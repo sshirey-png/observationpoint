@@ -438,73 +438,47 @@ margin-bottom:8px;cursor:pointer;transition:all .2s;background:var(--surf);box-s
 
     <div class="ai-card" id="aiSum">
         <div class="ai-hdr"><div class="ai-pill">AI</div><span style="font-size:13px;font-weight:600;color:#78350f;">Observation Summary</span></div>
-        <p>8-minute observation of 5th grade math. Strong call to attention and transition routines. Students engaged in Kagan Rally Robin with effective gambits. 3 students in back corner slow during transitions. Teacher used narrate the positive effectively. Most students on task with quick pace throughout.</p>
+        <p id="aiSumText">8-minute observation. AI summary will appear here based on transcript analysis.</p>
         <p style="font-size:11px;color:var(--txt3);margin-top:8px;">Based on transcript analysis &middot; Review suggested scores below</p>
     </div>
 
-    <div class="sec-title">FLS Teacher Rubric</div>
-
-    <div class="rub-card" id="rc1">
-        <div class="rub-top"><div class="rub-code">T1</div><div class="rub-req">Required</div></div>
-        <div class="rub-q">On Task — Are all students engaged in the work of the lesson from start to finish?</div>
-        <div class="s-row">
-            <div class="s-btn" data-v="1" onclick="doScore(this)"><span class="n">1</span><span class="l">NI</span></div>
-            <div class="s-btn" data-v="2" onclick="doScore(this)"><span class="n">2</span><span class="l">Emrg</span></div>
-            <div class="s-btn" data-v="3" onclick="doScore(this)"><span class="n">3</span><span class="l">Dev</span></div>
-            <div class="s-btn sel" data-v="4" onclick="doScore(this)"><span class="n">4</span><span class="l">Prof</span></div>
-            <div class="s-btn" data-v="5" onclick="doScore(this)"><span class="n">5</span><span class="l">Exm</span></div>
-        </div>
-        <div class="rub-expand" onclick="togDesc(this)"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l4 4-4 4"/></svg> View descriptors</div>
-        <div class="rub-desc"><strong>4 — Proficient:</strong> All or almost all students complete instructional tasks, volunteer responses and/or ask appropriate questions. All or almost all students follow behavioral expectations. Students execute transitions in an orderly and efficient manner with minimal direction. Class has a quick pace from start to finish.</div>
-    </div>
-
-    <div class="rub-card" id="rc2">
-        <div class="rub-top"><div class="rub-code">T2</div></div>
-        <div class="rub-q">Community of Learners — Are all students active members of a joyful and supportive classroom community?</div>
-        <div class="s-row">
-            <div class="s-btn" data-v="1" onclick="doScore(this)"><span class="n">1</span><span class="l">NI</span></div>
-            <div class="s-btn" data-v="2" onclick="doScore(this)"><span class="n">2</span><span class="l">Emrg</span></div>
-            <div class="s-btn sel" data-v="3" onclick="doScore(this)"><span class="n">3</span><span class="l">Dev</span></div>
-            <div class="s-btn" data-v="4" onclick="doScore(this)"><span class="n">4</span><span class="l">Prof</span></div>
-            <div class="s-btn" data-v="5" onclick="doScore(this)"><span class="n">5</span><span class="l">Exm</span></div>
-        </div>
-    </div>
-
-    <div class="rub-card" id="rc3">
-        <div class="rub-top"><div class="rub-code">T3</div></div>
-        <div class="rub-q">Essential Content — Are all students working with content aligned to appropriate standards?</div>
-        <div class="s-row">
-            <div class="s-btn" data-v="1" onclick="doScore(this)"><span class="n">1</span><span class="l">NI</span></div>
-            <div class="s-btn" data-v="2" onclick="doScore(this)"><span class="n">2</span><span class="l">Emrg</span></div>
-            <div class="s-btn" data-v="3" onclick="doScore(this)"><span class="n">3</span><span class="l">Dev</span></div>
-            <div class="s-btn sel" data-v="4" onclick="doScore(this)"><span class="n">4</span><span class="l">Prof</span></div>
-            <div class="s-btn" data-v="5" onclick="doScore(this)"><span class="n">5</span><span class="l">Exm</span></div>
+    <!-- Cycle info for PreK (hidden for Teacher obs) -->
+    <div id="cycle-info" style="display:none;">
+        <div class="sec-title">Cycle 1: Information</div>
+        <div style="background:var(--surf);border-radius:var(--R);box-shadow:var(--sh);padding:16px;margin-bottom:14px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div><div class="label">Number of Students</div><input class="fb-ta" type="number" placeholder="0" style="min-height:auto;padding:10px;"></div>
+                <div><div class="label">Number of Adults</div><input class="fb-ta" type="number" placeholder="0" style="min-height:auto;padding:10px;"></div>
+                <div><div class="label">Start Time</div><input class="fb-ta" type="time" style="min-height:auto;padding:10px;"></div>
+                <div><div class="label">End Time</div><input class="fb-ta" type="time" style="min-height:auto;padding:10px;"></div>
+            </div>
+            <div style="margin-top:12px;">
+                <div class="label">Academic Content</div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    <label style="display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;background:var(--bg);border-radius:6px;cursor:pointer"><input type="checkbox"> Lit/Lang Arts</label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;background:var(--bg);border-radius:6px;cursor:pointer"><input type="checkbox"> Math</label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;background:var(--bg);border-radius:6px;cursor:pointer"><input type="checkbox"> Social Studies</label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;background:var(--bg);border-radius:6px;cursor:pointer"><input type="checkbox"> Science</label>
+                </div>
+            </div>
+            <div style="margin-top:12px;">
+                <div class="label">Cycle Format</div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    <label style="display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;background:var(--bg);border-radius:6px;cursor:pointer"><input type="checkbox"> Routine</label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;background:var(--bg);border-radius:6px;cursor:pointer"><input type="checkbox"> Meals/Snacks</label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;background:var(--bg);border-radius:6px;cursor:pointer"><input type="checkbox"> Whole Group</label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;background:var(--bg);border-radius:6px;cursor:pointer"><input type="checkbox"> Individual Time</label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;background:var(--bg);border-radius:6px;cursor:pointer"><input type="checkbox"> Small Groups</label>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="rub-card" id="rc4">
-        <div class="rub-top"><div class="rub-code">T4</div></div>
-        <div class="rub-q">Cognitive Engagement — Are all students responsible for doing the thinking?</div>
-        <div class="s-row">
-            <div class="s-btn" data-v="1" onclick="doScore(this)"><span class="n">1</span><span class="l">NI</span></div>
-            <div class="s-btn" data-v="2" onclick="doScore(this)"><span class="n">2</span><span class="l">Emrg</span></div>
-            <div class="s-btn sel" data-v="3" onclick="doScore(this)"><span class="n">3</span><span class="l">Dev</span></div>
-            <div class="s-btn" data-v="4" onclick="doScore(this)"><span class="n">4</span><span class="l">Prof</span></div>
-            <div class="s-btn" data-v="5" onclick="doScore(this)"><span class="n">5</span><span class="l">Exm</span></div>
-        </div>
-    </div>
+    <div class="sec-title" id="rubric-title">FLS Teacher Rubric</div>
 
-    <div class="rub-card" id="rc5">
-        <div class="rub-top"><div class="rub-code">T5</div></div>
-        <div class="rub-q">Demonstration of Learning — Do all students demonstrate they are learning?</div>
-        <div class="s-row">
-            <div class="s-btn" data-v="1" onclick="doScore(this)"><span class="n">1</span><span class="l">NI</span></div>
-            <div class="s-btn" data-v="2" onclick="doScore(this)"><span class="n">2</span><span class="l">Emrg</span></div>
-            <div class="s-btn" data-v="3" onclick="doScore(this)"><span class="n">3</span><span class="l">Dev</span></div>
-            <div class="s-btn sel" data-v="4" onclick="doScore(this)"><span class="n">4</span><span class="l">Prof</span></div>
-            <div class="s-btn" data-v="5" onclick="doScore(this)"><span class="n">5</span><span class="l">Exm</span></div>
-        </div>
-    </div>
+    <!-- Dynamic rubric items rendered here -->
+    <div id="rubric-container"></div>
+
 </div>
 <div class="bbar bbar-light">
     <button class="bb bb-pri" onclick="go('feedback')">Next: Feedback &amp; Action Steps</button>
@@ -581,24 +555,19 @@ margin-bottom:8px;cursor:pointer;transition:all .2s;background:var(--surf);box-s
         <div><div class="pub-name" id="p-name">Marcus Williams</div><div class="pub-meta" id="p-meta">Samuel J. Green &middot; 5th Grade Math &middot; April 9, 2026</div></div>
     </div>
 
-    <div class="pub-chips">
+    <div class="pub-chips" id="pub-chips">
         <span class="chip chip-g">8:23 observation</span>
         <span class="chip chip-o">AI Assisted</span>
-        <span class="chip" style="background:#dbeafe;color:#2563eb;">Teacher Obs</span>
+        <span class="chip" id="pub-form-chip" style="background:#dbeafe;color:#2563eb;">Teacher Obs</span>
     </div>
 
     <div class="avg-hero">
-        <div class="avg-num">3.6</div>
+        <div class="avg-num" id="pub-avg">--</div>
         <div class="avg-lbl">Average Score</div>
     </div>
 
-    <div class="sum-grid">
-        <div class="sum-box"><div class="d">T1</div><div class="v" data-c="4">4</div></div>
-        <div class="sum-box"><div class="d">T2</div><div class="v" data-c="3">3</div></div>
-        <div class="sum-box"><div class="d">T3</div><div class="v" data-c="4">4</div></div>
-        <div class="sum-box"><div class="d">T4</div><div class="v" data-c="3">3</div></div>
-        <div class="sum-box"><div class="d">T5</div><div class="v" data-c="4">4</div></div>
-    </div>
+    <!-- Dynamic score summary -->
+    <div id="pub-scores"></div>
 
     <div class="pub-section">
         <div class="section-label">Action Step</div>
@@ -634,42 +603,345 @@ margin-bottom:8px;cursor:pointer;transition:all .2s;background:var(--surf);box-s
 </div>
 
 <script>
-// Navigation
+// =============================================
+// RUBRIC DEFINITIONS (data-driven form engine)
+// =============================================
+const RUBRICS = {
+    teacher: {
+        id: 'fls_teacher_v1',
+        name: 'FLS Teacher Rubric',
+        badge: 'Teacher Obs',
+        badgeColor: '#dbeafe',
+        badgeText: '#2563eb',
+        scale: {min:1, max:5, labels:{1:'NI',2:'Emrg',3:'Dev',4:'Prof',5:'Exm'}},
+        colors: {1:'#ef4444',2:'#f97316',3:'#eab308',4:'#22c55e',5:'#0ea5e9'},
+        hasCycles: false,
+        dimensions: [
+            {code:'T1',name:'On Task',q:'Are all students engaged in the work of the lesson from start to finish?',required:true,
+             desc:{4:'All or almost all students complete instructional tasks, volunteer responses and/or ask appropriate questions. All or almost all students follow behavioral expectations. Students execute transitions in an orderly and efficient manner with minimal direction. Class has a quick pace from start to finish.'}},
+            {code:'T2',name:'Community of Learners',q:'Are all students active members of a joyful and supportive classroom community?',required:false,
+             desc:{4:'All students use kind words & actions and show empathy. All students respond to consequences calmly. All students frequently share positive communication. Classroom norms are evident. Teacher always incorporates Kagan activities. Positive, student-driven interactions.'}},
+            {code:'T3',name:'Essential Content',q:'Are all students working with content aligned to the appropriate standards for their subject and grade?',required:false,
+             desc:{4:'The lesson focuses on grade-level content. All activities are aligned, well-sequenced, and build on each other. All instructional materials are high-quality and appropriately demanding. All lessons drive towards students answering a meaning driven question.'}},
+            {code:'T4',name:'Cognitive Engagement',q:'Are all students responsible for doing the thinking in this classroom?',required:false,
+             desc:{4:'All or almost all students provide meaningful evidence to support thinking. Students complete an appropriately challenging amount of cognitive work. Students respond to and build on peers\' thinking. All students consistently try hard even when work is challenging. Engaged in discussion/writing >50% of lesson.'}},
+            {code:'T5',name:'Demonstration of Learning',q:'Do all students demonstrate that they are learning?',required:false,
+             desc:{4:'Questions/assessments yield data to pinpoint where understanding breaks down. Students have extensive opportunities for academic writing. All students demonstrate understanding. All or almost all students are on track to achieve learning goals.'}},
+        ],
+        feedback: [
+            {id:'see_it_success',label:'See It / Name It: Success',placeholder:'What\'s working well in this classroom?'},
+            {id:'see_it_growth',label:'See It / Name It: Area(s) of Growth',placeholder:'Where is there opportunity to grow?'},
+            {id:'do_it_practice',label:'Do It: What did you practice?',placeholder:'What was practiced during the debrief?'},
+        ]
+    },
+    prek: {
+        id: 'fls_prek_class_v1',
+        name: 'CLASS PreK Rubric',
+        badge: 'CLASS PreK',
+        badgeColor: '#fce7f3',
+        badgeText: '#db2777',
+        scale: {min:1, max:7, labels:{1:'1',2:'2',3:'3',4:'4',5:'5',6:'6',7:'7'}},
+        colors: {1:'#ef4444',2:'#ef4444',3:'#eab308',4:'#eab308',5:'#eab308',6:'#22c55e',7:'#22c55e'},
+        hasCycles: true,
+        dimensions: [
+            {code:'PK1',name:'Positive Climate',abbr:'PC',domain:'Emotional Support',required:true},
+            {code:'PK2',name:'Negative Climate',abbr:'NC',domain:'Emotional Support',required:true},
+            {code:'PK3',name:'Teacher Sensitivity',abbr:'TS',domain:'Emotional Support',required:true},
+            {code:'PK4',name:'Regard for Student Perspectives',abbr:'RSP',domain:'Classroom Organization',required:true},
+            {code:'PK5',name:'Behavior Management',abbr:'BM',domain:'Classroom Organization',required:true},
+            {code:'PK6',name:'Productivity',abbr:'PD',domain:'Classroom Organization',required:true},
+            {code:'PK7',name:'Instructional Learning Formats',abbr:'ILF',domain:'Classroom Organization',required:true},
+            {code:'PK8',name:'Concept Development',abbr:'CD',domain:'Instructional Support',required:true},
+            {code:'PK9',name:'Quality of Feedback',abbr:'QF',domain:'Instructional Support',required:true},
+            {code:'PK10',name:'Language Modeling',abbr:'LM',domain:'Instructional Support',required:true},
+        ],
+        feedback: [
+            {id:'observation_note',label:'Observation Note',placeholder:'Provide additional details or context here'},
+        ]
+    },
+    fundamentals: {
+        id: 'fls_fundamentals_v1',
+        name: 'Fundamentals',
+        badge: 'Fundamentals',
+        badgeColor: '#fef3c7',
+        badgeText: '#ca8a04',
+        scale: {min:0, max:100, labels:{0:'No',100:'Yes'}, isPercent:true},
+        colors: {0:'#ef4444',100:'#22c55e'},
+        hasCycles: false,
+        dimensions: [
+            {code:'M1',name:'On Task Minute 1',q:'Percentage',type:'percent',required:true},
+            {code:'M2',name:'On Task Minute 2',q:'Percentage',type:'percent',required:true},
+            {code:'M3',name:'On Task Minute 3',q:'Percentage',type:'percent',required:true},
+            {code:'M4',name:'On Task Minute 4',q:'Percentage',type:'percent',required:true},
+            {code:'M5',name:'On Task Minute 5',q:'Percentage',type:'percent',required:true},
+            {code:'OP',name:'On Pace?',q:'',type:'binary',required:false},
+            {code:'FL',name:'Fundamentals Locked?',q:'Is Fundamentals locked in for this teacher?',type:'binary',required:true},
+            {code:'RB',name:'Relationship Building',q:'Are the foundations for Relationship Building/Community of Learners in place?',type:'binary',required:true},
+        ],
+        feedback: [
+            {id:'fundamental_skills',label:'Fundamental Skills',placeholder:'Identify the Fundamental skills to be addressed'},
+        ]
+    },
+    leader: {
+        id: 'fls_leader_v1',
+        name: 'FLS Leadership Competencies',
+        badge: 'PMAP Leader',
+        badgeColor: '#dcfce7',
+        badgeText: '#059669',
+        scale: {min:1, max:5, labels:{1:'NI',2:'Emrg',3:'Dev',4:'Prof',5:'Exm'}},
+        colors: {1:'#ef4444',2:'#f97316',3:'#eab308',4:'#22c55e',5:'#0ea5e9'},
+        hasCycles: false,
+        dimensions: [
+            {code:'L1',name:'Instructional Leadership',q:'Does the leader ensure that all classes within their scope meet or exceed the FLS Vision of Excellence?',required:true},
+            {code:'L2',name:'Cultural Leadership',q:'Does the leader build a motivational school culture with high expectations?',required:true},
+            {code:'L3',name:'Personal Leadership',q:'Does the leader inspire and motivate all staff, students and parents to model the FirstLine way?',required:true},
+            {code:'L4',name:'Talent Management',q:'Does the leader plan for, cultivate, hire, develop and manage high performing teams?',required:true},
+            {code:'L5',name:'Strategic & Ops Leadership',q:'Does the leader effectively allocate resources to support student learning and staff development?',required:true},
+        ],
+        feedback: [
+            {id:'additional_comments',label:'Additional Comments',placeholder:'Please provide any additional notes or context here'},
+        ]
+    }
+};
+
+// =============================================
+// STATE
+// =============================================
+let teacher = {};
+let currentRubric = null;
+let scores = {};
+let isRec = false, secs = 0, intv;
+let aiOn = true;
+
+// =============================================
+// NAVIGATION
+// =============================================
 function go(id){
     document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
     document.getElementById(id).classList.add('on');
     window.scrollTo(0,0);
+    // Render dynamic content when entering score or publish screen
+    if(id === 'score') renderScoreScreen();
+    if(id === 'publish') renderPublishScreen();
 }
 
-// Teacher select
-let teacher={};
-function pick(name,school,role,type){
-    teacher={name,school,role,type};
-    const ini=name.split(' ').map(n=>n[0]).join('');
-    document.getElementById('r-av').textContent=ini;
-    document.getElementById('r-name').textContent=name;
-    document.getElementById('r-meta').textContent=school+' \u00b7 '+role;
-    document.getElementById('p-av').textContent=ini;
-    document.getElementById('p-name').textContent=name;
-    document.getElementById('p-meta').textContent=school+' \u00b7 '+role+' \u00b7 April 9, 2026';
-    document.getElementById('done-msg').textContent=name+' has been notified';
-    // Auto-detect form type
-    let badge='Teacher Obs';
-    if(role.toLowerCase().includes('prek')||role.toLowerCase().includes('pre-k'))badge='CLASS PreK';
-    else if(type==='Leadership')badge='PMAP Leader';
-    document.getElementById('r-badge').textContent=badge;
+// =============================================
+// TEACHER SELECTION + FORM AUTO-DETECT
+// =============================================
+function detectFormType(role, type){
+    const r = (role||'').toLowerCase();
+    if(r.includes('prek') || r.includes('pre-k') || r.includes('pk')) return 'prek';
+    if(type === 'Leadership') return 'leader';
+    return 'teacher';
+}
+
+function pick(name, school, role, type){
+    const formType = detectFormType(role, type);
+    currentRubric = RUBRICS[formType];
+    scores = {};
+    teacher = {name, school, role, type, formType};
+
+    const ini = name.split(' ').map(n=>n[0]).join('');
+
+    // Update record screen
+    document.getElementById('r-av').textContent = ini;
+    document.getElementById('r-name').textContent = name;
+    document.getElementById('r-meta').textContent = school + ' \u00b7 ' + role;
+    document.getElementById('r-badge').textContent = currentRubric.badge;
+    document.getElementById('r-badge').style.background = currentRubric.badgeColor;
+    document.getElementById('r-badge').style.color = currentRubric.badgeText;
+
+    // Update publish screen
+    document.getElementById('p-av').textContent = ini;
+    document.getElementById('p-name').textContent = name;
+    document.getElementById('p-meta').textContent = school + ' \u00b7 ' + role + ' \u00b7 April 9, 2026';
+    document.getElementById('done-msg').textContent = name + ' has been notified';
+    document.getElementById('pub-form-chip').textContent = currentRubric.badge;
+    document.getElementById('pub-form-chip').style.background = currentRubric.badgeColor;
+    document.getElementById('pub-form-chip').style.color = currentRubric.badgeText;
+
     go('record');
 }
+
 function filterT(q){
     document.querySelectorAll('.t-card').forEach(c=>{
-        c.style.display=c.textContent.toLowerCase().includes(q.toLowerCase())?'':'none';
+        c.style.display = c.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
     });
 }
 
-// Recording
-let isRec=false,secs=0,intv;
+// =============================================
+// RENDER SCORE SCREEN (data-driven)
+// =============================================
+function renderScoreScreen(){
+    if(!currentRubric) return;
+    const r = currentRubric;
+    const container = document.getElementById('rubric-container');
+    const cycleInfo = document.getElementById('cycle-info');
+    const title = document.getElementById('rubric-title');
+
+    title.textContent = r.name;
+    cycleInfo.style.display = r.hasCycles ? '' : 'none';
+
+    // Build AI summary text
+    document.getElementById('aiSumText').textContent =
+        'Observation of ' + teacher.role + '. AI summary will appear here after recording analysis.';
+
+    let html = '';
+
+    // Group by domain for PreK
+    let lastDomain = '';
+
+    r.dimensions.forEach((dim, i) => {
+        // Domain header for PreK
+        if(dim.domain && dim.domain !== lastDomain){
+            lastDomain = dim.domain;
+            html += `<div style="font-size:12px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em;margin:16px 0 8px;padding-top:8px;border-top:1px solid var(--bdr);">${dim.domain}</div>`;
+        }
+
+        if(dim.type === 'percent'){
+            // Percentage input (Fundamentals)
+            html += `<div class="rub-card" data-dim="${dim.code}">
+                <div class="rub-top"><div class="rub-code">${dim.code}</div>${dim.required?'<div class="rub-req">Required</div>':''}</div>
+                <div class="rub-q">${dim.name}</div>
+                <input type="number" class="fb-ta" placeholder="Enter %" min="0" max="100" style="min-height:auto;padding:12px;font-size:18px;font-weight:700;text-align:center;width:100px;"
+                    oninput="scores['${dim.code}']=parseInt(this.value)">
+            </div>`;
+        } else if(dim.type === 'binary'){
+            // Yes/No (Fundamentals)
+            html += `<div class="rub-card" data-dim="${dim.code}">
+                <div class="rub-top"><div class="rub-code">${dim.code}</div>${dim.required?'<div class="rub-req">Required</div>':''}</div>
+                <div class="rub-q">${dim.name}${dim.q ? ' — ' + dim.q : ''}</div>
+                <div class="s-row">
+                    <div class="s-btn" data-v="0" onclick="doScore(this)" style="flex:1"><span class="n">No</span></div>
+                    <div class="s-btn" data-v="100" onclick="doScore(this)" style="flex:1"><span class="n">Yes</span></div>
+                </div>
+            </div>`;
+        } else {
+            // Standard scored rubric item
+            let btns = '';
+            for(let s = r.scale.min; s <= r.scale.max; s++){
+                const label = r.scale.labels[s] || s;
+                const shortLabel = String(label).length > 4 ? String(label).substring(0,4) : label;
+                btns += `<div class="s-btn" data-v="${s}" onclick="doScore(this)"><span class="n">${s}</span>${r.scale.max <= 5 ? '<span class="l">'+shortLabel+'</span>' : ''}</div>`;
+            }
+            html += `<div class="rub-card" data-dim="${dim.code}">
+                <div class="rub-top">
+                    <div class="rub-code">${dim.code}${dim.abbr ? ' \u00b7 ' + dim.abbr : ''}</div>
+                    ${dim.required ? '<div class="rub-req">Required</div>' : ''}
+                </div>
+                <div class="rub-q">${dim.name}${dim.q ? ' — ' + dim.q : ''}</div>
+                <div class="s-row">${btns}</div>
+                ${dim.desc ? `<div class="rub-expand" onclick="togDesc(this)"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l4 4-4 4"/></svg> View descriptors</div><div class="rub-desc"><strong>4 — Proficient:</strong> ${dim.desc[4]||''}</div>` : ''}
+            </div>`;
+        }
+    });
+
+    container.innerHTML = html;
+}
+
+// =============================================
+// RENDER PUBLISH SCREEN (data-driven)
+// =============================================
+function renderPublishScreen(){
+    if(!currentRubric) return;
+    const r = currentRubric;
+
+    // Collect scores from the score screen
+    document.querySelectorAll('#rubric-container .rub-card').forEach(card => {
+        const dim = card.dataset.dim;
+        const sel = card.querySelector('.s-btn.sel');
+        if(sel) scores[dim] = parseInt(sel.dataset.v);
+        const pctInput = card.querySelector('input[type="number"]');
+        if(pctInput && pctInput.value) scores[dim] = parseInt(pctInput.value);
+    });
+
+    // Calculate average (only numeric scored dimensions, not binary/percent)
+    const scoredDims = r.dimensions.filter(d => !d.type || d.type === 'standard');
+    const vals = scoredDims.map(d => scores[d.code]).filter(v => v !== undefined && v !== null);
+    const avg = vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1) : '--';
+    document.getElementById('pub-avg').textContent = avg;
+
+    // Color the average
+    const avgEl = document.getElementById('pub-avg');
+    if(avg !== '--'){
+        const avgNum = parseFloat(avg);
+        if(r.scale.max === 7){
+            avgEl.style.color = avgNum >= 5.5 ? '#059669' : avgNum >= 3 ? '#ca8a04' : '#dc2626';
+        } else {
+            avgEl.style.color = avgNum >= 3.5 ? '#059669' : avgNum >= 2.5 ? '#ca8a04' : '#dc2626';
+        }
+    }
+
+    // Build score grid
+    let gridHtml = '<div class="sum-grid" style="grid-template-columns:repeat('+Math.min(scoredDims.length,5)+',1fr)">';
+    scoredDims.forEach(d => {
+        const v = scores[d.code];
+        const display = v !== undefined ? v : '-';
+        const colorKey = v || 0;
+        const color = r.colors[colorKey] || 'var(--txt3)';
+        gridHtml += `<div class="sum-box"><div class="d">${d.code}</div><div class="v" style="color:${color}">${display}</div></div>`;
+    });
+    gridHtml += '</div>';
+
+    // For PreK, show domains grouped
+    if(r.hasCycles && scoredDims.length > 5){
+        gridHtml = '<div style="margin-bottom:14px;">';
+        const domains = {};
+        scoredDims.forEach(d => {
+            const dom = d.domain || 'Other';
+            if(!domains[dom]) domains[dom] = [];
+            domains[dom].push(d);
+        });
+        for(const [domName, dims] of Object.entries(domains)){
+            const domVals = dims.map(d=>scores[d.code]).filter(v=>v!==undefined);
+            const domAvg = domVals.length ? (domVals.reduce((a,b)=>a+b,0)/domVals.length).toFixed(1) : '-';
+            gridHtml += `<div style="font-size:11px;font-weight:600;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em;margin:10px 0 6px;">${domName} <span style="float:right;color:var(--txt);font-size:14px;font-weight:700;">${domAvg}</span></div>`;
+            gridHtml += '<div class="sum-grid" style="grid-template-columns:repeat('+Math.min(dims.length,5)+',1fr);margin-bottom:8px;">';
+            dims.forEach(d => {
+                const v = scores[d.code];
+                const color = r.colors[v] || 'var(--txt3)';
+                gridHtml += `<div class="sum-box"><div class="d">${d.abbr||d.code}</div><div class="v" style="color:${color}">${v||'-'}</div></div>`;
+            });
+            gridHtml += '</div>';
+        }
+        gridHtml += '</div>';
+    }
+
+    document.getElementById('pub-scores').innerHTML = gridHtml;
+}
+
+// =============================================
+// SCORING INTERACTION
+// =============================================
+function doScore(el){
+    const card = el.closest('.rub-card');
+    card.querySelectorAll('.s-btn').forEach(b => b.classList.remove('sel'));
+    el.classList.add('sel');
+    const v = el.dataset.v;
+    const dim = card.dataset.dim;
+    scores[dim] = parseInt(v);
+
+    // Update border color
+    const color = currentRubric.colors[parseInt(v)] || 'var(--bdr)';
+    card.style.borderLeftColor = color;
+    card.style.borderLeftWidth = '4px';
+}
+
+function togDesc(el){
+    const d = el.nextElementSibling;
+    d.classList.toggle('open');
+    if(d.classList.contains('open')){
+        el.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5l4 4 4-4"/></svg> Hide descriptors';
+    } else {
+        el.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l4 4-4 4"/></svg> View descriptors';
+    }
+}
+
+// =============================================
+// RECORDING
+// =============================================
 function toggleRec(){
-    isRec=!isRec;
+    isRec = !isRec;
     const btn=document.getElementById('recBtn'),t=document.getElementById('timer'),
           sub=document.getElementById('timer-sub'),hint=document.getElementById('recHint'),
           w=document.getElementById('wave');
@@ -686,8 +958,9 @@ function toggleRec(){
     }
 }
 
-// AI toggle
-let aiOn=true;
+// =============================================
+// AI TOGGLE
+// =============================================
 function togAI(){
     aiOn=!aiOn;
     document.getElementById('aiTog').classList.toggle('on',aiOn);
@@ -697,27 +970,9 @@ function togAI(){
     if(sum)sum.style.display=aiOn?'':'none';
 }
 
-// Scoring
-function doScore(el){
-    const card=el.closest('.rub-card');
-    card.querySelectorAll('.s-btn').forEach(b=>b.classList.remove('sel'));
-    el.classList.add('sel');
-    const v=el.dataset.v;
-    card.className='rub-card s'+v;
-}
-
-// Descriptor toggle
-function togDesc(el){
-    const d=el.nextElementSibling;
-    d.classList.toggle('open');
-    if(d.classList.contains('open')){
-        el.innerHTML='<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5l4 4 4-4"/></svg> Hide descriptors';
-    }else{
-        el.innerHTML='<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l4 4-4 4"/></svg> View descriptors';
-    }
-}
-
-// Publish
+// =============================================
+// PUBLISH
+// =============================================
 function showDone(){document.getElementById('doneWrap').style.display='flex';}
 </script>
 </body>
