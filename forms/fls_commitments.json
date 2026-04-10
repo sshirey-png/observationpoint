@@ -1,0 +1,99 @@
+{
+  "id": "fls_commitments_v1",
+  "name": "FLS Community Commitments",
+  "description": "FirstLine Schools Community Commitments with actionable behaviors",
+  "commitments": [
+    {
+      "id": "learning",
+      "number": 1,
+      "theme": "We Keep Learning",
+      "personal": "I commit to my own and others' development.",
+      "collective": "We commit to our own personal and collective learning. We give and seek the gift of feedback to help us solve our problems so we can all grow together.",
+      "behaviors": [
+        "Seek opportunities to learn, develop, and grow (observe a co-teacher, book study, PD, visit another school in city, virtual PD) to enhance your skills as a professional.",
+        "Continually improve our practices and systems.",
+        "Give 5:1 ratio of positive feedback to students and adults.",
+        "Learn through problem solving and failings."
+      ]
+    },
+    {
+      "id": "listening",
+      "number": 2,
+      "theme": "We Work Together",
+      "personal": "I commit to listening and understanding.",
+      "collective": "We believe all perspectives have meaning and help us make better decisions. We are all part of a whole; we leave no community member behind.",
+      "behaviors": [
+        "Listen to learn with compassion and empathy before responding and be comfortable not responding right away.",
+        "Practice blameless problem solving.",
+        "Forgive when mistakes are made and provide support or development as needed (don't hold grudges).",
+        "Assume that people are always trying to do the right thing (even if they did not).",
+        "Be open to different perspectives; understand that everyone is on a journey of learning."
+      ]
+    },
+    {
+      "id": "honesty",
+      "number": 3,
+      "theme": "We Work Together",
+      "personal": "I commit to speaking with honesty and respect.",
+      "collective": "We commit to being clear, supportive and direct in our communications. We commit to speaking to each other, not about each other.",
+      "behaviors": [
+        "Be kind in language and tone in all interactions, even when you are frustrated.",
+        "Give feedback constructively and with empathy.",
+        "Speak up against injustice or wrongdoing while maintaining professionalism and respect."
+      ]
+    },
+    {
+      "id": "service",
+      "number": 4,
+      "theme": "We are Helpful",
+      "personal": "I commit to doing what it takes to serve others.",
+      "collective": "We commit to doing what it takes to serve our community by identifying and meeting what others need to understand, grow, and thrive.",
+      "behaviors": [
+        "Offer support and assistance to others without hesitation.",
+        "Respond with flexibility, framing and problem-solving.",
+        "Take initiative to address challenges and solve problems proactively.",
+        "Address requests, questions, and concerns in a timely manner."
+      ]
+    },
+    {
+      "id": "safety",
+      "number": 5,
+      "theme": "We are the Safekeepers of our Community",
+      "personal": "I commit to keeping myself and others safe in mind, body, and spirit.",
+      "collective": "We commit to physical and emotional safety for ourselves and our community.",
+      "behaviors": [
+        "Follow safety protocols and procedures to ensure physical safety.",
+        "Intervene appropriately in situations where safety is at risk.",
+        "Promote mental and emotional well-being by creating a supportive and nurturing environment.",
+        "Create safe, organized, and beautiful environments for students, staff and families.",
+        "Take care of yourself by practicing healthy habits, stress management and self-reflection."
+      ]
+    },
+    {
+      "id": "joy",
+      "number": 6,
+      "theme": "We Share Joy",
+      "personal": "I commit to bringing my personal joy to our work.",
+      "collective": "We celebrate together, create together, and share experiences that build our community and make us happy.",
+      "behaviors": [
+        "Approach tasks and interactions with enthusiasm and positivity.",
+        "Share successes and celebrate achievements.",
+        "Express gratitude for little and big things to students, teacher, families, and colleagues and others.",
+        "Show genuine care and understanding towards colleagues, which can help to build strong, joyful relationships."
+      ]
+    },
+    {
+      "id": "results",
+      "number": 7,
+      "theme": "We Show Results",
+      "personal": "I commit to holding myself and others accountable.",
+      "collective": "We believe in each other, set high expectations, and hold each other accountable to reach them. We celebrate our progress as a community by showing our results. Together we will reach our goals.",
+      "behaviors": [
+        "Set clear, measurable goals that are both aspirational and achievable.",
+        "Regularly review progress towards goals and collaborate on how to improve.",
+        "Take personal responsibility for results.",
+        "Acknowledge, own, correct, and learn from our mistakes."
+      ]
+    }
+  ]
+}

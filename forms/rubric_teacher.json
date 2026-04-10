@@ -1,0 +1,98 @@
+{
+  "id": "fls_teacher_v1",
+  "name": "FLS Teacher Rubric",
+  "description": "FirstLine Schools Teacher Observation Rubric",
+  "scale": {
+    "min": 1,
+    "max": 5,
+    "labels": {
+      "1": "Needs Improvement",
+      "2": "Emerging",
+      "3": "Developing",
+      "4": "Proficient",
+      "5": "Exemplary"
+    },
+    "colors": {
+      "1": "#ef4444",
+      "2": "#f97316",
+      "3": "#eab308",
+      "4": "#22c55e",
+      "5": "#0ea5e9"
+    }
+  },
+  "dimensions": [
+    {
+      "id": "t1_on_task",
+      "code": "T1",
+      "name": "On Task",
+      "question": "Are all students engaged in the work of the lesson from start to finish?",
+      "required": true,
+      "note_on_1": true
+    },
+    {
+      "id": "t2_community",
+      "code": "T2",
+      "name": "Community of Learners",
+      "question": "Are all students active members of a joyful and supportive classroom community?",
+      "required": false
+    },
+    {
+      "id": "t3_content",
+      "code": "T3",
+      "name": "Essential Content",
+      "question": "Are all current students working with content aligned to the appropriate standards for their subject and grade?",
+      "required": false
+    },
+    {
+      "id": "t4_cognitive",
+      "code": "T4",
+      "name": "Cognitive Engagement",
+      "question": "Are all current students responsible for doing the thinking in this classroom?",
+      "required": false
+    },
+    {
+      "id": "t5_demonstration",
+      "code": "T5",
+      "name": "Demonstration of Learning",
+      "question": "Do all current students demonstrate that they are learning?",
+      "required": false
+    }
+  ],
+  "feedback_fields": [
+    {
+      "id": "see_it_success",
+      "label": "See It / Name It: Success",
+      "type": "richtext",
+      "placeholder": "What's working well in this classroom?"
+    },
+    {
+      "id": "see_it_growth",
+      "label": "See It / Name It: Area(s) of Growth",
+      "type": "richtext",
+      "placeholder": "Where is there opportunity to grow?"
+    },
+    {
+      "id": "do_it_practice",
+      "label": "Do It: What did you practice?",
+      "type": "richtext",
+      "placeholder": "What was practiced during the observation debrief?"
+    }
+  ],
+  "context_fields": [
+    {
+      "id": "observation_purpose",
+      "label": "Observation Purpose",
+      "type": "richtext",
+      "required": true,
+      "placeholder": "Indicate the focus area or purpose for this observation"
+    },
+    {
+      "id": "actmo",
+      "label": "ActMo",
+      "type": "select",
+      "required": true,
+      "description": "85% of students in classrooms observed receive feedback so that they are on track to achieve learning goals",
+      "options": []
+    }
+  ]
+}

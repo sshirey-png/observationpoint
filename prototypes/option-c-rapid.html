@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ObservationPoint — Option C: Rapid</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --primary: #e47727;
+    --navy: #002f60;
+    --bg: #fafbfc;
+    --surface: #ffffff;
+    --border: #e8ecf0;
+    --text: #111827;
+    --text2: #6b7280;
+    --text3: #9ca3af;
+    --danger: #dc2626;
+    --success: #059669;
+    --R: 14px;
+}
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+
+/* Nav */
+.nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: var(--navy); color: white;
+    padding: 12px 16px; display: flex; align-items: center; gap: 12px;
+}
+.nav .logo { font-size: 15px; font-weight: 700; flex: 1; }
+.nav .logo span { color: var(--primary); }
+.nav-pill {
+    padding: 6px 12px; border-radius: 8px;
+    background: rgba(255,255,255,0.15);
+    font-size: 12px; font-weight: 600; cursor: pointer;
+}
+
+/* Content */
+.content { padding: 60px 12px 160px; }
+
+/* Quick Select */
+.quick-select {
+    background: var(--surface); border-radius: var(--R); border: 1px solid var(--border);
+    padding: 14px; margin-bottom: 10px;
+}
+.qs-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); margin-bottom: 8px; }
+.qs-input {
+    width: 100%; padding: 12px; border: 1.5px solid var(--border); border-radius: 10px;
+    font-size: 14px; font-family: 'Inter', sans-serif; color: var(--text);
+    outline: none; transition: border-color 0.2s;
+}
+.qs-input:focus { border-color: var(--primary); }
+.qs-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.qs-chip {
+    padding: 8px 14px; border-radius: 20px;
+    background: var(--bg); border: 1.5px solid var(--border);
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    transition: all 0.2s; -webkit-tap-highlight-color: transparent;
+}
+.qs-chip:active { transform: scale(0.95); }
+.qs-chip.active { background: var(--navy); color: white; border-color: var(--navy); }
+
+/* Accordion Sections */
+.section {
+    background: var(--surface); border-radius: var(--R); border: 1px solid var(--border);
+    margin-bottom: 10px; overflow: hidden;
+    transition: all 0.3s;
+}
+.section-head {
+    padding: 14px 16px; display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.section-head .left { display: flex; align-items: center; gap: 10px; }
+.section-head .icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+}
+.section-head .title { font-size: 14px; font-weight: 600; }
+.section-head .subtitle { font-size: 11px; color: var(--text3); }
+.section-head .arrow {
+    transition: transform 0.3s; color: var(--text3);
+}
+.section.open .section-head .arrow { transform: rotate(180deg); }
+.section-body {
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.section.open .section-body { max-height: 2000px; }
+.section-inner { padding: 0 16px 16px; }
+
+/* Recording - Floating */
+.float-record {
+    position: fixed; bottom: 90px; right: 16px; z-index: 90;
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface); border-radius: 28px;
+    padding: 6px 16px 6px 6px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    border: 1.5px solid var(--border);
+    transition: all 0.3s;
+}
+.float-record.recording {
+    background: #fef2f2; border-color: #fecaca;
+    box-shadow: 0 4px 20px rgba(220,38,38,0.2);
+}
+.fr-btn {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: white; border: 2.5px solid var(--danger);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.3s;
+}
+.fr-dot {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--danger); transition: all 0.3s;
+}
+.float-record.recording .fr-dot { width: 14px; height: 14px; border-radius: 3px; }
+.float-record.recording .fr-btn { animation: fpulse 1.5s infinite; }
+@keyframes fpulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.3); }
+    50% { box-shadow: 0 0 0 8px rgba(220,38,38,0); }
+}
+.fr-time {
+    font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums;
+    color: var(--text);
+}
+.float-record.recording .fr-time { color: var(--danger); }
+.fr-label { font-size: 10px; color: var(--text3); }
+.float-record.recording .fr-label { color: var(--danger); }
+
+/* Rubric inline */
+.r-item {
+    padding: 14px 0; border-bottom: 1px solid #f3f4f6;
+}
+.r-item:last-child { border-bottom: none; }
+.r-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+.r-code {
+    font-size: 11px; font-weight: 700; color: var(--navy);
+    background: #eef2ff; padding: 2px 6px; border-radius: 4px;
+}
+.r-q { font-size: 13px; font-weight: 500; line-height: 1.5; margin-top: 4px; color: var(--text); }
+.r-scores { display: flex; gap: 4px; }
+.r-s {
+    width: 44px; height: 44px; border-radius: 10px;
+    border: 1.5px solid var(--border);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    background: white;
+}
+.r-s .n { font-size: 16px; font-weight: 700; color: var(--text3); transition: all 0.15s; }
+.r-s:active { transform: scale(0.9); }
+.r-s.sel { border-color: transparent; }
+.r-s.sel .n { color: white; }
+.r-s[data-v="1"].sel { background: #ef4444; }
+.r-s[data-v="2"].sel { background: #f97316; }
+.r-s[data-v="3"].sel { background: #eab308; }
+.r-s[data-v="4"].sel { background: #22c55e; }
+.r-s[data-v="5"].sel { background: #0ea5e9; }
+
+/* Inline score badge after selection */
+.r-badge {
+    padding: 4px 8px; border-radius: 6px;
+    font-size: 12px; font-weight: 700; display: none;
+}
+.r-item.scored .r-badge { display: inline-block; }
+
+/* Textarea */
+.ta {
+    width: 100%; padding: 12px; border: 1.5px solid var(--border);
+    border-radius: 10px; font-size: 13px; font-family: 'Inter', sans-serif;
+    color: var(--text); resize: vertical; min-height: 70px; outline: none;
+    line-height: 1.6;
+}
+.ta:focus { border-color: var(--primary); }
+
+/* Action cards */
+.act-card {
+    padding: 12px; border: 1.5px solid var(--border); border-radius: 10px;
+    margin-bottom: 8px; cursor: pointer; transition: all 0.2s;
+}
+.act-card:active { transform: scale(0.98); }
+.act-card.sel { border-color: var(--primary); background: #fff7ed; }
+.act-cat { font-size: 10px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.04em; }
+.act-name { font-size: 13px; font-weight: 600; margin-top: 3px; }
+.act-prompt {
+    font-size: 12px; color: #2563eb; font-style: italic; margin-top: 8px;
+    padding: 8px 10px; background: #eff6ff; border-radius: 6px;
+    line-height: 1.5; display: none;
+}
+.act-card.sel .act-prompt { display: block; }
+
+/* AI badge */
+.ai-b {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 8px; border-radius: 4px;
+    background: linear-gradient(135deg, var(--primary), #d35400);
+    color: white; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.04em;
+}
+
+/* Bottom bar */
+.bottom-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: white; border-top: 1px solid var(--border);
+    padding: 10px 12px; padding-bottom: max(10px, env(safe-area-inset-bottom));
+    z-index: 100; display: flex; gap: 8px;
+}
+.bb-btn {
+    flex: 1; padding: 14px; border-radius: 12px;
+    font-size: 14px; font-weight: 600; text-align: center;
+    cursor: pointer; font-family: 'Inter', sans-serif;
+    transition: all 0.2s; border: none;
+}
+.bb-primary { background: var(--primary); color: white; }
+.bb-primary:active { opacity: 0.9; transform: scale(0.98); }
+.bb-outline { background: white; color: var(--text); border: 1.5px solid var(--border); }
+
+/* Summary row */
+.sum-row {
+    display: flex; gap: 6px; justify-content: center; margin: 12px 0;
+}
+.sum-item {
+    text-align: center; flex: 1;
+    padding: 10px 4px; background: var(--bg);
+    border-radius: 8px;
+}
+.sum-item .d { font-size: 10px; font-weight: 600; color: var(--text3); }
+.sum-item .v { font-size: 20px; font-weight: 800; }
+.sum-item .v[data-c="1"] { color: #ef4444; }
+.sum-item .v[data-c="2"] { color: #f97316; }
+.sum-item .v[data-c="3"] { color: #eab308; }
+.sum-item .v[data-c="4"] { color: #22c55e; }
+.sum-item .v[data-c="5"] { color: #0ea5e9; }
+.avg-big { font-size: 44px; font-weight: 800; text-align: center; color: var(--success); letter-spacing: -0.03em; }
+.avg-label { font-size: 12px; color: var(--text2); text-align: center; }
+
+/* Toggle */
+.ai-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; }
+.tog { width: 42px; height: 24px; border-radius: 12px; background: #d1d5db; cursor: pointer; position: relative; transition: all 0.3s; }
+.tog.on { background: var(--primary); }
+.tog-t { width: 20px; height: 20px; border-radius: 50%; background: white; position: absolute; top: 2px; left: 2px; transition: all 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.tog.on .tog-t { left: 20px; }
+
+/* Done overlay */
+.done-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4); backdrop-filter: blur(6px);
+    z-index: 200; align-items: center; justify-content: center;
+}
+.done-card {
+    background: white; border-radius: 20px; padding: 36px 28px;
+    text-align: center; margin: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+    <div class="logo">Observation<span>Point</span></div>
+    <div class="nav-pill" id="formType">Teacher Obs</div>
+</nav>
+
+<div class="content">
+
+    <!-- Quick teacher select -->
+    <div class="quick-select">
+        <div class="qs-label">Teacher</div>
+        <input class="qs-input" placeholder="Search staff..." value="Marcus Williams">
+        <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+            <span style="font-size:12px; color:var(--text2);">Samuel J. Green &middot; 5th Grade Math</span>
+            <span style="font-size:11px; color:var(--primary); font-weight:600; cursor:pointer;">Change</span>
+        </div>
+    </div>
+
+    <!-- AI Toggle -->
+    <div class="quick-select" style="padding:12px 14px;">
+        <div class="ai-row">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <div class="ai-b">AI</div>
+                <div><div style="font-size:13px; font-weight:600;">AI Assist</div><div style="font-size:11px; color:var(--text3);">Transcribe + analyze recording</div></div>
+            </div>
+            <div class="tog on" onclick="this.classList.toggle('on')"><div class="tog-t"></div></div>
+        </div>
+    </div>
+
+    <!-- Section: Notes -->
+    <div class="section open" id="sec-notes">
+        <div class="section-head" onclick="toggleSec('sec-notes')">
+            <div class="left">
+                <div class="icon" style="background:#fef3c7;">
+                    <svg width="16" height="16" fill="none" stroke="#ca8a04" stroke-width="2"><path d="M12 3H4a1 1 0 00-1 1v8a1 1 0 001 1h8a1 1 0 001-1V4a1 1 0 00-1-1z"/><path d="M6 1v4M10 1v4"/></svg>
+                </div>
+                <div><div class="title">Notes</div><div class="subtitle">Observation evidence</div></div>
+            </div>
+            <div class="arrow"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg></div>
+        </div>
+        <div class="section-body"><div class="section-inner">
+            <textarea class="ta" style="min-height:120px;" placeholder="Type observations here...">Strong call to attention — all students respond within 3 seconds. Teacher uses countdown.
+
+Transition to group work: 3 students in back corner slow to move. Teacher narrates positive — "I see table 2 ready."
+
+Rally Robin — all pairs engaged. Gambits used at end.</textarea>
+        </div></div>
+    </div>
+
+    <!-- Section: Score -->
+    <div class="section open" id="sec-score">
+        <div class="section-head" onclick="toggleSec('sec-score')">
+            <div class="left">
+                <div class="icon" style="background:#dbeafe;">
+                    <svg width="16" height="16" fill="none" stroke="#2563eb" stroke-width="2"><path d="M2 12l4-8 3 4 3-6 2 10"/></svg>
+                </div>
+                <div><div class="title">Rubric Scores</div><div class="subtitle">FLS Teacher Rubric (T1-T5)</div></div>
+            </div>
+            <div class="arrow"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg></div>
+        </div>
+        <div class="section-body"><div class="section-inner">
+
+            <div class="r-item scored" id="ri1">
+                <div class="r-top"><div><div class="r-code">T1</div><div class="r-q">On Task</div></div></div>
+                <div class="r-scores">
+                    <div class="r-s" data-v="1" onclick="sc(this)"><div class="n">1</div></div>
+                    <div class="r-s" data-v="2" onclick="sc(this)"><div class="n">2</div></div>
+                    <div class="r-s" data-v="3" onclick="sc(this)"><div class="n">3</div></div>
+                    <div class="r-s sel" data-v="4" onclick="sc(this)"><div class="n">4</div></div>
+                    <div class="r-s" data-v="5" onclick="sc(this)"><div class="n">5</div></div>
+                </div>
+            </div>
+
+            <div class="r-item" id="ri2">
+                <div class="r-top"><div><div class="r-code">T2</div><div class="r-q">Community of Learners</div></div></div>
+                <div class="r-scores">
+                    <div class="r-s" data-v="1" onclick="sc(this)"><div class="n">1</div></div>
+                    <div class="r-s" data-v="2" onclick="sc(this)"><div class="n">2</div></div>
+                    <div class="r-s sel" data-v="3" onclick="sc(this)"><div class="n">3</div></div>
+                    <div class="r-s" data-v="4" onclick="sc(this)"><div class="n">4</div></div>
+                    <div class="r-s" data-v="5" onclick="sc(this)"><div class="n">5</div></div>
+                </div>
+            </div>
+
+            <div class="r-item" id="ri3">
+                <div class="r-top"><div><div class="r-code">T3</div><div class="r-q">Essential Content</div></div></div>
+                <div class="r-scores">
+                    <div class="r-s" data-v="1" onclick="sc(this)"><div class="n">1</div></div>
+                    <div class="r-s" data-v="2" onclick="sc(this)"><div class="n">2</div></div>
+                    <div class="r-s" data-v="3" onclick="sc(this)"><div class="n">3</div></div>
+                    <div class="r-s" data-v="4" onclick="sc(this)"><div class="n">4</div></div>
+                    <div class="r-s" data-v="5" onclick="sc(this)"><div class="n">5</div></div>
+                </div>
+            </div>
+
+            <div class="r-item" id="ri4">
+                <div class="r-top"><div><div class="r-code">T4</div><div class="r-q">Cognitive Engagement</div></div></div>
+                <div class="r-scores">
+                    <div class="r-s" data-v="1" onclick="sc(this)"><div class="n">1</div></div>
+                    <div class="r-s" data-v="2" onclick="sc(this)"><div class="n">2</div></div>
+                    <div class="r-s" data-v="3" onclick="sc(this)"><div class="n">3</div></div>
+                    <div class="r-s" data-v="4" onclick="sc(this)"><div class="n">4</div></div>
+                    <div class="r-s" data-v="5" onclick="sc(this)"><div class="n">5</div></div>
+                </div>
+            </div>
+
+            <div class="r-item" id="ri5">
+                <div class="r-top"><div><div class="r-code">T5</div><div class="r-q">Demonstration of Learning</div></div></div>
+                <div class="r-scores">
+                    <div class="r-s" data-v="1" onclick="sc(this)"><div class="n">1</div></div>
+                    <div class="r-s" data-v="2" onclick="sc(this)"><div class="n">2</div></div>
+                    <div class="r-s" data-v="3" onclick="sc(this)"><div class="n">3</div></div>
+                    <div class="r-s" data-v="4" onclick="sc(this)"><div class="n">4</div></div>
+                    <div class="r-s" data-v="5" onclick="sc(this)"><div class="n">5</div></div>
+                </div>
+            </div>
+
+        </div></div>
+    </div>
+
+    <!-- Section: Feedback -->
+    <div class="section" id="sec-fb">
+        <div class="section-head" onclick="toggleSec('sec-fb')">
+            <div class="left">
+                <div class="icon" style="background:#dcfce7;">
+                    <svg width="16" height="16" fill="none" stroke="#059669" stroke-width="2"><path d="M14 2l-8 8-3-3"/></svg>
+                </div>
+                <div><div class="title">Feedback</div><div class="subtitle">Strengths, growth, action step</div></div>
+            </div>
+            <div class="arrow"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg></div>
+        </div>
+        <div class="section-body"><div class="section-inner">
+            <div style="margin-bottom:12px;">
+                <div class="qs-label">See It / Name It: Success</div>
+                <textarea class="ta" style="min-height:60px;">Strong routines and transitions. Effective Kagan Rally Robin with gambits.</textarea>
+            </div>
+            <div style="margin-bottom:12px;">
+                <div class="qs-label">See It / Name It: Growth</div>
+                <textarea class="ta" style="min-height:60px;">3 students slow during transitions. Community norms not yet student-driven.</textarea>
+            </div>
+            <div>
+                <div class="qs-label">Action Step <span class="ai-b" style="margin-left:6px;">AI Suggested</span></div>
+                <div class="act-card sel" onclick="this.classList.toggle('sel')">
+                    <div class="act-cat">Community of Learners</div>
+                    <div class="act-name">Explicitly teach words and actions of politeness</div>
+                    <div class="act-prompt">"What words would you like for students to use when interacting?"</div>
+                </div>
+                <div class="act-card" onclick="this.classList.toggle('sel')">
+                    <div class="act-cat">On Task &middot; Narrate the Positive</div>
+                    <div class="act-name">Narrate the Positive X3</div>
+                    <div class="act-prompt">"What does this teacher do after giving clear directions?"</div>
+                </div>
+            </div>
+        </div></div>
+    </div>
+
+    <!-- Section: Summary -->
+    <div class="section" id="sec-sum">
+        <div class="section-head" onclick="toggleSec('sec-sum')">
+            <div class="left">
+                <div class="icon" style="background:#fae8ff;">
+                    <svg width="16" height="16" fill="none" stroke="#a855f7" stroke-width="2"><path d="M8 2v12M2 8h12"/></svg>
+                </div>
+                <div><div class="title">Summary &amp; Publish</div><div class="subtitle">Review and submit</div></div>
+            </div>
+            <div class="arrow"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg></div>
+        </div>
+        <div class="section-body"><div class="section-inner">
+            <div class="avg-big">3.6</div>
+            <div class="avg-label">Average Score</div>
+            <div class="sum-row">
+                <div class="sum-item"><div class="d">T1</div><div class="v" data-c="4">4</div></div>
+                <div class="sum-item"><div class="d">T2</div><div class="v" data-c="3">3</div></div>
+                <div class="sum-item"><div class="d">T3</div><div class="v" data-c="4">4</div></div>
+                <div class="sum-item"><div class="d">T4</div><div class="v" data-c="3">3</div></div>
+                <div class="sum-item"><div class="d">T5</div><div class="v" data-c="4">4</div></div>
+            </div>
+            <div style="margin-top:12px;">
+                <div class="bb-btn bb-primary" onclick="document.getElementById('doneC').style.display='flex'" style="border-radius:10px; text-align:center; padding:14px; border:none; font-family:'Inter',sans-serif; cursor:pointer;">Publish Observation</div>
+            </div>
+        </div></div>
+    </div>
+
+</div>
+
+<!-- Floating Record Button -->
+<div class="float-record" id="floatRec" onclick="toggleFR()">
+    <div class="fr-btn"><div class="fr-dot"></div></div>
+    <div>
+        <div class="fr-time" id="frTime">00:00</div>
+        <div class="fr-label" id="frLabel">Record</div>
+    </div>
+</div>
+
+<!-- Bottom Bar -->
+<div class="bottom-bar">
+    <button class="bb-btn bb-outline" onclick="alert('Saved')">Save Draft</button>
+    <button class="bb-btn bb-primary" onclick="document.getElementById('doneC').style.display='flex'">Publish</button>
+</div>
+
+<!-- Done -->
+<div class="done-overlay" id="doneC">
+    <div class="done-card">
+        <div style="width:56px; height:56px; border-radius:50%; background:#dcfce7; display:flex; align-items:center; justify-content:center; margin:0 auto 14px;">
+            <svg width="28" height="28" fill="none" stroke="#059669" stroke-width="3"><path d="M7 14l5 5 10-10"/></svg>
+        </div>
+        <div style="font-size:18px; font-weight:700; margin-bottom:4px;">Published!</div>
+        <div style="font-size:13px; color:var(--text2); margin-bottom:20px;">Marcus Williams notified</div>
+        <div class="bb-btn bb-primary" onclick="location.reload()" style="border:none; font-family:'Inter',sans-serif; cursor:pointer;">New Observation</div>
+    </div>
+</div>
+
+<script>
+function toggleSec(id) {
+    document.getElementById(id).classList.toggle('open');
+}
+function sc(el) {
+    const item = el.closest('.r-item');
+    item.querySelectorAll('.r-s').forEach(s => s.classList.remove('sel'));
+    el.classList.add('sel');
+    item.classList.add('scored');
+}
+let frOn = false, frSec = 0, frInt;
+function toggleFR() {
+    frOn = !frOn;
+    const f = document.getElementById('floatRec');
+    const t = document.getElementById('frTime');
+    const l = document.getElementById('frLabel');
+    if (frOn) {
+        f.classList.add('recording');
+        l.textContent = 'Recording';
+        frInt = setInterval(() => {
+            frSec++;
+            t.textContent = String(Math.floor(frSec/60)).padStart(2,'0') + ':' + String(frSec%60).padStart(2,'0');
+        }, 1000);
+    } else {
+        f.classList.remove('recording');
+        l.textContent = 'Paused';
+        clearInterval(frInt);
+    }
+}
+</script>
+</body>
+</html>

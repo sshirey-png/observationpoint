@@ -1,0 +1,429 @@
+{
+  "id": "fls_get_better_faster_v1",
+  "name": "Get Better Faster Action Step Guide",
+  "description": "FLS coaching playbook aligned to Teacher Rubric — action steps, coaching prompts, practice exercises, and real-time feedback cues",
+  "coaching_cycles": [
+    {
+      "id": "cycle_0",
+      "name": "Leadership Weeks & Summer PD",
+      "timeline": "June-July",
+      "focus": "Preparation and training"
+    },
+    {
+      "id": "cycle_1",
+      "name": "Strong Start — Fundamentals",
+      "timeline": "August-September",
+      "rubric_focus": ["t1_on_task", "t2_community"],
+      "description": "Leaders observe daily (5-10 min), use Real Time Coaching, weekly O3 meetings. Fundamentals Lock = 90% on task in 5 consecutive observations."
+    },
+    {
+      "id": "cycle_2",
+      "name": "Essential Content",
+      "timeline": "October-December",
+      "rubric_focus": ["t3_content"],
+      "description": "Biweekly observations minimum. Focus on lesson internalization and content alignment."
+    },
+    {
+      "id": "cycle_3",
+      "name": "ActMo",
+      "timeline": "December-Mardi Gras",
+      "rubric_focus": ["t5_demonstration"],
+      "description": "Active Monitoring focus. Goal: all students demonstrate understanding, 85% receive feedback on track to learning goals."
+    },
+    {
+      "id": "final_pmap",
+      "name": "Final PMAP",
+      "timeline": "March",
+      "rubric_focus": ["t1_on_task", "t2_community", "t3_content", "t4_cognitive", "t5_demonstration"],
+      "description": "Full observation, final performance map conversation."
+    }
+  ],
+  "action_steps": {
+    "t1_on_task": [
+      {
+        "category": "Routines & Procedures",
+        "steps": [
+          {
+            "action": "Plan critical routines and procedures moment-by-moment",
+            "when": "Teacher does not have clear routines established",
+            "coaching_prompt": "What is each step the teacher takes in this routine? What is the teacher doing and what are the students doing?",
+            "practice": "Complete template for key routines (call to attention, entry/exit, transitions, materials). Rehearse every routine in classroom setting.",
+            "rtc_cue": "N/A"
+          },
+          {
+            "action": "Plan the roll-out for introducing the routine",
+            "when": "Routine is new for the students",
+            "coaching_prompt": "What will be the most difficult parts of the routine for students to master? How will you model this effectively?",
+            "practice": "Script the I Do, We Do, You Do of roll-out speeches. Keep language positive, enthusiastic, including a challenge.",
+            "rtc_cue": "If model is ineffective: 'Mr. Smith, am I following your model effectively?'"
+          },
+          {
+            "action": "Revise routines that are inefficient",
+            "when": "Students are following the routine but it is inefficient",
+            "coaching_prompt": "What has been the challenge in implementing this routine? Where does the breakdown begin?",
+            "practice": "Revise plan minute-by-minute. Role play with teacher rolling out revised routine.",
+            "rtc_cue": "N/A"
+          },
+          {
+            "action": "Do It Again & Cut It Short",
+            "when": "Students aren't performing a routine correctly",
+            "coaching_prompt": "What are the keys to running a Do It Again effectively? Why is it important to have students repeat?",
+            "practice": "Role play revised routine with same errors students make. Practice until flawless.",
+            "rtc_cue": "Non-verbal: Make a circle with your finger to cue Do It Again."
+          }
+        ]
+      },
+      {
+        "category": "Strong Voice",
+        "steps": [
+          {
+            "action": "Square up and stand still",
+            "when": "Teacher's body language lacks leadership presence",
+            "coaching_prompt": "What is the value in communicating leadership with our body language?",
+            "practice": "Deliver opening routines while squaring up and standing still.",
+            "rtc_cue": "Non-verbal: shift body upward and arch shoulders."
+          },
+          {
+            "action": "Use formal register",
+            "when": "Teacher's tone lacks leadership presence",
+            "coaching_prompt": "Imagine saying 'It's time to leave' to three audiences — friend, symphony, fire. What's the value of the middle one?",
+            "practice": "Deliver opening routines in three registers. Practice maintaining formal register throughout.",
+            "rtc_cue": "Non-verbal: square up/stand still gesture + point to mouth."
+          },
+          {
+            "action": "Call to Attention",
+            "when": "Teacher speaks without getting students' attention",
+            "coaching_prompt": "Why is it important to get everyone's attention before you give directions?",
+            "practice": "Deliver call to order. Practice using it two times if students are not on task.",
+            "rtc_cue": "N/A"
+          }
+        ]
+      },
+      {
+        "category": "Clear Directions",
+        "steps": [
+          {
+            "action": "Use MVP Directions",
+            "when": "Teacher's directions are unclear and use too many words",
+            "coaching_prompt": "What happened when you asked students to ___? What caused the dip in behavior?",
+            "practice": "Plan and rehearse key directions in a lesson.",
+            "rtc_cue": "Non-verbal: sign MVP Directions. Whisper: 'When I say go, at a level zero...'"
+          }
+        ]
+      },
+      {
+        "category": "Teacher Radar",
+        "steps": [
+          {
+            "action": "Perch and Be Seen Looking",
+            "when": "Students don't feel like teacher is paying attention to behavior",
+            "coaching_prompt": "How do the students know in this moment that you are monitoring their behavior?",
+            "practice": "Have teacher use Pastor's Perch to Be Seen Looking after giving instructions.",
+            "rtc_cue": "Non-verbal: Make gesture of Be Seen Looking yourself."
+          },
+          {
+            "action": "Scan Hot Spots",
+            "when": "Teacher is not noticing earliest actions of non-compliance",
+            "coaching_prompt": "At what moment do the first students begin to go off track? Which students are most often off task?",
+            "practice": "Identify hot spots and moments in lesson plan to scan. Role play student behavior.",
+            "rtc_cue": "Hold hand out over a hot spot at the moment you want teacher to notice."
+          },
+          {
+            "action": "Circulate the perimeter",
+            "when": "Teacher is stationary, lack of movement enables off-task behavior",
+            "coaching_prompt": "Where did the off-task behavior start? Where were you standing at that time?",
+            "practice": "Develop a pathway for walking around classroom, stopping at corners.",
+            "rtc_cue": "Non-verbal: point to a corner where they should stand."
+          }
+        ]
+      },
+      {
+        "category": "Pacing",
+        "steps": [
+          {
+            "action": "Time Yourself",
+            "when": "Lesson doesn't conform to time stamps",
+            "coaching_prompt": "How much time did you want to spend on the I Do? What kept us from sticking to that?",
+            "practice": "Practice teaching with a timer. Role play what to do when timer goes off.",
+            "rtc_cue": "Non-verbal: point at watch. Hand signal for minutes remaining."
+          },
+          {
+            "action": "Illusion of Speed",
+            "when": "Students don't have urgency in completing work",
+            "coaching_prompt": "What actions can you take to go faster? How could you challenge students to work with greater purpose?",
+            "practice": "Have teacher transition using a countdown to work the clock.",
+            "rtc_cue": "Non-verbal: signal 5-4-3-2-1 with fingers for countdown."
+          }
+        ]
+      },
+      {
+        "category": "Narrate the Positive",
+        "steps": [
+          {
+            "action": "Use a warm/strict voice",
+            "when": "Teacher's tone when addressing management is overly negative",
+            "coaching_prompt": "How did the teacher get students to correct misbehaviors without being negative?",
+            "practice": "Role play students not following directions. Practice warm/strict tone.",
+            "rtc_cue": "Non-verbal: index card with plus sign. Whisper: 'Warm strict'"
+          },
+          {
+            "action": "Narrate the Positive X3",
+            "when": "Students who are off task don't respond to clear directions",
+            "coaching_prompt": "What does this teacher do after they give clear directions? How does that affect students' attention?",
+            "practice": "Role play: model off-task behavior while teacher narrates positive of another student.",
+            "rtc_cue": "Whisper: 'Narrate X3'"
+          }
+        ]
+      },
+      {
+        "category": "Individual Correction",
+        "steps": [
+          {
+            "action": "Least-Invasive Intervention (proximity, eye contact, non-verbal, quick whisper, self-interrupt)",
+            "when": "Teacher uses corrections that draw more attention than necessary",
+            "coaching_prompt": "What is the advantage of starting with the least invasive intervention?",
+            "practice": "Role play different off-task behaviors. Escalate through intervention types.",
+            "rtc_cue": "Non-verbal: point to off-task students. Whisper: 'Use ___ intervention.'"
+          }
+        ]
+      },
+      {
+        "category": "Consequence",
+        "steps": [
+          {
+            "action": "Give a consequence",
+            "when": "Consequences are not being implemented",
+            "coaching_prompt": "You gave clear directions, narrated X3 and did non-verbal cues but students were still off task. What could you do?",
+            "practice": "Script how/when to implement consequence. Practice full BMC to calm consequences.",
+            "rtc_cue": "Non-verbal or whisper to implement consequence."
+          }
+        ]
+      }
+    ],
+    "t2_community": [
+      {
+        "category": "Kind Words & Empathy",
+        "steps": [
+          {
+            "action": "Explicitly teach words and actions of politeness",
+            "when": "Students are not using polite words with one another",
+            "coaching_prompt": "What words would you like students to use when interacting?",
+            "practice": "Create poster of 'Words We Use To Be Polite.' Write lesson plan for rollout.",
+            "rtc_cue": "Non-verbal: Point to the poster."
+          },
+          {
+            "action": "Explicitly teach words and actions of apology",
+            "when": "Students are not apologizing to one another",
+            "coaching_prompt": "What words would you like students to use when they need to apologize?",
+            "practice": "Create poster of 'Words We Use To Apologize.' Write lesson plan for rollout.",
+            "rtc_cue": "Non-verbal: Point to the poster."
+          },
+          {
+            "action": "Teach response to consequences from teacher",
+            "when": "Students have unproductive arguments with teacher over consequences",
+            "coaching_prompt": "When students have a conflict with you, how do you want them to respond?",
+            "practice": "Create lesson plan. Create catch phrase (right time, right tone, right place).",
+            "rtc_cue": "Model: Remind student in class when they don't adhere."
+          },
+          {
+            "action": "Teach conflict resolution between students",
+            "when": "Students have unproductive arguments with one another",
+            "coaching_prompt": "When students have a conflict, how do you want them to respond?",
+            "practice": "Create lesson plan for peer conflict resolution. Create catch phrase.",
+            "rtc_cue": "Model: Remind student when they don't adhere."
+          }
+        ]
+      },
+      {
+        "category": "Kagan Strategies",
+        "steps": [
+          {
+            "action": "Model the routine for each new structure",
+            "when": "Students are confused during a structure",
+            "coaching_prompt": "Watch me model the rollout. What did I do and say? What's different from your current application?",
+            "practice": "Script out how/when teacher will roll out. Practice the rollout.",
+            "rtc_cue": "Model: Rollout of a Kagan structure for the teacher."
+          },
+          {
+            "action": "Implement class-building activities",
+            "when": "Teacher is not implementing class-building",
+            "coaching_prompt": "What is the goal of class-building? What is holding you back?",
+            "practice": "Script two specific class-builders for the week. Practice rollout and implementation.",
+            "rtc_cue": "N/A"
+          },
+          {
+            "action": "Use gambits at end of structures",
+            "when": "Teacher implements Kagan but doesn't prompt kind words to partner",
+            "coaching_prompt": "What is the purpose of using a gambit at the end of a Kagan structure?",
+            "practice": "Create gambit poster. Practice a Kagan strategy with gambits multiple times.",
+            "rtc_cue": "Non-verbal: Point to gambit poster. Whisper: 'Use your gambits!'"
+          }
+        ]
+      }
+    ],
+    "t3_content": [
+      {
+        "category": "Lesson Internalization",
+        "steps": [
+          {
+            "action": "Script exemplar Exit Ticket response",
+            "when": "Teacher struggles to identify whether students have reached mastery",
+            "coaching_prompt": "What do you want students to write on the exit ticket? What exactly? How will you recognize it?",
+            "practice": "Write exemplar/CFS for exit ticket. Guide teacher to make it optimally rigorous.",
+            "rtc_cue": "N/A"
+          },
+          {
+            "action": "ID key points and must-dos",
+            "when": "Teacher does not address key points for most important problems",
+            "coaching_prompt": "What are the most important must-do parts for this lesson? What are the key points?",
+            "practice": "Plan for most important parts and isolate key points. Practice lesson components.",
+            "rtc_cue": "Whisper: 'How does this connect to our key point of ___?'"
+          },
+          {
+            "action": "Script exemplar answers for student work (Right is Right)",
+            "when": "Teacher struggles to evaluate student responses in-the-moment",
+            "coaching_prompt": "What is the completely right answer? What answers would be only partially correct?",
+            "practice": "Script exact answer for every key question. Role play not calling partial answers 'right.'",
+            "rtc_cue": "N/A"
+          },
+          {
+            "action": "Plan engagement strategies",
+            "when": "Teacher does not plan for specific pedagogical moves",
+            "coaching_prompt": "What are the specific ways you want students engaged? How are you implementing them?",
+            "practice": "Script exact engagement method for every key question. Role play.",
+            "rtc_cue": "Whisper: Prompt for using an engagement strategy."
+          },
+          {
+            "action": "Plan accommodations/supplements for students",
+            "when": "Teacher does not plan specific accommodations",
+            "coaching_prompt": "What are the specific accommodations and modifications? How are you implementing them?",
+            "practice": "Plan lesson incorporating acc/mods for specific students. Practice implementing.",
+            "rtc_cue": "Whisper: Prompt for using a specific acc/mod."
+          },
+          {
+            "action": "Key moments to address misconceptions",
+            "when": "Teacher struggles to check if students understand important aspects",
+            "coaching_prompt": "What key part of the lesson did students not understand? Why? What was the misconception?",
+            "practice": "Identify key moments. Script a CFU for each. Role play using CFU.",
+            "rtc_cue": "N/A"
+          }
+        ]
+      }
+    ],
+    "t5_demonstration": [
+      {
+        "category": "Active Monitoring (ActMo)",
+        "steps": [
+          {
+            "action": "ActMo 1 — Create monitoring pathway for On Task Start",
+            "when": "Teacher isn't paying attention to whether students are starting work",
+            "coaching_prompt": "What is the purpose of monitoring? Which 2-3 students do you approach first? What's the ideal order?",
+            "practice": "Plan monitoring pathway: fast writers first, key students to spend more time with.",
+            "rtc_cue": "Non-verbal or whisper: Cue teacher to monitor lap for On Task Start."
+          },
+          {
+            "action": "ActMo 2 — Monitor quality of student work",
+            "when": "Teacher does not see patterns in student answers or adjust teaching",
+            "coaching_prompt": "What is the purpose of active monitoring during work time? How can it inform the rest of your lesson?",
+            "practice": "Develop note-taking template. Practice a lap with sample work. Note patterns.",
+            "rtc_cue": "Whisper: Share patterns you're seeing in student responses."
+          },
+          {
+            "action": "ActMo 3 — Mark up student work and give feedback",
+            "when": "Few students are getting explicit feedback during independent practice",
+            "coaching_prompt": "What is the student experiencing when you're monitoring? How many know if they're on track?",
+            "practice": "Create feedback code (simple cues). Practice writing codes on student work.",
+            "rtc_cue": "Whisper: Prompt lap for feedback. Model."
+          },
+          {
+            "action": "ActMo 4 — Ensure students apply feedback",
+            "when": "Few students are using feedback to adjust work",
+            "coaching_prompt": "Once you've written feedback, how do you know they've made an adjustment?",
+            "practice": "Create response code. Practice a lap checking student response to feedback.",
+            "rtc_cue": "Whisper: Prompt lap for response to feedback."
+          },
+          {
+            "action": "ActMo Advanced — All pieces together",
+            "when": "Teacher is not combining trend-spotting, marking up work, and ensuring changes",
+            "coaching_prompt": "How could you look for overall trends while also marking up work AND ensuring students addressed feedback?",
+            "practice": "Practice full monitoring cycle. Address misconceptions when 50%+ miss key criteria.",
+            "rtc_cue": "Prompt which type of lap is missing."
+          }
+        ]
+      },
+      {
+        "category": "Check for Understanding & DDI",
+        "steps": [
+          {
+            "action": "Poll the Room",
+            "when": "Teacher moves ahead without clear vision of which students comprehend",
+            "coaching_prompt": "What is the purpose of polling the room? When would be the best moments to poll?",
+            "practice": "Script key moments to poll the room into lesson plan.",
+            "rtc_cue": "Intervene: Poll the room."
+          },
+          {
+            "action": "Data-Driven Cold Call",
+            "when": "Teacher doesn't call on students who most need practice",
+            "coaching_prompt": "What was your purpose in calling on that student? Which students are ideal for each question?",
+            "practice": "Select best student for each question. Identify higher student backup if they struggle.",
+            "rtc_cue": "Whisper: 'Call on a [high/medium/low] student to check understanding.'"
+          },
+          {
+            "action": "Roll back the answer",
+            "when": "Students aren't given a chance to correct their own errors",
+            "coaching_prompt": "What do you want students to say? Where do you anticipate they'll struggle?",
+            "practice": "Role play questioning sequence. Provide answers to practice rolling back.",
+            "rtc_cue": "Non-verbal: rolling/cranking motion (like 'movie' in charades)."
+          },
+          {
+            "action": "Break it down / content-specific prompts",
+            "when": "After incorrect response, teacher moves on or repeats original question",
+            "coaching_prompt": "What is the student experiencing when you respond to an error? What are the key components they must know?",
+            "practice": "Design scaffolded questions that break down upcoming lesson questions.",
+            "rtc_cue": "Signal when best move is to break it down. Model if needed."
+          },
+          {
+            "action": "Close the loop",
+            "when": "After incorrect answer, teacher doesn't return to original student",
+            "coaching_prompt": "When the student gave the incorrect answer, what was the missed opportunity?",
+            "practice": "Role play questioning sequence, coming back to first student.",
+            "rtc_cue": "Whisper: 'Come back to x student to make sure they understand.'"
+          }
+        ]
+      }
+    ],
+    "t4_cognitive": [
+      {
+        "category": "Independent Practice",
+        "steps": [
+          {
+            "action": "Plan moments for Everybody Writes",
+            "when": "Students lack opportunities to write before discussing",
+            "coaching_prompt": "What are the limitations of class discussion for assessing every student? How would writing first change the discussion?",
+            "practice": "Identify when to give Everybody Writes. Build Do Nows or exit tickets.",
+            "rtc_cue": "Non-verbal: write in the air. Intervene: 'Everybody write: [key question].'"
+          }
+        ]
+      },
+      {
+        "category": "Engaging All Students",
+        "steps": [
+          {
+            "action": "Call on all students",
+            "when": "Teacher tends to call on same few students",
+            "coaching_prompt": "Let's look at footage — which students are you calling on? Which aren't?",
+            "practice": "Plan which students to call on and when, ensuring all levels get called.",
+            "rtc_cue": "Non-verbal: point to ideal student to call on."
+          },
+          {
+            "action": "Rule of Thirds (cold call, taking hands, choral response)",
+            "when": "Teacher over-relies on one technique",
+            "coaching_prompt": "When is the best moment to use cold call vs. taking hands vs. choral response?",
+            "practice": "Role play whole group discussion using each strategy in succession.",
+            "rtc_cue": "Non-verbal: cue for cold call, choral response, all hands."
+          }
+        ]
+      }
+    ]
+  }
+}

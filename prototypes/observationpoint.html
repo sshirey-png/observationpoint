@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>ObservationPoint</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--pri:#e47727;--pri-l:#e4772715;--pri-g:#e4772735;
+--navy:#002f60;--navy-l:#002f600a;
+--bg:#f5f7fa;--surf:#ffffff;--bdr:#e5e7eb;
+--txt:#111827;--txt2:#6b7280;--txt3:#9ca3af;
+--dark-bg:#0f1623;--dark-surf:#1a2332;--dark-bdr:#2a3a4e;--dark-txt:#e8ecf1;--dark-txt2:#8899aa;--dark-txt3:#556677;
+--suc:#059669;--suc-bg:#dcfce7;--warn:#ca8a04;--warn-bg:#fef9c3;--err:#dc2626;--err-bg:#fee2e2;--info:#2563eb;--info-bg:#dbeafe;
+--R:16px;--Rs:12px;--Rx:8px;
+--sh:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+--sh-md:0 4px 12px rgba(0,0,0,0.08);
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden}
+
+/* === LIGHT NAV === */
+.nav-light{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--navy);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,47,96,0.15)}
+.nav-light .logo{font-size:16px;font-weight:700;color:#fff}
+.nav-light .logo span{color:var(--pri)}
+.nav-light .back{width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer}
+.nav-light .back:active{background:rgba(255,255,255,0.2)}
+.nav-light .act{font-size:14px;font-weight:600;color:#fff;cursor:pointer;padding:6px 12px;border-radius:6px}
+.nav-light .act:active{background:rgba(255,255,255,0.12)}
+
+/* === DARK NAV === */
+.nav-dark{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(15,22,35,0.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--dark-bdr);padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+.nav-dark .logo{font-size:15px;font-weight:600;color:var(--dark-txt)}
+.nav-dark .logo span{color:var(--pri)}
+.nav-dark .back{width:34px;height:34px;border-radius:8px;background:var(--dark-surf);border:1px solid var(--dark-bdr);display:flex;align-items:center;justify-content:center;color:var(--dark-txt2);cursor:pointer}
+.nav-dark .act{font-size:13px;font-weight:600;color:var(--pri);cursor:pointer;padding:6px 12px;border-radius:6px}
+.nav-dark .act:active{background:var(--pri-l)}
+
+/* === SCREENS === */
+.scr{display:none;animation:fadeUp .3s ease-out}
+.scr.on{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.pad-light{padding:64px 16px 100px;background:var(--bg);min-height:100vh}
+.pad-dark{padding:64px 16px 100px;background:var(--dark-bg);min-height:100vh;color:var(--dark-txt)}
+
+/* === HOME SCREEN === */
+.greeting{font-size:24px;font-weight:800;letter-spacing:-.025em;margin:16px 0 4px}
+.greeting-sub{font-size:14px;color:var(--txt2);margin-bottom:20px}
+.quick-btn{
+display:flex;align-items:center;gap:12px;
+background:var(--pri);color:#fff;border-radius:var(--Rs);
+padding:16px 18px;margin-bottom:16px;cursor:pointer;
+box-shadow:0 4px 14px rgba(228,119,39,0.3);
+transition:all .2s;border:none;width:100%;
+font-family:'Inter',sans-serif;font-size:15px;font-weight:600;text-align:left;
+}
+.quick-btn:active{transform:scale(.98);opacity:.9}
+.quick-btn .ico{width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.form-card{
+background:var(--surf);border-radius:var(--Rs);padding:16px;
+box-shadow:var(--sh);cursor:pointer;border:2px solid transparent;
+transition:all .2s;-webkit-tap-highlight-color:transparent;
+}
+.form-card:active{transform:scale(.97);border-color:var(--pri)}
+.form-card .fc-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;font-size:16px}
+.form-card .fc-title{font-size:13px;font-weight:600;line-height:1.3}
+.form-card .fc-sub{font-size:11px;color:var(--txt3);margin-top:2px}
+.section-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--txt3);margin-bottom:10px}
+.recent-item{
+display:flex;align-items:center;gap:12px;
+background:var(--surf);border-radius:var(--Rs);padding:12px 14px;
+box-shadow:var(--sh);margin-bottom:8px;cursor:pointer;
+}
+.recent-item .ri-av{width:36px;height:36px;border-radius:8px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.recent-item .ri-name{font-size:13px;font-weight:600}
+.recent-item .ri-meta{font-size:11px;color:var(--txt3)}
+.recent-item .ri-score{margin-left:auto;font-size:18px;font-weight:800;color:var(--suc)}
+.ri-draft{background:var(--warn-bg);color:var(--warn);font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:auto}
+
+/* === TEACHER SELECT === */
+.search-box{
+width:100%;padding:14px 16px 14px 44px;
+background:var(--surf);border:1.5px solid var(--bdr);border-radius:var(--Rs);
+font-size:15px;font-family:'Inter',sans-serif;color:var(--txt);
+outline:none;box-shadow:var(--sh);transition:all .2s;
+background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Ccircle cx='8' cy='8' r='5.5'/%3E%3Cpath d='m13 13 3 3'/%3E%3C/svg%3E");
+background-repeat:no-repeat;background-position:14px center;
+}
+.search-box:focus{border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-g)}
+.search-box::placeholder{color:var(--txt3)}
+.t-card{
+display:flex;align-items:center;gap:14px;
+background:var(--surf);border-radius:var(--Rs);padding:14px;
+box-shadow:var(--sh);margin-top:8px;cursor:pointer;
+border:2px solid transparent;transition:all .2s;
+}
+.t-card:active{border-color:var(--pri);transform:scale(.98)}
+.t-av{width:42px;height:42px;border-radius:10px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.t-name{font-size:14px;font-weight:600}
+.t-meta{font-size:12px;color:var(--txt2);margin-top:1px}
+.t-form-badge{margin-left:auto;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;flex-shrink:0}
+
+/* === RECORD SCREEN (DARK) === */
+.teacher-bar{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--dark-surf);border-radius:var(--Rs);margin-bottom:16px}
+.tb-av{width:38px;height:38px;border-radius:10px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.tb-name{font-size:14px;font-weight:600;color:var(--dark-txt)}
+.tb-meta{font-size:12px;color:var(--dark-txt2)}
+.form-badge-sm{display:inline-flex;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;background:var(--pri-l);color:var(--pri);text-transform:uppercase;letter-spacing:.04em}
+.rec-center{text-align:center;padding:20px 0 12px}
+.timer{font-size:52px;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:var(--dark-txt)}
+.timer.on{color:var(--err)}
+.timer-sub{font-size:12px;font-weight:500;color:var(--dark-txt3);text-transform:uppercase;letter-spacing:.06em}
+.rec-btn{
+width:76px;height:76px;border-radius:50%;border:3px solid var(--err);
+background:transparent;margin:20px auto;
+display:flex;align-items:center;justify-content:center;
+cursor:pointer;transition:all .3s;position:relative;
+}
+.rec-dot{width:30px;height:30px;border-radius:50%;background:var(--err);transition:all .3s}
+.rec-btn.on .rec-dot{width:22px;height:22px;border-radius:5px}
+.rec-btn.on{animation:rpulse 1.5s infinite}
+@keyframes rpulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.35)}50%{box-shadow:0 0 0 12px rgba(220,38,38,0)}}
+.wave{display:flex;align-items:center;justify-content:center;gap:3px;height:36px;margin:8px 0}
+.wave.off{visibility:hidden}
+.wave .b{width:3px;border-radius:2px;background:var(--pri);animation:wv .8s ease-in-out infinite}
+.wave .b:nth-child(1){height:10px;animation-delay:0s}
+.wave .b:nth-child(2){height:18px;animation-delay:.1s}
+.wave .b:nth-child(3){height:26px;animation-delay:.2s}
+.wave .b:nth-child(4){height:14px;animation-delay:.3s}
+.wave .b:nth-child(5){height:22px;animation-delay:.15s}
+.wave .b:nth-child(6){height:16px;animation-delay:.25s}
+.wave .b:nth-child(7){height:24px;animation-delay:.05s}
+@keyframes wv{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.35)}}
+.rec-hint{font-size:12px;color:var(--dark-txt3);text-align:center}
+.ai-tog{display:flex;align-items:center;justify-content:center;gap:10px;margin:16px 0;font-size:13px;color:var(--dark-txt2)}
+.tog{width:44px;height:24px;border-radius:12px;background:var(--dark-bdr);cursor:pointer;position:relative;transition:all .3s}
+.tog.on{background:var(--pri)}
+.tog-t{width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:all .3s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.tog.on .tog-t{left:22px}
+.dark-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--dark-txt3);margin:20px 0 8px}
+.dark-ta{
+width:100%;min-height:110px;padding:14px;
+background:var(--dark-surf);border:1.5px solid var(--dark-bdr);border-radius:var(--Rs);
+font-size:14px;font-family:'Inter',sans-serif;color:var(--dark-txt);
+line-height:1.6;resize:vertical;outline:none;transition:all .2s;
+}
+.dark-ta:focus{border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-l)}
+.dark-ta::placeholder{color:var(--dark-txt3)}
+.ts-note{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--dark-bdr);font-size:13px}
+.ts-note .ts{color:var(--pri);font-weight:600;font-variant-numeric:tabular-nums;min-width:40px}
+.ts-note .tx{color:var(--dark-txt2);line-height:1.5}
+
+/* === SCORE SCREEN (LIGHT) === */
+.ai-card{background:linear-gradient(135deg,#fff7ed,#fff1e0);border:1.5px solid var(--pri-g);border-radius:var(--R);padding:16px;margin-bottom:14px}
+.ai-hdr{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.ai-pill{background:var(--pri);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.06em}
+.ai-card p{font-size:13px;color:#78350f;line-height:1.7}
+.sec-title{font-size:18px;font-weight:700;letter-spacing:-.01em;margin:18px 0 12px}
+.rub-card{
+background:var(--surf);border-radius:var(--R);box-shadow:var(--sh);padding:16px;
+margin-bottom:10px;border-left:4px solid var(--bdr);transition:all .2s;
+}
+.rub-card.s1{border-left-color:#ef4444}.rub-card.s2{border-left-color:#f97316}
+.rub-card.s3{border-left-color:#eab308}.rub-card.s4{border-left-color:#22c55e}
+.rub-card.s5{border-left-color:#0ea5e9}
+.rub-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.rub-code{font-size:12px;font-weight:700;color:var(--navy);background:var(--navy-l);padding:3px 8px;border-radius:4px}
+.rub-req{font-size:10px;color:var(--err);font-weight:600}
+.rub-q{font-size:13px;font-weight:500;line-height:1.5;margin-bottom:12px}
+.s-row{display:flex;gap:6px}
+.s-btn{
+flex:1;padding:12px 2px;border-radius:var(--Rx);
+border:2px solid var(--bdr);background:#fff;
+text-align:center;cursor:pointer;transition:all .15s;
+-webkit-tap-highlight-color:transparent;
+}
+.s-btn .n{font-size:17px;font-weight:700;color:var(--txt3);display:block;transition:color .15s}
+.s-btn .l{font-size:8px;font-weight:600;color:var(--txt3);text-transform:uppercase;letter-spacing:.03em;margin-top:1px;display:block}
+.s-btn:active{transform:scale(.92)}
+.s-btn.sel{border-width:2px}
+.s-btn.sel .n,.s-btn.sel .l{color:#fff}
+.s-btn[data-v="1"].sel{background:#ef4444;border-color:#ef4444}
+.s-btn[data-v="2"].sel{background:#f97316;border-color:#f97316}
+.s-btn[data-v="3"].sel{background:#eab308;border-color:#eab308}
+.s-btn[data-v="4"].sel{background:#22c55e;border-color:#22c55e}
+.s-btn[data-v="5"].sel{background:#0ea5e9;border-color:#0ea5e9}
+.rub-expand{font-size:12px;color:var(--pri);cursor:pointer;margin-top:8px;display:flex;align-items:center;gap:4px}
+.rub-desc{display:none;margin-top:10px;padding:10px;background:var(--bg);border-radius:var(--Rx);font-size:12px;color:var(--txt2);line-height:1.6}
+.rub-desc.open{display:block}
+
+/* === FEEDBACK (LIGHT) === */
+.fb-field{margin-bottom:14px}
+.fb-label{font-size:13px;font-weight:600;margin-bottom:6px}
+.fb-ta{
+width:100%;min-height:70px;padding:12px;
+border:1.5px solid var(--bdr);border-radius:var(--Rs);
+font-size:13px;font-family:'Inter',sans-serif;color:var(--txt);
+line-height:1.6;resize:vertical;outline:none;
+}
+.fb-ta:focus{border-color:var(--pri)}
+.act-card{
+padding:14px;border:1.5px solid var(--bdr);border-radius:var(--Rs);
+margin-bottom:8px;cursor:pointer;transition:all .2s;background:var(--surf);box-shadow:var(--sh);
+}
+.act-card:active{transform:scale(.98)}
+.act-card.sel{border-color:var(--pri);background:#fff7ed}
+.act-cat{font-size:10px;font-weight:700;color:var(--pri);text-transform:uppercase;letter-spacing:.04em}
+.act-name{font-size:13px;font-weight:600;margin-top:3px;line-height:1.4}
+.act-when{font-size:11px;color:var(--txt3);margin-top:4px}
+.act-prompt{font-size:12px;color:var(--info);font-style:italic;margin-top:8px;padding:8px 10px;background:var(--info-bg);border-radius:6px;line-height:1.5;display:none}
+.act-card.sel .act-prompt{display:block}
+.act-rtc{font-size:11px;color:var(--txt3);margin-top:6px;display:none}
+.act-card.sel .act-rtc{display:block}
+
+/* === PUBLISH (LIGHT) === */
+.pub-strip{display:flex;align-items:center;gap:12px;background:var(--surf);border-radius:var(--Rs);padding:12px;box-shadow:var(--sh);margin-bottom:12px}
+.pub-av{width:40px;height:40px;border-radius:10px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.pub-name{font-size:14px;font-weight:600}
+.pub-meta{font-size:12px;color:var(--txt2)}
+.pub-chips{display:flex;gap:6px;margin-bottom:12px}
+.chip{display:inline-flex;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.chip-g{background:var(--suc-bg);color:var(--suc)}.chip-o{background:#fff7ed;color:var(--pri)}
+.avg-hero{text-align:center;padding:20px;background:var(--surf);border-radius:var(--R);box-shadow:var(--sh);margin-bottom:12px}
+.avg-num{font-size:52px;font-weight:800;letter-spacing:-.04em;color:var(--suc)}
+.avg-lbl{font-size:13px;color:var(--txt2)}
+.sum-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px}
+.sum-box{text-align:center;padding:10px 4px;background:var(--surf);border-radius:var(--Rx);box-shadow:var(--sh)}
+.sum-box .d{font-size:10px;font-weight:600;color:var(--txt3)}
+.sum-box .v{font-size:20px;font-weight:800}
+.sum-box .v[data-c="1"]{color:#ef4444}.sum-box .v[data-c="2"]{color:#f97316}
+.sum-box .v[data-c="3"]{color:#eab308}.sum-box .v[data-c="4"]{color:#22c55e}
+.sum-box .v[data-c="5"]{color:#0ea5e9}
+.pub-section{background:var(--surf);border-radius:var(--Rs);box-shadow:var(--sh);padding:14px;margin-bottom:10px;font-size:13px;line-height:1.7}
+
+/* === BOTTOM BAR === */
+.bbar{position:fixed;bottom:0;left:0;right:0;padding:10px 16px;padding-bottom:max(10px,env(safe-area-inset-bottom));z-index:100;display:flex;gap:8px}
+.bbar-light{background:#fff;border-top:1px solid var(--bdr);box-shadow:0 -2px 10px rgba(0,0,0,.04)}
+.bbar-dark{background:rgba(15,22,35,.9);backdrop-filter:blur(20px);border-top:1px solid var(--dark-bdr)}
+.bb{flex:1;padding:15px;border-radius:var(--Rs);font-size:14px;font-weight:600;text-align:center;cursor:pointer;font-family:'Inter',sans-serif;border:none;transition:all .2s}
+.bb:active{transform:scale(.97)}
+.bb-pri{background:var(--pri);color:#fff}
+.bb-out{background:transparent;color:var(--txt);border:1.5px solid var(--bdr)}
+.bb-out-dark{background:var(--dark-surf);color:var(--dark-txt);border:1.5px solid var(--dark-bdr)}
+
+/* === SUCCESS === */
+.done-wrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);z-index:200;align-items:center;justify-content:center}
+.done-box{background:#fff;border-radius:20px;padding:36px 28px;text-align:center;margin:16px;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:fadeUp .4s ease-out}
+.done-check{width:60px;height:60px;border-radius:50%;background:var(--suc-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+</style>
+</head>
+<body>
+
+<!-- ==================== HOME ==================== -->
+<div class="scr on" id="home">
+<nav class="nav-light">
+    <div style="width:34px"></div>
+    <div class="logo">Observation<span>Point</span></div>
+    <div class="act" style="font-size:12px;">
+        <svg width="18" height="18" fill="none" stroke="white" stroke-width="2" style="vertical-align:middle"><circle cx="9" cy="5" r="3.5"/><path d="M2 16c0-3.3 3.1-6 7-6s7 2.7 7 6"/></svg>
+    </div>
+</nav>
+<div class="pad-light">
+    <div class="greeting">Good evening, Scott</div>
+    <div class="greeting-sub">FirstLine Schools &middot; 2025-26</div>
+
+    <!-- Quick Observe -->
+    <button class="quick-btn" onclick="go('select')">
+        <div class="ico">
+            <svg width="22" height="22" fill="none" stroke="white" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M11 8v6M8 11h6"/></svg>
+        </div>
+        <div>
+            <div>Quick Observe</div>
+            <div style="font-size:12px;font-weight:400;opacity:.8;margin-top:2px;">Auto-selects form based on teacher's role</div>
+        </div>
+    </button>
+
+    <!-- Form Type Cards -->
+    <div class="section-label">Or choose form type</div>
+    <div class="form-grid">
+        <div class="form-card" onclick="go('select')">
+            <div class="fc-icon" style="background:#dbeafe">
+                <svg width="18" height="18" fill="none" stroke="#2563eb" stroke-width="2"><path d="M3 3h12v12H3z"/><path d="M7 7h4M7 10h4"/></svg>
+            </div>
+            <div class="fc-title">Teacher Observation</div>
+            <div class="fc-sub">T1-T5 Rubric</div>
+        </div>
+        <div class="form-card" onclick="go('select')">
+            <div class="fc-icon" style="background:#fce7f3">
+                <svg width="18" height="18" fill="none" stroke="#db2777" stroke-width="2"><circle cx="9" cy="9" r="6"/><path d="M6 9h6"/></svg>
+            </div>
+            <div class="fc-title">PreK Observation</div>
+            <div class="fc-sub">CLASS PK1-PK10</div>
+        </div>
+        <div class="form-card" onclick="go('select')">
+            <div class="fc-icon" style="background:#fef3c7">
+                <svg width="18" height="18" fill="none" stroke="#ca8a04" stroke-width="2"><path d="M9 2v14M4 6l5-4 5 4"/></svg>
+            </div>
+            <div class="fc-title">Fundamentals</div>
+            <div class="fc-sub">On Task %</div>
+        </div>
+        <div class="form-card" onclick="go('select')">
+            <div class="fc-icon" style="background:#dcfce7">
+                <svg width="18" height="18" fill="none" stroke="#059669" stroke-width="2"><path d="M3 12l4 4 8-8"/></svg>
+            </div>
+            <div class="fc-title">PMAP</div>
+            <div class="fc-sub">Performance Map</div>
+        </div>
+    </div>
+
+    <!-- Recent -->
+    <div class="section-label">Recent Observations</div>
+    <div class="recent-item">
+        <div class="ri-av">KB</div>
+        <div><div class="ri-name">Keisha Brown</div><div class="ri-meta">Langston Hughes &middot; Apr 7</div></div>
+        <div class="ri-score">4.2</div>
+    </div>
+    <div class="recent-item">
+        <div class="ri-av">DC</div>
+        <div><div class="ri-name">David Chen</div><div class="ri-meta">Arthur Ashe &middot; Apr 5</div></div>
+        <div class="ri-score">3.4</div>
+    </div>
+    <div class="recent-item">
+        <div class="ri-av">AJ</div>
+        <div><div class="ri-name">Amara Johnson</div><div class="ri-meta">Live Oak &middot; Apr 3</div></div>
+        <div class="ri-draft">DRAFT</div>
+    </div>
+</div>
+</div>
+
+<!-- ==================== SELECT TEACHER ==================== -->
+<div class="scr" id="select">
+<nav class="nav-light">
+    <div class="back" onclick="go('home')"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></div>
+    <div class="logo">Select Teacher</div>
+    <div style="width:34px"></div>
+</nav>
+<div class="pad-light">
+    <input class="search-box" type="text" placeholder="Search by name or school..." oninput="filterT(this.value)">
+
+    <div id="tlist">
+        <div class="t-card" onclick="pick('Marcus Williams','Samuel J. Green','5th Grade Math','Teacher')">
+            <div class="t-av">MW</div>
+            <div><div class="t-name">Marcus Williams</div><div class="t-meta">Samuel J. Green &middot; 5th Grade Math</div></div>
+            <div class="t-form-badge" style="background:#dbeafe;color:#2563eb;">T1-T5</div>
+        </div>
+        <div class="t-card" onclick="pick('Keisha Brown','Langston Hughes Academy','3rd Grade ELA','Teacher')">
+            <div class="t-av">KB</div>
+            <div><div class="t-name">Keisha Brown</div><div class="t-meta">Langston Hughes Academy &middot; 3rd Grade ELA</div></div>
+            <div class="t-form-badge" style="background:#dbeafe;color:#2563eb;">T1-T5</div>
+        </div>
+        <div class="t-card" onclick="pick('Marie Thibodaux','Arthur Ashe Charter','PreK-4','Teacher')">
+            <div class="t-av">MT</div>
+            <div><div class="t-name">Marie Thibodaux</div><div class="t-meta">Arthur Ashe Charter &middot; PreK-4</div></div>
+            <div class="t-form-badge" style="background:#fce7f3;color:#db2777;">CLASS</div>
+        </div>
+        <div class="t-card" onclick="pick('David Chen','Arthur Ashe Charter','7th Grade Science','Teacher')">
+            <div class="t-av">DC</div>
+            <div><div class="t-name">David Chen</div><div class="t-meta">Arthur Ashe Charter &middot; 7th Grade Science</div></div>
+            <div class="t-form-badge" style="background:#dbeafe;color:#2563eb;">T1-T5</div>
+        </div>
+        <div class="t-card" onclick="pick('Amara Johnson','Live Oak Elementary','1st Grade','Teacher')">
+            <div class="t-av">AJ</div>
+            <div><div class="t-name">Amara Johnson</div><div class="t-meta">Live Oak Elementary &middot; 1st Grade</div></div>
+            <div class="t-form-badge" style="background:#dbeafe;color:#2563eb;">T1-T5</div>
+        </div>
+        <div class="t-card" onclick="pick('James Carter','GW Carver High','Principal','Leadership')">
+            <div class="t-av">JC</div>
+            <div><div class="t-name">James Carter</div><div class="t-meta">GW Carver High &middot; Principal</div></div>
+            <div class="t-form-badge" style="background:#dcfce7;color:#059669;">PMAP</div>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- ==================== RECORD (DARK) ==================== -->
+<div class="scr" id="record">
+<nav class="nav-dark">
+    <div class="back" onclick="go('select')"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></div>
+    <div class="logo">Observation<span>Point</span></div>
+    <div class="act" onclick="go('score')">Done</div>
+</nav>
+<div class="pad-dark">
+    <div class="teacher-bar">
+        <div class="tb-av" id="r-av">MW</div>
+        <div>
+            <div class="tb-name" id="r-name">Marcus Williams</div>
+            <div class="tb-meta" id="r-meta">Samuel J. Green &middot; 5th Grade Math</div>
+        </div>
+        <div class="form-badge-sm" id="r-badge">Teacher Obs</div>
+    </div>
+
+    <div class="rec-center">
+        <div class="timer" id="timer">00:00</div>
+        <div class="timer-sub" id="timer-sub">Ready to observe</div>
+    </div>
+
+    <div class="wave off" id="wave">
+        <div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div>
+    </div>
+
+    <div class="rec-btn" id="recBtn" onclick="toggleRec()"><div class="rec-dot"></div></div>
+    <div class="rec-hint" id="recHint">Tap to start recording</div>
+
+    <div class="ai-tog">
+        <span>AI Assist</span>
+        <div class="tog on" id="aiTog" onclick="togAI()"><div class="tog-t"></div></div>
+        <span id="aiSt" style="color:var(--pri);font-weight:500">ON</span>
+    </div>
+
+    <div style="height:1px;background:var(--dark-bdr);margin:16px 0"></div>
+
+    <div class="dark-label">Live Notes</div>
+    <textarea class="dark-ta" id="notes" placeholder="Type observations here... tap the timestamp button to mark a moment."></textarea>
+
+    <div style="margin-top:12px">
+        <div class="ts-note"><div class="ts">0:42</div><div class="tx">Strong call to attention — all students respond within 3 seconds. Teacher uses countdown.</div></div>
+        <div class="ts-note"><div class="ts">2:15</div><div class="tx">Transition to group work. 3 students in back corner slow to move. Teacher narrates positive.</div></div>
+        <div class="ts-note"><div class="ts">5:30</div><div class="tx">Kagan Rally Robin — all pairs engaged. Gambits used at end: "Tell your partner great job!"</div></div>
+    </div>
+</div>
+<div class="bbar bbar-dark">
+    <button class="bb bb-pri" onclick="go('score')">End Observation &amp; Score</button>
+</div>
+</div>
+
+<!-- ==================== SCORE (LIGHT) ==================== -->
+<div class="scr" id="score">
+<nav class="nav-light">
+    <div class="back" onclick="go('record')"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></div>
+    <div class="logo">Score Rubric</div>
+    <div class="act" onclick="go('feedback')">Next</div>
+</nav>
+<div class="pad-light">
+
+    <div class="ai-card" id="aiSum">
+        <div class="ai-hdr"><div class="ai-pill">AI</div><span style="font-size:13px;font-weight:600;color:#78350f;">Observation Summary</span></div>
+        <p>8-minute observation of 5th grade math. Strong call to attention and transition routines. Students engaged in Kagan Rally Robin with effective gambits. 3 students in back corner slow during transitions. Teacher used narrate the positive effectively. Most students on task with quick pace throughout.</p>
+        <p style="font-size:11px;color:var(--txt3);margin-top:8px;">Based on transcript analysis &middot; Review suggested scores below</p>
+    </div>
+
+    <div class="sec-title">FLS Teacher Rubric</div>
+
+    <div class="rub-card" id="rc1">
+        <div class="rub-top"><div class="rub-code">T1</div><div class="rub-req">Required</div></div>
+        <div class="rub-q">On Task — Are all students engaged in the work of the lesson from start to finish?</div>
+        <div class="s-row">
+            <div class="s-btn" data-v="1" onclick="doScore(this)"><span class="n">1</span><span class="l">NI</span></div>
+            <div class="s-btn" data-v="2" onclick="doScore(this)"><span class="n">2</span><span class="l">Emrg</span></div>
+            <div class="s-btn" data-v="3" onclick="doScore(this)"><span class="n">3</span><span class="l">Dev</span></div>
+            <div class="s-btn sel" data-v="4" onclick="doScore(this)"><span class="n">4</span><span class="l">Prof</span></div>
+            <div class="s-btn" data-v="5" onclick="doScore(this)"><span class="n">5</span><span class="l">Exm</span></div>
+        </div>
+        <div class="rub-expand" onclick="togDesc(this)"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l4 4-4 4"/></svg> View descriptors</div>
+        <div class="rub-desc"><strong>4 — Proficient:</strong> All or almost all students complete instructional tasks, volunteer responses and/or ask appropriate questions. All or almost all students follow behavioral expectations. Students execute transitions in an orderly and efficient manner with minimal direction. Class has a quick pace from start to finish.</div>
+    </div>
+
+    <div class="rub-card" id="rc2">
+        <div class="rub-top"><div class="rub-code">T2</div></div>
+        <div class="rub-q">Community of Learners — Are all students active members of a joyful and supportive classroom community?</div>
+        <div class="s-row">
+            <div class="s-btn" data-v="1" onclick="doScore(this)"><span class="n">1</span><span class="l">NI</span></div>
+            <div class="s-btn" data-v="2" onclick="doScore(this)"><span class="n">2</span><span class="l">Emrg</span></div>
+            <div class="s-btn sel" data-v="3" onclick="doScore(this)"><span class="n">3</span><span class="l">Dev</span></div>
+            <div class="s-btn" data-v="4" onclick="doScore(this)"><span class="n">4</span><span class="l">Prof</span></div>
+            <div class="s-btn" data-v="5" onclick="doScore(this)"><span class="n">5</span><span class="l">Exm</span></div>
+        </div>
+    </div>
+
+    <div class="rub-card" id="rc3">
+        <div class="rub-top"><div class="rub-code">T3</div></div>
+        <div class="rub-q">Essential Content — Are all students working with content aligned to appropriate standards?</div>
+        <div class="s-row">
+            <div class="s-btn" data-v="1" onclick="doScore(this)"><span class="n">1</span><span class="l">NI</span></div>
+            <div class="s-btn" data-v="2" onclick="doScore(this)"><span class="n">2</span><span class="l">Emrg</span></div>
+            <div class="s-btn" data-v="3" onclick="doScore(this)"><span class="n">3</span><span class="l">Dev</span></div>
+            <div class="s-btn sel" data-v="4" onclick="doScore(this)"><span class="n">4</span><span class="l">Prof</span></div>
+            <div class="s-btn" data-v="5" onclick="doScore(this)"><span class="n">5</span><span class="l">Exm</span></div>
+        </div>
+    </div>
+
+    <div class="rub-card" id="rc4">
+        <div class="rub-top"><div class="rub-code">T4</div></div>
+        <div class="rub-q">Cognitive Engagement — Are all students responsible for doing the thinking?</div>
+        <div class="s-row">
+            <div class="s-btn" data-v="1" onclick="doScore(this)"><span class="n">1</span><span class="l">NI</span></div>
+            <div class="s-btn" data-v="2" onclick="doScore(this)"><span class="n">2</span><span class="l">Emrg</span></div>
+            <div class="s-btn sel" data-v="3" onclick="doScore(this)"><span class="n">3</span><span class="l">Dev</span></div>
+            <div class="s-btn" data-v="4" onclick="doScore(this)"><span class="n">4</span><span class="l">Prof</span></div>
+            <div class="s-btn" data-v="5" onclick="doScore(this)"><span class="n">5</span><span class="l">Exm</span></div>
+        </div>
+    </div>
+
+    <div class="rub-card" id="rc5">
+        <div class="rub-top"><div class="rub-code">T5</div></div>
+        <div class="rub-q">Demonstration of Learning — Do all students demonstrate they are learning?</div>
+        <div class="s-row">
+            <div class="s-btn" data-v="1" onclick="doScore(this)"><span class="n">1</span><span class="l">NI</span></div>
+            <div class="s-btn" data-v="2" onclick="doScore(this)"><span class="n">2</span><span class="l">Emrg</span></div>
+            <div class="s-btn" data-v="3" onclick="doScore(this)"><span class="n">3</span><span class="l">Dev</span></div>
+            <div class="s-btn sel" data-v="4" onclick="doScore(this)"><span class="n">4</span><span class="l">Prof</span></div>
+            <div class="s-btn" data-v="5" onclick="doScore(this)"><span class="n">5</span><span class="l">Exm</span></div>
+        </div>
+    </div>
+</div>
+<div class="bbar bbar-light">
+    <button class="bb bb-pri" onclick="go('feedback')">Next: Feedback &amp; Action Steps</button>
+</div>
+</div>
+
+<!-- ==================== FEEDBACK (LIGHT) ==================== -->
+<div class="scr" id="feedback">
+<nav class="nav-light">
+    <div class="back" onclick="go('score')"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></div>
+    <div class="logo">Feedback</div>
+    <div class="act" onclick="go('publish')">Review</div>
+</nav>
+<div class="pad-light">
+    <div class="sec-title">Observation Feedback</div>
+
+    <div class="fb-field">
+        <div class="fb-label">See It / Name It: Success</div>
+        <textarea class="fb-ta">Strong classroom routines and transitions. Effective use of Kagan Rally Robin with gambits. Students showed genuine enthusiasm during partner work.</textarea>
+    </div>
+    <div class="fb-field">
+        <div class="fb-label">See It / Name It: Area(s) of Growth</div>
+        <textarea class="fb-ta">3 students in back corner consistently slow during transitions. Community norms not fully student-driven yet — teacher still initiating most positive interactions.</textarea>
+    </div>
+    <div class="fb-field">
+        <div class="fb-label">Do It: What did you practice?</div>
+        <textarea class="fb-ta" placeholder="What was practiced during the debrief?"></textarea>
+    </div>
+
+    <div style="height:1px;background:var(--bdr);margin:20px 0"></div>
+
+    <div class="sec-title" style="display:flex;align-items:center;gap:8px;">Action Step <div class="ai-pill">AI Suggested</div></div>
+    <p style="font-size:12px;color:var(--txt2);margin-bottom:12px;">Based on T2 score (Developing) and transition evidence from Get Better Faster guide:</p>
+
+    <div class="act-card sel" onclick="this.classList.toggle('sel')">
+        <div class="act-cat">Community of Learners &middot; Kind Words</div>
+        <div class="act-name">Explicitly teach words and actions of politeness</div>
+        <div class="act-when">When: Students are not using polite words with one another</div>
+        <div class="act-prompt">"What words would you like for students to use when interacting? How do you think you can communicate this to your students?"</div>
+        <div class="act-rtc">RTC Cue: Non-verbal — Point to the poster</div>
+    </div>
+
+    <div class="act-card" onclick="this.classList.toggle('sel')">
+        <div class="act-cat">On Task &middot; Narrate the Positive</div>
+        <div class="act-name">Narrate the Positive X3</div>
+        <div class="act-when">When: Off-task students don't respond to clear directions</div>
+        <div class="act-prompt">"What does this teacher do after they give clear directions? How does that affect students' attention?"</div>
+        <div class="act-rtc">RTC Cue: Whisper "Narrate X3"</div>
+    </div>
+
+    <div class="act-card" onclick="this.classList.toggle('sel')">
+        <div class="act-cat">On Task &middot; Teacher Radar</div>
+        <div class="act-name">Scan Hot Spots</div>
+        <div class="act-when">When: Not noticing earliest actions of non-compliance</div>
+        <div class="act-prompt">"At what moment do the first students begin to go off track? Which students are most often off task? What are your hot spots?"</div>
+        <div class="act-rtc">RTC Cue: Hold hand over hot spot to cue teacher</div>
+    </div>
+</div>
+<div class="bbar bbar-light">
+    <button class="bb bb-pri" onclick="go('publish')">Review &amp; Publish</button>
+</div>
+</div>
+
+<!-- ==================== PUBLISH (LIGHT) ==================== -->
+<div class="scr" id="publish">
+<nav class="nav-light">
+    <div class="back" onclick="go('feedback')"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></div>
+    <div class="logo">Review</div>
+    <div style="width:34px"></div>
+</nav>
+<div class="pad-light">
+    <div class="pub-strip">
+        <div class="pub-av" id="p-av">MW</div>
+        <div><div class="pub-name" id="p-name">Marcus Williams</div><div class="pub-meta" id="p-meta">Samuel J. Green &middot; 5th Grade Math &middot; April 9, 2026</div></div>
+    </div>
+
+    <div class="pub-chips">
+        <span class="chip chip-g">8:23 observation</span>
+        <span class="chip chip-o">AI Assisted</span>
+        <span class="chip" style="background:#dbeafe;color:#2563eb;">Teacher Obs</span>
+    </div>
+
+    <div class="avg-hero">
+        <div class="avg-num">3.6</div>
+        <div class="avg-lbl">Average Score</div>
+    </div>
+
+    <div class="sum-grid">
+        <div class="sum-box"><div class="d">T1</div><div class="v" data-c="4">4</div></div>
+        <div class="sum-box"><div class="d">T2</div><div class="v" data-c="3">3</div></div>
+        <div class="sum-box"><div class="d">T3</div><div class="v" data-c="4">4</div></div>
+        <div class="sum-box"><div class="d">T4</div><div class="v" data-c="3">3</div></div>
+        <div class="sum-box"><div class="d">T5</div><div class="v" data-c="4">4</div></div>
+    </div>
+
+    <div class="pub-section">
+        <div class="section-label">Action Step</div>
+        <div style="font-weight:600;">Explicitly teach words and actions of politeness</div>
+        <div style="color:var(--info);font-style:italic;font-size:12px;margin-top:6px;">"What words would you like for students to use when interacting?"</div>
+        <div style="color:var(--txt3);font-size:11px;margin-top:6px;">RTC Cue: Non-verbal — Point to the poster</div>
+    </div>
+
+    <div class="pub-section">
+        <div class="section-label">Feedback</div>
+        <div><strong style="color:var(--suc);">Strengths:</strong> Strong classroom routines and transitions. Effective use of Kagan Rally Robin with gambits.</div>
+        <div style="margin-top:8px;"><strong style="color:var(--warn);">Growth:</strong> 3 students in back corner slow during transitions. Community norms not yet student-driven.</div>
+    </div>
+
+    <div style="height:60px;"></div>
+</div>
+<div class="bbar bbar-light">
+    <button class="bb bb-out" onclick="alert('Saved as draft')">Save Draft</button>
+    <button class="bb bb-pri" onclick="showDone()">Publish</button>
+</div>
+</div>
+
+<!-- ==================== SUCCESS ==================== -->
+<div class="done-wrap" id="doneWrap">
+    <div class="done-box">
+        <div class="done-check">
+            <svg width="28" height="28" fill="none" stroke="#059669" stroke-width="3"><path d="M7 14l5 5 10-10"/></svg>
+        </div>
+        <div style="font-size:20px;font-weight:700;margin-bottom:6px;">Observation Published</div>
+        <div style="font-size:14px;color:var(--txt2);margin-bottom:24px;" id="done-msg">Marcus Williams has been notified</div>
+        <button class="bb bb-pri" style="width:auto;padding:12px 32px;border:none;font-family:'Inter',sans-serif;cursor:pointer;" onclick="location.reload()">New Observation</button>
+    </div>
+</div>
+
+<script>
+// Navigation
+function go(id){
+    document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+    document.getElementById(id).classList.add('on');
+    window.scrollTo(0,0);
+}
+
+// Teacher select
+let teacher={};
+function pick(name,school,role,type){
+    teacher={name,school,role,type};
+    const ini=name.split(' ').map(n=>n[0]).join('');
+    document.getElementById('r-av').textContent=ini;
+    document.getElementById('r-name').textContent=name;
+    document.getElementById('r-meta').textContent=school+' \u00b7 '+role;
+    document.getElementById('p-av').textContent=ini;
+    document.getElementById('p-name').textContent=name;
+    document.getElementById('p-meta').textContent=school+' \u00b7 '+role+' \u00b7 April 9, 2026';
+    document.getElementById('done-msg').textContent=name+' has been notified';
+    // Auto-detect form type
+    let badge='Teacher Obs';
+    if(role.toLowerCase().includes('prek')||role.toLowerCase().includes('pre-k'))badge='CLASS PreK';
+    else if(type==='Leadership')badge='PMAP Leader';
+    document.getElementById('r-badge').textContent=badge;
+    go('record');
+}
+function filterT(q){
+    document.querySelectorAll('.t-card').forEach(c=>{
+        c.style.display=c.textContent.toLowerCase().includes(q.toLowerCase())?'':'none';
+    });
+}
+
+// Recording
+let isRec=false,secs=0,intv;
+function toggleRec(){
+    isRec=!isRec;
+    const btn=document.getElementById('recBtn'),t=document.getElementById('timer'),
+          sub=document.getElementById('timer-sub'),hint=document.getElementById('recHint'),
+          w=document.getElementById('wave');
+    if(isRec){
+        btn.classList.add('on');sub.textContent='Recording...';t.classList.add('on');
+        w.classList.remove('off');hint.textContent='Tap to pause';
+        intv=setInterval(()=>{secs++;
+            t.textContent=String(Math.floor(secs/60)).padStart(2,'0')+':'+String(secs%60).padStart(2,'0');
+        },1000);
+    }else{
+        btn.classList.remove('on');sub.textContent='Paused';t.classList.remove('on');
+        w.classList.add('off');hint.textContent='Tap to resume';
+        clearInterval(intv);
+    }
+}
+
+// AI toggle
+let aiOn=true;
+function togAI(){
+    aiOn=!aiOn;
+    document.getElementById('aiTog').classList.toggle('on',aiOn);
+    document.getElementById('aiSt').textContent=aiOn?'ON':'OFF';
+    document.getElementById('aiSt').style.color=aiOn?'var(--pri)':'var(--dark-txt3)';
+    const sum=document.getElementById('aiSum');
+    if(sum)sum.style.display=aiOn?'':'none';
+}
+
+// Scoring
+function doScore(el){
+    const card=el.closest('.rub-card');
+    card.querySelectorAll('.s-btn').forEach(b=>b.classList.remove('sel'));
+    el.classList.add('sel');
+    const v=el.dataset.v;
+    card.className='rub-card s'+v;
+}
+
+// Descriptor toggle
+function togDesc(el){
+    const d=el.nextElementSibling;
+    d.classList.toggle('open');
+    if(d.classList.contains('open')){
+        el.innerHTML='<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5l4 4 4-4"/></svg> Hide descriptors';
+    }else{
+        el.innerHTML='<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l4 4-4 4"/></svg> View descriptors';
+    }
+}
+
+// Publish
+function showDone(){document.getElementById('doneWrap').style.display='flex';}
+</script>
+</body>
+</html>

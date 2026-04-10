@@ -1,0 +1,18 @@
+{
+  "id": "fls_vision_v1",
+  "name": "FirstLine Vision of Excellent Classrooms",
+  "description": "We believe that great classrooms are places where students:",
+  "pillars": [
+    "Are engaged in their work from start to finish",
+    "Are active members of a joyful & supportive community",
+    "Are working on aligned, grade-level content",
+    "Are demonstrating that they have learned the content taught that day",
+    "Are responsible for doing the majority of the thinking, writing, & discussing in the class"
+  ],
+  "scoring_guide": {
+    "few": "Less than 50%",
+    "some": "51 - 75%",
+    "most": "76 - 90%",
+    "all": "90 - 100%"
+  }
+}

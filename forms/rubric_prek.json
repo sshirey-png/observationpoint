@@ -1,0 +1,125 @@
+{
+  "id": "fls_prek_class_v1",
+  "name": "CLASS PreK Rubric",
+  "description": "Classroom Assessment Scoring System (CLASS) for PreK Teachers",
+  "scale": {
+    "min": 1,
+    "max": 7,
+    "labels": {
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7"
+    },
+    "ranges": {
+      "low": {"min": 1, "max": 2, "label": "Low", "color": "#ef4444"},
+      "mid": {"min": 3, "max": 5, "label": "Mid", "color": "#eab308"},
+      "high": {"min": 6, "max": 7, "label": "High", "color": "#22c55e"}
+    }
+  },
+  "cycles": true,
+  "max_cycles": 3,
+  "cycle_info_fields": [
+    {"id": "num_students", "label": "Number of Students", "type": "number"},
+    {"id": "num_adults", "label": "Number of Adults", "type": "number"},
+    {"id": "start_time", "label": "Start Time", "type": "time"},
+    {"id": "end_time", "label": "End Time", "type": "time"},
+    {
+      "id": "academic_content",
+      "label": "Academic Content",
+      "type": "checkbox_group",
+      "options": ["Lit/Lang Arts", "Math", "Social Studies", "Science", "Other"]
+    },
+    {
+      "id": "cycle_format",
+      "label": "Cycle Format",
+      "type": "checkbox_group",
+      "options": ["Routine", "Meals/Snacks", "Whole Group", "Individual Time", "Small Groups"]
+    }
+  ],
+  "dimensions": [
+    {
+      "id": "pk1_positive_climate",
+      "code": "PK1",
+      "name": "Positive Climate",
+      "abbreviation": "PC",
+      "domain": "Emotional Support",
+      "required": true
+    },
+    {
+      "id": "pk2_negative_climate",
+      "code": "PK2",
+      "name": "Negative Climate",
+      "abbreviation": "NC",
+      "domain": "Emotional Support",
+      "required": true
+    },
+    {
+      "id": "pk3_teacher_sensitivity",
+      "code": "PK3",
+      "name": "Teacher Sensitivity",
+      "abbreviation": "TS",
+      "domain": "Emotional Support",
+      "required": true
+    },
+    {
+      "id": "pk4_regard_student_perspectives",
+      "code": "PK4",
+      "name": "Regard for Student Perspectives",
+      "abbreviation": "RSP",
+      "domain": "Classroom Organization",
+      "required": true
+    },
+    {
+      "id": "pk5_behavior_management",
+      "code": "PK5",
+      "name": "Behavior Management",
+      "abbreviation": "BM",
+      "domain": "Classroom Organization",
+      "required": true
+    },
+    {
+      "id": "pk6_productivity",
+      "code": "PK6",
+      "name": "Productivity",
+      "abbreviation": "PD",
+      "domain": "Classroom Organization",
+      "required": true
+    },
+    {
+      "id": "pk7_instructional_learning_formats",
+      "code": "PK7",
+      "name": "Instructional Learning Formats",
+      "abbreviation": "ILF",
+      "domain": "Classroom Organization",
+      "required": true
+    },
+    {
+      "id": "pk8_concept_development",
+      "code": "PK8",
+      "name": "Concept Development",
+      "abbreviation": "CD",
+      "domain": "Instructional Support",
+      "required": true
+    },
+    {
+      "id": "pk9_quality_of_feedback",
+      "code": "PK9",
+      "name": "Quality of Feedback",
+      "abbreviation": "QF",
+      "domain": "Instructional Support",
+      "required": true
+    },
+    {
+      "id": "pk10_language_modeling",
+      "code": "PK10",
+      "name": "Language Modeling",
+      "abbreviation": "LM",
+      "domain": "Instructional Support",
+      "required": true
+    }
+  ]
+}
