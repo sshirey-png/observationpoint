@@ -381,32 +381,32 @@ margin-bottom:8px;cursor:pointer;transition:all .2s;background:var(--surf);box-s
         <div class="t-card" onclick="pick('Marcus Williams','Samuel J. Green','5th Grade Math','Teacher')">
             <div class="t-av">MW</div>
             <div><div class="t-name">Marcus Williams</div><div class="t-meta">Samuel J. Green &middot; 5th Grade Math</div></div>
-            <div class="t-form-badge" style="background:#dbeafe;color:#2563eb;">T1-T5</div>
+            <div style="margin-left:auto;text-align:right;flex-shrink:0;"><div style="font-size:11px;color:var(--txt3);">Apr 7</div></div>
         </div>
         <div class="t-card" onclick="pick('Keisha Brown','Langston Hughes Academy','3rd Grade ELA','Teacher')">
             <div class="t-av">KB</div>
             <div><div class="t-name">Keisha Brown</div><div class="t-meta">Langston Hughes Academy &middot; 3rd Grade ELA</div></div>
-            <div class="t-form-badge" style="background:#dbeafe;color:#2563eb;">T1-T5</div>
+            <div style="margin-left:auto;text-align:right;flex-shrink:0;"><div style="font-size:11px;color:var(--txt3);">Apr 3</div></div>
         </div>
         <div class="t-card" onclick="pick('Marie Thibodaux','Arthur Ashe Charter','PreK-4','Teacher')">
             <div class="t-av">MT</div>
             <div><div class="t-name">Marie Thibodaux</div><div class="t-meta">Arthur Ashe Charter &middot; PreK-4</div></div>
-            <div class="t-form-badge" style="background:#fce7f3;color:#db2777;">CLASS</div>
+            <div style="margin-left:auto;text-align:right;flex-shrink:0;"><div style="font-size:11px;color:var(--txt3);">Mar 28</div></div>
         </div>
         <div class="t-card" onclick="pick('David Chen','Arthur Ashe Charter','7th Grade Science','Teacher')">
             <div class="t-av">DC</div>
             <div><div class="t-name">David Chen</div><div class="t-meta">Arthur Ashe Charter &middot; 7th Grade Science</div></div>
-            <div class="t-form-badge" style="background:#dbeafe;color:#2563eb;">T1-T5</div>
+            <div style="margin-left:auto;text-align:right;flex-shrink:0;"><div style="font-size:11px;color:var(--err);">14 days</div></div>
         </div>
         <div class="t-card" onclick="pick('Amara Johnson','Live Oak Elementary','1st Grade','Teacher')">
             <div class="t-av">AJ</div>
             <div><div class="t-name">Amara Johnson</div><div class="t-meta">Live Oak Elementary &middot; 1st Grade</div></div>
-            <div class="t-form-badge" style="background:#dbeafe;color:#2563eb;">T1-T5</div>
+            <div style="margin-left:auto;text-align:right;flex-shrink:0;"><div style="font-size:11px;color:var(--err);">21 days</div></div>
         </div>
         <div class="t-card" onclick="pick('James Carter','GW Carver High','Principal','Leadership')">
             <div class="t-av">JC</div>
             <div><div class="t-name">James Carter</div><div class="t-meta">GW Carver High &middot; Principal</div></div>
-            <div class="t-form-badge" style="background:#dcfce7;color:#059669;">PMAP</div>
+            <div style="margin-left:auto;text-align:right;flex-shrink:0;"><div style="font-size:11px;color:var(--txt3);">Apr 9</div></div>
         </div>
     </div>
 </div>
@@ -725,7 +725,12 @@ function pick(name, school, role, type){
     // Reset for next form
     state.formType = null; // reset so next pick auto-detects
 
-    go('record');
+    // Observations go to record screen first. Everything else goes straight to the form.
+    if(f.hasRecording){
+        go('record');
+    } else {
+        go('score');
+    }
 }
 
 function filterT(q){
