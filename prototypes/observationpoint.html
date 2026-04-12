@@ -320,7 +320,7 @@ margin-bottom:8px;cursor:pointer;transition:all .2s;background:var(--surf);box-s
             <div class="fc-title">PMAP</div>
             <div class="fc-sub">Performance Map</div>
         </div>
-        <div class="form-card" onclick="startWithForm('self_reflection')">
+        <div class="form-card" onclick="startWithForm('self_reflection_teacher')">
             <div class="fc-icon" style="background:#ede9fe">
                 <svg width="18" height="18" fill="none" stroke="#7c3aed" stroke-width="2"><circle cx="9" cy="9" r="6"/><path d="M9 6v3l2 2"/></svg>
             </div>
@@ -1033,7 +1033,6 @@ function toggleRec(){
 // AI TOGGLE
 // =============================================
 function togAI(){
-    aiOn=!aiOn;
     state.aiOn = !state.aiOn;
     document.getElementById('aiTog').classList.toggle('on',state.aiOn);
     document.getElementById('aiSt').textContent=state.aiOn?'ON':'OFF';
