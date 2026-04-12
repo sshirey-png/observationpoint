@@ -1,0 +1,1082 @@
+{% extends "base.html" %}
+
+{% block title %}ObservationPoint{% endblock %}
+
+{% block head %}
+<style>
+/* === HOME === */
+.greeting{font-size:24px;font-weight:800;letter-spacing:-.025em;margin:16px 0 4px}
+.greeting-sub{font-size:14px;color:var(--txt2);margin-bottom:20px}
+.quick-btn{display:flex;align-items:center;gap:12px;background:var(--pri);color:#fff;border-radius:var(--Rs);padding:16px 18px;margin-bottom:16px;cursor:pointer;box-shadow:0 4px 14px rgba(228,119,39,0.3);transition:all .2s;border:none;width:100%;font-family:'Inter',sans-serif;font-size:15px;font-weight:600;text-align:left}
+.quick-btn:active{transform:scale(.98);opacity:.9}
+.quick-btn .ico{width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.form-card{background:var(--surf);border-radius:var(--Rs);padding:16px;box-shadow:var(--sh);cursor:pointer;border:2px solid transparent;transition:all .2s}
+.form-card:active{transform:scale(.97);border-color:var(--pri)}
+.form-card .fc-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.form-card .fc-title{font-size:13px;font-weight:600;line-height:1.3}
+.form-card .fc-sub{font-size:11px;color:var(--txt3);margin-top:2px}
+.section-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--txt3);margin-bottom:10px}
+.recent-item{display:flex;align-items:center;gap:12px;background:var(--surf);border-radius:var(--Rs);padding:12px 14px;box-shadow:var(--sh);margin-bottom:8px;cursor:pointer}
+.recent-item .ri-av{width:36px;height:36px;border-radius:8px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.recent-item .ri-name{font-size:13px;font-weight:600}
+.recent-item .ri-meta{font-size:11px;color:var(--txt3)}
+.recent-item .ri-score{margin-left:auto;font-size:18px;font-weight:800;color:var(--suc)}
+.ri-draft{background:var(--warn-bg);color:var(--warn);font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:auto}
+
+/* === SEARCH === */
+.search-box{width:100%;padding:14px 16px 14px 44px;background:var(--surf);border:1.5px solid var(--bdr);border-radius:var(--Rs);font-size:15px;font-family:'Inter',sans-serif;color:var(--txt);outline:none;box-shadow:var(--sh);transition:all .2s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Ccircle cx='8' cy='8' r='5.5'/%3E%3Cpath d='m13 13 3 3'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:14px center}
+.search-box:focus{border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-g)}
+.search-box::placeholder{color:var(--txt3)}
+.t-card{display:flex;align-items:center;gap:14px;background:var(--surf);border-radius:var(--Rs);padding:14px;box-shadow:var(--sh);margin-top:8px;cursor:pointer;border:2px solid transparent;transition:all .2s}
+.t-card:active{border-color:var(--pri);transform:scale(.98)}
+.t-av{width:42px;height:42px;border-radius:10px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.t-name{font-size:14px;font-weight:600}
+.t-meta{font-size:12px;color:var(--txt2);margin-top:1px}
+.t-form-badge{margin-left:auto;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;flex-shrink:0}
+.search-empty{text-align:center;padding:40px 20px;color:var(--txt3);font-size:14px}
+.search-loading{text-align:center;padding:20px;color:var(--txt3);font-size:13px}
+
+/* === RECORD (DARK) === */
+.teacher-bar{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--dark-surf);border-radius:var(--Rs);margin-bottom:16px}
+.tb-av{width:38px;height:38px;border-radius:10px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.tb-name{font-size:14px;font-weight:600;color:var(--dark-txt)}
+.tb-meta{font-size:12px;color:var(--dark-txt2)}
+.form-badge-sm{display:inline-flex;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.rec-center{text-align:center;padding:20px 0 12px}
+.timer{font-size:52px;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:var(--dark-txt)}
+.timer.on{color:var(--err)}
+.timer-sub{font-size:12px;font-weight:500;color:var(--dark-txt3);text-transform:uppercase;letter-spacing:.06em}
+.rec-btn{width:76px;height:76px;border-radius:50%;border:3px solid var(--err);background:transparent;margin:20px auto;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s}
+.rec-dot{width:30px;height:30px;border-radius:50%;background:var(--err);transition:all .3s}
+.rec-btn.on .rec-dot{width:22px;height:22px;border-radius:5px}
+.rec-btn.on{animation:rpulse 1.5s infinite}
+@keyframes rpulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.35)}50%{box-shadow:0 0 0 12px rgba(220,38,38,0)}}
+.wave{display:flex;align-items:center;justify-content:center;gap:3px;height:36px;margin:8px 0}
+.wave.off .b{animation:none;height:4px!important}
+.wave .b{width:3px;border-radius:2px;background:var(--pri);transition:height .1s ease}
+.ai-tog{display:flex;align-items:center;justify-content:center;gap:10px;margin:16px 0;font-size:13px;color:var(--dark-txt2)}
+.tog{width:44px;height:24px;border-radius:12px;background:var(--dark-bdr);cursor:pointer;position:relative;transition:all .3s}
+.tog.on{background:var(--pri)}
+.tog-t{width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:all .3s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.tog.on .tog-t{left:22px}
+.dark-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--dark-txt3);margin:20px 0 8px}
+.dark-ta{width:100%;min-height:110px;padding:14px;background:var(--dark-surf);border:1.5px solid var(--dark-bdr);border-radius:var(--Rs);font-size:14px;font-family:'Inter',sans-serif;color:var(--dark-txt);line-height:1.6;resize:vertical;outline:none;transition:all .2s}
+.dark-ta:focus{border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-l)}
+.dark-ta::placeholder{color:var(--dark-txt3)}
+.ts-note{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--dark-bdr);font-size:13px}
+.ts-note .ts{color:var(--pri);font-weight:600;font-variant-numeric:tabular-nums;min-width:40px}
+.ts-note .tx{color:var(--dark-txt2);line-height:1.5}
+.timestamp-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;background:var(--dark-surf);border:1.5px solid var(--dark-bdr);color:var(--pri);font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;margin-top:8px}
+.timestamp-btn:active{transform:scale(.95)}
+
+/* === SCORE (LIGHT) === */
+.ai-card{background:linear-gradient(135deg,#fff7ed,#fff1e0);border:1.5px solid var(--pri-g);border-radius:var(--R);padding:16px;margin-bottom:14px}
+.ai-hdr{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.ai-pill{background:var(--pri);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.06em}
+.ai-card p{font-size:13px;color:#78350f;line-height:1.7}
+.ai-card.loading{opacity:.6;animation:pulse-load 1.5s infinite}
+@keyframes pulse-load{0%,100%{opacity:.6}50%{opacity:1}}
+.sec-title{font-size:18px;font-weight:700;letter-spacing:-.01em;margin:18px 0 12px}
+.rub-card{background:var(--surf);border-radius:var(--R);box-shadow:var(--sh);padding:16px;margin-bottom:10px;border-left:4px solid var(--bdr);transition:all .2s}
+.rub-card.s1{border-left-color:#ef4444}.rub-card.s2{border-left-color:#f97316}
+.rub-card.s3{border-left-color:#eab308}.rub-card.s4{border-left-color:#22c55e}
+.rub-card.s5{border-left-color:#0ea5e9}.rub-card.s6{border-left-color:#22c55e}.rub-card.s7{border-left-color:#22c55e}
+.rub-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.rub-code{font-size:12px;font-weight:700;color:var(--navy);background:var(--navy-l);padding:3px 8px;border-radius:4px}
+.rub-req{font-size:10px;color:var(--err);font-weight:600}
+.rub-q{font-size:13px;font-weight:500;line-height:1.5;margin-bottom:12px}
+.s-row{display:flex;gap:6px}
+.s-btn{flex:1;padding:12px 2px;border-radius:var(--Rx);border:2px solid var(--bdr);background:#fff;text-align:center;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.s-btn .n{font-size:17px;font-weight:700;color:var(--txt3);display:block;transition:color .15s}
+.s-btn .l{font-size:8px;font-weight:600;color:var(--txt3);text-transform:uppercase;letter-spacing:.03em;margin-top:1px;display:block}
+.s-btn:active{transform:scale(.92)}
+.s-btn.sel{border-width:2px}
+.s-btn.sel .n,.s-btn.sel .l{color:#fff}
+.s-btn[data-v="1"].sel{background:#ef4444;border-color:#ef4444}
+.s-btn[data-v="2"].sel{background:#f97316;border-color:#f97316}
+.s-btn[data-v="3"].sel{background:#eab308;border-color:#eab308}
+.s-btn[data-v="4"].sel{background:#22c55e;border-color:#22c55e}
+.s-btn[data-v="5"].sel{background:#0ea5e9;border-color:#0ea5e9}
+.s-btn[data-v="6"].sel{background:#22c55e;border-color:#22c55e}
+.s-btn[data-v="7"].sel{background:#22c55e;border-color:#22c55e}
+.rub-expand{font-size:12px;color:var(--pri);cursor:pointer;margin-top:8px;display:flex;align-items:center;gap:4px}
+.rub-desc{display:none;margin-top:10px;padding:10px;background:var(--bg);border-radius:var(--Rx);font-size:12px;color:var(--txt2);line-height:1.6}
+.rub-desc.open{display:block}
+.domain-header{font-size:12px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em;margin:16px 0 8px;padding-top:8px;border-top:1px solid var(--bdr)}
+
+/* === FEEDBACK === */
+.fb-field{margin-bottom:14px}
+.fb-label{font-size:13px;font-weight:600;margin-bottom:6px}
+.fb-ta{width:100%;min-height:70px;padding:12px;border:1.5px solid var(--bdr);border-radius:var(--Rs);font-size:13px;font-family:'Inter',sans-serif;color:var(--txt);line-height:1.6;resize:vertical;outline:none}
+.fb-ta:focus{border-color:var(--pri)}
+.act-card{padding:14px;border:1.5px solid var(--bdr);border-radius:var(--Rs);margin-bottom:8px;cursor:pointer;transition:all .2s;background:var(--surf);box-shadow:var(--sh)}
+.act-card:active{transform:scale(.98)}
+.act-card.sel{border-color:var(--pri);background:#fff7ed}
+.act-cat{font-size:10px;font-weight:700;color:var(--pri);text-transform:uppercase;letter-spacing:.04em}
+.act-name{font-size:13px;font-weight:600;margin-top:3px;line-height:1.4}
+.act-when{font-size:11px;color:var(--txt3);margin-top:4px}
+.act-prompt{font-size:12px;color:var(--info);font-style:italic;margin-top:8px;padding:8px 10px;background:var(--info-bg);border-radius:6px;line-height:1.5;display:none}
+.act-card.sel .act-prompt{display:block}
+.act-rtc{font-size:11px;color:var(--txt3);margin-top:6px;display:none}
+.act-card.sel .act-rtc{display:block}
+
+/* === PUBLISH === */
+.pub-strip{display:flex;align-items:center;gap:12px;background:var(--surf);border-radius:var(--Rs);padding:12px;box-shadow:var(--sh);margin-bottom:12px}
+.pub-av{width:40px;height:40px;border-radius:10px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.pub-name{font-size:14px;font-weight:600}
+.pub-meta{font-size:12px;color:var(--txt2)}
+.pub-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chip-g{background:var(--suc-bg);color:var(--suc)}.chip-o{background:#fff7ed;color:var(--pri)}
+.avg-hero{text-align:center;padding:20px;background:var(--surf);border-radius:var(--R);box-shadow:var(--sh);margin-bottom:12px}
+.avg-num{font-size:52px;font-weight:800;letter-spacing:-.04em}
+.avg-lbl{font-size:13px;color:var(--txt2)}
+.sum-grid{display:grid;gap:8px;margin-bottom:14px}
+.sum-box{text-align:center;padding:10px 4px;background:var(--surf);border-radius:var(--Rx);box-shadow:var(--sh)}
+.sum-box .d{font-size:10px;font-weight:600;color:var(--txt3)}
+.sum-box .v{font-size:20px;font-weight:800}
+.pub-section{background:var(--surf);border-radius:var(--Rs);box-shadow:var(--sh);padding:14px;margin-bottom:10px;font-size:13px;line-height:1.7}
+
+/* === SUCCESS === */
+.done-wrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);z-index:200;align-items:center;justify-content:center}
+.done-box{background:#fff;border-radius:20px;padding:36px 28px;text-align:center;margin:16px;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:fadeUp .4s ease-out}
+.done-check{width:60px;height:60px;border-radius:50%;background:var(--suc-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+
+/* Cycle info fields */
+.cycle-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cycle-input{width:100%;padding:10px;border:1.5px solid var(--bdr);border-radius:var(--Rx);font-size:14px;font-family:'Inter',sans-serif;color:var(--txt);outline:none}
+.cycle-input:focus{border-color:var(--pri)}
+.check-group{display:flex;flex-wrap:wrap;gap:6px}
+.check-label{display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;background:var(--bg);border-radius:6px;cursor:pointer}
+</style>
+{% endblock %}
+
+{% block body %}
+
+<!-- ==================== HOME ==================== -->
+<div class="scr on" id="home">
+<nav class="nav-l">
+    <div style="width:34px"></div>
+    <div class="logo">Observation<span>Point</span></div>
+    <div class="act" onclick="go('select')" style="font-size:12px;">
+        <svg width="18" height="18" fill="none" stroke="white" stroke-width="2" style="vertical-align:middle"><circle cx="9" cy="5" r="3.5"/><path d="M2 16c0-3.3 3.1-6 7-6s7 2.7 7 6"/></svg>
+    </div>
+</nav>
+<div class="pad-l">
+    <div class="greeting">Good {{ 'morning' if range(5,12).__contains__(now_hour) else ('afternoon' if range(12,17).__contains__(now_hour) else 'evening') }}, {{ user.name.split(' ')[0] }}</div>
+    <div class="greeting-sub">{{ config.org_name }} &middot; {{ school_year }}</div>
+
+    <button class="quick-btn" onclick="go('select')">
+        <div class="ico"><svg width="22" height="22" fill="none" stroke="white" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M11 8v6M8 11h6"/></svg></div>
+        <div>
+            <div>Quick Observe</div>
+            <div style="font-size:12px;font-weight:400;opacity:.8;margin-top:2px;">Auto-selects form based on teacher's role</div>
+        </div>
+    </button>
+
+    <div class="section-label">Or choose form type</div>
+    <div class="form-grid">
+        <div class="form-card" onclick="startWithForm('teacher')">
+            <div class="fc-icon" style="background:#dbeafe"><svg width="18" height="18" fill="none" stroke="#2563eb" stroke-width="2"><path d="M3 3h12v12H3z"/><path d="M7 7h4M7 10h4"/></svg></div>
+            <div class="fc-title">Teacher Observation</div>
+            <div class="fc-sub">T1-T5 Rubric</div>
+        </div>
+        <div class="form-card" onclick="startWithForm('prek')">
+            <div class="fc-icon" style="background:#fce7f3"><svg width="18" height="18" fill="none" stroke="#db2777" stroke-width="2"><circle cx="9" cy="9" r="6"/><path d="M6 9h6"/></svg></div>
+            <div class="fc-title">PreK Observation</div>
+            <div class="fc-sub">CLASS PK1-PK10</div>
+        </div>
+        <div class="form-card" onclick="startWithForm('fundamentals')">
+            <div class="fc-icon" style="background:#fef3c7"><svg width="18" height="18" fill="none" stroke="#ca8a04" stroke-width="2"><path d="M9 2v14M4 6l5-4 5 4"/></svg></div>
+            <div class="fc-title">Fundamentals</div>
+            <div class="fc-sub">On Task %</div>
+        </div>
+        <div class="form-card" onclick="startWithForm('leader')">
+            <div class="fc-icon" style="background:#dcfce7"><svg width="18" height="18" fill="none" stroke="#059669" stroke-width="2"><path d="M3 12l4 4 8-8"/></svg></div>
+            <div class="fc-title">PMAP</div>
+            <div class="fc-sub">Performance Map</div>
+        </div>
+    </div>
+
+    <div class="section-label">Recent Observations</div>
+    <div id="recent-list"><div class="search-loading">Loading...</div></div>
+</div>
+</div>
+
+<!-- ==================== SELECT TEACHER ==================== -->
+<div class="scr" id="select">
+<nav class="nav-l">
+    <div class="back" onclick="go('home')"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></div>
+    <div class="logo">Select Teacher</div>
+    <div style="width:34px"></div>
+</nav>
+<div class="pad-l">
+    <input class="search-box" type="text" id="staffSearch" placeholder="Search by name or school..." oninput="searchStaff(this.value)" autocomplete="off">
+    <div id="staff-results"></div>
+</div>
+</div>
+
+<!-- ==================== RECORD (DARK) ==================== -->
+<div class="scr" id="record">
+<nav class="nav-d">
+    <div class="back" onclick="go('select')"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></div>
+    <div class="logo">Observation<span>Point</span></div>
+    <div class="act" onclick="endObservation()">Done</div>
+</nav>
+<div class="pad-d">
+    <div class="teacher-bar">
+        <div class="tb-av" id="r-av">--</div>
+        <div>
+            <div class="tb-name" id="r-name">Select a teacher</div>
+            <div class="tb-meta" id="r-meta"></div>
+        </div>
+        <div class="form-badge-sm" id="r-badge" style="background:var(--pri-l);color:var(--pri);">--</div>
+    </div>
+
+    <div class="rec-center">
+        <div class="timer" id="timer">00:00</div>
+        <div class="timer-sub" id="timer-sub">Ready to observe</div>
+    </div>
+
+    <div class="wave off" id="wave">
+        <div class="b" style="height:10px"></div><div class="b" style="height:18px"></div><div class="b" style="height:26px"></div><div class="b" style="height:14px"></div><div class="b" style="height:22px"></div><div class="b" style="height:16px"></div><div class="b" style="height:24px"></div>
+    </div>
+
+    <div class="rec-btn" id="recBtn" onclick="toggleRecording()"><div class="rec-dot"></div></div>
+    <div class="rec-hint" id="recHint">Tap to start recording</div>
+
+    <div class="ai-tog">
+        <span>AI Assist</span>
+        <div class="tog on" id="aiTog" onclick="toggleAI()"><div class="tog-t"></div></div>
+        <span id="aiSt" style="color:var(--pri);font-weight:500">ON</span>
+    </div>
+
+    <div style="height:1px;background:var(--dark-bdr);margin:16px 0"></div>
+
+    <div class="dark-label">Live Notes</div>
+    <textarea class="dark-ta" id="liveNotes" placeholder="Type observations here..."></textarea>
+
+    <button class="timestamp-btn" onclick="addTimestamp()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7" cy="7" r="5.5"/><path d="M7 4v3.5l2.5 1.5"/></svg>
+        Add Timestamped Note
+    </button>
+
+    <div id="timestamped-notes" style="margin-top:12px"></div>
+</div>
+<div class="bbar bbar-d">
+    <button class="bb bb-pri" onclick="endObservation()">End Observation &amp; Score</button>
+</div>
+</div>
+
+<!-- ==================== SCORE (LIGHT) ==================== -->
+<div class="scr" id="score">
+<nav class="nav-l">
+    <div class="back" onclick="go('record')"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></div>
+    <div class="logo">Score Rubric</div>
+    <div class="act" onclick="go('feedback')">Next</div>
+</nav>
+<div class="pad-l">
+    <div class="ai-card" id="aiSummaryCard" style="display:none">
+        <div class="ai-hdr"><div class="ai-pill">AI</div><span style="font-size:13px;font-weight:600;color:#78350f;">Observation Summary</span></div>
+        <p id="aiSummaryText">Analyzing observation...</p>
+        <p style="font-size:11px;color:var(--txt3);margin-top:8px;">Based on transcript analysis &middot; Review suggested scores below</p>
+    </div>
+
+    <div id="cycle-info" style="display:none"></div>
+    <div class="sec-title" id="rubric-title"></div>
+    <div id="rubric-container"></div>
+</div>
+<div class="bbar bbar-l">
+    <button class="bb bb-pri" onclick="go('feedback')">Next: Feedback &amp; Action Steps</button>
+</div>
+</div>
+
+<!-- ==================== FEEDBACK (LIGHT) ==================== -->
+<div class="scr" id="feedback">
+<nav class="nav-l">
+    <div class="back" onclick="go('score')"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></div>
+    <div class="logo">Feedback</div>
+    <div class="act" onclick="go('publish')">Review</div>
+</nav>
+<div class="pad-l">
+    <div class="sec-title">Observation Feedback</div>
+    <div id="feedback-fields"></div>
+
+    <div style="height:1px;background:var(--bdr);margin:20px 0"></div>
+
+    <div class="sec-title" style="display:flex;align-items:center;gap:8px;">Action Step <div class="ai-pill" id="action-ai-badge" style="display:none">AI Suggested</div></div>
+    <div id="action-steps-container"></div>
+</div>
+<div class="bbar bbar-l">
+    <button class="bb bb-pri" onclick="go('publish')">Review &amp; Publish</button>
+</div>
+</div>
+
+<!-- ==================== PUBLISH (LIGHT) ==================== -->
+<div class="scr" id="publish">
+<nav class="nav-l">
+    <div class="back" onclick="go('feedback')"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></div>
+    <div class="logo">Review</div>
+    <div style="width:34px"></div>
+</nav>
+<div class="pad-l">
+    <div class="pub-strip">
+        <div class="pub-av" id="p-av">--</div>
+        <div><div class="pub-name" id="p-name"></div><div class="pub-meta" id="p-meta"></div></div>
+    </div>
+    <div class="pub-chips" id="pub-chips"></div>
+    <div class="avg-hero"><div class="avg-num" id="pub-avg">--</div><div class="avg-lbl">Average Score</div></div>
+    <div id="pub-scores"></div>
+    <div id="pub-action-step"></div>
+    <div id="pub-feedback"></div>
+    <div style="height:60px"></div>
+</div>
+<div class="bbar bbar-l">
+    <button class="bb bb-out" onclick="saveDraft()">Save Draft</button>
+    <button class="bb bb-pri" onclick="publishObservation()">Publish</button>
+</div>
+</div>
+
+<!-- ==================== SUCCESS ==================== -->
+<div class="done-wrap" id="doneWrap">
+    <div class="done-box">
+        <div class="done-check"><svg width="28" height="28" fill="none" stroke="#059669" stroke-width="3"><path d="M7 14l5 5 10-10"/></svg></div>
+        <div style="font-size:20px;font-weight:700;margin-bottom:6px;">Observation Published</div>
+        <div style="font-size:14px;color:var(--txt2);margin-bottom:24px;" id="done-msg"></div>
+        <button class="bb bb-pri" style="width:auto;padding:12px 32px;border:none;font-family:'Inter',sans-serif;cursor:pointer;" onclick="resetAndHome()">New Observation</button>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/recorder.js?v={{ build }}"></script>
+<script>
+// =============================================
+// RUBRIC DEFINITIONS
+// =============================================
+const RUBRICS = {
+    teacher: {
+        id:'fls_teacher_v1', name:'FLS Teacher Rubric', badge:'Teacher Obs',
+        badgeStyle:'background:#dbeafe;color:#2563eb',
+        scale:{min:1,max:5,labels:{1:'NI',2:'Emrg',3:'Dev',4:'Prof',5:'Exm'}},
+        colors:{1:'#ef4444',2:'#f97316',3:'#eab308',4:'#22c55e',5:'#0ea5e9'},
+        hasCycles:false,
+        dimensions:[
+            {code:'T1',name:'On Task',q:'Are all students engaged in the work of the lesson from start to finish?',required:true,
+             desc:{4:'All or almost all students complete instructional tasks, volunteer responses and/or ask appropriate questions. All or almost all students follow behavioral expectations. Students execute transitions in an orderly and efficient manner with minimal direction. Class has a quick pace from start to finish.'}},
+            {code:'T2',name:'Community of Learners',q:'Are all students active members of a joyful and supportive classroom community?',
+             desc:{4:'All students use kind words & actions and show empathy. All students respond to consequences calmly. Positive, student-driven interactions. Teacher always incorporates Kagan activities.'}},
+            {code:'T3',name:'Essential Content',q:'Are all students working with content aligned to the appropriate standards for their subject and grade?',
+             desc:{4:'All activities are aligned, well-sequenced, and build on each other to move students toward mastery. All instructional materials are high-quality and appropriately demanding.'}},
+            {code:'T4',name:'Cognitive Engagement',q:'Are all students responsible for doing the thinking in this classroom?',
+             desc:{4:'All or almost all students provide meaningful evidence to support thinking. Students respond to and build on peers\' ideas. Engaged in discussion/writing >50% of lesson.'}},
+            {code:'T5',name:'Demonstration of Learning',q:'Do all students demonstrate that they are learning?',
+             desc:{4:'Questions/assessments yield data to pinpoint where understanding breaks down. All students demonstrate understanding through work and responses.'}},
+        ],
+        feedback:[
+            {id:'see_it_success',label:'See It / Name It: Success',placeholder:'What\'s working well in this classroom?'},
+            {id:'see_it_growth',label:'See It / Name It: Area(s) of Growth',placeholder:'Where is there opportunity to grow?'},
+            {id:'do_it_practice',label:'Do It: What did you practice?',placeholder:'What was practiced during the debrief?'},
+        ]
+    },
+    prek: {
+        id:'fls_prek_class_v1', name:'CLASS PreK Rubric', badge:'CLASS PreK',
+        badgeStyle:'background:#fce7f3;color:#db2777',
+        scale:{min:1,max:7,labels:{1:'1',2:'2',3:'3',4:'4',5:'5',6:'6',7:'7'}},
+        colors:{1:'#ef4444',2:'#ef4444',3:'#eab308',4:'#eab308',5:'#eab308',6:'#22c55e',7:'#22c55e'},
+        hasCycles:true,
+        dimensions:[
+            {code:'PK1',name:'Positive Climate',abbr:'PC',domain:'Emotional Support',required:true},
+            {code:'PK2',name:'Negative Climate',abbr:'NC',domain:'Emotional Support',required:true},
+            {code:'PK3',name:'Teacher Sensitivity',abbr:'TS',domain:'Emotional Support',required:true},
+            {code:'PK4',name:'Regard for Student Perspectives',abbr:'RSP',domain:'Classroom Organization',required:true},
+            {code:'PK5',name:'Behavior Management',abbr:'BM',domain:'Classroom Organization',required:true},
+            {code:'PK6',name:'Productivity',abbr:'PD',domain:'Classroom Organization',required:true},
+            {code:'PK7',name:'Instructional Learning Formats',abbr:'ILF',domain:'Classroom Organization',required:true},
+            {code:'PK8',name:'Concept Development',abbr:'CD',domain:'Instructional Support',required:true},
+            {code:'PK9',name:'Quality of Feedback',abbr:'QF',domain:'Instructional Support',required:true},
+            {code:'PK10',name:'Language Modeling',abbr:'LM',domain:'Instructional Support',required:true},
+        ],
+        feedback:[{id:'observation_note',label:'Observation Note',placeholder:'Provide additional details or context here'}]
+    },
+    fundamentals: {
+        id:'fls_fundamentals_v1', name:'Fundamentals', badge:'Fundamentals',
+        badgeStyle:'background:#fef3c7;color:#ca8a04',
+        scale:{min:0,max:100},
+        colors:{0:'#ef4444',100:'#22c55e'},
+        hasCycles:false,
+        dimensions:[
+            {code:'M1',name:'On Task Minute 1',type:'percent',required:true},
+            {code:'M2',name:'On Task Minute 2',type:'percent',required:true},
+            {code:'M3',name:'On Task Minute 3',type:'percent',required:true},
+            {code:'M4',name:'On Task Minute 4',type:'percent',required:true},
+            {code:'M5',name:'On Task Minute 5',type:'percent',required:true},
+            {code:'OP',name:'On Pace?',type:'binary',required:false},
+            {code:'FL',name:'Fundamentals Locked?',q:'Is Fundamentals locked in for this teacher?',type:'binary',required:true},
+            {code:'RB',name:'Relationship Building',q:'Are the foundations for Relationship Building/Community of Learners in place?',type:'binary',required:true},
+        ],
+        feedback:[{id:'fundamental_skills',label:'Fundamental Skills',placeholder:'Identify the Fundamental skills to be addressed'}]
+    },
+    leader: {
+        id:'fls_leader_v1', name:'FLS Leadership Competencies', badge:'PMAP Leader',
+        badgeStyle:'background:#dcfce7;color:#059669',
+        scale:{min:1,max:5,labels:{1:'NI',2:'Emrg',3:'Dev',4:'Prof',5:'Exm'}},
+        colors:{1:'#ef4444',2:'#f97316',3:'#eab308',4:'#22c55e',5:'#0ea5e9'},
+        hasCycles:false,
+        dimensions:[
+            {code:'L1',name:'Instructional Leadership',q:'Does the leader ensure that all classes within their scope meet or exceed the FLS Vision of Excellence?',required:true},
+            {code:'L2',name:'Cultural Leadership',q:'Does the leader build a motivational school culture with high expectations?',required:true},
+            {code:'L3',name:'Personal Leadership',q:'Does the leader inspire and motivate all staff, students and parents to model the FirstLine way?',required:true},
+            {code:'L4',name:'Talent Management',q:'Does the leader plan for, cultivate, hire, develop and manage high performing teams?',required:true},
+            {code:'L5',name:'Strategic & Ops Leadership',q:'Does the leader effectively allocate resources to support student learning and staff development?',required:true},
+        ],
+        feedback:[{id:'additional_comments',label:'Additional Comments',placeholder:'Provide any additional notes or context'}]
+    }
+};
+
+// =============================================
+// STATE
+// =============================================
+let state = {
+    teacher: null,
+    formType: null,
+    rubric: null,
+    scores: {},
+    feedback: {},
+    actionStep: null,
+    notes: '',
+    timestampedNotes: [],
+    aiEnabled: true,
+    aiAnalysis: null,
+    duration: 0,
+};
+
+let recorder = null;
+let searchTimeout = null;
+
+// =============================================
+// NAVIGATION
+// =============================================
+function go(id) {
+    document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+    document.getElementById(id).classList.add('on');
+    window.scrollTo(0, 0);
+
+    if (id === 'score') renderScoreScreen();
+    if (id === 'feedback') renderFeedbackScreen();
+    if (id === 'publish') renderPublishScreen();
+}
+
+// =============================================
+// STAFF SEARCH (live API)
+// =============================================
+let searchCache = {};
+
+async function searchStaff(query) {
+    const container = document.getElementById('staff-results');
+    if (query.length < 2) {
+        container.innerHTML = '<div class="search-empty">Type at least 2 characters to search</div>';
+        return;
+    }
+
+    // Debounce
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(async () => {
+        container.innerHTML = '<div class="search-loading">Searching...</div>';
+
+        try {
+            const resp = await fetch(`/api/staff/search?q=${encodeURIComponent(query)}`, {credentials: 'include'});
+            if (!resp.ok) throw new Error('Search failed');
+            const results = await resp.json();
+
+            if (results.length === 0) {
+                container.innerHTML = '<div class="search-empty">No staff found</div>';
+                return;
+            }
+
+            container.innerHTML = results.map(s => {
+                const ini = (s.name || '').split(' ').map(n => n[0]).join('').substring(0, 2);
+                const formInfo = detectFormType(s);
+                return `<div class="t-card" onclick='pickTeacher(${JSON.stringify(s).replace(/'/g,"&#39;")})'>
+                    <div class="t-av">${ini}</div>
+                    <div><div class="t-name">${s.name}</div><div class="t-meta">${s.school || ''} &middot; ${s.job_title || ''}</div></div>
+                    <div class="t-form-badge" style="${formInfo.style}">${formInfo.badge}</div>
+                </div>`;
+            }).join('');
+        } catch (err) {
+            container.innerHTML = '<div class="search-empty">Error searching staff</div>';
+        }
+    }, 300);
+}
+
+function detectFormType(staff) {
+    const jf = (staff.job_function || '').toLowerCase();
+    const jt = (staff.job_title || '').toLowerCase();
+    const grade = (staff.school || '').toLowerCase();
+
+    if (jt.includes('prek') || jt.includes('pre-k') || jt.includes('pk') || grade.includes('prek'))
+        return {type: 'prek', badge: 'CLASS', style: 'background:#fce7f3;color:#db2777'};
+    if (jf === 'leadership' || jt.includes('principal') || jt.includes('dean') || jt.includes('director'))
+        return {type: 'leader', badge: 'PMAP', style: 'background:#dcfce7;color:#059669'};
+    return {type: 'teacher', badge: 'T1-T5', style: 'background:#dbeafe;color:#2563eb'};
+}
+
+function pickTeacher(staff) {
+    const formInfo = state.forcedForm ? {type: state.forcedForm} : detectFormType(staff);
+    state.teacher = staff;
+    state.formType = formInfo.type;
+    state.rubric = RUBRICS[state.formType];
+    state.scores = {};
+    state.feedback = {};
+    state.actionStep = null;
+    state.timestampedNotes = [];
+    state.aiAnalysis = null;
+    state.forcedForm = null;
+
+    const ini = (staff.name || '').split(' ').map(n => n[0]).join('').substring(0, 2);
+
+    // Update record screen
+    document.getElementById('r-av').textContent = ini;
+    document.getElementById('r-name').textContent = staff.name;
+    document.getElementById('r-meta').textContent = (staff.school || '') + ' \u00b7 ' + (staff.job_title || '');
+    document.getElementById('r-badge').textContent = state.rubric.badge;
+    document.getElementById('r-badge').setAttribute('style', state.rubric.badgeStyle);
+
+    // Reset timer
+    document.getElementById('timer').textContent = '00:00';
+    document.getElementById('timer-sub').textContent = 'Ready to observe';
+    document.getElementById('liveNotes').value = '';
+    document.getElementById('timestamped-notes').innerHTML = '';
+
+    go('record');
+}
+
+function startWithForm(formType) {
+    state.forcedForm = formType;
+    go('select');
+    document.getElementById('staffSearch').focus();
+}
+
+// =============================================
+// RECORDING
+// =============================================
+async function toggleRecording() {
+    const btn = document.getElementById('recBtn');
+    const hint = document.getElementById('recHint');
+    const timerEl = document.getElementById('timer');
+    const sub = document.getElementById('timer-sub');
+    const wave = document.getElementById('wave');
+
+    if (!recorder) {
+        recorder = new ObservationRecorder({
+            onTimerUpdate: (formatted, secs) => {
+                timerEl.textContent = formatted;
+                state.duration = secs;
+            },
+            onStateChange: (s) => {
+                if (s === 'recording') {
+                    btn.classList.add('on'); sub.textContent = 'Recording...';
+                    timerEl.classList.add('on'); wave.classList.remove('off');
+                    hint.textContent = 'Tap to pause';
+                } else {
+                    btn.classList.remove('on'); sub.textContent = 'Paused';
+                    timerEl.classList.remove('on'); wave.classList.add('off');
+                    hint.textContent = 'Tap to resume';
+                }
+            },
+            onWaveformData: (bands) => {
+                const bars = wave.querySelectorAll('.b');
+                bands.forEach((v, i) => {
+                    if (bars[i]) bars[i].style.height = (4 + v * 28) + 'px';
+                });
+            },
+            onError: (err) => {
+                console.error('Recorder error:', err);
+                hint.textContent = 'Microphone access denied';
+            }
+        });
+        const ok = await recorder.init();
+        if (!ok) return;
+    }
+
+    recorder.toggle();
+}
+
+function addTimestamp() {
+    const time = recorder ? recorder.getTimeFormatted() : '00:00';
+    const note = prompt('Note for ' + time + ':');
+    if (!note) return;
+
+    state.timestampedNotes.push({time, note});
+
+    const container = document.getElementById('timestamped-notes');
+    container.innerHTML += `<div class="ts-note"><div class="ts">${time}</div><div class="tx">${note}</div></div>`;
+
+    // Auto-save
+    autoSave();
+}
+
+async function endObservation() {
+    // Stop recording if active
+    if (recorder && recorder.isRecording) {
+        await recorder.stop();
+    }
+
+    state.notes = document.getElementById('liveNotes').value;
+
+    // If AI is enabled and we have audio, transcribe and analyze
+    if (state.aiEnabled && recorder && recorder.getBlob()) {
+        go('score');
+        const card = document.getElementById('aiSummaryCard');
+        card.style.display = '';
+        card.classList.add('loading');
+        document.getElementById('aiSummaryText').textContent = 'Transcribing and analyzing observation...';
+
+        try {
+            const transcriptResult = await recorder.transcribe();
+            if (transcriptResult && transcriptResult.transcript) {
+                // Now analyze with Claude
+                const resp = await fetch('/api/analyze', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        transcript: transcriptResult.transcript,
+                        notes: state.notes,
+                        rubric_id: state.rubric.id,
+                        duration_seconds: state.duration,
+                    })
+                });
+                if (resp.ok) {
+                    state.aiAnalysis = await resp.json();
+                    renderAISuggestions();
+                }
+            }
+        } catch (err) {
+            console.error('AI analysis error:', err);
+        }
+        card.classList.remove('loading');
+    } else {
+        go('score');
+    }
+
+    // Hide AI card if AI is off
+    if (!state.aiEnabled) {
+        document.getElementById('aiSummaryCard').style.display = 'none';
+    }
+}
+
+// =============================================
+// AI TOGGLE
+// =============================================
+function toggleAI() {
+    state.aiEnabled = !state.aiEnabled;
+    document.getElementById('aiTog').classList.toggle('on', state.aiEnabled);
+    document.getElementById('aiSt').textContent = state.aiEnabled ? 'ON' : 'OFF';
+    document.getElementById('aiSt').style.color = state.aiEnabled ? 'var(--pri)' : 'var(--dark-txt3)';
+}
+
+function renderAISuggestions() {
+    if (!state.aiAnalysis) return;
+    const a = state.aiAnalysis;
+
+    // Summary
+    if (a.summary) {
+        document.getElementById('aiSummaryText').textContent = a.summary;
+    }
+
+    // Pre-fill scores
+    if (a.scores) {
+        for (const [dim, info] of Object.entries(a.scores)) {
+            const score = typeof info === 'number' ? info : info.score;
+            if (score) {
+                state.scores[dim.toUpperCase()] = score;
+            }
+        }
+        renderScoreScreen(); // Re-render with AI suggestions
+    }
+}
+
+// =============================================
+// RENDER: SCORE SCREEN
+// =============================================
+function renderScoreScreen() {
+    if (!state.rubric) return;
+    const r = state.rubric;
+
+    document.getElementById('rubric-title').textContent = r.name;
+
+    // Cycle info for PreK
+    const cycleInfo = document.getElementById('cycle-info');
+    if (r.hasCycles) {
+        cycleInfo.style.display = '';
+        cycleInfo.innerHTML = `
+            <div class="sec-title">Cycle 1: Information</div>
+            <div style="background:var(--surf);border-radius:var(--R);box-shadow:var(--sh);padding:16px;margin-bottom:14px;">
+                <div class="cycle-grid">
+                    <div><div class="label">Number of Students</div><input class="cycle-input" type="number" placeholder="0"></div>
+                    <div><div class="label">Number of Adults</div><input class="cycle-input" type="number" placeholder="0"></div>
+                    <div><div class="label">Start Time</div><input class="cycle-input" type="time"></div>
+                    <div><div class="label">End Time</div><input class="cycle-input" type="time"></div>
+                </div>
+                <div style="margin-top:12px"><div class="label">Academic Content</div>
+                    <div class="check-group">
+                        <label class="check-label"><input type="checkbox"> Lit/Lang Arts</label>
+                        <label class="check-label"><input type="checkbox"> Math</label>
+                        <label class="check-label"><input type="checkbox"> Social Studies</label>
+                        <label class="check-label"><input type="checkbox"> Science</label>
+                    </div>
+                </div>
+                <div style="margin-top:12px"><div class="label">Cycle Format</div>
+                    <div class="check-group">
+                        <label class="check-label"><input type="checkbox"> Routine</label>
+                        <label class="check-label"><input type="checkbox"> Meals/Snacks</label>
+                        <label class="check-label"><input type="checkbox"> Whole Group</label>
+                        <label class="check-label"><input type="checkbox"> Individual Time</label>
+                        <label class="check-label"><input type="checkbox"> Small Groups</label>
+                    </div>
+                </div>
+            </div>`;
+    } else {
+        cycleInfo.style.display = 'none';
+    }
+
+    // Build rubric items
+    let html = '';
+    let lastDomain = '';
+
+    r.dimensions.forEach(dim => {
+        if (dim.domain && dim.domain !== lastDomain) {
+            lastDomain = dim.domain;
+            html += `<div class="domain-header">${dim.domain}</div>`;
+        }
+
+        const currentScore = state.scores[dim.code];
+
+        if (dim.type === 'percent') {
+            const val = currentScore || '';
+            html += `<div class="rub-card" data-dim="${dim.code}">
+                <div class="rub-top"><div class="rub-code">${dim.code}</div>${dim.required ? '<div class="rub-req">Required</div>' : ''}</div>
+                <div class="rub-q">${dim.name}</div>
+                <input type="number" class="cycle-input" placeholder="Enter %" min="0" max="100" value="${val}"
+                    style="font-size:18px;font-weight:700;text-align:center;width:100px;"
+                    oninput="state.scores['${dim.code}']=parseInt(this.value);autoSave()">
+            </div>`;
+        } else if (dim.type === 'binary') {
+            html += `<div class="rub-card" data-dim="${dim.code}">
+                <div class="rub-top"><div class="rub-code">${dim.code}</div>${dim.required ? '<div class="rub-req">Required</div>' : ''}</div>
+                <div class="rub-q">${dim.name}${dim.q ? ' — ' + dim.q : ''}</div>
+                <div class="s-row">
+                    <div class="s-btn ${currentScore === 0 ? 'sel' : ''}" data-v="0" onclick="doScore(this)" style="flex:1;${currentScore === 0 ? 'background:#ef4444;border-color:#ef4444' : ''}"><span class="n" ${currentScore === 0 ? 'style="color:#fff"' : ''}>No</span></div>
+                    <div class="s-btn ${currentScore === 100 ? 'sel' : ''}" data-v="100" onclick="doScore(this)" style="flex:1;${currentScore === 100 ? 'background:#22c55e;border-color:#22c55e' : ''}"><span class="n" ${currentScore === 100 ? 'style="color:#fff"' : ''}>Yes</span></div>
+                </div>
+            </div>`;
+        } else {
+            let btns = '';
+            for (let s = r.scale.min; s <= r.scale.max; s++) {
+                const label = r.scale.labels ? r.scale.labels[s] : s;
+                const shortLabel = String(label).length > 4 ? String(label).substring(0, 4) : label;
+                const isSel = currentScore === s;
+                const selStyle = isSel ? `background:${r.colors[s]};border-color:${r.colors[s]}` : '';
+                btns += `<div class="s-btn ${isSel ? 'sel' : ''}" data-v="${s}" onclick="doScore(this)" style="${selStyle}">
+                    <span class="n" ${isSel ? 'style="color:#fff"' : ''}>${s}</span>
+                    ${r.scale.max <= 5 ? `<span class="l" ${isSel ? 'style="color:rgba(255,255,255,.85)"' : ''}>${shortLabel}</span>` : ''}
+                </div>`;
+            }
+            const scoreClass = currentScore ? ' s' + currentScore : '';
+            html += `<div class="rub-card${scoreClass}" data-dim="${dim.code}">
+                <div class="rub-top">
+                    <div class="rub-code">${dim.code}${dim.abbr ? ' \u00b7 ' + dim.abbr : ''}</div>
+                    ${dim.required ? '<div class="rub-req">Required</div>' : ''}
+                </div>
+                <div class="rub-q">${dim.name}${dim.q ? ' — ' + dim.q : ''}</div>
+                <div class="s-row">${btns}</div>
+                ${dim.desc ? `<div class="rub-expand" onclick="togDesc(this)"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l4 4-4 4"/></svg> View descriptors</div><div class="rub-desc"><strong>4 — Proficient:</strong> ${dim.desc[4] || ''}</div>` : ''}
+            </div>`;
+        }
+    });
+
+    document.getElementById('rubric-container').innerHTML = html;
+}
+
+function doScore(el) {
+    const card = el.closest('.rub-card');
+    card.querySelectorAll('.s-btn').forEach(b => {
+        b.classList.remove('sel');
+        b.style.background = '';
+        b.style.borderColor = '';
+        b.querySelectorAll('.n, .l').forEach(t => t.style.color = '');
+    });
+    el.classList.add('sel');
+    const v = parseInt(el.dataset.v);
+    const dim = card.dataset.dim;
+    state.scores[dim] = v;
+
+    // Apply color
+    const color = state.rubric.colors[v] || 'var(--bdr)';
+    el.style.background = color;
+    el.style.borderColor = color;
+    el.querySelectorAll('.n, .l').forEach(t => t.style.color = '#fff');
+
+    card.style.borderLeftColor = color;
+    card.style.borderLeftWidth = '4px';
+
+    autoSave();
+}
+
+function togDesc(el) {
+    const d = el.nextElementSibling;
+    d.classList.toggle('open');
+    el.innerHTML = d.classList.contains('open')
+        ? '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5l4 4 4-4"/></svg> Hide descriptors'
+        : '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l4 4-4 4"/></svg> View descriptors';
+}
+
+// =============================================
+// RENDER: FEEDBACK SCREEN
+// =============================================
+function renderFeedbackScreen() {
+    if (!state.rubric) return;
+    const container = document.getElementById('feedback-fields');
+
+    container.innerHTML = state.rubric.feedback.map(f =>
+        `<div class="fb-field">
+            <div class="fb-label">${f.label}</div>
+            <textarea class="fb-ta" id="fb-${f.id}" placeholder="${f.placeholder}"
+                oninput="state.feedback['${f.id}']=this.value;autoSave()">${state.feedback[f.id] || ''}</textarea>
+        </div>`
+    ).join('');
+
+    // Action steps — show AI badge if we have analysis
+    const aiBadge = document.getElementById('action-ai-badge');
+    aiBadge.style.display = state.aiAnalysis ? '' : 'none';
+
+    // TODO: render action steps from Get Better Faster guide based on lowest score
+    renderActionSteps();
+}
+
+function renderActionSteps() {
+    const container = document.getElementById('action-steps-container');
+    // Find lowest scoring dimension to suggest relevant action steps
+    const dims = state.rubric.dimensions.filter(d => !d.type);
+    let lowestDim = null;
+    let lowestScore = 999;
+    dims.forEach(d => {
+        if (state.scores[d.code] && state.scores[d.code] < lowestScore) {
+            lowestScore = state.scores[d.code];
+            lowestDim = d;
+        }
+    });
+
+    if (!lowestDim) {
+        container.innerHTML = '<p style="font-size:13px;color:var(--txt3);">Score the rubric first to see suggested action steps.</p>';
+        return;
+    }
+
+    // For now, show placeholder action steps based on dimension
+    // In production, these come from action_steps_guide.json via API
+    container.innerHTML = `
+        <p style="font-size:12px;color:var(--txt2);margin-bottom:12px;">Based on ${lowestDim.code} score (${lowestScore}) — suggested coaching focus:</p>
+        <div class="act-card sel" onclick="this.classList.toggle('sel')">
+            <div class="act-cat">${lowestDim.name}</div>
+            <div class="act-name">Action step will load from Get Better Faster guide</div>
+            <div class="act-prompt">Coaching prompt will appear here based on the selected action step</div>
+            <div class="act-rtc">RTC Cue: Real-time coaching cue for next visit</div>
+        </div>`;
+}
+
+// =============================================
+// RENDER: PUBLISH SCREEN
+// =============================================
+function renderPublishScreen() {
+    if (!state.rubric || !state.teacher) return;
+    const r = state.rubric;
+    const t = state.teacher;
+    const ini = (t.name || '').split(' ').map(n => n[0]).join('').substring(0, 2);
+
+    document.getElementById('p-av').textContent = ini;
+    document.getElementById('p-name').textContent = t.name;
+    document.getElementById('p-meta').textContent = (t.school || '') + ' \u00b7 ' + (t.job_title || '') + ' \u00b7 ' + new Date().toLocaleDateString('en-US', {month: 'long', day: 'numeric', year: 'numeric'});
+    document.getElementById('done-msg').textContent = t.name + ' has been notified';
+
+    // Chips
+    const mins = Math.floor(state.duration / 60);
+    const secs = state.duration % 60;
+    const timeStr = mins > 0 ? `${mins}:${String(secs).padStart(2,'0')} observation` : 'Quick observation';
+    document.getElementById('pub-chips').innerHTML = `
+        <span class="chip chip-g">${timeStr}</span>
+        ${state.aiEnabled ? '<span class="chip chip-o">AI Assisted</span>' : ''}
+        <span class="chip" style="${r.badgeStyle}">${r.badge}</span>`;
+
+    // Average score
+    const scoredDims = r.dimensions.filter(d => !d.type);
+    const vals = scoredDims.map(d => state.scores[d.code]).filter(v => v !== undefined);
+    const avg = vals.length ? (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1) : '--';
+    const avgEl = document.getElementById('pub-avg');
+    avgEl.textContent = avg;
+    if (avg !== '--') {
+        const n = parseFloat(avg);
+        avgEl.style.color = r.scale.max === 7
+            ? (n >= 5.5 ? '#059669' : n >= 3 ? '#ca8a04' : '#dc2626')
+            : (n >= 3.5 ? '#059669' : n >= 2.5 ? '#ca8a04' : '#dc2626');
+    }
+
+    // Score grid
+    const cols = Math.min(scoredDims.length, 5);
+    let gridHtml = `<div class="sum-grid" style="grid-template-columns:repeat(${cols},1fr)">`;
+    scoredDims.forEach(d => {
+        const v = state.scores[d.code];
+        const color = v ? (r.colors[v] || 'var(--txt3)') : 'var(--txt3)';
+        gridHtml += `<div class="sum-box"><div class="d">${d.abbr || d.code}</div><div class="v" style="color:${color}">${v || '-'}</div></div>`;
+    });
+    gridHtml += '</div>';
+    document.getElementById('pub-scores').innerHTML = gridHtml;
+
+    // Feedback summary
+    const fbHtml = Object.entries(state.feedback).filter(([, v]) => v).map(([k, v]) => {
+        const field = r.feedback.find(f => f.id === k);
+        return `<div style="margin-bottom:8px"><strong>${field ? field.label : k}:</strong> ${v}</div>`;
+    }).join('');
+    document.getElementById('pub-feedback').innerHTML = fbHtml
+        ? `<div class="pub-section"><div class="section-label">Feedback</div>${fbHtml}</div>` : '';
+}
+
+// =============================================
+// PUBLISH / SAVE
+// =============================================
+async function publishObservation() {
+    const data = buildSubmissionData('published');
+
+    try {
+        const resp = await fetch('/api/observations', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data),
+        });
+
+        if (!resp.ok) throw new Error('Failed to save');
+        const result = await resp.json();
+
+        ObservationAutoSave.clear();
+        document.getElementById('doneWrap').style.display = 'flex';
+    } catch (err) {
+        alert('Error publishing: ' + err.message);
+    }
+}
+
+async function saveDraft() {
+    const data = buildSubmissionData('draft');
+
+    try {
+        const resp = await fetch('/api/observations', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data),
+        });
+
+        if (!resp.ok) throw new Error('Failed to save');
+        alert('Draft saved');
+    } catch (err) {
+        alert('Error saving draft: ' + err.message);
+    }
+}
+
+function buildSubmissionData(status) {
+    return {
+        form_type: state.formType,
+        rubric_id: state.rubric.id,
+        teacher_id: state.teacher.employee_id,
+        teacher_name: state.teacher.name,
+        teacher_email: state.teacher.email,
+        school: state.teacher.school,
+        observation_date: new Date().toISOString().split('T')[0],
+        duration_seconds: state.duration,
+        has_recording: !!(recorder && recorder.getBlob()),
+        transcript: state.aiAnalysis ? state.aiAnalysis.transcript : null,
+        ai_summary: state.aiAnalysis ? state.aiAnalysis.summary : null,
+        status: status,
+        scores: state.scores,
+        feedback: state.feedback,
+        context: {
+            notes: state.notes,
+            timestamped_notes: state.timestampedNotes,
+            ai_enabled: state.aiEnabled,
+        },
+    };
+}
+
+function resetAndHome() {
+    state = {teacher:null,formType:null,rubric:null,scores:{},feedback:{},actionStep:null,notes:'',timestampedNotes:[],aiEnabled:true,aiAnalysis:null,duration:0};
+    if (recorder) { recorder.destroy(); recorder = null; }
+    document.getElementById('doneWrap').style.display = 'none';
+    go('home');
+    loadRecent();
+}
+
+// =============================================
+// AUTO-SAVE
+// =============================================
+function autoSave() {
+    ObservationAutoSave.save({
+        teacher: state.teacher,
+        formType: state.formType,
+        scores: state.scores,
+        feedback: state.feedback,
+        notes: state.notes,
+        timestampedNotes: state.timestampedNotes,
+    });
+}
+
+// =============================================
+// LOAD RECENT OBSERVATIONS
+// =============================================
+async function loadRecent() {
+    const container = document.getElementById('recent-list');
+    try {
+        const resp = await fetch('/api/observations?limit=10', {credentials: 'include'});
+        if (!resp.ok) throw new Error('Failed');
+        const obs = await resp.json();
+
+        if (obs.length === 0) {
+            container.innerHTML = '<div class="search-empty">No observations yet. Start your first one!</div>';
+            return;
+        }
+
+        container.innerHTML = obs.map(o => {
+            const ini = (o.teacher_name || '').split(' ').map(n => n[0]).join('').substring(0, 2);
+            const date = o.observation_date ? new Date(o.observation_date).toLocaleDateString('en-US', {month: 'short', day: 'numeric'}) : '';
+            const scores = o.scores_json ? JSON.parse(o.scores_json) : {};
+            const vals = Object.values(scores).filter(v => typeof v === 'number');
+            const avg = vals.length ? (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1) : null;
+
+            return `<div class="recent-item">
+                <div class="ri-av">${ini}</div>
+                <div><div class="ri-name">${o.teacher_name}</div><div class="ri-meta">${o.school || ''} &middot; ${date}</div></div>
+                ${o.status === 'draft' ? '<div class="ri-draft">DRAFT</div>' : (avg ? `<div class="ri-score">${avg}</div>` : '')}
+            </div>`;
+        }).join('');
+    } catch (err) {
+        container.innerHTML = '<div class="search-empty">Welcome to ObservationPoint</div>';
+    }
+}
+
+// =============================================
+// INIT
+// =============================================
+document.addEventListener('DOMContentLoaded', () => {
+    loadRecent();
+
+    // Check for auto-saved draft
+    if (ObservationAutoSave.hasDraft()) {
+        const draft = ObservationAutoSave.load();
+        if (draft && draft.teacher) {
+            // Could prompt to resume, but for now just note it
+            console.log('Draft found for', draft.teacher.name);
+        }
+    }
+});
+</script>
+{% endblock %}
