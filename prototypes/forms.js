@@ -7,27 +7,27 @@
 // =============================================
 // SCALES
 // =============================================
-const SCALE_1_5 = {
+var SCALE_1_5 = {
     min: 1, max: 5,
     labels: {1:'NI', 2:'Emrg', 3:'Dev', 4:'Prof', 5:'Exm'},
     fullLabels: {1:'Needs Improvement', 2:'Emerging', 3:'Developing', 4:'Proficient', 5:'Exemplary'}
 };
-const COLORS_1_5 = {1:'#ef4444', 2:'#f97316', 3:'#eab308', 4:'#22c55e', 5:'#0ea5e9'};
+var COLORS_1_5 = {1:'#ef4444', 2:'#f97316', 3:'#eab308', 4:'#22c55e', 5:'#0ea5e9'};
 
-const SCALE_1_7 = {
+var SCALE_1_7 = {
     min: 1, max: 7,
     labels: {1:'1', 2:'2', 3:'3', 4:'4', 5:'5', 6:'6', 7:'7'},
     ranges: {low:{min:1,max:2,label:'Low'}, mid:{min:3,max:5,label:'Mid'}, high:{min:6,max:7,label:'High'}}
 };
-const COLORS_1_7 = {1:'#ef4444', 2:'#ef4444', 3:'#eab308', 4:'#eab308', 5:'#eab308', 6:'#22c55e', 7:'#22c55e'};
+var COLORS_1_7 = {1:'#ef4444', 2:'#ef4444', 3:'#eab308', 4:'#eab308', 5:'#eab308', 6:'#22c55e', 7:'#22c55e'};
 
-const SCALE_TRACK = {min: 1, max: 2, labels: {1:'Off Track', 2:'On Track'}};
-const COLORS_TRACK = {1:'#ef4444', 2:'#22c55e'};
+var SCALE_TRACK = {min: 1, max: 2, labels: {1:'Off Track', 2:'On Track'}};
+var COLORS_TRACK = {1:'#ef4444', 2:'#22c55e'};
 
 // =============================================
 // RUBRIC DIMENSIONS (reusable across form types)
 // =============================================
-const TEACHER_DIMS = [
+var TEACHER_DIMS = [
     {code:'T1', name:'On Task',
      q:'Are all students engaged in the work of the lesson from start to finish?',
      required: true,
@@ -60,7 +60,7 @@ const TEACHER_DIMS = [
      }},
 ];
 
-const PREK_DIMS = [
+var PREK_DIMS = [
     {code:'PK1',  name:'Positive Climate',                    abbr:'PC',  domain:'Emotional Support',        required:true},
     {code:'PK2',  name:'Negative Climate',                    abbr:'NC',  domain:'Emotional Support',        required:true},
     {code:'PK3',  name:'Teacher Sensitivity',                 abbr:'TS',  domain:'Emotional Support',        required:true},
@@ -73,7 +73,7 @@ const PREK_DIMS = [
     {code:'PK10', name:'Language Modeling',                    abbr:'LM',  domain:'Instructional Support',    required:true},
 ];
 
-const LEADER_DIMS = [
+var LEADER_DIMS = [
     {code:'L1', name:'Instructional Leadership',
      q:'Does the leader ensure all classes within their scope meet or exceed the FLS Vision of Excellence and lead to increased academic achievement?', required:true},
     {code:'L2', name:'Cultural Leadership and Builder',
@@ -86,7 +86,7 @@ const LEADER_DIMS = [
      q:'Does the leader ensure that resources (structures, time, money, partnerships) are allocated effectively?', required:true},
 ];
 
-const FUNDAMENTALS_DIMS = [
+var FUNDAMENTALS_DIMS = [
     {code:'M1', name:'On Task Minute 1', type:'percent', required:true},
     {code:'M2', name:'On Task Minute 2', type:'percent', required:true},
     {code:'M3', name:'On Task Minute 3', type:'percent', required:true},
@@ -102,7 +102,7 @@ const FUNDAMENTALS_DIMS = [
 // =============================================
 // SHARED SECTIONS (composable across PMAPs and Self-Reflections)
 // =============================================
-const SHARED_SECTIONS = {
+var SHARED_SECTIONS = {
     meeting_checklist: {
         title: 'Meeting Checklist',
         fields: [
@@ -191,7 +191,7 @@ const SHARED_SECTIONS = {
 // =============================================
 // FORM DEFINITIONS
 // =============================================
-const FORMS = {
+var FORMS = {
 
     // ---- TOUCHPOINTS ----
 
@@ -430,4 +430,4 @@ function detectFormType(staff) {
 }
 
 // Backward compat
-const RUBRICS = FORMS;
+var RUBRICS = FORMS;
