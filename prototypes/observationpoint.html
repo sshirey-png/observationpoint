@@ -279,35 +279,71 @@ margin-bottom:8px;cursor:pointer;transition:all .2s;background:var(--surf);box-s
     </button>
 
     <!-- Form Type Cards -->
-    <div class="section-label">Or choose form type</div>
+    <div class="section-label">TouchPoints</div>
     <div class="form-grid">
-        <div class="form-card" onclick="go('select')">
+        <div class="form-card" onclick="startWithForm('teacher')">
             <div class="fc-icon" style="background:#dbeafe">
                 <svg width="18" height="18" fill="none" stroke="#2563eb" stroke-width="2"><path d="M3 3h12v12H3z"/><path d="M7 7h4M7 10h4"/></svg>
             </div>
-            <div class="fc-title">Teacher Observation</div>
-            <div class="fc-sub">T1-T5 Rubric</div>
+            <div class="fc-title">Observation</div>
+            <div class="fc-sub">Classroom visit</div>
         </div>
-        <div class="form-card" onclick="go('select')">
-            <div class="fc-icon" style="background:#fce7f3">
-                <svg width="18" height="18" fill="none" stroke="#db2777" stroke-width="2"><circle cx="9" cy="9" r="6"/><path d="M6 9h6"/></svg>
+        <div class="form-card" onclick="startWithForm('meeting_o3')">
+            <div class="fc-icon" style="background:#f0fdf4">
+                <svg width="18" height="18" fill="none" stroke="#16a34a" stroke-width="2"><path d="M3 14V4a1 1 0 011-1h10a1 1 0 011 1v7a1 1 0 01-1 1H6l-3 3z"/></svg>
             </div>
-            <div class="fc-title">PreK Observation</div>
-            <div class="fc-sub">CLASS PK1-PK10</div>
+            <div class="fc-title">Meeting</div>
+            <div class="fc-sub">O3, Coaching, Data</div>
         </div>
-        <div class="form-card" onclick="go('select')">
+        <div class="form-card" onclick="startWithForm('quick_feedback')">
             <div class="fc-icon" style="background:#fef3c7">
-                <svg width="18" height="18" fill="none" stroke="#ca8a04" stroke-width="2"><path d="M9 2v14M4 6l5-4 5 4"/></svg>
+                <svg width="18" height="18" fill="none" stroke="#ca8a04" stroke-width="2"><path d="M4 14l2-2h7a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v9z"/></svg>
+            </div>
+            <div class="fc-title">Quick Feedback</div>
+            <div class="fc-sub">Informal touchpoint</div>
+        </div>
+        <div class="form-card" onclick="startWithForm('fundamentals')">
+            <div class="fc-icon" style="background:#fef9c3">
+                <svg width="18" height="18" fill="none" stroke="#a16207" stroke-width="2"><path d="M9 2v14M4 6l5-4 5 4"/></svg>
             </div>
             <div class="fc-title">Fundamentals</div>
             <div class="fc-sub">On Task %</div>
         </div>
-        <div class="form-card" onclick="go('select')">
+    </div>
+
+    <div class="section-label">Evaluations</div>
+    <div class="form-grid">
+        <div class="form-card" onclick="startWithForm('pmap_teacher')">
             <div class="fc-icon" style="background:#dcfce7">
                 <svg width="18" height="18" fill="none" stroke="#059669" stroke-width="2"><path d="M3 12l4 4 8-8"/></svg>
             </div>
             <div class="fc-title">PMAP</div>
             <div class="fc-sub">Performance Map</div>
+        </div>
+        <div class="form-card" onclick="startWithForm('self_reflection')">
+            <div class="fc-icon" style="background:#ede9fe">
+                <svg width="18" height="18" fill="none" stroke="#7c3aed" stroke-width="2"><circle cx="9" cy="9" r="6"/><path d="M9 6v3l2 2"/></svg>
+            </div>
+            <div class="fc-title">Self-Reflection</div>
+            <div class="fc-sub">Teacher self-assessment</div>
+        </div>
+    </div>
+
+    <div class="section-label">Discipline</div>
+    <div class="form-grid">
+        <div class="form-card" onclick="startWithForm('iap')">
+            <div class="fc-icon" style="background:#fee2e2">
+                <svg width="18" height="18" fill="none" stroke="#dc2626" stroke-width="2"><path d="M9 3v8M9 14h.01"/></svg>
+            </div>
+            <div class="fc-title">IAP</div>
+            <div class="fc-sub">Improvement Plan</div>
+        </div>
+        <div class="form-card" onclick="startWithForm('write_up')">
+            <div class="fc-icon" style="background:#fef2f2">
+                <svg width="18" height="18" fill="none" stroke="#b91c1c" stroke-width="2"><path d="M4 4h10v10H4zM7 7h4M7 10h4"/></svg>
+            </div>
+            <div class="fc-title">Write-Up</div>
+            <div class="fc-sub">Employee discipline</div>
         </div>
     </div>
 
