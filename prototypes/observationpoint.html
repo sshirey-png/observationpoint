@@ -643,7 +643,9 @@ margin-bottom:8px;cursor:pointer;transition:all .2s;background:var(--surf);box-s
 // =============================================
 // STATE
 // =============================================
-let currentRubric = null; // backward compat alias
+var state = { teacher:null, formType:null, form:null, scores:{}, sectionData:{}, feedback:{}, notes:'', timestampedNotes:[], aiOn:true };
+var isRec=false, secs=0, intv;
+var currentRubric = null; // backward compat alias
 
 // =============================================
 // NAVIGATION
