@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>PreK Observation — ObservationPoint</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.nav{position:sticky;top:0;z-index:100;background:#002f60;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.nav-back{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.nav-title{font-size:15px;font-weight:700;color:#fff;flex:1}
+.nav-title span{color:#e47727}
+.teacher-banner{display:flex;align-items:center;gap:12px;padding:14px 16px;background:#fff;border-bottom:1px solid #e5e7eb}
+.tb-av{width:40px;height:40px;border-radius:10px;background:#002f60;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.tb-name{font-size:15px;font-weight:600}
+.tb-meta{font-size:12px;color:#6b7280}
+.tb-badge{margin-left:auto;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;background:#fce7f3;color:#db2777}
+.content{padding:0 16px 120px}
+.section{margin-top:20px}
+.section-title{font-size:16px;font-weight:700;margin-bottom:4px}
+.section-sub{font-size:12px;color:#9ca3af;margin-bottom:12px}
+.card{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:16px;margin-bottom:10px}
+.label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;margin-bottom:6px}
+textarea{width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:'Inter',sans-serif;color:#111827;line-height:1.6;resize:vertical;outline:none;min-height:70px}
+textarea:focus{border-color:#e47727}
+textarea::placeholder{color:#9ca3af}
+input[type="number"],input[type="time"]{width:100%;padding:10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;font-family:'Inter',sans-serif;color:#111827;outline:none}
+input:focus{border-color:#e47727}
+.field{margin-bottom:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.check-group{display:flex;flex-wrap:wrap;gap:6px}
+.check-label{display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;background:#f5f7fa;border-radius:6px;cursor:pointer}
+.check-label input{width:16px;height:16px}
+.divider{height:1px;background:#e5e7eb;margin:20px 0}
+.domain-header{font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;margin:16px 0 8px;padding-top:10px;border-top:1px solid #e5e7eb}
+.rub{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:14px;margin-bottom:8px;border-left:4px solid #e5e7eb;transition:border-color .2s}
+.rub-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.rub-code{font-size:11px;font-weight:700;color:#002f60;background:#002f600a;padding:2px 6px;border-radius:4px}
+.rub-name{font-size:13px;font-weight:600;margin-left:8px;flex:1}
+.scores{display:flex;gap:4px}
+.sc{width:36px;height:40px;border-radius:6px;border:1.5px solid #e5e7eb;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .12s;-webkit-tap-highlight-color:transparent}
+.sc:active{transform:scale(.9)}
+.sc .n{font-size:15px;font-weight:700;color:#9ca3af}
+.sc.sel .n{color:#fff}
+.sc[data-v="1"].sel,.sc[data-v="2"].sel{background:#ef4444;border-color:#ef4444}
+.sc[data-v="3"].sel,.sc[data-v="4"].sel,.sc[data-v="5"].sel{background:#eab308;border-color:#eab308}
+.sc[data-v="6"].sel,.sc[data-v="7"].sel{background:#22c55e;border-color:#22c55e}
+
+/* Recording bar */
+.rec-bar{display:flex;align-items:center;gap:12px;padding:12px 14px;background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-top:16px}
+.rec-btn{width:44px;height:44px;border-radius:50%;border:2.5px solid #dc2626;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.rec-dot{width:18px;height:18px;border-radius:50%;background:#dc2626;transition:all .2s}
+.rec-bar.on{background:#fef2f2;border:1px solid #fecaca}
+.rec-bar.on .rec-dot{width:14px;height:14px;border-radius:3px}
+.rec-bar.on .rec-btn{animation:rpulse 1.5s infinite}
+@keyframes rpulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.3)}50%{box-shadow:0 0 0 8px rgba(220,38,38,0)}}
+.rec-time{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+.rec-bar.on .rec-time{color:#dc2626}
+.rec-label{font-size:11px;color:#9ca3af}
+.rec-bar.on .rec-label{color:#dc2626}
+.ai-toggle{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280}
+.tog{width:40px;height:22px;border-radius:11px;background:#d1d5db;cursor:pointer;position:relative;transition:all .3s}
+.tog.on{background:#e47727}
+.tog-t{width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:all .3s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.tog.on .tog-t{left:20px}
+
+.bottom{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;padding:10px 16px;padding-bottom:max(10px,env(safe-area-inset-bottom));display:flex;gap:8px;z-index:100}
+.btn{flex:1;padding:15px;border-radius:12px;font-size:14px;font-weight:600;text-align:center;cursor:pointer;font-family:'Inter',sans-serif;border:none}
+.btn:active{transform:scale(.97)}
+.btn-pri{background:#e47727;color:#fff}
+.btn-out{background:#fff;color:#111827;border:1.5px solid #e5e7eb}
+.success{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(6px);z-index:200;align-items:center;justify-content:center}
+.success-box{background:#fff;border-radius:20px;padding:36px 28px;text-align:center;margin:16px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.check-icon{width:56px;height:56px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+    <div class="nav-back" onclick="history.back()"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></div>
+    <div class="nav-title">Observation<span>Point</span></div>
+</nav>
+
+<div class="teacher-banner">
+    <div class="tb-av">MT</div>
+    <div><div class="tb-name">Marie Thibodaux</div><div class="tb-meta">Arthur Ashe Charter &middot; PreK-4</div></div>
+    <div class="tb-badge">CLASS PreK</div>
+</div>
+
+<div class="content">
+
+<!-- Recording -->
+<div class="rec-bar" id="recBar" onclick="toggleRec()">
+    <div class="rec-btn"><div class="rec-dot"></div></div>
+    <div><div class="rec-time" id="recTime">00:00</div><div class="rec-label" id="recLabel">Tap to record</div></div>
+    <div class="ai-toggle" onclick="event.stopPropagation()"><span>AI</span><div class="tog on" onclick="this.classList.toggle('on')"><div class="tog-t"></div></div></div>
+</div>
+
+<!-- Notes -->
+<div class="section">
+    <div class="notes-label label">Observation Notes</div>
+    <textarea placeholder="Type observations here..."></textarea>
+</div>
+
+<div class="divider"></div>
+
+<!-- Cycle Info -->
+<div class="section">
+    <div class="section-title">Cycle 1: Information</div>
+    <div class="card">
+        <div class="grid2">
+            <div class="field"><div class="label">Number of Students</div><input type="number" placeholder="0"></div>
+            <div class="field"><div class="label">Number of Adults</div><input type="number" placeholder="0"></div>
+            <div class="field"><div class="label">Start Time</div><input type="time"></div>
+            <div class="field"><div class="label">End Time</div><input type="time"></div>
+        </div>
+        <div class="field" style="margin-top:8px"><div class="label">Academic Content</div>
+            <div class="check-group">
+                <label class="check-label"><input type="checkbox"> Lit/Lang Arts</label>
+                <label class="check-label"><input type="checkbox"> Math</label>
+                <label class="check-label"><input type="checkbox"> Social Studies</label>
+                <label class="check-label"><input type="checkbox"> Science</label>
+            </div>
+        </div>
+        <div class="field"><div class="label">Cycle Format</div>
+            <div class="check-group">
+                <label class="check-label"><input type="checkbox"> Routine</label>
+                <label class="check-label"><input type="checkbox"> Meals/Snacks</label>
+                <label class="check-label"><input type="checkbox"> Whole Group</label>
+                <label class="check-label"><input type="checkbox"> Individual Time</label>
+                <label class="check-label"><input type="checkbox"> Small Groups</label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CLASS Scoring -->
+<div class="section">
+    <div class="section-title">CLASS Scoring — Cycle 1</div>
+    <div class="section-sub">Score 1-7 for each dimension</div>
+
+    <div class="domain-header" style="border-top:none;padding-top:0">Emotional Support</div>
+
+    <div class="rub" id="pk1"><div class="rub-top"><div><div class="rub-code">PK1</div><span class="rub-name">Positive Climate</span></div></div>
+        <div class="scores"><div class="sc" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div>
+    </div>
+    <div class="rub" id="pk2"><div class="rub-top"><div><div class="rub-code">PK2</div><span class="rub-name">Negative Climate</span></div></div>
+        <div class="scores"><div class="sc" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div>
+    </div>
+    <div class="rub" id="pk3"><div class="rub-top"><div><div class="rub-code">PK3</div><span class="rub-name">Teacher Sensitivity</span></div></div>
+        <div class="scores"><div class="sc" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div>
+    </div>
+
+    <div class="domain-header">Classroom Organization</div>
+
+    <div class="rub" id="pk4"><div class="rub-top"><div><div class="rub-code">PK4</div><span class="rub-name">Regard for Student Perspectives</span></div></div>
+        <div class="scores"><div class="sc" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div>
+    </div>
+    <div class="rub" id="pk5"><div class="rub-top"><div><div class="rub-code">PK5</div><span class="rub-name">Behavior Management</span></div></div>
+        <div class="scores"><div class="sc" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div>
+    </div>
+    <div class="rub" id="pk6"><div class="rub-top"><div><div class="rub-code">PK6</div><span class="rub-name">Productivity</span></div></div>
+        <div class="scores"><div class="sc" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div>
+    </div>
+    <div class="rub" id="pk7"><div class="rub-top"><div><div class="rub-code">PK7</div><span class="rub-name">Instructional Learning Formats</span></div></div>
+        <div class="scores"><div class="sc" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div>
+    </div>
+
+    <div class="domain-header">Instructional Support</div>
+
+    <div class="rub" id="pk8"><div class="rub-top"><div><div class="rub-code">PK8</div><span class="rub-name">Concept Development</span></div></div>
+        <div class="scores"><div class="sc" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div>
+    </div>
+    <div class="rub" id="pk9"><div class="rub-top"><div><div class="rub-code">PK9</div><span class="rub-name">Quality of Feedback</span></div></div>
+        <div class="scores"><div class="sc" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div>
+    </div>
+    <div class="rub" id="pk10"><div class="rub-top"><div><div class="rub-code">PK10</div><span class="rub-name">Language Modeling</span></div></div>
+        <div class="scores"><div class="sc" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div>
+    </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- Observation Note -->
+<div class="section">
+    <div class="section-title">Observation Note</div>
+    <div class="card">
+        <textarea placeholder="Provide additional details or context here"></textarea>
+    </div>
+</div>
+
+</div>
+
+<div class="bottom">
+    <button class="btn btn-out" onclick="alert('Draft saved')">Save Draft</button>
+    <button class="btn btn-pri" onclick="document.getElementById('done').style.display='flex'">Publish</button>
+</div>
+
+<div class="success" id="done">
+    <div class="success-box">
+        <div class="check-icon"><svg width="28" height="28" fill="none" stroke="#059669" stroke-width="3"><path d="M7 14l5 5 10-10"/></svg></div>
+        <div style="font-size:20px;font-weight:700;margin-bottom:4px;">Published!</div>
+        <div style="font-size:14px;color:#6b7280;margin-bottom:20px;">Marie Thibodaux has been notified</div>
+        <button class="btn btn-pri" style="width:auto;padding:12px 32px" onclick="location.reload()">Done</button>
+    </div>
+</div>
+
+<script>
+function scPK(el){
+    var card=el.closest('.rub');
+    card.querySelectorAll('.sc').forEach(function(s){s.classList.remove('sel');s.style.background='';s.style.borderColor='';s.querySelector('.n').style.color=''});
+    el.classList.add('sel');
+    var v=parseInt(el.dataset.v);
+    var color=v<=2?'#ef4444':v<=5?'#eab308':'#22c55e';
+    el.style.background=color;el.style.borderColor=color;
+    el.querySelector('.n').style.color='#fff';
+    card.style.borderLeftColor=color;
+}
+var isRec=false,secs=0,intv;
+function toggleRec(){
+    isRec=!isRec;
+    var bar=document.getElementById('recBar'),time=document.getElementById('recTime'),label=document.getElementById('recLabel');
+    if(isRec){bar.classList.add('on');label.textContent='Recording...';intv=setInterval(function(){secs++;time.textContent=String(Math.floor(secs/60)).padStart(2,'0')+':'+String(secs%60).padStart(2,'0')},1000)}
+    else{bar.classList.remove('on');label.textContent='Paused';clearInterval(intv)}
+}
+</script>
+</body>
+</html>
