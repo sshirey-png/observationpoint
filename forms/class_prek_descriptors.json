@@ -1,0 +1,338 @@
+{
+  "source": "CLASS PreK Manual (Hamre, La Paro, Pianta, 2008) via Grow by Level Data",
+  "dimensions": {
+    "PK1": {
+      "name": "Positive Climate",
+      "abbr": "PC",
+      "domain": "Emotional Support",
+      "definition": "Reflects the emotional connection between the teacher and students and among students and the warmth, respect, and enjoyment communicated by verbal and nonverbal interactions",
+      "indicators": {
+        "Relationships": {
+          "markers": ["Physical proximity", "Shared activities", "Peer assistance", "Matched affect", "Social conversation"],
+          "low": "There are few, if any, indications that the teacher and students enjoy warm, supportive relationships with one another",
+          "mid": "There are some indications that the teacher and students enjoy warm, supportive relationships with one another",
+          "high": "There are many indications that the teacher and students enjoy warm, supportive relationships with one another"
+        },
+        "Positive Affect": {
+          "markers": ["Smiling", "Laughter", "Enthusiasm"],
+          "low": "There are no or few displays of positive affect by the teacher and/or students",
+          "mid": "There are sometimes displays of positive affect by the teacher and/or students",
+          "high": "There are frequent displays of positive affect by the teacher and/or students"
+        },
+        "Positive Communication": {
+          "markers": ["Verbal affection", "Physical affection", "Positive expectations"],
+          "low": "There are rarely positive communications, verbal or physical, among teachers and students",
+          "mid": "There are sometimes positive communications, verbal or physical, among teachers and students",
+          "high": "There are frequently positive communications, verbal or physical, among teachers and students"
+        },
+        "Respect": {
+          "markers": ["Eye contact", "Warm, calm voice", "Respectful language", "Cooperation and/or sharing"],
+          "low": "The teacher and students rarely, if ever, demonstrate respect for one another",
+          "mid": "The teacher and students sometimes demonstrate respect for one another",
+          "high": "The teacher and students consistently demonstrate respect for one another"
+        }
+      }
+    },
+    "PK2": {
+      "name": "Negative Climate",
+      "abbr": "NC",
+      "domain": "Emotional Support",
+      "definition": "Reflects the overall level of expressed negativity in the classroom; the frequency, quality, and intensity of teacher and peer negativity are key to this scale",
+      "note": "Negative Climate is scaled in the opposite direction. Higher negativity indicates lower quality.",
+      "indicators": {
+        "Negative Affect": {
+          "markers": ["Irritability", "Anger", "Harsh voice", "Peer aggression", "Disconnected or escalating negativity"],
+          "low": "The teacher and students do not display strong negative affect and only rarely, if ever, display mild negativity",
+          "mid": "The classroom is characterized by mild displays of irritability, anger, or other negative affect by the teacher and/or students",
+          "high": "The classroom is characterized by consistent irritability, anger, or other negative affect by the teacher and/or the students"
+        },
+        "Punitive Control": {
+          "markers": ["Yelling", "Threats", "Physical control", "Harsh punishment"],
+          "low": "The teacher does not yell or make threats to establish control",
+          "mid": "The teacher occasionally uses expressed negativity such as threats or yelling to establish control",
+          "high": "The teacher repeatedly yells at students or makes threats to establish control"
+        },
+        "Sarcasm/Disrespect": {
+          "markers": ["Sarcastic voice/statement", "Teasing", "Humiliation"],
+          "low": "The teacher and students are not sarcastic or disrespectful",
+          "mid": "The teacher and/or students are occasionally sarcastic or disrespectful",
+          "high": "The teacher and/or students are repeatedly sarcastic or disrespectful"
+        },
+        "Severe Negativity": {
+          "markers": ["Victimization", "Bullying", "Physical punishment"],
+          "low": "There are no instances of severe negativity between the teacher and students",
+          "mid": "There are no instances of severe negativity between the teacher and students",
+          "high": "There are instances of severe negativity between the teacher and students or among the students"
+        }
+      }
+    },
+    "PK3": {
+      "name": "Teacher Sensitivity",
+      "abbr": "TS",
+      "domain": "Emotional Support",
+      "definition": "Encompasses the teacher's awareness of and responsivity to students' academic and emotional needs; high levels of sensitivity facilitate students' ability to actively explore and learn because the teacher consistently provides comfort, reassurance, and encouragement",
+      "indicators": {
+        "Awareness": {
+          "markers": ["Anticipates problems and plans appropriately", "Notices lack of understanding and/or difficulties"],
+          "low": "The teacher consistently fails to be aware of students who need extra support, assistance, or attention",
+          "mid": "The teacher is sometimes aware of students who need extra support, assistance, or attention",
+          "high": "The teacher is consistently aware of students who need extra support, assistance, or attention"
+        },
+        "Responsiveness": {
+          "markers": ["Acknowledges emotions", "Provides comfort and assistance", "Provides individualized support"],
+          "low": "The teacher is unresponsive to or dismissive of students and provides the same level of assistance to all students, regardless of their individual needs",
+          "mid": "The teacher is responsive to students sometimes but at other times is more dismissive or unresponsive, matching support to the needs of some students but not others",
+          "high": "The teacher is consistently responsive to students and matches support to their needs and abilities"
+        },
+        "Addresses Problems": {
+          "markers": ["Helps in an effective and timely manner", "Helps resolve problems"],
+          "low": "The teacher is ineffective at addressing students' problems and concerns",
+          "mid": "The teacher is sometimes effective at addressing students' problems and concerns",
+          "high": "The teacher is consistently effective at addressing students' problems and concerns"
+        },
+        "Student Comfort": {
+          "markers": ["Seeks support and guidance", "Freely participates", "Takes risks"],
+          "low": "The students rarely seek support, share their ideas with, or respond to questions from the teacher",
+          "mid": "The students sometimes seek support from, share their ideas with, or respond to questions from the teacher",
+          "high": "The students appear comfortable seeking support from, sharing their ideas with, and responding freely to the teacher"
+        }
+      }
+    },
+    "PK4": {
+      "name": "Regard for Student Perspectives",
+      "abbr": "RSP",
+      "domain": "Emotional Support",
+      "definition": "Captures the degree to which the teacher's interactions with students and classroom activities place an emphasis on students' interests, motivations, and points of view and encourage student responsibility and autonomy",
+      "indicators": {
+        "Flexibility and Student Focus": {
+          "markers": ["Shows flexibility", "Incorporates students' ideas", "Follows students' lead"],
+          "low": "The teacher is rigid, inflexible, and controlling; most classroom activities are teacher-driven",
+          "mid": "The teacher may follow the students' lead during some periods and be more controlling during others",
+          "high": "The teacher is flexible, goes along with students' ideas, and organizes instruction around students' interests"
+        },
+        "Support for Autonomy and Leadership": {
+          "markers": ["Allows choice", "Allows students to lead lessons", "Gives students responsibility"],
+          "low": "The teacher does not support student autonomy and leadership",
+          "mid": "The teacher sometimes provides support for student autonomy and leadership but at other times fails to do so",
+          "high": "The teacher provides consistent support for student autonomy and leadership"
+        },
+        "Student Expression": {
+          "markers": ["Encourages student talk", "Elicits ideas and/or perspectives"],
+          "low": "There are few opportunities for student talk and expression",
+          "mid": "There are periods with a lot of student talk and expression but other times when teacher talk predominates",
+          "high": "There are many opportunities for student talk and expression"
+        },
+        "Restriction of Movement": {
+          "markers": ["Allows movement", "Is not rigid"],
+          "low": "The teacher is highly controlling of students' movement and placement during activities",
+          "mid": "The teacher is somewhat controlling of students' movement and placement during activities",
+          "high": "The students have freedom of movement and placement during activities"
+        }
+      }
+    },
+    "PK5": {
+      "name": "Behavior Management",
+      "abbr": "BM",
+      "domain": "Classroom Organization",
+      "definition": "Encompasses the teacher's ability to provide clear behavioral expectations and use effective methods to prevent and redirect misbehavior",
+      "indicators": {
+        "Clear Behavior Expectations": {
+          "markers": ["Clear expectations", "Consistency", "Clarity of rules"],
+          "low": "Rules and expectations are absent, unclear, or inconsistently enforced",
+          "mid": "Rules and expectations may be stated clearly but are inconsistently enforced",
+          "high": "Rules and expectations for behavior are clear and consistently enforced"
+        },
+        "Proactive": {
+          "markers": ["Anticipates problem behavior or escalation", "Low reactivity", "Monitors"],
+          "low": "The teacher is reactive, and monitoring is absent or ineffective",
+          "mid": "The teacher uses a mix of proactive and reactive responses; sometimes monitors and reacts to early indicators but other times misses or ignores them",
+          "high": "The teacher is consistently proactive and monitors the classroom effectively to prevent problems from developing"
+        },
+        "Redirection of Misbehavior": {
+          "markers": ["Effective reduction of misbehavior", "Attention to the positive", "Uses subtle cues to redirect", "Efficient redirection"],
+          "low": "Attempts to redirect misbehavior are ineffective; the teacher rarely focuses on positives or uses subtle cues. Misbehavior continues and/or escalates",
+          "mid": "Some attempts to redirect are effective, particularly when focusing on positive behavior and using subtle cues. Few times when misbehavior continues or escalates",
+          "high": "The teacher effectively redirects misbehavior by focusing on positives and using subtle cues. Behavior management does not take time away from learning"
+        },
+        "Student Behavior": {
+          "markers": ["Frequent compliance", "Little aggression and defiance"],
+          "low": "There are frequent instances of misbehavior in the classroom",
+          "mid": "There are periodic episodes of misbehavior in the classroom",
+          "high": "There are few, if any, instances of student misbehavior in the classroom"
+        }
+      }
+    },
+    "PK6": {
+      "name": "Productivity",
+      "abbr": "PD",
+      "domain": "Classroom Organization",
+      "definition": "Considers how well the teacher manages instructional time and routines and provides activities for students so that they have the opportunity to be involved in learning activities",
+      "indicators": {
+        "Maximizing Learning Time": {
+          "markers": ["Provision of activities", "Choice when finished", "Few disruptions", "Effective completion of managerial tasks", "Pacing"],
+          "low": "Few, if any, activities are provided for students, and an excessive amount of time is spent addressing disruptions and completing managerial tasks",
+          "mid": "The teacher provides activities most of the time, but some learning time is lost in dealing with disruptions and managerial tasks",
+          "high": "The teacher provides activities for the students and deals efficiently with disruptions and managerial tasks"
+        },
+        "Routines": {
+          "markers": ["Students know what to do", "Clear instructions", "Little wandering"],
+          "low": "The classroom routines are unclear; most students do not know what is expected of them",
+          "mid": "There is some evidence of classroom routines that allow everyone to know what is expected",
+          "high": "The classroom resembles a 'well-oiled machine'; everybody knows what is expected and how to go about doing it"
+        },
+        "Transitions": {
+          "markers": ["Brief", "Explicit follow-through", "Learning opportunities within"],
+          "low": "Transitions are too long, too frequent, and/or inefficient",
+          "mid": "Transitions sometimes take too long or are too frequent and inefficient",
+          "high": "Transitions are quick and efficient"
+        },
+        "Preparation": {
+          "markers": ["Materials ready and accessible", "Knows lessons"],
+          "low": "The teacher does not have activities prepared and ready for the students",
+          "mid": "The teacher is mostly prepared but takes some time away from instruction for last-minute preparations",
+          "high": "The teacher is fully prepared for activities and lessons"
+        }
+      }
+    },
+    "PK7": {
+      "name": "Instructional Learning Formats",
+      "abbr": "ILF",
+      "domain": "Classroom Organization",
+      "definition": "Focuses on the ways in which the teacher maximizes students' interest, engagement, and ability to learn from lessons and activities",
+      "indicators": {
+        "Effective Facilitation": {
+          "markers": ["Teacher involvement", "Effective questioning", "Expanding children's involvement"],
+          "low": "The teacher does not actively facilitate activities and lessons to encourage students' interest and expanded involvement",
+          "mid": "At times, the teacher actively facilitates but at other times merely provides activities for the students",
+          "high": "The teacher actively facilitates students' engagement in activities and lessons to encourage participation and expanded involvement"
+        },
+        "Variety of Modalities and Materials": {
+          "markers": ["Range of auditory, visual, and movement opportunities", "Interesting and creative materials", "Hands-on opportunities"],
+          "low": "The teacher does not use a variety of modalities or materials to gain students' interest and participation",
+          "mid": "The teacher is inconsistent in use of a variety of modalities and materials",
+          "high": "The teacher uses a variety of modalities including auditory, visual, and movement and uses a variety of materials to effectively interest students"
+        },
+        "Student Interest": {
+          "markers": ["Active participation", "Listening", "Focused attention"],
+          "low": "The students do not appear interested and/or involved in the lesson or activities",
+          "mid": "Students may be engaged for periods of time, but at other times their interest wanes",
+          "high": "Students are consistently interested and involved in activities and lessons"
+        },
+        "Clarity of Learning Objectives": {
+          "markers": ["Advanced organizers", "Summaries", "Reorientation statements"],
+          "low": "The teacher makes no attempt or is unsuccessful at orienting students toward learning objectives",
+          "mid": "The teacher orients students somewhat, or learning objectives may be clear during some periods but less so during others",
+          "high": "The teacher effectively focuses students' attention toward learning objectives and/or the purpose of the lesson"
+        }
+      }
+    },
+    "PK8": {
+      "name": "Concept Development",
+      "abbr": "CD",
+      "domain": "Instructional Support",
+      "definition": "Measures the teacher's use of instructional discussions and activities to promote students' higher-order thinking skills and cognition and the teacher's focus on understanding rather than on rote instruction",
+      "indicators": {
+        "Analysis and Reasoning": {
+          "markers": ["Why and/or how questions", "Problem solving", "Prediction/experimentation", "Classification/comparison", "Evaluation"],
+          "low": "The teacher rarely uses discussions and activities that encourage analysis and reasoning",
+          "mid": "The teacher occasionally uses discussions and activities that encourage analysis and reasoning",
+          "high": "The teacher often uses discussions and activities that encourage analysis and reasoning"
+        },
+        "Creating": {
+          "markers": ["Brainstorming", "Planning", "Producing"],
+          "low": "The teacher rarely provides opportunities for students to be creative and/or generate their own ideas and products",
+          "mid": "The teacher sometimes provides opportunities for students to be creative and/or generate their own ideas and products",
+          "high": "The teacher often provides opportunities for students to be creative and/or generate their own ideas and products"
+        },
+        "Integration": {
+          "markers": ["Connects concepts", "Integrates with previous knowledge"],
+          "low": "Concepts and activities are presented independent of one another, and students are not asked to apply previous learning",
+          "mid": "The teacher sometimes links concepts and activities to one another and to previous learning",
+          "high": "The teacher consistently links concepts and activities to one another and to previous learning"
+        },
+        "Connections to the Real World": {
+          "markers": ["Real-world applications", "Related to students' lives"],
+          "low": "The teacher does not relate concepts to the students' actual lives",
+          "mid": "The teacher makes some attempts to relate concepts to the students' actual lives",
+          "high": "The teacher consistently relates concepts to the students' actual lives"
+        }
+      }
+    },
+    "PK9": {
+      "name": "Quality of Feedback",
+      "abbr": "QF",
+      "domain": "Instructional Support",
+      "definition": "Assesses the degree to which the teacher provides feedback that expands learning and understanding and encourages continued participation",
+      "indicators": {
+        "Scaffolding": {
+          "markers": ["Hints", "Assistance"],
+          "low": "The teacher rarely provides scaffolding but rather dismisses responses as incorrect or ignores problems in understanding",
+          "mid": "The teacher occasionally provides scaffolding but at other times simply dismisses responses as incorrect",
+          "high": "The teacher often scaffolds for students who are having a hard time understanding a concept, answering a question, or completing an activity"
+        },
+        "Feedback Loops": {
+          "markers": ["Back-and-forth exchanges", "Persistence by teacher", "Follow-up questions"],
+          "low": "The teacher gives only perfunctory feedback to students",
+          "mid": "There are occasional feedback loops between the teacher and students; other times feedback is more perfunctory",
+          "high": "There are frequent feedback loops — back-and-forth exchanges — between the teacher and students"
+        },
+        "Prompting Thought Processes": {
+          "markers": ["Asks students to explain thinking", "Queries responses and actions"],
+          "low": "The teacher rarely queries students or prompts them to explain their thinking and rationale",
+          "mid": "The teacher occasionally queries students or prompts them to explain their thinking",
+          "high": "The teacher often queries students or prompts them to explain their thinking and rationale"
+        },
+        "Providing Information": {
+          "markers": ["Expansion", "Clarification", "Specific feedback"],
+          "low": "The teacher rarely provides additional information to expand on students' understanding or actions",
+          "mid": "The teacher occasionally provides additional information to expand on students' understanding",
+          "high": "The teacher often provides additional information to expand on students' understanding or actions"
+        },
+        "Encouragement and Affirmation": {
+          "markers": ["Recognition", "Reinforcement", "Student persistence"],
+          "low": "The teacher rarely offers encouragement of students' efforts that increases involvement and persistence",
+          "mid": "The teacher occasionally offers encouragement that increases involvement and persistence",
+          "high": "The teacher often offers encouragement of students' efforts that increases involvement and persistence"
+        }
+      }
+    },
+    "PK10": {
+      "name": "Language Modeling",
+      "abbr": "LM",
+      "domain": "Instructional Support",
+      "definition": "Captures the quality and amount of the teacher's use of language-stimulation and language-facilitation techniques",
+      "indicators": {
+        "Frequent Conversation": {
+          "markers": ["Back-and-forth exchanges", "Contingent responding", "Peer conversations"],
+          "low": "There are few if any conversations in the classroom",
+          "mid": "There are limited conversations in the classroom",
+          "high": "There are frequent conversations in the classroom"
+        },
+        "Open-Ended Questions": {
+          "markers": ["Questions require more than a one-word response", "Students respond"],
+          "low": "The majority of the teacher's questions are closed-ended",
+          "mid": "The teacher asks a mix of closed-ended and open-ended questions",
+          "high": "The teacher asks many open-ended questions"
+        },
+        "Repetition and Extension": {
+          "markers": ["Repeats", "Extends/elaborates"],
+          "low": "The teacher rarely, if ever, repeats or extends the students' responses",
+          "mid": "The teacher sometimes repeats or extends the students' responses",
+          "high": "The teacher often repeats or extends the students' responses"
+        },
+        "Self- and Parallel Talk": {
+          "markers": ["Maps own actions with language", "Maps student action with language"],
+          "low": "The teacher rarely maps his or her own actions and the students' actions through language and description",
+          "mid": "The teacher occasionally maps his or her own actions and the students' actions through language",
+          "high": "The teacher consistently maps his or her own actions and the students' actions through language and description"
+        },
+        "Advanced Language": {
+          "markers": ["Variety of words", "Connected to familiar words and/or ideas"],
+          "low": "The teacher does not use advanced language with students",
+          "mid": "The teacher sometimes uses advanced language with students",
+          "high": "The teacher often uses advanced language with students"
+        }
+      }
+    }
+  }
+}
