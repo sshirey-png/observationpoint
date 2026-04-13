@@ -104,6 +104,44 @@ textarea::placeholder{color:#9ca3af}
         </div>
     </div>
 
+    <div class="card">
+        <div class="label">Public Recognition</div>
+        <div style="font-size:12px;color:#6b7280;margin-bottom:10px;">Track where this shout-out was shared publicly</div>
+        <div class="shout-options">
+            <div class="shout-item">
+                <label class="shout-opt"><input type="checkbox" onchange="toggleNote(this)"> <span>Newsletter</span></label>
+                <input class="shout-note" type="text" placeholder="Add context..." style="display:none">
+            </div>
+            <div class="shout-item">
+                <label class="shout-opt"><input type="checkbox" onchange="toggleNote(this)"> <span>This Week at FirstLine (TWAF)</span></label>
+                <input class="shout-note" type="text" placeholder="Add context..." style="display:none">
+            </div>
+            <div class="shout-item">
+                <label class="shout-opt"><input type="checkbox" onchange="toggleNote(this)"> <span>Huddle Shout Out</span></label>
+                <input class="shout-note" type="text" placeholder="Add context..." style="display:none">
+            </div>
+            <div class="shout-item">
+                <label class="shout-opt"><input type="checkbox" onchange="toggleNote(this)"> <span>Other</span></label>
+                <input class="shout-note" type="text" placeholder="Where and why?" style="display:none">
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="background:#f0fdf4;border:1.5px solid #bbf7d0;">
+        <div style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="document.getElementById('noteArea').style.display=document.getElementById('noteArea').style.display==='none'?'':'none'">
+            <div style="width:32px;height:32px;border-radius:8px;background:#059669;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg width="16" height="16" fill="none" stroke="white" stroke-width="2"><path d="M4 14l2-2h7a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v9z"/></svg>
+            </div>
+            <div>
+                <div style="font-size:14px;font-weight:600;color:#059669;">Send them a note now!</div>
+                <div style="font-size:11px;color:#6b7280;">Write a personal message directly to the teacher</div>
+            </div>
+        </div>
+        <div id="noteArea" style="display:none;margin-top:12px;">
+            <textarea placeholder="Hey Marcus — just wanted you to know..." style="min-height:80px;border-color:#bbf7d0;"></textarea>
+        </div>
+    </div>
+
 </div>
 
 <div class="bottom">
@@ -119,8 +157,26 @@ textarea::placeholder{color:#9ca3af}
     </div>
 </div>
 
+<style>
+.shout-options{display:flex;flex-direction:column;gap:4px}
+.shout-item{display:flex;flex-direction:column;gap:6px}
+.shout-opt{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;padding:10px 0;cursor:pointer}
+.shout-opt input{width:18px;height:18px;accent-color:#059669}
+.shout-note{width:100%;padding:8px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;color:#111827;outline:none;margin-left:26px;width:calc(100% - 26px)}
+.shout-note:focus{border-color:#e47727}
+</style>
 <script>
 function visSel(el){el.closest('.visibility').querySelectorAll('.vis-btn').forEach(function(b){b.classList.remove('sel')});el.classList.add('sel')}
+function toggleNote(checkbox){
+    var note = checkbox.closest('.shout-item').querySelector('.shout-note');
+    if(checkbox.querySelector('input').checked){
+        note.style.display='';
+        note.focus();
+    } else {
+        note.style.display='none';
+        note.value='';
+    }
+}
 </script>
 </body>
 </html>
