@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Solicited Feedback — ObservationPoint</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.nav{position:sticky;top:0;z-index:100;background:#002f60;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.nav-back{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.nav-title{font-size:15px;font-weight:700;color:#fff;flex:1}
+.nav-title span{color:#e47727}
+.teacher-banner{display:flex;align-items:center;gap:12px;padding:14px 16px;background:#fff;border-bottom:1px solid #e5e7eb}
+.tb-av{width:40px;height:40px;border-radius:10px;background:#002f60;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.tb-name{font-size:15px;font-weight:600}
+.tb-meta{font-size:12px;color:#6b7280}
+.tb-badge{margin-left:auto;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;background:#dbeafe;color:#2563eb}
+.content{padding:16px 16px 120px}
+.section-title{font-size:16px;font-weight:700;margin-bottom:4px}
+.section-sub{font-size:12px;color:#9ca3af;margin-bottom:14px}
+.card{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:16px;margin-bottom:12px}
+.label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;margin-bottom:6px}
+textarea{width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:'Inter',sans-serif;color:#111827;line-height:1.6;resize:vertical;outline:none;min-height:100px}
+textarea:focus{border-color:#e47727}
+textarea::placeholder{color:#9ca3af}
+.context-options{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.ctx-opt{padding:12px 14px;border-radius:10px;border:1.5px solid #e5e7eb;background:#fff;cursor:pointer;font-size:13px;font-weight:500;transition:all .15s;display:flex;align-items:center;gap:10px}
+.ctx-opt:active{transform:scale(.98)}
+.ctx-opt.sel{background:#eff6ff;border-color:#2563eb;color:#2563eb}
+.ctx-opt .dot{width:18px;height:18px;border-radius:50%;border:2px solid #d1d5db;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.ctx-opt.sel .dot{border-color:#2563eb;background:#2563eb}
+.ctx-opt.sel .dot::after{content:'';width:6px;height:6px;border-radius:50%;background:#fff}
+.scale-row{display:flex;gap:4px;margin-top:8px}
+.scale-btn{flex:1;padding:14px 4px;border-radius:8px;border:1.5px solid #e5e7eb;background:#fff;text-align:center;cursor:pointer;transition:all .12s;-webkit-tap-highlight-color:transparent}
+.scale-btn:active{transform:scale(.92)}
+.scale-btn .n{font-size:18px;font-weight:700;color:#9ca3af;display:block}
+.scale-btn .l{font-size:8px;font-weight:600;color:#9ca3af;display:block;margin-top:1px}
+.scale-btn.sel .n,.scale-btn.sel .l{color:#fff}
+.scale-btn[data-v="1"].sel{background:#ef4444;border-color:#ef4444}
+.scale-btn[data-v="2"].sel{background:#f97316;border-color:#f97316}
+.scale-btn[data-v="3"].sel{background:#eab308;border-color:#eab308}
+.scale-btn[data-v="4"].sel{background:#22c55e;border-color:#22c55e}
+.scale-btn[data-v="5"].sel{background:#0ea5e9;border-color:#0ea5e9}
+.divider{height:1px;background:#e5e7eb;margin:20px 0}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;padding:10px 16px;padding-bottom:max(10px,env(safe-area-inset-bottom));z-index:100}
+.btn{width:100%;padding:15px;border-radius:12px;font-size:14px;font-weight:600;text-align:center;cursor:pointer;font-family:'Inter',sans-serif;border:none;background:#2563eb;color:#fff}
+.btn:active{transform:scale(.97)}
+.success{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(6px);z-index:200;align-items:center;justify-content:center}
+.success-box{background:#fff;border-radius:20px;padding:36px 28px;text-align:center;margin:16px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.check{width:56px;height:56px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+    <div class="nav-back" onclick="history.back()"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></div>
+    <div class="nav-title">Observation<span>Point</span></div>
+</nav>
+
+<div class="teacher-banner">
+    <div class="tb-av">MW</div>
+    <div><div class="tb-name">Marcus Williams</div><div class="tb-meta">Samuel J. Green &middot; 5th Grade Math</div></div>
+    <div class="tb-badge">Feedback</div>
+</div>
+
+<div class="content">
+
+    <div class="section-title">Solicited Feedback</div>
+    <div class="section-sub">Ask the teacher for feedback. Their response shows up on your dashboard.</div>
+
+    <div class="card">
+        <div class="label">Context — What are you asking about?</div>
+        <div class="context-options">
+            <div class="ctx-opt" onclick="ctxSel(this)"><div class="dot"></div>How is your workload right now?</div>
+            <div class="ctx-opt" onclick="ctxSel(this)"><div class="dot"></div>How are you feeling about your goals?</div>
+            <div class="ctx-opt" onclick="ctxSel(this)"><div class="dot"></div>What support do you need from me?</div>
+            <div class="ctx-opt" onclick="ctxSel(this)"><div class="dot"></div>How is the team culture feeling?</div>
+            <div class="ctx-opt" onclick="ctxSel(this)"><div class="dot"></div>Custom question</div>
+        </div>
+    </div>
+
+    <div class="card" id="customQ" style="display:none">
+        <div class="label">Your Question</div>
+        <textarea placeholder="Type your question for the teacher..."></textarea>
+    </div>
+
+    <div class="card">
+        <div class="label">Additional context (optional, visible to teacher)</div>
+        <textarea placeholder="Any background or context for the teacher..." style="min-height:70px"></textarea>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-title">Quick Pulse (optional)</div>
+    <div class="section-sub">How would you rate this teacher's current engagement?</div>
+
+    <div class="card">
+        <div class="label">Sustainability — Is this teacher's workload sustainable?</div>
+        <div class="scale-row">
+            <div class="scale-btn" data-v="1" onclick="scaleSel(this)"><span class="n">1</span><span class="l">Not at all</span></div>
+            <div class="scale-btn" data-v="2" onclick="scaleSel(this)"><span class="n">2</span></div>
+            <div class="scale-btn" data-v="3" onclick="scaleSel(this)"><span class="n">3</span><span class="l">Neutral</span></div>
+            <div class="scale-btn" data-v="4" onclick="scaleSel(this)"><span class="n">4</span></div>
+            <div class="scale-btn" data-v="5" onclick="scaleSel(this)"><span class="n">5</span><span class="l">Very</span></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="label">Flight Risk — How likely is this teacher to stay next year?</div>
+        <div class="scale-row">
+            <div class="scale-btn" data-v="1" onclick="scaleSel(this)"><span class="n">1</span><span class="l">Leaving</span></div>
+            <div class="scale-btn" data-v="2" onclick="scaleSel(this)"><span class="n">2</span></div>
+            <div class="scale-btn" data-v="3" onclick="scaleSel(this)"><span class="n">3</span><span class="l">50/50</span></div>
+            <div class="scale-btn" data-v="4" onclick="scaleSel(this)"><span class="n">4</span></div>
+            <div class="scale-btn" data-v="5" onclick="scaleSel(this)"><span class="n">5</span><span class="l">Locked in</span></div>
+        </div>
+    </div>
+
+</div>
+
+<div class="bottom">
+    <button class="btn" onclick="document.getElementById('done').style.display='flex'">Send to Teacher</button>
+</div>
+
+<div class="success" id="done">
+    <div class="success-box">
+        <div class="check"><svg width="28" height="28" fill="none" stroke="#2563eb" stroke-width="3"><path d="M4 13l3 3 9-9"/></svg></div>
+        <div style="font-size:20px;font-weight:700;margin-bottom:4px;">Feedback Request Sent!</div>
+        <div style="font-size:14px;color:#6b7280;margin-bottom:20px;">Marcus Williams will see this in ObservationPoint</div>
+        <button class="btn" style="width:auto;padding:12px 32px" onclick="location.reload()">Done</button>
+    </div>
+</div>
+
+<script>
+function ctxSel(el){
+    el.closest('.context-options').querySelectorAll('.ctx-opt').forEach(function(b){b.classList.remove('sel')});
+    el.classList.add('sel');
+    // Show custom question field if "Custom" selected
+    var isCustom = el.textContent.trim() === 'Custom question';
+    document.getElementById('customQ').style.display = isCustom ? '' : 'none';
+    if(isCustom) document.querySelector('#customQ textarea').focus();
+}
+function scaleSel(el){
+    var row=el.closest('.scale-row');
+    row.querySelectorAll('.scale-btn').forEach(function(b){b.classList.remove('sel');b.style.background='';b.style.borderColor='';b.querySelectorAll('.n,.l').forEach(function(t){t.style.color=''})});
+    el.classList.add('sel');
+    var v=el.dataset.v;
+    var c={1:'#ef4444',2:'#f97316',3:'#eab308',4:'#22c55e',5:'#0ea5e9'};
+    el.style.background=c[v];el.style.borderColor=c[v];
+    el.querySelectorAll('.n,.l').forEach(function(t){t.style.color='#fff'});
+}
+</script>
+</body>
+</html>
