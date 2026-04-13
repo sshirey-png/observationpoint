@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>My Team — ObservationPoint</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.nav{position:sticky;top:0;z-index:100;background:#002f60;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.nav-back{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.nav-title{font-size:15px;font-weight:700;color:#fff;flex:1}.nav-title span{color:#e47727}
+.content{padding:16px 16px 40px}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.stat{background:#fff;border-radius:10px;padding:10px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.stat-val{font-size:22px;font-weight:800}.stat-label{font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+
+/* Filters */
+.filters{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px}
+.filter-chip{padding:7px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid #e5e7eb;background:#fff;cursor:pointer;white-space:nowrap;transition:all .15s;font-family:'Inter',sans-serif}
+.filter-chip:active{transform:scale(.95)}
+.filter-chip.active{background:#002f60;color:#fff;border-color:#002f60}
+
+/* Search */
+.search{width:100%;padding:10px 10px 10px 36px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:'Inter',sans-serif;outline:none;margin-bottom:12px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Ccircle cx='7' cy='7' r='4.5'/%3E%3Cpath d='m11 11 3 3'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:10px center}
+.search:focus{border-color:#e47727}
+
+/* Section label */
+.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;margin:12px 0 8px;display:flex;align-items:center;justify-content:space-between}
+
+/* Staff card */
+.staff-card{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:12px;margin-bottom:8px;cursor:pointer;transition:all .15s}
+.staff-card:active{transform:scale(.98);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.staff-top{display:flex;align-items:center;gap:10px}
+.staff-av{width:40px;height:40px;border-radius:10px;background:#002f60;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.staff-name{font-size:14px;font-weight:600}
+.staff-meta{font-size:11px;color:#9ca3af}
+.staff-right{margin-left:auto;text-align:right;flex-shrink:0}
+.staff-days{font-size:14px;font-weight:700}
+.staff-days.ok{color:#059669}.staff-days.warn{color:#e47727}.staff-days.danger{color:#dc2626}
+.staff-days-label{font-size:9px;color:#9ca3af;text-transform:uppercase}
+.staff-scores{display:flex;gap:3px;margin-top:8px}
+.staff-sc{padding:2px 5px;border-radius:3px;font-size:10px;font-weight:700;background:#f5f7fa}
+.staff-bottom{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.staff-tag{font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px}
+
+/* Needs attention banner */
+.attention{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.attention-icon{width:28px;height:28px;border-radius:8px;background:#dc2626;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.attention-text{font-size:12px;color:#991b1b;font-weight:500}
+.attention-count{font-weight:800;font-size:14px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+    <div class="nav-back" onclick="location.href='index.html'"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></div>
+    <div class="nav-title">My Team</div>
+</nav>
+
+<div class="content">
+
+<!-- Stats -->
+<div class="stats">
+    <div class="stat"><div class="stat-val" style="color:#2563eb">8</div><div class="stat-label">Staff</div></div>
+    <div class="stat"><div class="stat-val" style="color:#059669">47</div><div class="stat-label">TouchPoints</div></div>
+    <div class="stat"><div class="stat-val" style="color:#e47727">5.9</div><div class="stat-label">Avg/Person</div></div>
+    <div class="stat"><div class="stat-val" style="color:#dc2626">2</div><div class="stat-label">Need Attn</div></div>
+</div>
+
+<!-- Attention Banner -->
+<div class="attention">
+    <div class="attention-icon">!</div>
+    <div class="attention-text"><span class="attention-count">2 teachers</span> haven't been observed in 14+ days</div>
+</div>
+
+<!-- Search -->
+<input class="search" type="text" placeholder="Search staff..." oninput="filterStaff(this.value)">
+
+<!-- Filters -->
+<div class="filters">
+    <div class="filter-chip active" onclick="filterRole(this,'all')">All</div>
+    <div class="filter-chip" onclick="filterRole(this,'teacher')">Teachers</div>
+    <div class="filter-chip" onclick="filterRole(this,'support')">Support</div>
+    <div class="filter-chip" onclick="filterRole(this,'needs')">Needs Attention</div>
+</div>
+
+<!-- Needs Attention -->
+<div class="section-label"><span>Needs Attention</span><span style="color:#dc2626;font-size:10px">14+ days</span></div>
+
+<div class="staff-card" onclick="location.href='teacher-profile.html'" data-role="teacher">
+    <div class="staff-top">
+        <div class="staff-av" style="background:#dc2626">DC</div>
+        <div><div class="staff-name">David Chen</div><div class="staff-meta">7th Grade Science</div></div>
+        <div class="staff-right"><div class="staff-days danger">21</div><div class="staff-days-label">days ago</div></div>
+    </div>
+    <div class="staff-scores">
+        <div class="staff-sc" style="color:#eab308">T1:3</div>
+        <div class="staff-sc" style="color:#f97316">T2:2</div>
+        <div class="staff-sc" style="color:#eab308">T3:3</div>
+        <div class="staff-sc" style="color:#f97316">T4:2</div>
+        <div class="staff-sc" style="color:#eab308">T5:3</div>
+    </div>
+    <div class="staff-bottom">
+        <div class="staff-tag" style="background:#fee2e2;color:#dc2626">Needs Obs</div>
+        <div class="staff-tag" style="background:#fef3c7;color:#a16207">PMAP 2 Due</div>
+    </div>
+</div>
+
+<div class="staff-card" onclick="location.href='teacher-profile.html'" data-role="teacher">
+    <div class="staff-top">
+        <div class="staff-av" style="background:#dc2626">AJ</div>
+        <div><div class="staff-name">Amara Johnson</div><div class="staff-meta">1st Grade</div></div>
+        <div class="staff-right"><div class="staff-days danger">14</div><div class="staff-days-label">days ago</div></div>
+    </div>
+    <div class="staff-scores">
+        <div class="staff-sc" style="color:#22c55e">T1:4</div>
+        <div class="staff-sc" style="color:#eab308">T2:3</div>
+        <div class="staff-sc" style="color:#22c55e">T3:4</div>
+        <div class="staff-sc" style="color:#eab308">T4:3</div>
+        <div class="staff-sc" style="color:#22c55e">T5:4</div>
+    </div>
+    <div class="staff-bottom">
+        <div class="staff-tag" style="background:#fee2e2;color:#dc2626">Needs Obs</div>
+    </div>
+</div>
+
+<!-- On Track -->
+<div class="section-label">On Track</div>
+
+<div class="staff-card" onclick="location.href='teacher-profile.html'" data-role="teacher">
+    <div class="staff-top">
+        <div class="staff-av">MW</div>
+        <div><div class="staff-name">Marcus Williams</div><div class="staff-meta">5th Grade Math</div></div>
+        <div class="staff-right"><div class="staff-days ok">3</div><div class="staff-days-label">days ago</div></div>
+    </div>
+    <div class="staff-scores">
+        <div class="staff-sc" style="color:#22c55e">T1:4</div>
+        <div class="staff-sc" style="color:#eab308">T2:3</div>
+        <div class="staff-sc" style="color:#22c55e">T3:4</div>
+        <div class="staff-sc" style="color:#eab308">T4:3</div>
+        <div class="staff-sc" style="color:#22c55e">T5:4</div>
+    </div>
+    <div class="staff-bottom">
+        <div class="staff-tag" style="background:#dcfce7;color:#059669">2 Active Steps</div>
+        <div class="staff-tag" style="background:#dbeafe;color:#2563eb">12 TouchPoints</div>
+    </div>
+</div>
+
+<div class="staff-card" onclick="location.href='teacher-profile.html'" data-role="teacher">
+    <div class="staff-top">
+        <div class="staff-av">KB</div>
+        <div><div class="staff-name">Keisha Brown</div><div class="staff-meta">3rd Grade ELA</div></div>
+        <div class="staff-right"><div class="staff-days ok">5</div><div class="staff-days-label">days ago</div></div>
+    </div>
+    <div class="staff-scores">
+        <div class="staff-sc" style="color:#22c55e">T1:4</div>
+        <div class="staff-sc" style="color:#22c55e">T2:4</div>
+        <div class="staff-sc" style="color:#0ea5e9">T3:5</div>
+        <div class="staff-sc" style="color:#22c55e">T4:4</div>
+        <div class="staff-sc" style="color:#22c55e">T5:4</div>
+    </div>
+    <div class="staff-bottom">
+        <div class="staff-tag" style="background:#dcfce7;color:#059669">1 Active Step</div>
+        <div class="staff-tag" style="background:#dbeafe;color:#2563eb">9 TouchPoints</div>
+    </div>
+</div>
+
+<div class="staff-card" onclick="location.href='teacher-profile.html'" data-role="teacher">
+    <div class="staff-top">
+        <div class="staff-av">MT</div>
+        <div><div class="staff-name">Marie Thibodaux</div><div class="staff-meta">PreK-4</div></div>
+        <div class="staff-right"><div class="staff-days ok">7</div><div class="staff-days-label">days ago</div></div>
+    </div>
+    <div class="staff-scores">
+        <div class="staff-sc" style="color:#22c55e">5.3</div>
+        <div class="staff-sc" style="color:#22c55e">5.9</div>
+        <div class="staff-sc" style="color:#eab308">3.2</div>
+    </div>
+    <div class="staff-bottom">
+        <div class="staff-tag" style="background:#fce7f3;color:#db2777">CLASS PreK</div>
+        <div class="staff-tag" style="background:#dbeafe;color:#2563eb">8 TouchPoints</div>
+    </div>
+</div>
+
+<div class="staff-card" onclick="location.href='teacher-profile.html'" data-role="teacher">
+    <div class="staff-top">
+        <div class="staff-av">RT</div>
+        <div><div class="staff-name">Robert Taylor</div><div class="staff-meta">10th Grade English</div></div>
+        <div class="staff-right"><div class="staff-days ok">2</div><div class="staff-days-label">days ago</div></div>
+    </div>
+    <div class="staff-scores">
+        <div class="staff-sc" style="color:#0ea5e9">T1:5</div>
+        <div class="staff-sc" style="color:#22c55e">T2:4</div>
+        <div class="staff-sc" style="color:#22c55e">T3:4</div>
+        <div class="staff-sc" style="color:#22c55e">T4:4</div>
+        <div class="staff-sc" style="color:#0ea5e9">T5:5</div>
+    </div>
+    <div class="staff-bottom">
+        <div class="staff-tag" style="background:#dcfce7;color:#059669">On Track</div>
+        <div class="staff-tag" style="background:#dbeafe;color:#2563eb">15 TouchPoints</div>
+    </div>
+</div>
+
+<div class="staff-card" onclick="location.href='teacher-profile.html'" data-role="support">
+    <div class="staff-top">
+        <div class="staff-av" style="background:#6b7280">TJ</div>
+        <div><div class="staff-name">Tamika Jackson</div><div class="staff-meta">Front Office Admin</div></div>
+        <div class="staff-right"><div class="staff-days warn">10</div><div class="staff-days-label">days ago</div></div>
+    </div>
+    <div class="staff-bottom">
+        <div class="staff-tag" style="background:#f3f4f6;color:#6b7280">Support Staff</div>
+        <div class="staff-tag" style="background:#dbeafe;color:#2563eb">4 TouchPoints</div>
+    </div>
+</div>
+
+<div class="staff-card" onclick="location.href='teacher-profile.html'" data-role="support">
+    <div class="staff-top">
+        <div class="staff-av" style="background:#6b7280">LW</div>
+        <div><div class="staff-name">Lisa Washington</div><div class="staff-meta">Paraprofessional</div></div>
+        <div class="staff-right"><div class="staff-days warn">8</div><div class="staff-days-label">days ago</div></div>
+    </div>
+    <div class="staff-bottom">
+        <div class="staff-tag" style="background:#f3f4f6;color:#6b7280">Support Staff</div>
+        <div class="staff-tag" style="background:#dbeafe;color:#2563eb">3 TouchPoints</div>
+    </div>
+</div>
+
+</div>
+
+<script>
+function filterStaff(q) {
+    document.querySelectorAll('.staff-card').forEach(function(c) {
+        c.style.display = c.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+    });
+}
+function filterRole(el, role) {
+    document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
+    el.classList.add('active');
+    document.querySelectorAll('.staff-card').forEach(function(c) {
+        if (role === 'all') { c.style.display = ''; return; }
+        if (role === 'needs') { c.style.display = c.querySelector('.staff-days.danger') ? '' : 'none'; return; }
+        c.style.display = c.dataset.role === role ? '' : 'none';
+    });
+}
+</script>
+</body>
+</html>
