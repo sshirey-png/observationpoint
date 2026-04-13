@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Self-Reflection: Network Staff — ObservationPoint</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.nav{position:sticky;top:0;z-index:100;background:#7c3aed;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.nav-back{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.nav-title{font-size:15px;font-weight:700;color:#fff;flex:1}.nav-title span{color:#c4b5fd}
+.banner{padding:16px;background:#ede9fe;border-bottom:1px solid #ddd6fe}
+.banner-title{font-size:16px;font-weight:700;color:#5b21b6}
+.banner-sub{font-size:13px;color:#7c3aed;margin-top:2px}
+.content{padding:0 16px 120px}
+.section{margin-top:20px}
+.section-title{font-size:16px;font-weight:700;margin-bottom:4px}
+.section-sub{font-size:12px;color:#9ca3af;margin-bottom:12px}
+.card{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:16px;margin-bottom:10px}
+.label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;margin-bottom:6px}
+.req{color:#dc2626}
+textarea{width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:'Inter',sans-serif;color:#111827;line-height:1.6;resize:vertical;outline:none;min-height:70px}
+textarea:focus{border-color:#7c3aed}textarea::placeholder{color:#9ca3af}
+.rub{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:16px;margin-bottom:10px;border-left:4px solid #e5e7eb;transition:border-color .2s}
+.rub-code{font-size:11px;font-weight:700;color:#5b21b6;background:#ede9fe;padding:2px 6px;border-radius:4px;display:inline-block;margin-bottom:6px}
+.rub-q{font-size:13px;font-weight:500;line-height:1.5;margin-bottom:12px}
+.scores{display:flex;gap:6px}
+.sc{flex:1;padding:14px 4px;border-radius:8px;border:2px solid #e5e7eb;background:#fff;text-align:center;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.sc:active{transform:scale(.92)}
+.sc .n{font-size:18px;font-weight:700;color:#9ca3af;display:block}
+.sc .l{font-size:8px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.03em}
+.sc.sel .n,.sc.sel .l{color:#fff}
+.sc[data-v="1"].sel{background:#ef4444;border-color:#ef4444}
+.sc[data-v="2"].sel{background:#f97316;border-color:#f97316}
+.sc[data-v="3"].sel{background:#eab308;border-color:#eab308}
+.sc[data-v="4"].sel{background:#22c55e;border-color:#22c55e}
+.sc[data-v="5"].sel{background:#0ea5e9;border-color:#0ea5e9}
+.divider{height:1px;background:#e5e7eb;margin:20px 0}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;padding:10px 16px;padding-bottom:max(10px,env(safe-area-inset-bottom));display:flex;gap:8px;z-index:100}
+.btn{flex:1;padding:15px;border-radius:12px;font-size:14px;font-weight:600;text-align:center;cursor:pointer;font-family:'Inter',sans-serif;border:none}.btn:active{transform:scale(.97)}
+.btn-pri{background:#7c3aed;color:#fff}.btn-out{background:#fff;color:#111827;border:1.5px solid #e5e7eb}
+.success{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(6px);z-index:200;align-items:center;justify-content:center}
+.success-box{background:#fff;border-radius:20px;padding:36px 28px;text-align:center;margin:16px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.check-icon{width:56px;height:56px;border-radius:50%;background:#ede9fe;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+</style>
+</head>
+<body>
+
+<nav class="nav"><div class="nav-back" onclick="history.back()"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></div><div class="nav-title">Observation<span>Point</span></div></nav>
+
+<div class="banner">
+    <div class="banner-title">Self-Reflection: Network Staff</div>
+    <div class="banner-sub">Reflect on your personal leadership, commitments, and career growth</div>
+</div>
+
+<div class="content">
+
+<!-- Personal Leadership (Network staff) -->
+<div class="section"><div class="section-title">FLS Personal Leadership</div>
+<div class="section-sub">Reflect honestly on your personal leadership practices.</div>
+<div class="card"><div class="label">Personal Leadership Strength <span class="req">*</span></div>
+<textarea placeholder="What leadership qualities do you model consistently? Provide examples."></textarea>
+<div style="margin-top:12px"><div class="label">Personal Leadership Growth Area <span class="req">*</span></div>
+<textarea placeholder="Where do you want to grow as a leader?"></textarea></div></div></div>
+
+<div class="divider"></div>
+
+<!-- Commitments -->
+<div class="section"><div class="section-title">FLS Commitments</div>
+<div class="card"><div class="label">Commitment Strength <span class="req">*</span></div>
+<textarea placeholder="Which commitment(s) do you model consistently? Provide examples."></textarea>
+<div style="margin-top:12px"><div class="label">Commitment Growth Area <span class="req">*</span></div>
+<textarea placeholder="Which commitment(s) do you want to grow in?"></textarea></div></div></div>
+
+<div class="divider"></div>
+
+<!-- Career -->
+<div class="section"><div class="section-title">Professional Development & Career Growth</div>
+<div class="card"><div class="label">Career Goals <span class="req">*</span></div>
+<textarea placeholder="Where do you see yourself in 3-5 years? What skills or experiences would help you get there?"></textarea>
+<div style="margin-top:12px"><div class="label">Licenses, Certifications, and Trainings <span class="req">*</span></div>
+<textarea placeholder="Progress towards required certifications. Write N/A if not applicable."></textarea></div></div></div>
+
+</div>
+
+<div class="bottom"><button class="btn btn-out" onclick="alert('Draft saved')">Save Draft</button><button class="btn btn-pri" onclick="document.getElementById('done').style.display='flex'">Submit Reflection</button></div>
+
+<div class="success" id="done"><div class="success-box"><div class="check-icon"><svg width="28" height="28" fill="none" stroke="#7c3aed" stroke-width="3"><path d="M7 14l5 5 10-10"/></svg></div><div style="font-size:20px;font-weight:700;margin-bottom:4px;">Reflection Submitted!</div><div style="font-size:14px;color:#6b7280;margin-bottom:20px;">Your leader will review this before your PMAP meeting</div><button class="btn btn-pri" style="width:auto;padding:12px 32px" onclick="location.reload()">Done</button></div></div>
+
+<script>
+function score(el){var c=el.closest('.rub');c.querySelectorAll('.sc').forEach(function(s){s.classList.remove('sel');s.style.background='';s.style.borderColor='';s.querySelectorAll('.n,.l').forEach(function(t){t.style.color=''})});el.classList.add('sel');var v=el.dataset.v;var colors={1:'#ef4444',2:'#f97316',3:'#eab308',4:'#22c55e',5:'#0ea5e9'};el.style.background=colors[v];el.style.borderColor=colors[v];el.querySelectorAll('.n,.l').forEach(function(t){t.style.color='#fff'});c.style.borderLeftColor=colors[v]}
+</script>
+</body>
+</html>
