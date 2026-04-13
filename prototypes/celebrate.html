@@ -60,6 +60,23 @@ textarea::placeholder{color:#9ca3af}
     <div><div class="tb-name">Marcus Williams</div><div class="tb-meta">Samuel J. Green &middot; 5th Grade Math</div></div>
     <div class="tb-badge">Celebrate</div>
 </div>
+<div class="multi-teachers" id="multiTeachers">
+    <div class="added-teachers" id="addedTeachers"></div>
+    <div class="add-teacher-btn" onclick="showAddTeacher()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 1v12M1 7h12"/></svg>
+        Add another teacher
+    </div>
+    <div class="add-teacher-search" id="addSearch" style="display:none">
+        <input type="text" class="add-search-input" id="addSearchInput" placeholder="Search name..." oninput="filterAdd(this.value)">
+        <div class="add-results" id="addResults">
+            <div class="add-item" onclick="addTeacher('Keisha Brown','Langston Hughes','3rd Grade ELA')">Keisha Brown <span>Langston Hughes</span></div>
+            <div class="add-item" onclick="addTeacher('David Chen','Arthur Ashe','7th Grade Science')">David Chen <span>Arthur Ashe</span></div>
+            <div class="add-item" onclick="addTeacher('Amara Johnson','Live Oak','1st Grade')">Amara Johnson <span>Live Oak</span></div>
+            <div class="add-item" onclick="addTeacher('Marie Thibodaux','Arthur Ashe','PreK-4')">Marie Thibodaux <span>Arthur Ashe</span></div>
+            <div class="add-item" onclick="addTeacher('Robert Taylor','GW Carver','10th English')">Robert Taylor <span>GW Carver</span></div>
+        </div>
+    </div>
+</div>
 
 <div class="content">
 
@@ -158,6 +175,20 @@ textarea::placeholder{color:#9ca3af}
 </div>
 
 <style>
+.multi-teachers{padding:8px 16px 12px;background:#fff;border-bottom:1px solid #e5e7eb}
+.added-teachers{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.teacher-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;background:#f5f7fa;border-radius:8px;font-size:13px;font-weight:500}
+.teacher-chip .remove{width:18px;height:18px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:#6b7280;line-height:1}
+.teacher-chip .remove:hover{background:#dc2626;color:#fff}
+.add-teacher-btn{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#e47727;cursor:pointer;padding:6px 0}
+.add-teacher-btn:active{opacity:.7}
+.add-teacher-search{margin-top:6px}
+.add-search-input{width:100%;padding:10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none}
+.add-search-input:focus{border-color:#e47727}
+.add-results{max-height:160px;overflow-y:auto;margin-top:4px}
+.add-item{padding:10px;font-size:13px;cursor:pointer;border-radius:6px;transition:background .1s}
+.add-item:active{background:#f5f7fa}
+.add-item span{color:#9ca3af;margin-left:6px;font-size:12px}
 .shout-options{display:flex;flex-direction:column;gap:4px}
 .shout-item{display:flex;flex-direction:column;gap:6px}
 .shout-opt{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;padding:10px 0;cursor:pointer}
@@ -167,6 +198,27 @@ textarea::placeholder{color:#9ca3af}
 </style>
 <script>
 function visSel(el){el.closest('.visibility').querySelectorAll('.vis-btn').forEach(function(b){b.classList.remove('sel')});el.classList.add('sel')}
+function showAddTeacher(){
+    var s=document.getElementById('addSearch');
+    s.style.display=s.style.display==='none'?'':'none';
+    if(s.style.display!=='none')document.getElementById('addSearchInput').focus();
+}
+function addTeacher(name,school,role){
+    var container=document.getElementById('addedTeachers');
+    var id='chip-'+name.replace(/\s/g,'');
+    if(document.getElementById(id))return; // already added
+    var chip=document.createElement('div');
+    chip.className='teacher-chip';
+    chip.id=id;
+    chip.innerHTML=name+' <div class="remove" onclick="this.parentElement.remove()">&times;</div>';
+    container.appendChild(chip);
+    document.getElementById('addSearch').style.display='none';
+    document.getElementById('addSearchInput').value='';
+}
+function filterAdd(q){
+    var items=document.querySelectorAll('.add-item');
+    items.forEach(function(i){i.style.display=i.textContent.toLowerCase().includes(q.toLowerCase())?'':'none'});
+}
 function toggleNote(checkbox){
     var note = checkbox.closest('.shout-item').querySelector('.shout-note');
     if(checkbox.querySelector('input').checked){
