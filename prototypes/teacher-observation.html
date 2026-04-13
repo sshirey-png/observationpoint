@@ -126,6 +126,11 @@ textarea::placeholder{color:#9ca3af}
     </div>
     <div class="tb-badge">Teacher Obs</div>
 </div>
+<div style="padding:8px 16px 12px;background:#fff;border-bottom:1px solid #e5e7eb">
+    <div id="addedTeachers" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px"></div>
+    <div onclick="showAdd()" style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#e47727;cursor:pointer;padding:6px 0"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 1v12M1 7h12"/></svg> Add another teacher</div>
+    <div id="addSearch" style="display:none;margin-top:6px"><input id="addInput" placeholder="Search name..." oninput="filterAdd(this.value)" style="width:100%;padding:10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:Inter,sans-serif;outline:none"><div style="max-height:160px;overflow-y:auto;margin-top:4px"><div class="add-i" onclick="addT('Keisha Brown')">Keisha Brown</div><div class="add-i" onclick="addT('David Chen')">David Chen</div><div class="add-i" onclick="addT('Amara Johnson')">Amara Johnson</div></div></div>
+</div>
 
 <div class="content">
 
@@ -292,6 +297,11 @@ textarea::placeholder{color:#9ca3af}
 </div>
 
 <script>
+// Multi-teacher
+function showAdd(){var s=document.getElementById('addSearch');s.style.display=s.style.display==='none'?'':'none';if(s.style.display!=='none')document.getElementById('addInput').focus()}
+function addT(n){var c=document.getElementById('addedTeachers');var id='c-'+n.replace(/\s/g,'');if(document.getElementById(id))return;var d=document.createElement('div');d.style.cssText='display:inline-flex;align-items:center;gap:6px;padding:6px 10px;background:#f5f7fa;border-radius:8px;font-size:13px;font-weight:500';d.id=id;d.innerHTML=n+' <div onclick="this.parentElement.remove()" style="width:18px;height:18px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:#6b7280">&times;</div>';c.appendChild(d);document.getElementById('addSearch').style.display='none';document.getElementById('addInput').value=''}
+function filterAdd(q){document.querySelectorAll('.add-i').forEach(function(i){i.style.display=i.textContent.toLowerCase().includes(q.toLowerCase())?'':'none'})}
+
 // Scoring
 function score(el){
     const card = el.closest('.rub');
