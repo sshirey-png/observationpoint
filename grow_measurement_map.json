@@ -1,0 +1,109 @@
+{
+  "_description": "Maps Grow measurement IDs to standardized dimension codes across all rubric versions",
+
+  "teacher_rubric": {
+    "T1": {
+      "name": "On Task",
+      "ids": [
+        "6838c54ee7b1e5001139b001",
+        "611ebe119d9370001027c4ee",
+        "57abb67197341b0f00fc6435",
+        "55953414b65b4b0300252baf"
+      ]
+    },
+    "T2": {
+      "name": "Community of Learners",
+      "ids": [
+        "6838ca8c9b5d490011994207",
+        "611ebe65cfe5ac001119f8c3",
+        "57abb67197341b0f00fc6459",
+        "55953414b65b4b0300252bb5"
+      ]
+    },
+    "T3": {
+      "name": "Essential Content",
+      "ids": [
+        "6838cb2cf4ee8900104c5af4",
+        "611ebe7bcfe5ac001119f919",
+        "57abb67197341b0f00fc647d",
+        "55953414b65b4b0300252bbb"
+      ]
+    },
+    "T4": {
+      "name": "Cognitive Engagement",
+      "ids": [
+        "6838cbc848872a0011bdaabe",
+        "611ebe949ed56700116e73f3",
+        "57abb67197341b0f00fc64a1",
+        "55953415b65b4b0300252bd3"
+      ]
+    },
+    "T5": {
+      "name": "Demonstration of Learning",
+      "ids": [
+        "683db4c02afc78001107ae25",
+        "611ebeb79ed56700116e7417",
+        "57abb67197341b0f00fc64c5",
+        "55953415b65b4b0300252c21"
+      ]
+    }
+  },
+
+  "leader_rubric": {
+    "L1": {
+      "name": "Instructional Leadership",
+      "ids": [
+        "682e2efc211fbb0011e0d3a9",
+        "5d435b286d66260018e26fd6"
+      ]
+    },
+    "L2": {
+      "name": "Cultural Leadership and Builder",
+      "ids": [
+        "6838c062896bd500116c2aac",
+        "5d435b286d66260018e26fe1"
+      ]
+    }
+  },
+
+  "fundamentals": {
+    "M1": {"name": "On Task Minute 1", "ids": ["57322826ac02800800ac2805"]},
+    "M2": {"name": "On Task Minute 2", "ids": ["5732282ac99ff20800c07d41"]},
+    "M3": {"name": "On Task Minute 3", "ids": ["5732282e5971cb0700743cc0"]},
+    "M4": {"name": "On Task Minute 4", "ids": ["57322831ac02800800ac2806"]},
+    "M5": {"name": "On Task Minute 5", "ids": ["5732283226bb15070095b7be"]},
+    "RB": {"name": "Relationship Building", "ids": ["60ddc029fa6e6b001059c450"]}
+  },
+
+  "prek_class_cycle1": {
+    "PK1": {"name": "Positive Climate", "ids": ["683e6569dedb700011a633e5", "57d19085904c531100c807b2"]},
+    "PK2": {"name": "Negative Climate", "ids": ["683e65adb372f10011a61ebc", "57d19085904c531100c807ea"]},
+    "PK3": {"name": "Teacher Sensitivity", "ids": ["57d19086904c531100c80822"]},
+    "PK4": {"name": "Regard for Student Perspectives", "ids": ["57d19086904c531100c8085a"]},
+    "PK5": {"name": "Behavior Management", "ids": ["57d19086904c531100c80892"]},
+    "PK6": {"name": "Productivity", "ids": ["57d19086904c531100c808ca"]},
+    "PK7": {"name": "Instructional Learning Formats", "ids": ["57d19086904c531100c80902"]},
+    "PK8": {"name": "Concept Development", "ids": ["57d19086904c531100c8093a"]},
+    "PK9": {"name": "Quality of Feedback", "ids": ["57d19086904c531100c80972"]},
+    "PK10": {"name": "Language Modeling", "ids": ["683e68cacca9f40011d08a19", "57d19086904c531100c809aa"]}
+  },
+
+  "prek_class_cycle2": {
+    "PK1": {"name": "Positive Climate", "ids": ["683e6a2cdedb700011a6364b", "57e41ddaf8fbac0b0039f5e4"]},
+    "PK2": {"name": "Negative Climate", "ids": ["683e6a5f9d4fd2001117f60d", "57e41ddaf8fbac0b0039f61c"]},
+    "PK3": {"name": "Teacher Sensitivity", "ids": ["57e41ddaf8fbac0b0039f654"]},
+    "PK4": {"name": "Regard for Student Perspectives", "ids": ["57e41ddaf8fbac0b0039f680"]},
+    "PK5": {"name": "Behavior Management", "ids": ["57e41ddbf8fbac0b0039f6b8"]},
+    "PK6": {"name": "Productivity", "ids": ["57e41ddbf8fbac0b0039f6f0"]},
+    "PK7": {"name": "Instructional Learning Formats", "ids": ["57e41ddbf8fbac0b0039f728"]},
+    "PK8": {"name": "Concept Development", "ids": ["57e41ddbf8fbac0b0039f760"]},
+    "PK9": {"name": "Quality of Feedback", "ids": ["57e41ddbf8fbac0b0039f798"]},
+    "PK10": {"name": "Language Modeling", "ids": ["683e6bf7521ef6001168e864", "57e41ddbf8fbac0b0039f7d0"]}
+  },
+
+  "prek_class_cycle3": {
+    "PK1": {"name": "Positive Climate", "ids": ["683e6cc7555f62001105d9a7", "57e41ddbf8fbac0b0039f824"]},
+    "PK2": {"name": "Negative Climate", "ids": ["683e6cf409f8b50011c3184b", "57e41ddbf8fbac0b0039f85c"]},
+    "PK10": {"name": "Language Modeling", "ids": ["683e6e6b521ef6001168ea07"]}
+  }
+}
