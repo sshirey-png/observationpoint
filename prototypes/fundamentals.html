@@ -51,10 +51,20 @@ textarea::placeholder{color:#9ca3af}
 .minute-num.done{background:#22c55e;color:#fff}
 @keyframes pulse-min{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
 .minute-label{font-size:13px;font-weight:500;flex:1}
-.minute-input{width:80px;padding:10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:16px;font-weight:700;font-family:'Inter',sans-serif;text-align:center;outline:none}
+.minute-input{width:64px;padding:10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:16px;font-weight:700;font-family:'Inter',sans-serif;text-align:center;outline:none}
 .minute-input:focus{border-color:#e47727}
 .minute-input.done{background:#f0fdf4;border-color:#22c55e}
-.minute-pct{font-size:12px;color:#9ca3af;width:20px;text-align:right}
+.minute-of{font-size:13px;color:#6b7280;white-space:nowrap}
+.minute-pct{font-size:14px;font-weight:700;color:#9ca3af;min-width:48px;text-align:right;font-variant-numeric:tabular-nums}
+.minute-pct.done{color:#22c55e}
+
+/* Class size */
+.class-size-card{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:16px;margin-top:16px;display:flex;align-items:center;gap:12px}
+.class-size-label{flex:1}
+.class-size-label-title{font-size:14px;font-weight:600;color:#111827}
+.class-size-label-sub{font-size:12px;color:#9ca3af;margin-top:2px}
+.class-size-input{width:80px;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:20px;font-weight:800;font-family:'Inter',sans-serif;text-align:center;outline:none;color:#002f60}
+.class-size-input:focus{border-color:#e47727}
 
 /* Yes/No buttons */
 .yn-row{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid #f3f4f6}
@@ -111,40 +121,54 @@ textarea::placeholder{color:#9ca3af}
     </div>
 </div>
 
-<!-- On Task % per minute -->
+<!-- Class Size -->
+<div class="class-size-card">
+    <div class="class-size-label">
+        <div class="class-size-label-title">Students in class</div>
+        <div class="class-size-label-sub">Total count — set once at start</div>
+    </div>
+    <input class="class-size-input" id="classSize" type="number" placeholder="0" min="1" max="99" oninput="updateAvg()">
+</div>
+
+<!-- On Task count per minute -->
 <div class="section">
-    <div class="section-title">On Task % by Minute</div>
-    <div class="section-sub">Enter the percentage of students on task at the end of each minute</div>
+    <div class="section-title">On Task by Minute</div>
+    <div class="section-sub">Count students on task at the end of each minute — percent auto-calculates</div>
     <div class="card">
         <div class="minute-row" id="min1">
             <div class="minute-num pending" id="mn1">1</div>
             <div class="minute-label">Minute 1</div>
-            <input class="minute-input" id="mi1" type="number" placeholder="%" min="0" max="100" oninput="updateAvg()">
-            <div class="minute-pct">%</div>
+            <input class="minute-input" id="mi1" type="number" placeholder="#" min="0" max="99" oninput="updateAvg()">
+            <div class="minute-of" id="mo1">/ —</div>
+            <div class="minute-pct" id="mp1">—</div>
         </div>
         <div class="minute-row" id="min2">
             <div class="minute-num pending" id="mn2">2</div>
             <div class="minute-label">Minute 2</div>
-            <input class="minute-input" id="mi2" type="number" placeholder="%" min="0" max="100" oninput="updateAvg()">
-            <div class="minute-pct">%</div>
+            <input class="minute-input" id="mi2" type="number" placeholder="#" min="0" max="99" oninput="updateAvg()">
+            <div class="minute-of" id="mo2">/ —</div>
+            <div class="minute-pct" id="mp2">—</div>
         </div>
         <div class="minute-row" id="min3">
             <div class="minute-num pending" id="mn3">3</div>
             <div class="minute-label">Minute 3</div>
-            <input class="minute-input" id="mi3" type="number" placeholder="%" min="0" max="100" oninput="updateAvg()">
-            <div class="minute-pct">%</div>
+            <input class="minute-input" id="mi3" type="number" placeholder="#" min="0" max="99" oninput="updateAvg()">
+            <div class="minute-of" id="mo3">/ —</div>
+            <div class="minute-pct" id="mp3">—</div>
         </div>
         <div class="minute-row" id="min4">
             <div class="minute-num pending" id="mn4">4</div>
             <div class="minute-label">Minute 4</div>
-            <input class="minute-input" id="mi4" type="number" placeholder="%" min="0" max="100" oninput="updateAvg()">
-            <div class="minute-pct">%</div>
+            <input class="minute-input" id="mi4" type="number" placeholder="#" min="0" max="99" oninput="updateAvg()">
+            <div class="minute-of" id="mo4">/ —</div>
+            <div class="minute-pct" id="mp4">—</div>
         </div>
         <div class="minute-row" id="min5">
             <div class="minute-num pending" id="mn5">5</div>
             <div class="minute-label">Minute 5</div>
-            <input class="minute-input" id="mi5" type="number" placeholder="%" min="0" max="100" oninput="updateAvg()">
-            <div class="minute-pct">%</div>
+            <input class="minute-input" id="mi5" type="number" placeholder="#" min="0" max="99" oninput="updateAvg()">
+            <div class="minute-of" id="mo5">/ —</div>
+            <div class="minute-pct" id="mp5">—</div>
         </div>
 
         <div class="avg-bar">
@@ -285,24 +309,46 @@ function resetTimer(){
         document.getElementById('mn'+i).className = 'minute-num pending';
         document.getElementById('mi'+i).value = '';
         document.getElementById('mi'+i).classList.remove('done');
+        document.getElementById('mp'+i).textContent = '—';
+        document.getElementById('mp'+i).classList.remove('done');
+        document.getElementById('mo'+i).textContent = '/ —';
     }
     document.getElementById('avgVal').textContent = '—';
     document.getElementById('avgVal').className = 'avg-val';
 }
 
-// Average
+// Average — computes percent from on-task count / class size per minute
 function updateAvg(){
-    var vals = [];
+    var totalRaw = document.getElementById('classSize').value;
+    var total = totalRaw === '' ? null : parseInt(totalRaw);
+    var ofLabel = total ? '/ ' + total : '/ —';
+
+    var pcts = [];
     for(var i=1;i<=5;i++){
-        var v = document.getElementById('mi'+i).value;
-        if(v !== ''){
-            vals.push(parseInt(v));
-            document.getElementById('mi'+i).classList.add('done');
+        var countRaw = document.getElementById('mi'+i).value;
+        var mpEl = document.getElementById('mp'+i);
+        var moEl = document.getElementById('mo'+i);
+        var miEl = document.getElementById('mi'+i);
+        moEl.textContent = ofLabel;
+
+        if(countRaw === '' || total === null || total === 0){
+            mpEl.textContent = '—';
+            mpEl.classList.remove('done');
+            miEl.classList.remove('done');
+            continue;
         }
+        var count = parseInt(countRaw);
+        if(count > total) count = total;
+        var pct = Math.round((count / total) * 100);
+        pcts.push(pct);
+        mpEl.textContent = pct + '%';
+        mpEl.classList.add('done');
+        miEl.classList.add('done');
     }
+
     var el = document.getElementById('avgVal');
-    if(vals.length === 0){ el.textContent = '—'; el.className = 'avg-val'; return; }
-    var avg = Math.round(vals.reduce(function(a,b){return a+b},0) / vals.length);
+    if(pcts.length === 0){ el.textContent = '—'; el.className = 'avg-val'; return; }
+    var avg = Math.round(pcts.reduce(function(a,b){return a+b},0) / pcts.length);
     el.textContent = avg + '%';
     el.className = 'avg-val ' + (avg >= 90 ? 'high' : avg >= 70 ? 'mid' : 'low');
 }

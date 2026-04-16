@@ -1,0 +1,2396 @@
+{
+  "generated_at": "2026-04-16",
+  "note": "Demo data \u2014 all names, emails, and scores are fictional",
+  "school_years": [
+    "2021-2022",
+    "2022-2023",
+    "2023-2024",
+    "2024-2025",
+    "2025-2026"
+  ],
+  "teachers": {
+    "marcus.williams@demo.local": {
+      "email": "marcus.williams@demo.local",
+      "name": "Marcus Williams",
+      "school": "Samuel J. Green Charter School",
+      "role": "teacher",
+      "touchpoints": [
+        {
+          "id": "98ec63f3-6d0e-4889-87bb-6008709e9ff7",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2025-2026",
+          "date": "2026-04-18",
+          "scores": {
+            "T1": 4,
+            "T2": 2,
+            "T3": 4,
+            "T4": 3,
+            "T5": 4
+          }
+        },
+        {
+          "id": "143eb9bf-306c-4328-b3a3-e73dd30a7310",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2025-2026",
+          "date": "2026-03-19",
+          "scores": {
+            "T1": 4,
+            "T2": 3,
+            "T3": 4,
+            "T4": 3,
+            "T5": 4
+          }
+        },
+        {
+          "id": "c906a01f-7b9f-4c3d-8edd-5508f4a37af1",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2025-2026",
+          "date": "2026-02-06",
+          "scores": {
+            "M1": 3.6,
+            "M2": 3.8,
+            "M3": 3.4,
+            "M4": 3.6,
+            "M5": 3.8
+          }
+        },
+        {
+          "id": "cb382cf3-bd73-4550-939b-da0f325905f4",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2025-2026",
+          "date": "2026-01-14",
+          "scores": {
+            "T1": 4,
+            "T2": 3,
+            "T3": 4,
+            "T4": 3,
+            "T5": 4
+          }
+        },
+        {
+          "id": "793a8c68-bd14-49bf-a1e1-1d8ee2afb2d5",
+          "form_type": "pmap_teacher",
+          "rubric": "PMAP: Teacher",
+          "school_year": "2025-2026",
+          "date": "2025-11-13",
+          "scores": {
+            "T1": 4,
+            "T2": 3,
+            "T3": 4,
+            "T4": 3,
+            "T5": 4
+          }
+        },
+        {
+          "id": "b2bf7e6f-f55b-4cae-a5f6-6937a42495df",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2025-2026",
+          "date": "2025-10-25",
+          "scores": {
+            "M1": 3.5,
+            "M2": 3.8,
+            "M3": 3.5,
+            "M4": 3.4,
+            "M5": 3.5
+          }
+        },
+        {
+          "id": "07213d90-2af5-46e5-9c0f-492a1940c551",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2025-2026",
+          "date": "2025-10-21",
+          "scores": {
+            "T1": 4,
+            "T2": 3,
+            "T3": 4,
+            "T4": 3,
+            "T5": 4
+          }
+        },
+        {
+          "id": "4b1c020a-508f-4687-b839-dc26f7672fd2",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2025-2026",
+          "date": "2025-09-16",
+          "scores": {
+            "T1": 4,
+            "T2": 2,
+            "T3": 4,
+            "T4": 3,
+            "T5": 4
+          }
+        },
+        {
+          "id": "07026462-043a-4ab7-a15c-c9219bbb58f9",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2024-2025",
+          "date": "2025-04-21",
+          "scores": {
+            "T1": 4,
+            "T2": 3,
+            "T3": 3,
+            "T4": 3,
+            "T5": 2
+          }
+        },
+        {
+          "id": "8ee3e036-99b2-4698-b0f2-45f819bb4793",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2024-2025",
+          "date": "2025-03-03",
+          "scores": {
+            "T1": 4,
+            "T2": 3,
+            "T3": 3,
+            "T4": 3,
+            "T5": 3
+          }
+        },
+        {
+          "id": "ab9b1644-3edf-4fcf-afc9-74adf0008d54",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2024-2025",
+          "date": "2025-02-19",
+          "scores": {
+            "M1": 3.5,
+            "M2": 3.5,
+            "M3": 3.4,
+            "M4": 3.8,
+            "M5": 3.6
+          }
+        },
+        {
+          "id": "55e9802f-e273-45bb-b25c-acefec484952",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2024-2025",
+          "date": "2025-01-20",
+          "scores": {
+            "T1": 4,
+            "T2": 3,
+            "T3": 3,
+            "T4": 3,
+            "T5": 3
+          }
+        },
+        {
+          "id": "e9d8642d-674b-483f-b26d-834fe39a265b",
+          "form_type": "pmap_teacher",
+          "rubric": "PMAP: Teacher",
+          "school_year": "2024-2025",
+          "date": "2024-11-20",
+          "scores": {
+            "T1": 4,
+            "T2": 3,
+            "T3": 3,
+            "T4": 3,
+            "T5": 3
+          }
+        },
+        {
+          "id": "9f58efc9-9566-4700-bb06-c9dbd576fcf5",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2024-2025",
+          "date": "2024-10-28",
+          "scores": {
+            "T1": 4,
+            "T2": 3,
+            "T3": 3,
+            "T4": 3,
+            "T5": 3
+          }
+        },
+        {
+          "id": "a66c6ab8-5adf-4441-9fe8-b206c0ff0906",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2024-2025",
+          "date": "2024-10-26",
+          "scores": {
+            "M1": 3.4,
+            "M2": 3.4,
+            "M3": 3.4,
+            "M4": 3.3,
+            "M5": 3.1
+          }
+        },
+        {
+          "id": "09b2c660-757c-4217-800d-85762f862ee1",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2024-2025",
+          "date": "2024-09-06",
+          "scores": {
+            "T1": 4,
+            "T2": 3,
+            "T3": 3,
+            "T4": 4,
+            "T5": 3
+          }
+        },
+        {
+          "id": "01a57f92-5a11-4ba2-acaa-8607bcc11e57",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2023-2024",
+          "date": "2024-04-05",
+          "scores": {
+            "T1": 3,
+            "T2": 2,
+            "T3": 3,
+            "T4": 2,
+            "T5": 3
+          }
+        },
+        {
+          "id": "b57380dd-b47d-4dc2-9a75-20a163bab361",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2023-2024",
+          "date": "2024-03-18",
+          "scores": {
+            "T1": 3,
+            "T2": 2,
+            "T3": 3,
+            "T4": 2,
+            "T5": 3
+          }
+        },
+        {
+          "id": "5abf079f-6a29-4be6-af14-58244437386f",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2023-2024",
+          "date": "2024-02-13",
+          "scores": {
+            "M1": 2.5,
+            "M2": 2.3,
+            "M3": 2.6,
+            "M4": 2.5,
+            "M5": 2.8
+          }
+        },
+        {
+          "id": "38b58e8a-cc56-414d-8d9e-bde9bb16f3b4",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2023-2024",
+          "date": "2024-01-09",
+          "scores": {
+            "T1": 3,
+            "T2": 1,
+            "T3": 3,
+            "T4": 2,
+            "T5": 3
+          }
+        },
+        {
+          "id": "4eae0c54-3246-47c5-a4c8-509bb48e8b8c",
+          "form_type": "pmap_teacher",
+          "rubric": "PMAP: Teacher",
+          "school_year": "2023-2024",
+          "date": "2023-11-21",
+          "scores": {
+            "T1": 3,
+            "T2": 2,
+            "T3": 3,
+            "T4": 2,
+            "T5": 3
+          }
+        },
+        {
+          "id": "8c163213-8911-42e6-81f4-70326feac06b",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2023-2024",
+          "date": "2023-10-20",
+          "scores": {
+            "M1": 2.7,
+            "M2": 2.6,
+            "M3": 2.5,
+            "M4": 2.8,
+            "M5": 2.9
+          }
+        },
+        {
+          "id": "d764c63e-855e-47f4-8c6d-7011d77e5727",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2023-2024",
+          "date": "2023-10-04",
+          "scores": {
+            "T1": 3,
+            "T2": 2,
+            "T3": 3,
+            "T4": 2,
+            "T5": 3
+          }
+        },
+        {
+          "id": "4b57d30c-a75d-4917-9c9c-a74810ad7137",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2023-2024",
+          "date": "2023-09-01",
+          "scores": {
+            "T1": 3,
+            "T2": 2,
+            "T3": 3,
+            "T4": 2,
+            "T5": 3
+          }
+        }
+      ],
+      "touchpoint_count": 24,
+      "pmap_by_year": {
+        "2023-2024": {
+          "T1": 3,
+          "T2": 2,
+          "T3": 3,
+          "T4": 2,
+          "T5": 3
+        },
+        "2024-2025": {
+          "T1": 4,
+          "T2": 3,
+          "T3": 3,
+          "T4": 3,
+          "T5": 3
+        },
+        "2025-2026": {
+          "T1": 4,
+          "T2": 3,
+          "T3": 4,
+          "T4": 3,
+          "T5": 4
+        }
+      },
+      "last_observation_date": "2026-04-18"
+    },
+    "sarah.thompson@demo.local": {
+      "email": "sarah.thompson@demo.local",
+      "name": "Sarah Thompson",
+      "school": "Arthur Ashe Charter School",
+      "role": "teacher",
+      "touchpoints": [
+        {
+          "id": "7d381f02-205c-48b6-b068-396ad6ccd421",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2025-2026",
+          "date": "2026-04-28",
+          "scores": {
+            "T1": 4,
+            "T2": 4,
+            "T3": 5,
+            "T4": 4,
+            "T5": 5
+          }
+        },
+        {
+          "id": "f6a47c43-d2f2-493a-bced-48331921b556",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2025-2026",
+          "date": "2026-03-26",
+          "scores": {
+            "T1": 5,
+            "T2": 4,
+            "T3": 5,
+            "T4": 5,
+            "T5": 5
+          }
+        },
+        {
+          "id": "a6c4aab2-7efa-4ae9-a8c4-eb6f82dbe34b",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2025-2026",
+          "date": "2026-02-18",
+          "scores": {
+            "M1": 4.5,
+            "M2": 4.3,
+            "M3": 4.3,
+            "M4": 4.3,
+            "M5": 4.4
+          }
+        },
+        {
+          "id": "9e5ddbcd-d94d-4714-944a-dca10963b317",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2025-2026",
+          "date": "2026-01-07",
+          "scores": {
+            "T1": 5,
+            "T2": 4,
+            "T3": 5,
+            "T4": 5,
+            "T5": 5
+          }
+        },
+        {
+          "id": "122ea8f1-0aa8-4a4e-8a2e-9fafb8c04bbb",
+          "form_type": "pmap_teacher",
+          "rubric": "PMAP: Teacher",
+          "school_year": "2025-2026",
+          "date": "2025-11-08",
+          "scores": {
+            "T1": 5,
+            "T2": 4,
+            "T3": 5,
+            "T4": 5,
+            "T5": 5
+          }
+        },
+        {
+          "id": "d7e51ab9-bea1-420e-a968-43b1eaf9f229",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2025-2026",
+          "date": "2025-10-21",
+          "scores": {
+            "M1": 4.3,
+            "M2": 4.3,
+            "M3": 4.2,
+            "M4": 4.5,
+            "M5": 4.5
+          }
+        },
+        {
+          "id": "501eef6c-08e6-4af0-a3b0-ef0e035435ba",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2025-2026",
+          "date": "2025-10-12",
+          "scores": {
+            "T1": 5,
+            "T2": 4,
+            "T3": 5,
+            "T4": 5,
+            "T5": 5
+          }
+        },
+        {
+          "id": "f2e44c24-5f04-474f-877b-8897ce395468",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2025-2026",
+          "date": "2025-09-05",
+          "scores": {
+            "T1": 5,
+            "T2": 4,
+            "T3": 5,
+            "T4": 5,
+            "T5": 5
+          }
+        },
+        {
+          "id": "4b5e4166-9461-46c9-afc6-3f50463ae003",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2024-2025",
+          "date": "2025-04-05",
+          "scores": {
+            "T1": 5,
+            "T2": 5,
+            "T3": 5,
+            "T4": 5,
+            "T5": 4
+          }
+        },
+        {
+          "id": "6ab416cc-f739-41eb-9b9d-2a6582f6ea9f",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2024-2025",
+          "date": "2025-03-03",
+          "scores": {
+            "T1": 5,
+            "T2": 5,
+            "T3": 5,
+            "T4": 5,
+            "T5": 5
+          }
+        },
+        {
+          "id": "9a77e82d-d698-4f5b-a4dc-3417bf749d30",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2024-2025",
+          "date": "2025-02-17",
+          "scores": {
+            "M1": 4.4,
+            "M2": 4.3,
+            "M3": 4.2,
+            "M4": 4.4,
+            "M5": 4.2
+          }
+        },
+        {
+          "id": "c5b83324-ffbd-4ac3-8db7-359b52e51116",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2024-2025",
+          "date": "2025-01-17",
+          "scores": {
+            "T1": 5,
+            "T2": 5,
+            "T3": 5,
+            "T4": 5,
+            "T5": 5
+          }
+        },
+        {
+          "id": "aae13443-827d-4118-ab30-5e0132e7d267",
+          "form_type": "pmap_teacher",
+          "rubric": "PMAP: Teacher",
+          "school_year": "2024-2025",
+          "date": "2024-11-02",
+          "scores": {
+            "T1": 5,
+            "T2": 5,
+            "T3": 5,
+            "T4": 5,
+            "T5": 5
+          }
+        },
+        {
+          "id": "90db8dab-eaf0-481c-ae3e-a98eb6848ada",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2024-2025",
+          "date": "2024-10-20",
+          "scores": {
+            "M1": 4.6,
+            "M2": 4.8,
+            "M3": 4.4,
+            "M4": 4.4,
+            "M5": 4.8
+          }
+        },
+        {
+          "id": "c08d31f4-96b0-46c2-829f-b6fb864c9efa",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2024-2025",
+          "date": "2024-10-02",
+          "scores": {
+            "T1": 5,
+            "T2": 5,
+            "T3": 5,
+            "T4": 5,
+            "T5": 5
+          }
+        },
+        {
+          "id": "3a2dc4fa-629f-420d-90d2-a462f6d8f5f9",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2024-2025",
+          "date": "2024-09-19",
+          "scores": {
+            "T1": 5,
+            "T2": 5,
+            "T3": 5,
+            "T4": 5,
+            "T5": 5
+          }
+        },
+        {
+          "id": "56344749-cf30-46db-99b5-24dc595526f2",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2023-2024",
+          "date": "2024-04-09",
+          "scores": {
+            "T1": 5,
+            "T2": 5,
+            "T3": 5,
+            "T4": 5,
+            "T5": 5
+          }
+        },
+        {
+          "id": "4301764a-503c-4a71-a6da-544a1404ddbb",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2023-2024",
+          "date": "2024-03-03",
+          "scores": {
+            "T1": 5,
+            "T2": 5,
+            "T3": 5,
+            "T4": 5,
+            "T5": 5
+          }
+        },
+        {
+          "id": "535f45bf-6743-4981-a743-48571c69a7be",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2023-2024",
+          "date": "2024-02-02",
+          "scores": {
+            "M1": 4.4,
+            "M2": 4.6,
+            "M3": 4.5,
+            "M4": 4.2,
+            "M5": 4.4
+          }
+        },
+        {
+          "id": "6f7c84e4-59c6-453c-b435-3edcd02da533",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2023-2024",
+          "date": "2024-01-16",
+          "scores": {
+            "T1": 5,
+            "T2": 5,
+            "T3": 4,
+            "T4": 5,
+            "T5": 5
+          }
+        },
+        {
+          "id": "2fb52723-416d-427d-b251-57cf40a3c2b9",
+          "form_type": "pmap_teacher",
+          "rubric": "PMAP: Teacher",
+          "school_year": "2023-2024",
+          "date": "2023-11-07",
+          "scores": {
+            "T1": 5,
+            "T2": 5,
+            "T3": 5,
+            "T4": 5,
+            "T5": 5
+          }
+        },
+        {
+          "id": "ff53c5bd-90cd-4b43-89c3-5e44327d55c9",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2023-2024",
+          "date": "2023-10-22",
+          "scores": {
+            "M1": 4.7,
+            "M2": 4.8,
+            "M3": 4.5,
+            "M4": 4.5,
+            "M5": 4.6
+          }
+        },
+        {
+          "id": "9301c482-4bcb-47eb-9226-d9ba8d11d36d",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2023-2024",
+          "date": "2023-10-07",
+          "scores": {
+            "T1": 5,
+            "T2": 5,
+            "T3": 5,
+            "T4": 5,
+            "T5": 5
+          }
+        },
+        {
+          "id": "e796fc61-c5bf-4f50-b317-6581b2f027af",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2023-2024",
+          "date": "2023-09-27",
+          "scores": {
+            "T1": 4,
+            "T2": 5,
+            "T3": 5,
+            "T4": 5,
+            "T5": 5
+          }
+        },
+        {
+          "id": "1a6dbfc9-bd99-489c-a084-b83f62edb370",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2022-2023",
+          "date": "2023-04-16",
+          "scores": {
+            "T1": 5,
+            "T2": 4,
+            "T3": 5,
+            "T4": 4,
+            "T5": 5
+          }
+        },
+        {
+          "id": "8ef31d33-92c8-48ad-89af-ddfc8e2ede86",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2022-2023",
+          "date": "2023-03-19",
+          "scores": {
+            "T1": 5,
+            "T2": 4,
+            "T3": 5,
+            "T4": 4,
+            "T5": 5
+          }
+        },
+        {
+          "id": "2e9e1ef0-7ada-4ce4-8e8e-046f7676ae64",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2022-2023",
+          "date": "2023-02-02",
+          "scores": {
+            "M1": 4.3,
+            "M2": 4.3,
+            "M3": 4.3,
+            "M4": 4.1,
+            "M5": 4.2
+          }
+        },
+        {
+          "id": "52333ceb-bf82-4538-8825-598e14f3fcac",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2022-2023",
+          "date": "2023-01-07",
+          "scores": {
+            "T1": 5,
+            "T2": 4,
+            "T3": 5,
+            "T4": 4,
+            "T5": 5
+          }
+        },
+        {
+          "id": "448e77c4-766c-4932-8e0c-cb5d314d18f1",
+          "form_type": "pmap_teacher",
+          "rubric": "PMAP: Teacher",
+          "school_year": "2022-2023",
+          "date": "2022-11-21",
+          "scores": {
+            "T1": 5,
+            "T2": 4,
+            "T3": 5,
+            "T4": 4,
+            "T5": 5
+          }
+        },
+        {
+          "id": "121a4ff0-f610-4375-beca-7dd1532f3526",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2022-2023",
+          "date": "2022-10-28",
+          "scores": {
+            "M1": 4.6,
+            "M2": 4.3,
+            "M3": 4.8,
+            "M4": 4.8,
+            "M5": 4.8
+          }
+        },
+        {
+          "id": "8218d5bc-9f7e-4958-89cb-80cd1e11a80f",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2022-2023",
+          "date": "2022-10-12",
+          "scores": {
+            "T1": 5,
+            "T2": 4,
+            "T3": 5,
+            "T4": 4,
+            "T5": 5
+          }
+        },
+        {
+          "id": "b0253888-2fc3-420a-b15b-17e82e1e0cc8",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2022-2023",
+          "date": "2022-09-03",
+          "scores": {
+            "T1": 5,
+            "T2": 4,
+            "T3": 4,
+            "T4": 4,
+            "T5": 5
+          }
+        },
+        {
+          "id": "e1a5f323-4cc2-4ba5-8cb9-737e5d66ea0b",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2021-2022",
+          "date": "2022-04-16",
+          "scores": {
+            "T1": 4,
+            "T2": 5,
+            "T3": 5,
+            "T4": 4,
+            "T5": 4
+          }
+        },
+        {
+          "id": "ef5c9b50-df32-465b-8c6b-1c453d320ff5",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2021-2022",
+          "date": "2022-03-07",
+          "scores": {
+            "T1": 4,
+            "T2": 4,
+            "T3": 5,
+            "T4": 4,
+            "T5": 4
+          }
+        },
+        {
+          "id": "566610d2-d2a9-4ea2-a732-b1cd1fd6b5d3",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2021-2022",
+          "date": "2022-02-18",
+          "scores": {
+            "M1": 3.5,
+            "M2": 3.4,
+            "M3": 3.5,
+            "M4": 3.5,
+            "M5": 3.8
+          }
+        },
+        {
+          "id": "35d823b8-86fd-4b71-8a96-3fe13cbc0b9a",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2021-2022",
+          "date": "2022-01-26",
+          "scores": {
+            "T1": 4,
+            "T2": 3,
+            "T3": 5,
+            "T4": 5,
+            "T5": 4
+          }
+        },
+        {
+          "id": "59c120c3-5457-48bf-96b3-5122ea3f81ee",
+          "form_type": "pmap_teacher",
+          "rubric": "PMAP: Teacher",
+          "school_year": "2021-2022",
+          "date": "2021-11-25",
+          "scores": {
+            "T1": 4,
+            "T2": 4,
+            "T3": 5,
+            "T4": 4,
+            "T5": 4
+          }
+        },
+        {
+          "id": "03fefaff-c9a6-472b-814b-52f8e3cf4fc6",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2021-2022",
+          "date": "2021-10-06",
+          "scores": {
+            "T1": 4,
+            "T2": 4,
+            "T3": 5,
+            "T4": 4,
+            "T5": 4
+          }
+        },
+        {
+          "id": "1e6ced26-aff7-45d5-a0cb-2ea748c5c7b5",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2021-2022",
+          "date": "2021-10-06",
+          "scores": {
+            "M1": 3.8,
+            "M2": 3.7,
+            "M3": 3.9,
+            "M4": 4.0,
+            "M5": 3.8
+          }
+        },
+        {
+          "id": "b72b631b-e9eb-4060-8471-5ab3c8880567",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2021-2022",
+          "date": "2021-09-01",
+          "scores": {
+            "T1": 4,
+            "T2": 4,
+            "T3": 5,
+            "T4": 4,
+            "T5": 5
+          }
+        }
+      ],
+      "touchpoint_count": 40,
+      "pmap_by_year": {
+        "2021-2022": {
+          "T1": 4,
+          "T2": 4,
+          "T3": 5,
+          "T4": 4,
+          "T5": 4
+        },
+        "2022-2023": {
+          "T1": 5,
+          "T2": 4,
+          "T3": 5,
+          "T4": 4,
+          "T5": 5
+        },
+        "2023-2024": {
+          "T1": 5,
+          "T2": 5,
+          "T3": 5,
+          "T4": 5,
+          "T5": 5
+        },
+        "2024-2025": {
+          "T1": 5,
+          "T2": 5,
+          "T3": 5,
+          "T4": 5,
+          "T5": 5
+        },
+        "2025-2026": {
+          "T1": 5,
+          "T2": 4,
+          "T3": 5,
+          "T4": 5,
+          "T5": 5
+        }
+      },
+      "last_observation_date": "2026-04-28"
+    },
+    "david.chen@demo.local": {
+      "email": "david.chen@demo.local",
+      "name": "David Chen",
+      "school": "Langston Hughes Academy",
+      "role": "teacher",
+      "touchpoints": [
+        {
+          "id": "80e24a1c-dbcc-4c9d-adc7-32cd7ce901bd",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2025-2026",
+          "date": "2026-04-17",
+          "scores": {
+            "T1": 3,
+            "T2": 3,
+            "T3": 3,
+            "T4": 2,
+            "T5": 3
+          }
+        },
+        {
+          "id": "608ed5e3-8f85-49aa-bc51-f67ade7fafc8",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2025-2026",
+          "date": "2026-03-03",
+          "scores": {
+            "T1": 3,
+            "T2": 3,
+            "T3": 3,
+            "T4": 3,
+            "T5": 3
+          }
+        },
+        {
+          "id": "ba611d34-58af-4f28-a0b6-abfa3605c0ef",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2025-2026",
+          "date": "2026-02-14",
+          "scores": {
+            "M1": 2.7,
+            "M2": 2.5,
+            "M3": 3.0,
+            "M4": 2.7,
+            "M5": 2.9
+          }
+        },
+        {
+          "id": "11477c9a-19c3-4f53-811a-dda87cb43fe1",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2025-2026",
+          "date": "2026-01-09",
+          "scores": {
+            "T1": 2,
+            "T2": 3,
+            "T3": 3,
+            "T4": 3,
+            "T5": 3
+          }
+        },
+        {
+          "id": "9ef3429a-e1eb-48e0-8380-4e27bb253464",
+          "form_type": "pmap_teacher",
+          "rubric": "PMAP: Teacher",
+          "school_year": "2025-2026",
+          "date": "2025-11-27",
+          "scores": {
+            "T1": 3,
+            "T2": 3,
+            "T3": 3,
+            "T4": 3,
+            "T5": 3
+          }
+        },
+        {
+          "id": "f57ac9c3-df12-429b-8fbd-5b3cd232f985",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2025-2026",
+          "date": "2025-10-26",
+          "scores": {
+            "T1": 3,
+            "T2": 3,
+            "T3": 3,
+            "T4": 3,
+            "T5": 3
+          }
+        },
+        {
+          "id": "824bcd7b-fb98-4aaf-be90-21fc3d55d293",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2025-2026",
+          "date": "2025-10-26",
+          "scores": {
+            "M1": 2.9,
+            "M2": 3.0,
+            "M3": 3.1,
+            "M4": 3.1,
+            "M5": 2.8
+          }
+        },
+        {
+          "id": "db6c3838-6934-4f81-8c48-f13a5aa1122c",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2025-2026",
+          "date": "2025-09-18",
+          "scores": {
+            "T1": 3,
+            "T2": 2,
+            "T3": 3,
+            "T4": 3,
+            "T5": 3
+          }
+        },
+        {
+          "id": "52cef02e-8ca1-4e34-b4ed-00b52f0589cc",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2024-2025",
+          "date": "2025-04-24",
+          "scores": {
+            "T1": 3,
+            "T2": 2,
+            "T3": 3,
+            "T4": 2,
+            "T5": 2
+          }
+        },
+        {
+          "id": "906ff9b9-e1ee-49b2-b2ac-2a0ca41e8aa6",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2024-2025",
+          "date": "2025-03-26",
+          "scores": {
+            "T1": 2,
+            "T2": 2,
+            "T3": 3,
+            "T4": 2,
+            "T5": 2
+          }
+        },
+        {
+          "id": "4f0c5c6d-cd79-41a6-a16e-dc1eece70c84",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2024-2025",
+          "date": "2025-02-08",
+          "scores": {
+            "M1": 2.5,
+            "M2": 2.4,
+            "M3": 2.6,
+            "M4": 2.5,
+            "M5": 2.5
+          }
+        },
+        {
+          "id": "b99ae42c-adb1-40c8-8aa4-f4191cf15f0d",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2024-2025",
+          "date": "2025-01-08",
+          "scores": {
+            "T1": 2,
+            "T2": 3,
+            "T3": 3,
+            "T4": 2,
+            "T5": 1
+          }
+        },
+        {
+          "id": "f66c0dca-8c6f-4035-89ab-1b428b6a0ef5",
+          "form_type": "pmap_teacher",
+          "rubric": "PMAP: Teacher",
+          "school_year": "2024-2025",
+          "date": "2024-11-18",
+          "scores": {
+            "T1": 2,
+            "T2": 2,
+            "T3": 3,
+            "T4": 2,
+            "T5": 2
+          }
+        },
+        {
+          "id": "2f611abb-243c-4ea6-bbdd-211c5cfa2dbe",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2024-2025",
+          "date": "2024-10-09",
+          "scores": {
+            "M1": 2.5,
+            "M2": 2.4,
+            "M3": 2.3,
+            "M4": 2.5,
+            "M5": 2.2
+          }
+        },
+        {
+          "id": "1407b194-c8d2-4baf-bcb0-3a5badd2d24e",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2024-2025",
+          "date": "2024-10-02",
+          "scores": {
+            "T1": 2,
+            "T2": 2,
+            "T3": 3,
+            "T4": 2,
+            "T5": 2
+          }
+        },
+        {
+          "id": "cfdcce41-9ce0-4fe7-ad2d-712227e40413",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2024-2025",
+          "date": "2024-09-12",
+          "scores": {
+            "T1": 2,
+            "T2": 2,
+            "T3": 3,
+            "T4": 2,
+            "T5": 2
+          }
+        }
+      ],
+      "touchpoint_count": 16,
+      "pmap_by_year": {
+        "2024-2025": {
+          "T1": 2,
+          "T2": 2,
+          "T3": 3,
+          "T4": 2,
+          "T5": 2
+        },
+        "2025-2026": {
+          "T1": 3,
+          "T2": 3,
+          "T3": 3,
+          "T4": 3,
+          "T5": 3
+        }
+      },
+      "last_observation_date": "2026-04-17"
+    },
+    "ashley.davis@demo.local": {
+      "email": "ashley.davis@demo.local",
+      "name": "Ashley Davis",
+      "school": "Phillis Wheatley Community School",
+      "role": "teacher",
+      "touchpoints": [
+        {
+          "id": "a9b22a60-1690-409d-ae7a-a863ca6d42e0",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2025-2026",
+          "date": "2026-04-04",
+          "scores": {
+            "T1": 4,
+            "T2": 4,
+            "T3": 4,
+            "T4": 4,
+            "T5": 4
+          }
+        },
+        {
+          "id": "87fabe4b-251d-4616-a73d-96ca7e6583f2",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2025-2026",
+          "date": "2026-03-09",
+          "scores": {
+            "T1": 4,
+            "T2": 4,
+            "T3": 4,
+            "T4": 4,
+            "T5": 4
+          }
+        },
+        {
+          "id": "b6e68e28-acf7-4d26-8e8a-27dd01acab9f",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2025-2026",
+          "date": "2026-02-12",
+          "scores": {
+            "M1": 3.9,
+            "M2": 3.6,
+            "M3": 4.0,
+            "M4": 4.1,
+            "M5": 3.9
+          }
+        },
+        {
+          "id": "3caccb56-8bdb-466e-a58b-12311667e85d",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2025-2026",
+          "date": "2026-01-13",
+          "scores": {
+            "T1": 4,
+            "T2": 4,
+            "T3": 3,
+            "T4": 4,
+            "T5": 4
+          }
+        },
+        {
+          "id": "00f208e1-1f43-4a46-93c9-96697064267b",
+          "form_type": "pmap_teacher",
+          "rubric": "PMAP: Teacher",
+          "school_year": "2025-2026",
+          "date": "2025-11-20",
+          "scores": {
+            "T1": 4,
+            "T2": 4,
+            "T3": 4,
+            "T4": 4,
+            "T5": 4
+          }
+        },
+        {
+          "id": "ac245bc7-2978-4f18-a9b5-50477d6fa8c4",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2025-2026",
+          "date": "2025-10-26",
+          "scores": {
+            "M1": 3.8,
+            "M2": 3.5,
+            "M3": 3.8,
+            "M4": 4.0,
+            "M5": 3.9
+          }
+        },
+        {
+          "id": "3564e899-3129-4e47-b971-43fc0034ef72",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2025-2026",
+          "date": "2025-10-05",
+          "scores": {
+            "T1": 4,
+            "T2": 4,
+            "T3": 4,
+            "T4": 4,
+            "T5": 4
+          }
+        },
+        {
+          "id": "1f116773-a05f-48e7-ba47-12b225fad2df",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2025-2026",
+          "date": "2025-09-27",
+          "scores": {
+            "T1": 4,
+            "T2": 4,
+            "T3": 4,
+            "T4": 5,
+            "T5": 4
+          }
+        },
+        {
+          "id": "ca747df3-2bd8-4a9c-a88e-59c0ce341edb",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2024-2025",
+          "date": "2025-04-25",
+          "scores": {
+            "T1": 5,
+            "T2": 3,
+            "T3": 4,
+            "T4": 3,
+            "T5": 4
+          }
+        },
+        {
+          "id": "1b21a7b0-dc1d-42f9-8477-85eb767fa321",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2024-2025",
+          "date": "2025-03-27",
+          "scores": {
+            "T1": 4,
+            "T2": 3,
+            "T3": 4,
+            "T4": 3,
+            "T5": 4
+          }
+        },
+        {
+          "id": "3508ba6e-40ec-4c8a-8998-f502e3537f0a",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2024-2025",
+          "date": "2025-02-25",
+          "scores": {
+            "M1": 3.4,
+            "M2": 3.1,
+            "M3": 3.2,
+            "M4": 3.2,
+            "M5": 3.1
+          }
+        },
+        {
+          "id": "dd41e4fe-cc20-425a-a404-e1f92065ba22",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2024-2025",
+          "date": "2025-01-09",
+          "scores": {
+            "T1": 4,
+            "T2": 3,
+            "T3": 4,
+            "T4": 3,
+            "T5": 4
+          }
+        },
+        {
+          "id": "97f24b1b-adbb-45e9-a23b-43f1de994e7c",
+          "form_type": "pmap_teacher",
+          "rubric": "PMAP: Teacher",
+          "school_year": "2024-2025",
+          "date": "2024-11-09",
+          "scores": {
+            "T1": 4,
+            "T2": 3,
+            "T3": 4,
+            "T4": 3,
+            "T5": 4
+          }
+        },
+        {
+          "id": "f96daa21-5fee-4a39-aab8-f9a33463b85b",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2024-2025",
+          "date": "2024-10-14",
+          "scores": {
+            "T1": 4,
+            "T2": 3,
+            "T3": 4,
+            "T4": 3,
+            "T5": 4
+          }
+        },
+        {
+          "id": "6c4c7f87-d427-4c19-9ed2-0dde9b0e8a2b",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2024-2025",
+          "date": "2024-10-12",
+          "scores": {
+            "M1": 3.4,
+            "M2": 3.2,
+            "M3": 3.6,
+            "M4": 3.1,
+            "M5": 3.6
+          }
+        },
+        {
+          "id": "af436e55-97aa-42f6-8fdb-e97eee678fb6",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2024-2025",
+          "date": "2024-09-19",
+          "scores": {
+            "T1": 4,
+            "T2": 3,
+            "T3": 4,
+            "T4": 3,
+            "T5": 4
+          }
+        },
+        {
+          "id": "6df90012-828a-46b2-a547-47e88d6a9339",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2023-2024",
+          "date": "2024-04-25",
+          "scores": {
+            "T1": 3,
+            "T2": 3,
+            "T3": 3,
+            "T4": 3,
+            "T5": 3
+          }
+        },
+        {
+          "id": "8e7cf916-fee2-40b4-9259-23a094308bf4",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2023-2024",
+          "date": "2024-03-08",
+          "scores": {
+            "T1": 3,
+            "T2": 3,
+            "T3": 3,
+            "T4": 3,
+            "T5": 3
+          }
+        },
+        {
+          "id": "842cbd30-5d1d-43d6-a178-46875deac253",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2023-2024",
+          "date": "2024-02-26",
+          "scores": {
+            "M1": 2.9,
+            "M2": 3.0,
+            "M3": 2.8,
+            "M4": 3.0,
+            "M5": 2.8
+          }
+        },
+        {
+          "id": "0d2b5c1f-11d0-4159-936a-dac17bd2ceab",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2023-2024",
+          "date": "2024-01-14",
+          "scores": {
+            "T1": 3,
+            "T2": 3,
+            "T3": 3,
+            "T4": 3,
+            "T5": 3
+          }
+        },
+        {
+          "id": "58dac3e1-942a-4435-9591-c5a912deb3aa",
+          "form_type": "pmap_teacher",
+          "rubric": "PMAP: Teacher",
+          "school_year": "2023-2024",
+          "date": "2023-11-15",
+          "scores": {
+            "T1": 3,
+            "T2": 3,
+            "T3": 3,
+            "T4": 3,
+            "T5": 3
+          }
+        },
+        {
+          "id": "92438881-fa53-4ad1-9c9c-c8e01fa3eb77",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2023-2024",
+          "date": "2023-10-12",
+          "scores": {
+            "M1": 2.5,
+            "M2": 2.5,
+            "M3": 2.5,
+            "M4": 2.5,
+            "M5": 2.6
+          }
+        },
+        {
+          "id": "e5adaa2f-a4d9-41a6-850c-ae7f703f116c",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2023-2024",
+          "date": "2023-10-09",
+          "scores": {
+            "T1": 3,
+            "T2": 3,
+            "T3": 3,
+            "T4": 3,
+            "T5": 3
+          }
+        },
+        {
+          "id": "a789da1b-6e48-4897-b07b-405ada18de8a",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2023-2024",
+          "date": "2023-09-18",
+          "scores": {
+            "T1": 2,
+            "T2": 3,
+            "T3": 3,
+            "T4": 3,
+            "T5": 3
+          }
+        },
+        {
+          "id": "aa2d5b97-3e15-4792-9067-75aca1dda073",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2022-2023",
+          "date": "2023-04-08",
+          "scores": {
+            "T1": 3,
+            "T2": 2,
+            "T3": 3,
+            "T4": 2,
+            "T5": 2
+          }
+        },
+        {
+          "id": "214d35bd-79d5-4ed7-a73a-eaefe33d5363",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2022-2023",
+          "date": "2023-03-15",
+          "scores": {
+            "T1": 2,
+            "T2": 2,
+            "T3": 3,
+            "T4": 2,
+            "T5": 2
+          }
+        },
+        {
+          "id": "6b945a5b-a846-40c7-b1f0-f9e124e46db5",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2022-2023",
+          "date": "2023-02-27",
+          "scores": {
+            "M1": 2.5,
+            "M2": 2.6,
+            "M3": 2.6,
+            "M4": 2.4,
+            "M5": 2.6
+          }
+        },
+        {
+          "id": "fd5efd90-f27a-4261-a766-5b731bcba03d",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2022-2023",
+          "date": "2023-01-25",
+          "scores": {
+            "T1": 2,
+            "T2": 2,
+            "T3": 4,
+            "T4": 2,
+            "T5": 1
+          }
+        },
+        {
+          "id": "e884fde0-8346-407d-96cf-41598f488e19",
+          "form_type": "pmap_teacher",
+          "rubric": "PMAP: Teacher",
+          "school_year": "2022-2023",
+          "date": "2022-11-26",
+          "scores": {
+            "T1": 2,
+            "T2": 2,
+            "T3": 3,
+            "T4": 2,
+            "T5": 2
+          }
+        },
+        {
+          "id": "ca7e9260-19d2-45fc-bb40-8e42700a1c90",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2022-2023",
+          "date": "2022-10-20",
+          "scores": {
+            "M1": 2.5,
+            "M2": 2.5,
+            "M3": 2.6,
+            "M4": 2.7,
+            "M5": 2.6
+          }
+        },
+        {
+          "id": "376a5cf1-59b2-45f4-9340-2f62b512571e",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2022-2023",
+          "date": "2022-10-07",
+          "scores": {
+            "T1": 2,
+            "T2": 2,
+            "T3": 3,
+            "T4": 2,
+            "T5": 2
+          }
+        },
+        {
+          "id": "311502ee-8955-4be8-b222-690be685c7d2",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2022-2023",
+          "date": "2022-09-08",
+          "scores": {
+            "T1": 2,
+            "T2": 2,
+            "T3": 3,
+            "T4": 2,
+            "T5": 2
+          }
+        },
+        {
+          "id": "a63080a8-4a68-47a8-bde5-ef06d5a38b9c",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2021-2022",
+          "date": "2022-04-22",
+          "scores": {
+            "T1": 4,
+            "T2": 3,
+            "T3": 4,
+            "T4": 3,
+            "T5": 3
+          }
+        },
+        {
+          "id": "462a5b19-fa45-4b53-b6a8-65666a26d076",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2021-2022",
+          "date": "2022-03-13",
+          "scores": {
+            "T1": 4,
+            "T2": 3,
+            "T3": 4,
+            "T4": 3,
+            "T5": 3
+          }
+        },
+        {
+          "id": "76cc4083-a698-42bb-b375-13f7cd5ab37c",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2021-2022",
+          "date": "2022-02-03",
+          "scores": {
+            "M1": 3.6,
+            "M2": 3.5,
+            "M3": 3.9,
+            "M4": 3.5,
+            "M5": 3.5
+          }
+        },
+        {
+          "id": "c4bba3fa-f2b1-4e9e-a1ed-1ec71c87a2a4",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2021-2022",
+          "date": "2022-01-10",
+          "scores": {
+            "T1": 4,
+            "T2": 3,
+            "T3": 4,
+            "T4": 3,
+            "T5": 3
+          }
+        },
+        {
+          "id": "50bb78f2-6beb-41ed-8f07-7a468d883736",
+          "form_type": "pmap_teacher",
+          "rubric": "PMAP: Teacher",
+          "school_year": "2021-2022",
+          "date": "2021-11-11",
+          "scores": {
+            "T1": 4,
+            "T2": 3,
+            "T3": 4,
+            "T4": 3,
+            "T5": 3
+          }
+        },
+        {
+          "id": "dc78f8c0-14a5-4a40-98c0-184d4ca7f58f",
+          "form_type": "self_reflection_teacher",
+          "rubric": "Self Reflection: Teacher",
+          "school_year": "2021-2022",
+          "date": "2021-10-22",
+          "scores": {
+            "T1": 4,
+            "T2": 3,
+            "T3": 4,
+            "T4": 3,
+            "T5": 3
+          }
+        },
+        {
+          "id": "0c595cb2-8940-408e-ac08-2e053f52d312",
+          "form_type": "observation_fundamentals",
+          "rubric": "Observation: Fundamentals",
+          "school_year": "2021-2022",
+          "date": "2021-10-10",
+          "scores": {
+            "M1": 3.4,
+            "M2": 3.5,
+            "M3": 3.6,
+            "M4": 3.6,
+            "M5": 3.6
+          }
+        },
+        {
+          "id": "7ad42f76-a074-4e36-91df-86916c478764",
+          "form_type": "observation_teacher",
+          "rubric": "Observation/Feedback Form: Teacher",
+          "school_year": "2021-2022",
+          "date": "2021-09-24",
+          "scores": {
+            "T1": 4,
+            "T2": 3,
+            "T3": 4,
+            "T4": 3,
+            "T5": 2
+          }
+        }
+      ],
+      "touchpoint_count": 40,
+      "pmap_by_year": {
+        "2021-2022": {
+          "T1": 4,
+          "T2": 3,
+          "T3": 4,
+          "T4": 3,
+          "T5": 3
+        },
+        "2022-2023": {
+          "T1": 2,
+          "T2": 2,
+          "T3": 3,
+          "T4": 2,
+          "T5": 2
+        },
+        "2023-2024": {
+          "T1": 3,
+          "T2": 3,
+          "T3": 3,
+          "T4": 3,
+          "T5": 3
+        },
+        "2024-2025": {
+          "T1": 4,
+          "T2": 3,
+          "T3": 4,
+          "T4": 3,
+          "T5": 4
+        },
+        "2025-2026": {
+          "T1": 4,
+          "T2": 4,
+          "T3": 4,
+          "T4": 4,
+          "T5": 4
+        }
+      },
+      "last_observation_date": "2026-04-04"
+    },
+    "jennifer.rodriguez@demo.local": {
+      "email": "jennifer.rodriguez@demo.local",
+      "name": "Jennifer Rodriguez",
+      "school": "Arthur Ashe Charter School",
+      "role": "prek",
+      "touchpoints": [
+        {
+          "id": "7fa1515d-c3aa-4039-912a-bc73ea6f7cea",
+          "form_type": "observation_prek",
+          "rubric": "Observation/Feedback Form: PreK (CLASS-based)",
+          "school_year": "2025-2026",
+          "date": "2026-04-09",
+          "scores": {
+            "PK1": 5,
+            "PK2": 1,
+            "PK3": 5,
+            "PK4": 4,
+            "PK5": 5,
+            "PK6": 5,
+            "PK7": 5,
+            "PK8": 5,
+            "PK9": 5,
+            "PK10": 5
+          }
+        },
+        {
+          "id": "20f991cf-45ac-4dd6-ab95-77c1e99b6339",
+          "form_type": "self_reflection_prek",
+          "rubric": "Self Reflection: PreK",
+          "school_year": "2025-2026",
+          "date": "2026-03-06",
+          "scores": {
+            "PK1": 5,
+            "PK2": 1,
+            "PK3": 5,
+            "PK4": 5,
+            "PK5": 5,
+            "PK6": 5,
+            "PK7": 5,
+            "PK8": 5,
+            "PK9": 5,
+            "PK10": 5
+          }
+        },
+        {
+          "id": "4081001d-ca0c-4b27-b96e-22abbe1806dd",
+          "form_type": "observation_prek",
+          "rubric": "Observation/Feedback Form: PreK (CLASS-based)",
+          "school_year": "2025-2026",
+          "date": "2026-01-27",
+          "scores": {
+            "PK1": 5,
+            "PK2": 1,
+            "PK3": 5,
+            "PK4": 5,
+            "PK5": 5,
+            "PK6": 5,
+            "PK7": 5,
+            "PK8": 5,
+            "PK9": 5,
+            "PK10": 5
+          }
+        },
+        {
+          "id": "bbdb9249-58d6-4cae-9393-92419a355b5e",
+          "form_type": "pmap_prek",
+          "rubric": "PMAP: PreK",
+          "school_year": "2025-2026",
+          "date": "2025-11-15",
+          "scores": {
+            "PK1": 6,
+            "PK2": 1,
+            "PK3": 6,
+            "PK4": 5,
+            "PK5": 6,
+            "PK6": 6,
+            "PK7": 5,
+            "PK8": 5,
+            "PK9": 5,
+            "PK10": 5
+          }
+        },
+        {
+          "id": "84c69a60-5c18-48e3-8ff0-67a4b8dddae1",
+          "form_type": "self_reflection_prek",
+          "rubric": "Self Reflection: PreK",
+          "school_year": "2025-2026",
+          "date": "2025-10-10",
+          "scores": {
+            "PK1": 5,
+            "PK2": 1,
+            "PK3": 5,
+            "PK4": 5,
+            "PK5": 5,
+            "PK6": 5,
+            "PK7": 5,
+            "PK8": 5,
+            "PK9": 5,
+            "PK10": 5
+          }
+        },
+        {
+          "id": "14cfece6-59b6-452f-90c8-aefdd9299075",
+          "form_type": "observation_prek",
+          "rubric": "Observation/Feedback Form: PreK (CLASS-based)",
+          "school_year": "2025-2026",
+          "date": "2025-09-03",
+          "scores": {
+            "PK1": 5,
+            "PK2": 2,
+            "PK3": 5,
+            "PK4": 5,
+            "PK5": 5,
+            "PK6": 5,
+            "PK7": 5,
+            "PK8": 5,
+            "PK9": 5,
+            "PK10": 5
+          }
+        },
+        {
+          "id": "fbae2735-345a-47e9-b742-1501307496cd",
+          "form_type": "observation_prek",
+          "rubric": "Observation/Feedback Form: PreK (CLASS-based)",
+          "school_year": "2024-2025",
+          "date": "2025-04-05",
+          "scores": {
+            "PK1": 5,
+            "PK2": 3,
+            "PK3": 5,
+            "PK4": 4,
+            "PK5": 5,
+            "PK6": 5,
+            "PK7": 5,
+            "PK8": 4,
+            "PK9": 4,
+            "PK10": 5
+          }
+        },
+        {
+          "id": "5c516a17-eeba-4174-8576-99b5bf029376",
+          "form_type": "self_reflection_prek",
+          "rubric": "Self Reflection: PreK",
+          "school_year": "2024-2025",
+          "date": "2025-03-24",
+          "scores": {
+            "PK1": 5,
+            "PK2": 2,
+            "PK3": 5,
+            "PK4": 4,
+            "PK5": 5,
+            "PK6": 5,
+            "PK7": 5,
+            "PK8": 4,
+            "PK9": 4,
+            "PK10": 5
+          }
+        },
+        {
+          "id": "daed88e0-5994-4c91-8442-c04e95753002",
+          "form_type": "observation_prek",
+          "rubric": "Observation/Feedback Form: PreK (CLASS-based)",
+          "school_year": "2024-2025",
+          "date": "2025-01-16",
+          "scores": {
+            "PK1": 5,
+            "PK2": 2,
+            "PK3": 4,
+            "PK4": 5,
+            "PK5": 5,
+            "PK6": 5,
+            "PK7": 5,
+            "PK8": 3,
+            "PK9": 4,
+            "PK10": 4
+          }
+        },
+        {
+          "id": "cc83f785-0707-4a4f-b113-a13f5c9361f3",
+          "form_type": "pmap_prek",
+          "rubric": "PMAP: PreK",
+          "school_year": "2024-2025",
+          "date": "2024-11-18",
+          "scores": {
+            "PK1": 6,
+            "PK2": 2,
+            "PK3": 5,
+            "PK4": 4,
+            "PK5": 6,
+            "PK6": 6,
+            "PK7": 5,
+            "PK8": 4,
+            "PK9": 4,
+            "PK10": 5
+          }
+        },
+        {
+          "id": "35701a5d-604f-4b39-8e0c-a2ad02370e2d",
+          "form_type": "self_reflection_prek",
+          "rubric": "Self Reflection: PreK",
+          "school_year": "2024-2025",
+          "date": "2024-10-11",
+          "scores": {
+            "PK1": 5,
+            "PK2": 2,
+            "PK3": 5,
+            "PK4": 4,
+            "PK5": 5,
+            "PK6": 5,
+            "PK7": 5,
+            "PK8": 4,
+            "PK9": 4,
+            "PK10": 5
+          }
+        },
+        {
+          "id": "cb9f29f4-dcc1-423b-98c9-24779b082ef8",
+          "form_type": "observation_prek",
+          "rubric": "Observation/Feedback Form: PreK (CLASS-based)",
+          "school_year": "2024-2025",
+          "date": "2024-09-18",
+          "scores": {
+            "PK1": 5,
+            "PK2": 1,
+            "PK3": 4,
+            "PK4": 4,
+            "PK5": 5,
+            "PK6": 5,
+            "PK7": 5,
+            "PK8": 4,
+            "PK9": 3,
+            "PK10": 5
+          }
+        },
+        {
+          "id": "50ae1cdd-1ce2-484c-b64f-500ca3b1eaf3",
+          "form_type": "observation_prek",
+          "rubric": "Observation/Feedback Form: PreK (CLASS-based)",
+          "school_year": "2023-2024",
+          "date": "2024-04-16",
+          "scores": {
+            "PK1": 5,
+            "PK2": 1,
+            "PK3": 4,
+            "PK4": 4,
+            "PK5": 5,
+            "PK6": 5,
+            "PK7": 4,
+            "PK8": 3,
+            "PK9": 3,
+            "PK10": 5
+          }
+        },
+        {
+          "id": "7ace3098-e47e-477b-8177-7cee7dce6a6a",
+          "form_type": "self_reflection_prek",
+          "rubric": "Self Reflection: PreK",
+          "school_year": "2023-2024",
+          "date": "2024-03-20",
+          "scores": {
+            "PK1": 5,
+            "PK2": 2,
+            "PK3": 4,
+            "PK4": 4,
+            "PK5": 5,
+            "PK6": 5,
+            "PK7": 4,
+            "PK8": 3,
+            "PK9": 3,
+            "PK10": 4
+          }
+        },
+        {
+          "id": "5adad17c-c51e-4a88-b9ce-19733a5975b9",
+          "form_type": "observation_prek",
+          "rubric": "Observation/Feedback Form: PreK (CLASS-based)",
+          "school_year": "2023-2024",
+          "date": "2024-01-20",
+          "scores": {
+            "PK1": 5,
+            "PK2": 2,
+            "PK3": 3,
+            "PK4": 5,
+            "PK5": 5,
+            "PK6": 5,
+            "PK7": 4,
+            "PK8": 3,
+            "PK9": 3,
+            "PK10": 4
+          }
+        },
+        {
+          "id": "df6a05b6-c2dc-4453-be56-ed8e290279f4",
+          "form_type": "pmap_prek",
+          "rubric": "PMAP: PreK",
+          "school_year": "2023-2024",
+          "date": "2023-11-01",
+          "scores": {
+            "PK1": 5,
+            "PK2": 2,
+            "PK3": 4,
+            "PK4": 4,
+            "PK5": 5,
+            "PK6": 5,
+            "PK7": 4,
+            "PK8": 3,
+            "PK9": 3,
+            "PK10": 4
+          }
+        },
+        {
+          "id": "3274a1e5-0ed3-4ee5-bf3c-e3a9bc0ffd14",
+          "form_type": "self_reflection_prek",
+          "rubric": "Self Reflection: PreK",
+          "school_year": "2023-2024",
+          "date": "2023-10-28",
+          "scores": {
+            "PK1": 5,
+            "PK2": 2,
+            "PK3": 4,
+            "PK4": 4,
+            "PK5": 5,
+            "PK6": 5,
+            "PK7": 4,
+            "PK8": 3,
+            "PK9": 3,
+            "PK10": 4
+          }
+        },
+        {
+          "id": "4dac95dd-8e9f-48d4-b9bd-7e24fd388513",
+          "form_type": "observation_prek",
+          "rubric": "Observation/Feedback Form: PreK (CLASS-based)",
+          "school_year": "2023-2024",
+          "date": "2023-09-08",
+          "scores": {
+            "PK1": 5,
+            "PK2": 2,
+            "PK3": 4,
+            "PK4": 4,
+            "PK5": 5,
+            "PK6": 5,
+            "PK7": 4,
+            "PK8": 3,
+            "PK9": 3,
+            "PK10": 4
+          }
+        }
+      ],
+      "touchpoint_count": 18,
+      "pmap_by_year": {
+        "2023-2024": {
+          "PK1": 5,
+          "PK2": 2,
+          "PK3": 4,
+          "PK4": 4,
+          "PK5": 5,
+          "PK6": 5,
+          "PK7": 4,
+          "PK8": 3,
+          "PK9": 3,
+          "PK10": 4
+        },
+        "2024-2025": {
+          "PK1": 6,
+          "PK2": 2,
+          "PK3": 5,
+          "PK4": 4,
+          "PK5": 6,
+          "PK6": 6,
+          "PK7": 5,
+          "PK8": 4,
+          "PK9": 4,
+          "PK10": 5
+        },
+        "2025-2026": {
+          "PK1": 6,
+          "PK2": 1,
+          "PK3": 6,
+          "PK4": 5,
+          "PK5": 6,
+          "PK6": 6,
+          "PK7": 5,
+          "PK8": 5,
+          "PK9": 5,
+          "PK10": 5
+        }
+      },
+      "last_observation_date": "2026-04-09"
+    },
+    "michael.jackson@demo.local": {
+      "email": "michael.jackson@demo.local",
+      "name": "Michael Jackson",
+      "school": "Samuel J. Green Charter School",
+      "role": "leader",
+      "touchpoints": [
+        {
+          "id": "8c33a055-b26f-4940-a199-a0fd4feb085f",
+          "form_type": "self_reflection_leader",
+          "rubric": "Self Reflection: Leader",
+          "school_year": "2025-2026",
+          "date": "2026-03-14",
+          "scores": {
+            "L1": 5,
+            "L2": 5
+          }
+        },
+        {
+          "id": "a626bce8-5c81-45a7-83d1-ebe4b4e4597c",
+          "form_type": "pmap_leader",
+          "rubric": "PMAP: Leader",
+          "school_year": "2025-2026",
+          "date": "2025-11-11",
+          "scores": {
+            "L1": 5,
+            "L2": 5
+          }
+        },
+        {
+          "id": "fda471eb-853f-4cfe-847c-82e4769af7be",
+          "form_type": "self_reflection_leader",
+          "rubric": "Self Reflection: Leader",
+          "school_year": "2025-2026",
+          "date": "2025-10-22",
+          "scores": {
+            "L1": 5,
+            "L2": 5
+          }
+        },
+        {
+          "id": "20e247f1-d8b4-4e70-ba15-a3115fd68db1",
+          "form_type": "self_reflection_leader",
+          "rubric": "Self Reflection: Leader",
+          "school_year": "2024-2025",
+          "date": "2025-03-03",
+          "scores": {
+            "L1": 4,
+            "L2": 5
+          }
+        },
+        {
+          "id": "c66f267e-0c39-4d8e-9335-619f1a44dfd4",
+          "form_type": "pmap_leader",
+          "rubric": "PMAP: Leader",
+          "school_year": "2024-2025",
+          "date": "2024-11-19",
+          "scores": {
+            "L1": 4,
+            "L2": 5
+          }
+        },
+        {
+          "id": "6cdf876b-0ccc-4ff8-9c44-76ea72bf445f",
+          "form_type": "self_reflection_leader",
+          "rubric": "Self Reflection: Leader",
+          "school_year": "2024-2025",
+          "date": "2024-10-14",
+          "scores": {
+            "L1": 4,
+            "L2": 5
+          }
+        },
+        {
+          "id": "82075ae0-743d-42d3-aca1-f6bbf94456f6",
+          "form_type": "self_reflection_leader",
+          "rubric": "Self Reflection: Leader",
+          "school_year": "2023-2024",
+          "date": "2024-03-15",
+          "scores": {
+            "L1": 4,
+            "L2": 4
+          }
+        },
+        {
+          "id": "53f67c8b-aa07-4fea-bdec-424244df921e",
+          "form_type": "pmap_leader",
+          "rubric": "PMAP: Leader",
+          "school_year": "2023-2024",
+          "date": "2023-11-25",
+          "scores": {
+            "L1": 4,
+            "L2": 4
+          }
+        },
+        {
+          "id": "854368c8-a184-4188-b6e3-d9421fa4e95b",
+          "form_type": "self_reflection_leader",
+          "rubric": "Self Reflection: Leader",
+          "school_year": "2023-2024",
+          "date": "2023-10-25",
+          "scores": {
+            "L1": 4,
+            "L2": 4
+          }
+        },
+        {
+          "id": "26985950-42bb-40cc-ae4d-d5ca6a575231",
+          "form_type": "self_reflection_leader",
+          "rubric": "Self Reflection: Leader",
+          "school_year": "2022-2023",
+          "date": "2023-03-22",
+          "scores": {
+            "L1": 3,
+            "L2": 4
+          }
+        },
+        {
+          "id": "0050d9a7-51c4-4c4c-a300-dd3b96e8039b",
+          "form_type": "pmap_leader",
+          "rubric": "PMAP: Leader",
+          "school_year": "2022-2023",
+          "date": "2022-11-19",
+          "scores": {
+            "L1": 3,
+            "L2": 4
+          }
+        },
+        {
+          "id": "5a719c8e-905b-4169-bb76-d92732c76281",
+          "form_type": "self_reflection_leader",
+          "rubric": "Self Reflection: Leader",
+          "school_year": "2022-2023",
+          "date": "2022-10-19",
+          "scores": {
+            "L1": 3,
+            "L2": 4
+          }
+        }
+      ],
+      "touchpoint_count": 12,
+      "pmap_by_year": {
+        "2022-2023": {
+          "L1": 3,
+          "L2": 4
+        },
+        "2023-2024": {
+          "L1": 4,
+          "L2": 4
+        },
+        "2024-2025": {
+          "L1": 4,
+          "L2": 5
+        },
+        "2025-2026": {
+          "L1": 5,
+          "L2": 5
+        }
+      },
+      "last_observation_date": null
+    }
+  }
+}

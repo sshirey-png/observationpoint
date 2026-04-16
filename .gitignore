@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+grow_all_observations.json
+prototypes/teacher_history.json
+*.log
+.env
