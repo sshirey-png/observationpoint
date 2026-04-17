@@ -3,23 +3,29 @@ ObservationPoint — Flask Application
 """
 import os
 import json
-import secrets
+import logging
 from flask import Flask, session, redirect, request, jsonify, send_from_directory
 from flask_cors import CORS
 from werkzeug.middleware.proxy_fix import ProxyFix
-from auth import init_oauth, oauth, get_current_user, require_auth
+
+from config import (
+    SECRET_KEY, ALLOWED_DOMAIN, DEV_MODE, DEV_USER_EMAIL,
+    BUILD_VERSION, CURRENT_SCHOOL_YEAR,
+)
+from auth import (
+    init_oauth, oauth, get_current_user, require_auth,
+    get_accessible_emails, is_admin_title, check_access, is_supervisor,
+)
 import db
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 
 app = Flask(__name__, static_folder='prototypes', static_url_path='/static')
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
-app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
+app.secret_key = SECRET_KEY
 CORS(app)
 init_oauth(app)
-
-BUILD_VERSION = os.environ.get('BUILD_VERSION', '1')
-ALLOWED_DOMAIN = 'firstlineschools.org'
-DEV_MODE = os.environ.get('DEV_MODE', 'false').lower() == 'true'
-DEV_USER_EMAIL = os.environ.get('DEV_USER_EMAIL', 'sshirey@firstlineschools.org')
 
 
 # ------------------------------------------------------------------
@@ -41,18 +47,36 @@ def auth_callback():
     if not email.endswith(f'@{ALLOWED_DOMAIN}'):
         return 'Access restricted to FirstLine Schools staff', 403
 
+    # Look up staff record
     try:
         staff = db.get_staff_by_email(email)
-    except Exception:
+    except Exception as e:
+        log.error(f"DB lookup failed for {email}: {e}")
         staff = None
+
+    job_title = staff.get('job_title', '') if staff else ''
+
+    # Compute accessible emails via recursive CTE
+    try:
+        conn = db.get_conn()
+        accessible = get_accessible_emails(conn, email, job_title)
+        conn.close()
+    except Exception as e:
+        log.error(f"Hierarchy lookup failed for {email}: {e}")
+        accessible = []
+
     session['user'] = {
         'email': email,
         'name': userinfo.get('name', ''),
         'picture': userinfo.get('picture', ''),
+        'job_title': job_title,
         'school': staff.get('school', '') if staff else '',
-        'job_title': staff.get('job_title', '') if staff else '',
         'job_function': staff.get('job_function', '') if staff else '',
+        'is_admin': is_admin_title(job_title),
+        'accessible_emails': accessible,
     }
+
+    log.info(f"Login: {email} ({job_title}) — {len(accessible)} accessible staff, admin={is_admin_title(job_title)}")
     return redirect('/')
 
 
@@ -67,11 +91,14 @@ def health():
     try:
         conn = db.get_conn()
         cur = conn.cursor()
-        cur.execute('SELECT 1')
+        cur.execute('SELECT COUNT(*) FROM staff WHERE is_active')
+        staff_count = cur.fetchone()[0]
+        cur.execute('SELECT COUNT(*) FROM touchpoints')
+        tp_count = cur.fetchone()[0]
         conn.close()
-        return jsonify({'status': 'ok', 'db': 'connected', 'socket': db.DB_SOCKET or 'none'})
+        return jsonify({'status': 'ok', 'active_staff': staff_count, 'touchpoints': tp_count})
     except Exception as e:
-        return jsonify({'status': 'error', 'db': str(e), 'socket': db.DB_SOCKET or 'none'}), 500
+        return jsonify({'status': 'error', 'error': str(e)}), 500
 
 
 @app.route('/api/auth/status')
@@ -79,16 +106,33 @@ def auth_status():
     if DEV_MODE:
         return jsonify({
             'authenticated': True,
-            'user': {'email': DEV_USER_EMAIL, 'name': 'Dev User', 'picture': ''}
+            'user': {
+                'email': DEV_USER_EMAIL,
+                'name': 'Dev User',
+                'is_admin': True,
+                'accessible_count': 999,
+            }
         })
     user = get_current_user()
     if user:
-        return jsonify({'authenticated': True, 'user': user})
+        return jsonify({
+            'authenticated': True,
+            'user': {
+                'email': user['email'],
+                'name': user['name'],
+                'picture': user.get('picture', ''),
+                'job_title': user.get('job_title', ''),
+                'school': user.get('school', ''),
+                'is_admin': user.get('is_admin', False),
+                'is_supervisor': is_supervisor(user),
+                'accessible_count': len(user.get('accessible_emails', [])),
+            }
+        })
     return jsonify({'authenticated': False})
 
 
 # ------------------------------------------------------------------
-# Pages — serve prototypes as the frontend
+# Pages
 # ------------------------------------------------------------------
 
 @app.route('/')
@@ -109,52 +153,53 @@ def serve_page(page):
 
 
 # ------------------------------------------------------------------
-# API: Teacher History (profile + my-team pages)
+# API: My Team
 # ------------------------------------------------------------------
 
 @app.route('/api/my-team')
 @require_auth
 def api_my_team():
     user = get_current_user()
-    email = user['email'] if user else ''
-    data = db.get_my_team(email)
-    return jsonify(data)
+    if DEV_MODE:
+        conn = db.get_conn()
+        accessible = get_accessible_emails(conn, DEV_USER_EMAIL, 'Chief People Officer')
+        conn.close()
+    else:
+        accessible = user.get('accessible_emails', []) if user else []
+
+    sy = request.args.get('school_year', CURRENT_SCHOOL_YEAR)
+    return jsonify(db.get_my_team(accessible, school_year=sy))
 
 
-@app.route('/api/teacher_history')
+# ------------------------------------------------------------------
+# API: Staff Profile
+# ------------------------------------------------------------------
+
+@app.route('/api/staff/<email>')
 @require_auth
-def api_teacher_history():
-    teacher = request.args.get('teacher')
-    school = request.args.get('school')
-    data = db.get_teacher_history(teacher_email=teacher, school=school)
+def api_staff_profile(email):
+    user = get_current_user()
+    if not DEV_MODE and not check_access(user, email):
+        return jsonify({'error': 'Access denied'}), 403
+
+    data = db.get_staff_profile(email)
+    if not data:
+        return jsonify({'error': 'Not found'}), 404
     return jsonify(data)
-
-
-@app.route('/api/teacher/<email>')
-@require_auth
-def api_teacher_profile(email):
-    data = db.get_teacher_history(teacher_email=email)
-    teacher = data.get('teachers', {}).get(email.lower())
-    if not teacher:
-        staff = db.get_staff_by_email(email)
-        if not staff:
-            return jsonify({'error': 'Not found'}), 404
-        teacher = {
-            'email': staff['email'], 'name': f"{staff.get('first_name','')} {staff.get('last_name','')}".strip(),
-            'school': staff.get('school', ''), 'job_function': staff.get('job_function', ''),
-            'touchpoints': [], 'touchpoint_count': 0, 'pmap_by_year': {}, 'last_observation_date': None,
-        }
-    return jsonify({'teacher': teacher, 'school_years': data.get('school_years', [])})
 
 
 # ------------------------------------------------------------------
 # API: Network Dashboard
 # ------------------------------------------------------------------
 
-@app.route('/api/network_dashboard')
+@app.route('/api/network')
 @require_auth
-def api_network_dashboard():
-    return jsonify(db.get_network_dashboard())
+def api_network():
+    user = get_current_user()
+    if not DEV_MODE and not is_supervisor(user):
+        return jsonify({'error': 'Access denied'}), 403
+    sy = request.args.get('school_year', CURRENT_SCHOOL_YEAR)
+    return jsonify(db.get_network_dashboard(school_year=sy))
 
 
 # ------------------------------------------------------------------
@@ -167,7 +212,9 @@ def api_staff_search():
     q = request.args.get('q', '').strip()
     if len(q) < 2:
         return jsonify([])
-    return jsonify(db.search_staff(q, limit=15))
+    user = get_current_user()
+    accessible = user.get('accessible_emails') if user and not DEV_MODE else None
+    return jsonify(db.search_staff(q, accessible_emails=accessible, limit=15))
 
 
 # ------------------------------------------------------------------
@@ -179,8 +226,8 @@ def api_staff_search():
 def api_save_touchpoint():
     user = get_current_user()
     data = request.get_json()
-    data['observer_email'] = user['email']
-    data['school_year'] = '2025-2026'
+    data['observer_email'] = user['email'] if user else DEV_USER_EMAIL
+    data['school_year'] = CURRENT_SCHOOL_YEAR
     try:
         tp_id = db.save_touchpoint(data)
         return jsonify({'id': tp_id})
@@ -189,7 +236,7 @@ def api_save_touchpoint():
 
 
 # ------------------------------------------------------------------
-# API: Rubric + Form Configs
+# API: Form Configs
 # ------------------------------------------------------------------
 
 @app.route('/api/forms/<form_id>')

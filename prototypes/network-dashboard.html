@@ -139,7 +139,7 @@ function scoreColor(v){
 function covColor(pct){ return pct>=80?'#22c55e':pct>=50?'#eab308':'#dc2626'; }
 
 function render(d){
-    const k = d.network_kpis;
+    const k = d.kpis;
     document.getElementById('kpis').innerHTML = `
         <div class="kpi"><div class="kpi-val blue">${k.observations}</div><div class="kpi-label">Observations</div><div class="kpi-sub">${k.observations_teachers} teachers</div></div>
         <div class="kpi"><div class="kpi-val blue">${k.fundamentals}</div><div class="kpi-label">Fundamentals</div><div class="kpi-sub">${k.fundamentals_teachers} teachers</div></div>
@@ -180,8 +180,8 @@ function render(d){
     let cards = '';
     schools.forEach(school => {
         const s = d.schools[school];
-        const sc = s.scores;
-        const cov = s.coverage_pct || 0;
+        const sc = s.avg_scores || {};
+        const cov = null;
         const trend = s.trends || {};
         const yrs = Object.keys(trend).sort();
         let trendHtml = '';
@@ -195,7 +195,7 @@ function render(d){
         }
         cards += `<div class="school-card">
             <div class="school-name">${SHORT_SCHOOLS(school)}</div>
-            <div class="school-meta">${s.teacher_count} teachers with PMAPs</div>
+            <div class="school-meta">${s.staff_count || 0} staff · ${s.total_touchpoints || 0} touchpoints</div>
             <div class="school-scores">`;
         DIMS.forEach(dim => {
             const v = sc[dim];
@@ -206,11 +206,6 @@ function render(d){
             </div>`;
         });
         cards += `</div>
-            <div class="school-coverage">
-                <div class="cov-label">Obs coverage</div>
-                <div class="cov-bar-bg"><div class="cov-bar" style="width:${cov}%;background:${covColor(cov)}"></div></div>
-                <div class="cov-pct" style="color:${covColor(cov)}">${cov}%</div>
-            </div>
             ${trendHtml}
         </div>`;
     });
@@ -253,7 +248,7 @@ function render(d){
 
 async function load(){
     try {
-        let r = await fetch('/api/network_dashboard').catch(() => null);
+        let r = await fetch('/api/network').catch(() => null);
         if (!r || !r.ok) r = await fetch('network_dashboard_data.json');
         const d = await r.json();
         render(d);

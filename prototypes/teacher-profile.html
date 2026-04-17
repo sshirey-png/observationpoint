@@ -169,7 +169,6 @@ body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-fon
 <script>
 const params = new URLSearchParams(location.search);
 const TEACHER_EMAIL = (params.get('teacher') || '').toLowerCase();
-const DATA_URLS = ['/api/teacher_history', 'teacher_history.json', 'teacher_history_demo.json'];
 
 const DIM_ORDER = {
     teacher: ['T1','T2','T3','T4','T5'],
@@ -186,6 +185,11 @@ const FORM_META = {
     pmap_prek:           {label:'PMAP',        dot:'dot-pmap',type:'type-pmap',title:'Performance Map — PreK'},
     pmap_support:        {label:'PMAP',        dot:'dot-pmap',type:'type-pmap',title:'Performance Map — Support'},
     pmap_network:        {label:'PMAP',        dot:'dot-pmap',type:'type-pmap',title:'Performance Map — Network'},
+    quick_feedback:         {label:'Feedback',  dot:'dot-fb',  type:'type-fb',  title:'Quick Feedback'},
+    'meeting_quick_meeting':{label:'Meeting',   dot:'dot-meet',type:'type-meet',title:'Coaching Meeting'},
+    'meeting_data_meeting_(relay)':{label:'Data Mtg',dot:'dot-meet',type:'type-meet',title:'Data Meeting (Relay)'},
+    write_up:               {label:'Write-Up',  dot:'dot-disc',type:'type-disc',title:'Employee Write-Up'},
+    iap:                    {label:'IAP',        dot:'dot-disc',type:'type-disc',title:'Improvement Action Plan'},
     self_reflection_teacher:{label:'Self-Ref', dot:'dot-sr',  type:'type-sr',  title:'Teacher Self-Reflection'},
     self_reflection_leader: {label:'Self-Ref', dot:'dot-sr',  type:'type-sr',  title:'Leader Self-Reflection'},
     self_reflection_prek:   {label:'Self-Ref', dot:'dot-sr',  type:'type-sr',  title:'PreK Self-Reflection'},
@@ -423,33 +427,44 @@ function renderTimeline(teacher, filter, dims){
 }
 
 async function load(){
-    let data = null;
-    for(const url of DATA_URLS){
-        try {
-            const r = await fetch(url);
-            if(r.ok){ data = await r.json(); break; }
-        } catch(e){}
-    }
-    if(!data){
-        document.getElementById('loading').textContent = 'Failed to load teacher history';
+    if(!TEACHER_EMAIL){
+        document.getElementById('loading').textContent = 'No teacher specified. Use ?teacher=email';
         return;
     }
-    const emails = Object.keys(data.teachers);
-    const email = TEACHER_EMAIL || emails[0] || '';
-    const teacher = data.teachers[email];
-    if(!teacher){
-        const available = emails.slice(0,20).map(e => {
-            const t = data.teachers[e];
-            return `<a href="?teacher=${e}" style="color:#e47727">${t.name}</a>`;
-        }).join(' · ');
-        document.getElementById('loading').innerHTML =
-            `<div>No data for <b>${email}</b></div>
-             <div style="margin-top:12px;font-size:12px;line-height:1.8">Try: ${available}</div>`;
-        return;
+    try {
+        const r = await fetch(`/api/staff/${encodeURIComponent(TEACHER_EMAIL)}`);
+        if(r.status === 403){
+            document.getElementById('loading').textContent = 'Access denied';
+            return;
+        }
+        if(!r.ok) throw new Error(r.status);
+        const data = await r.json();
+        const teacher = {
+            email: data.staff.email,
+            name: data.staff.name,
+            school: data.staff.school,
+            job_function: data.staff.job_function,
+            job_title: data.staff.job_title,
+            hire_date: data.staff.hire_date,
+            touchpoints: data.touchpoints,
+            touchpoint_count: data.touchpoint_count,
+            pmap_by_year: data.pmap_by_year,
+            last_observation_date: null,
+        };
+        // Compute last observation date
+        for(const tp of data.touchpoints){
+            if(tp.form_type.startsWith('observation_') && tp.date){
+                teacher.last_observation_date = tp.date;
+                break;
+            }
+        }
+        render(teacher, data.school_years);
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+    } catch(e){
+        console.error(e);
+        document.getElementById('loading').textContent = 'Failed to load. Please sign in.';
     }
-    render(teacher, data.school_years);
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
 }
 load();
 </script>

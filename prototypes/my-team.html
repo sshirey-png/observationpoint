@@ -16,37 +16,31 @@ body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-fon
 
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
 .stat{background:#fff;border-radius:10px;padding:10px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.stat-val{font-size:22px;font-weight:800}.stat-label{font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
-
-.filters{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px}
-.filter-chip{padding:7px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid #e5e7eb;background:#fff;cursor:pointer;white-space:nowrap;transition:all .15s;font-family:'Inter',sans-serif}
-.filter-chip:active{transform:scale(.95)}
-.filter-chip.active{background:#002f60;color:#fff;border-color:#002f60}
+.stat-val{font-size:22px;font-weight:800;color:#002f60}.stat-label{font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
 
 .search{width:100%;padding:10px 10px 10px 36px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:'Inter',sans-serif;outline:none;margin-bottom:12px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Ccircle cx='7' cy='7' r='4.5'/%3E%3Cpath d='m11 11 3 3'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:10px center}
 .search:focus{border-color:#e47727}
 
-.staff-card{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:12px;margin-bottom:8px;cursor:pointer;transition:all .15s;text-decoration:none;color:inherit;display:block}
-.staff-card:active{transform:scale(.98);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.filters{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px}
+.filter-chip{padding:7px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid #e5e7eb;background:#fff;cursor:pointer;white-space:nowrap;font-family:'Inter',sans-serif}
+.filter-chip.active{background:#002f60;color:#fff;border-color:#002f60}
+
+.staff-card{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:12px;margin-bottom:8px;cursor:pointer;text-decoration:none;color:inherit;display:block}
+.staff-card:active{transform:scale(.98)}
 .staff-top{display:flex;align-items:center;gap:10px}
 .staff-av{width:40px;height:40px;border-radius:10px;background:#002f60;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
 .staff-name{font-size:14px;font-weight:600}
 .staff-meta{font-size:11px;color:#9ca3af}
 .staff-right{margin-left:auto;text-align:right;flex-shrink:0}
-.staff-days{font-size:14px;font-weight:700;color:#6b7280}
-.staff-days-label{font-size:9px;color:#9ca3af;text-transform:uppercase}
-.staff-scores{display:flex;gap:3px;margin-top:8px;flex-wrap:wrap}
-.staff-sc{padding:2px 5px;border-radius:3px;font-size:10px;font-weight:700;background:#f5f7fa}
-.staff-sc.s1{background:#fee2e2;color:#b91c1c}.staff-sc.s2{background:#ffedd5;color:#c2410c}
-.staff-sc.s3{background:#fef3c7;color:#a16207}.staff-sc.s4{background:#dcfce7;color:#059669}
-.staff-sc.s5{background:#bbf7d0;color:#047857}
-.staff-trend{font-size:11px;color:#9ca3af;margin-top:8px;display:flex;align-items:center;gap:4px}
-.staff-trend-val{font-weight:700}
-.staff-trend .up{color:#059669}.staff-trend .down{color:#dc2626}.staff-trend .flat{color:#6b7280}
-.staff-bottom{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
-.staff-tag{font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px}
+.staff-count{font-size:16px;font-weight:800;color:#002f60}
+.staff-count-label{font-size:9px;color:#9ca3af;text-transform:uppercase}
+.staff-types{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}
+.staff-type{font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#f3f4f6;color:#6b7280}
+.staff-type.has{background:#dbeafe;color:#2563eb}
+.staff-date{font-size:11px;color:#9ca3af;margin-top:6px}
 
 .loading{padding:60px 16px;text-align:center;color:#9ca3af;font-size:13px}
+.empty{padding:40px 16px;text-align:center;color:#9ca3af;font-size:14px;background:#fff;border-radius:12px}
 </style>
 </head>
 <body>
@@ -56,135 +50,100 @@ body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-fon
     <div class="nav-title">My Team</div>
 </nav>
 
-<div id="loading" class="loading">Loading team…</div>
+<div id="loading" class="loading">Loading team...</div>
 
 <div class="content" id="app" style="display:none">
-
-<div class="stats">
-    <div class="stat"><div class="stat-val" style="color:#2563eb" id="sStaff">—</div><div class="stat-label">Staff</div></div>
-    <div class="stat"><div class="stat-val" style="color:#059669" id="sTPs">—</div><div class="stat-label">TouchPoints</div></div>
-    <div class="stat"><div class="stat-val" style="color:#e47727" id="sAvg">—</div><div class="stat-label">Avg/Person</div></div>
-</div>
-
-<input class="search" type="text" placeholder="Search staff..." oninput="filterStaff(this.value)">
-
-<div class="filters">
-    <div class="filter-chip active" onclick="filterRole(this,'all')">All</div>
-    <div class="filter-chip" onclick="filterRole(this,'teacher')">Teachers</div>
-    <div class="filter-chip" onclick="filterRole(this,'prek')">PreK</div>
-    <div class="filter-chip" onclick="filterRole(this,'leader')">Leaders</div>
-</div>
-
-<div id="staffList"></div>
-
+    <div class="stats">
+        <div class="stat"><div class="stat-val" id="sStaff">—</div><div class="stat-label">Staff</div></div>
+        <div class="stat"><div class="stat-val" id="sTPs">—</div><div class="stat-label">TouchPoints</div></div>
+        <div class="stat"><div class="stat-val" id="sAvg">—</div><div class="stat-label">Avg / Person</div></div>
+    </div>
+    <input class="search" type="text" placeholder="Search staff..." oninput="filterStaff(this.value)">
+    <div class="filters" id="filters"></div>
+    <div id="staffList"></div>
 </div>
 
 <script>
-const DIM_ORDER = {
-    teacher: ['T1','T2','T3','T4','T5'],
-    leader: ['L1','L2'],
-    prek: ['PK1','PK5','PK7','PK8','PK9']
-};
-
 function initials(name){
-    const p = (name || '').trim().split(/\s+/);
-    return ((p[0]||'')[0] + (p[1]?p[1][0]:'')).toUpperCase() || '—';
+    const p = (name||'').trim().split(/\s+/);
+    return ((p[0]||'')[0]+(p[1]?p[1][0]:'')).toUpperCase()||'—';
 }
 
-function daysBetween(d1, d2){
-    if(!d1) return null;
-    return Math.floor(((new Date(d2)) - (new Date(d1))) / (1000*60*60*24));
+function daysSince(dateStr){
+    if(!dateStr) return null;
+    return Math.floor((new Date() - new Date(dateStr))/(1000*60*60*24));
 }
 
-function scoreClass(s){
-    if(s == null) return '';
-    return 's' + Math.max(1, Math.min(5, Math.round(s)));
-}
+function renderCard(s){
+    const days = daysSince(s.last_touchpoint_date);
+    const daysText = days !== null ? `Last touchpoint ${days} day${days===1?'':'s'} ago` : 'No touchpoints yet';
 
-function renderCard(t){
-    const pmapYrs = Object.keys(t.pmap_by_year).sort();
-    const latestYr = pmapYrs[pmapYrs.length-1];
-    const latestScores = latestYr ? t.pmap_by_year[latestYr] : {};
-    const role = t.job_function === 'Leadership' ? 'leader' : (t.job_function === 'Teacher' ? 'teacher' : 'teacher');
-    const dims = DIM_ORDER[role] || DIM_ORDER.teacher;
-
-    const days = daysBetween(t.last_observation_date, new Date().toISOString().slice(0,10));
-    const daysHtml = days == null
-        ? '<div class="staff-days">—</div><div class="staff-days-label">no obs</div>'
-        : `<div class="staff-days">${days}</div><div class="staff-days-label">days ago</div>`;
-
-    let scoresHtml = '';
-    if(latestYr){
-        scoresHtml = '<div class="staff-scores">';
-        for(const code of dims){
-            const s = latestScores[code];
-            if(s == null) continue;
-            scoresHtml += `<div class="staff-sc ${scoreClass(s)}">${code}:${Math.round(s)}</div>`;
-        }
-        scoresHtml += '</div>';
-    }
-
-    let trendHtml = '';
-    if(pmapYrs.length >= 2){
-        const prevYr = pmapYrs[pmapYrs.length-2];
-        const prev = t.pmap_by_year[prevYr];
-        const curVals = Object.values(latestScores);
-        const prevVals = Object.values(prev);
-        const curAvg = curVals.length ? curVals.reduce((a,b)=>a+b,0)/curVals.length : 0;
-        const prevAvg = prevVals.length ? prevVals.reduce((a,b)=>a+b,0)/prevVals.length : 0;
-        const delta = curAvg - prevAvg;
-        let arrow = '<span class="flat">→</span>';
-        if(delta >= 0.3) arrow = '<span class="up">▲</span>';
-        else if(delta <= -0.3) arrow = '<span class="down">▼</span>';
-        trendHtml = `<div class="staff-trend">
-            <span>${prevYr.slice(2,4)}–${prevYr.slice(7,9)}: <span class="staff-trend-val">${prevAvg.toFixed(1)}</span></span>
-            ${arrow}
-            <span>${latestYr.slice(2,4)}–${latestYr.slice(7,9)}: <span class="staff-trend-val">${curAvg.toFixed(1)}</span></span>
-        </div>`;
-    }
-
-    const tags = [];
-    if(role === 'prek') tags.push('<div class="staff-tag" style="background:#fce7f3;color:#be185d">PreK / CLASS</div>');
-    if(role === 'leader') tags.push('<div class="staff-tag" style="background:#ede9fe;color:#7c3aed">Leader</div>');
-    tags.push(`<div class="staff-tag" style="background:#dbeafe;color:#2563eb">${t.touchpoint_count} TouchPoints</div>`);
-
-    const avBg = role === 'leader' ? '#7c3aed' : (role === 'prek' ? '#be185d' : '#002f60');
+    const types = [];
+    if(s.observation_count) types.push(`<span class="staff-type has">${s.observation_count} Obs</span>`);
+    if(s.pmap_count) types.push(`<span class="staff-type has">${s.pmap_count} PMAP</span>`);
+    if(s.sr_count) types.push(`<span class="staff-type has">${s.sr_count} SR</span>`);
+    if(s.feedback_count) types.push(`<span class="staff-type has">${s.feedback_count} Feedback</span>`);
+    if(s.meeting_count) types.push(`<span class="staff-type has">${s.meeting_count} Meeting</span>`);
+    if(!types.length) types.push('<span class="staff-type">No touchpoints</span>');
 
     return `
-    <a class="staff-card" href="teacher-profile.html?teacher=${encodeURIComponent(t.email)}" data-role="${role}">
+    <a class="staff-card" href="teacher-profile.html?teacher=${encodeURIComponent(s.email)}" data-school="${s.school}" data-function="${s.job_function}">
         <div class="staff-top">
-            <div class="staff-av" style="background:${avBg}">${initials(t.name)}</div>
-            <div><div class="staff-name">${t.name}</div><div class="staff-meta">${t.school}</div></div>
-            <div class="staff-right">${daysHtml}</div>
+            <div class="staff-av">${initials(s.name)}</div>
+            <div>
+                <div class="staff-name">${s.name}</div>
+                <div class="staff-meta">${s.job_title||''} · ${s.school||''}</div>
+            </div>
+            <div class="staff-right">
+                <div class="staff-count">${s.touchpoint_count}</div>
+                <div class="staff-count-label">touchpoints</div>
+            </div>
         </div>
-        ${scoresHtml}
-        ${trendHtml}
-        <div class="staff-bottom">${tags.join('')}</div>
+        <div class="staff-types">${types.join('')}</div>
+        <div class="staff-date">${daysText}</div>
     </a>`;
 }
 
 async function load(){
     try {
-        let data = null;
-        for(const url of ['/api/my-team','/api/teacher_history','teacher_history.json','teacher_history_demo.json']){
-            try { const r = await fetch(url); if(r.ok){ data = await r.json(); break; } } catch(e){}
+        const r = await fetch('/api/my-team');
+        if(!r.ok) throw new Error(r.status);
+        const d = await r.json();
+        const staff = d.staff;
+
+        if(!staff.length){
+            document.getElementById('loading').style.display='none';
+            document.getElementById('app').style.display='';
+            document.getElementById('staffList').innerHTML='<div class="empty">No direct reports found</div>';
+            return;
         }
-        if(!data){ document.getElementById('loading').textContent = 'Failed to load'; return; }
-        const teachers = Object.values(data.teachers).sort((a,b)=>a.name.localeCompare(b.name));
 
         let totalTPs = 0;
-        for(const t of teachers) totalTPs += t.touchpoint_count;
+        const schoolSet = new Set();
+        const fnSet = new Set();
+        staff.forEach(s => {
+            totalTPs += s.touchpoint_count;
+            if(s.school) schoolSet.add(s.school);
+            if(s.job_function) fnSet.add(s.job_function);
+        });
 
-        document.getElementById('sStaff').textContent = teachers.length;
+        document.getElementById('sStaff').textContent = staff.length;
         document.getElementById('sTPs').textContent = totalTPs;
-        document.getElementById('sAvg').textContent = teachers.length ? (totalTPs / teachers.length).toFixed(1) : '—';
-        document.getElementById('staffList').innerHTML = teachers.map(renderCard).join('');
+        document.getElementById('sAvg').textContent = staff.length ? (totalTPs/staff.length).toFixed(1) : '—';
 
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('app').style.display = '';
-    } catch(e) {
+        // Build filter chips from data
+        let chips = '<div class="filter-chip active" onclick="applyFilter(this,\'all\')">All</div>';
+        fnSet.forEach(fn => {
+            chips += `<div class="filter-chip" onclick="applyFilter(this,'fn:${fn}')">${fn}</div>`;
+        });
+        document.getElementById('filters').innerHTML = chips;
+
+        document.getElementById('staffList').innerHTML = staff.map(renderCard).join('');
+        document.getElementById('loading').style.display='none';
+        document.getElementById('app').style.display='';
+    } catch(e){
         console.error(e);
-        document.getElementById('loading').textContent = 'Failed to load team';
+        document.getElementById('loading').textContent = 'Failed to load team. Please sign in.';
     }
 }
 
@@ -194,12 +153,15 @@ function filterStaff(q){
         c.style.display = c.textContent.toLowerCase().includes(qq) ? '' : 'none';
     });
 }
-function filterRole(el, role){
+
+function applyFilter(el, filter){
     document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
     el.classList.add('active');
     document.querySelectorAll('.staff-card').forEach(c => {
-        if(role === 'all') { c.style.display = ''; return; }
-        c.style.display = c.dataset.role === role ? '' : 'none';
+        if(filter === 'all'){ c.style.display=''; return; }
+        if(filter.startsWith('fn:')){
+            c.style.display = c.dataset.function === filter.slice(3) ? '' : 'none';
+        }
     });
 }
 

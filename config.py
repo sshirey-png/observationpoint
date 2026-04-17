@@ -1,80 +1,49 @@
 """
-ObservationPoint — Tenant Configuration
-Loads org config from BigQuery. Designed to work standalone (FirstLine)
-or as a TalentPoint module with shared tenant config.
+ObservationPoint — Configuration
 """
 import os
-from google.cloud import bigquery
+import secrets
 
+# Flask
+SECRET_KEY = os.environ.get('SECRET_KEY', secrets.token_hex(32))
+
+# OAuth
+ALLOWED_DOMAIN = 'firstlineschools.org'
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
+GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
+
+# Dev mode
+DEV_MODE = os.environ.get('DEV_MODE', 'false').lower() == 'true'
+DEV_USER_EMAIL = os.environ.get('DEV_USER_EMAIL', 'sshirey@firstlineschools.org')
+
+# Database
+DB_HOST = os.environ.get('DB_HOST') or '35.184.9.224'
+DB_NAME = os.environ.get('DB_NAME') or 'observationpoint'
+DB_USER = os.environ.get('DB_USER') or 'postgres'
+DB_PASS = os.environ.get('DB_PASS') or ''
+DB_PORT = os.environ.get('DB_PORT') or '5432'
+DB_SOCKET = os.environ.get('DB_SOCKET') or ''
+
+# GCP
 PROJECT_ID = os.environ.get('GCP_PROJECT', 'talent-demo-482004')
-DATASET = os.environ.get('BQ_DATASET', 'observationpoint')
 
-# Tenant defaults (FirstLine Schools)
-DEFAULTS = {
-    'org_name': 'FirstLine Schools',
-    'org_short': 'FLS',
-    'primary_color': '#e47727',
-    'secondary_color': '#002f60',
-    'font_family': 'Inter',
-    'logo_url': '',
-    'domain': 'firstlineschools.org',
-    'schools': [
-        'Arthur Ashe Charter School',
-        'George Washington Carver High School',
-        'George Washington Carver Preparatory Academy',
-        'Langston Hughes Academy',
-        'Live Oak Elementary School',
-        'Samuel J. Green Charter School',
-        'FirstLine Schools Network Office',
-    ],
-    'school_years': [
-        '2025-2026',
-        '2024-2025',
-        '2023-2024',
-    ],
-    'current_school_year': '2025-2026',
-}
+# Current school year
+CURRENT_SCHOOL_YEAR = '2025-2026'
+SCHOOL_YEARS = ['2023-2024', '2024-2025', '2025-2026']
 
-_config = None
-_client = None
+# Role-based access — same pattern as bigquery-dashboards/config.py
+CPO_TITLE = 'Chief People Officer'
+C_TEAM_KEYWORDS = ['Chief', 'ExDir']
 
+HR_TEAM_TITLES = [
+    'Chief Executive Officer',
+    'Chief HR Officer',
+    'Manager, HR',
+    'Manager Payroll',
+    'Manager - Benefits',
+    'Talent Operations Manager',
+    'Recruitment Manager',
+]
 
-def get_client():
-    global _client
-    if _client is None:
-        _client = bigquery.Client(project=PROJECT_ID)
-    return _client
-
-
-def tenant():
-    """Return tenant configuration. Loads from BQ if available, falls back to defaults."""
-    global _config
-    if _config is not None:
-        return _config
-
-    _config = DEFAULTS.copy()
-
-    # Try loading from BigQuery tenant config (TalentPoint pattern)
-    try:
-        client = get_client()
-        query = f"""
-            SELECT key, value
-            FROM `{PROJECT_ID}.{DATASET}.tenant_config`
-        """
-        rows = client.query(query).result()
-        for row in rows:
-            _config[row.key] = row.value
-    except Exception:
-        pass  # Use defaults
-
-    return _config
-
-
-def schools():
-    """Return list of schools."""
-    return tenant().get('schools', [])
-
-
-def current_school_year():
-    """Return current school year."""
-    return tenant().get('current_school_year', '2025-2026')
+# Build version for cache busting
+BUILD_VERSION = os.environ.get('BUILD_VERSION', '1')
