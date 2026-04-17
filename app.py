@@ -161,14 +161,18 @@ def serve_page(page):
 def api_my_team():
     user = get_current_user()
     if DEV_MODE:
+        email = DEV_USER_EMAIL
         conn = db.get_conn()
-        accessible = get_accessible_emails(conn, DEV_USER_EMAIL, 'Chief People Officer')
+        accessible = get_accessible_emails(conn, email, 'Chief People Officer')
         conn.close()
     else:
+        email = user['email'] if user else ''
         accessible = user.get('accessible_emails', []) if user else []
 
     sy = request.args.get('school_year', CURRENT_SCHOOL_YEAR)
-    return jsonify(db.get_my_team(accessible, school_year=sy))
+    view = request.args.get('view', 'direct')  # 'direct' or 'all'
+    direct_email = email if view == 'direct' else None
+    return jsonify(db.get_my_team(accessible, school_year=sy, direct_only_email=direct_email))
 
 
 # ------------------------------------------------------------------

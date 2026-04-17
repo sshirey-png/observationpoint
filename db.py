@@ -61,8 +61,10 @@ def search_staff(query, accessible_emails=None, limit=15):
 
 # --- My Team ---
 
-def get_my_team(accessible_emails, school_year=None):
-    """Return staff list with touchpoint counts by type. Only staff in accessible_emails."""
+def get_my_team(accessible_emails, school_year=None, direct_only_email=None):
+    """Return staff list with touchpoint counts by type.
+    If direct_only_email is set, only return that person's direct reports.
+    Otherwise return all accessible_emails."""
     if not accessible_emails:
         return {'staff': [], 'school_year': school_year or CURRENT_SCHOOL_YEAR}
 
@@ -70,7 +72,15 @@ def get_my_team(accessible_emails, school_year=None):
     conn = get_conn()
     try:
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cur.execute("""
+
+        if direct_only_email:
+            where = "WHERE s.supervisor_email = %s AND s.is_active"
+            params = (sy, direct_only_email)
+        else:
+            where = "WHERE s.email = ANY(%s) AND s.is_active"
+            params = (sy, accessible_emails)
+
+        cur.execute(f"""
             SELECT
                 s.email, s.first_name, s.last_name, s.job_title, s.school,
                 s.job_function, s.hire_date, s.supervisor_email,
@@ -83,11 +93,11 @@ def get_my_team(accessible_emails, school_year=None):
                 COUNT(CASE WHEN t.form_type LIKE 'meeting_%%' THEN 1 END) as meeting_count
             FROM staff s
             LEFT JOIN touchpoints t ON t.teacher_email = s.email AND t.school_year = %s
-            WHERE s.email = ANY(%s) AND s.is_active
+            {where}
             GROUP BY s.email, s.first_name, s.last_name, s.job_title, s.school,
                      s.job_function, s.hire_date, s.supervisor_email
             ORDER BY s.last_name, s.first_name
-        """, (sy, accessible_emails))
+        """, params)
         staff = []
         for r in cur.fetchall():
             row = dict(r)

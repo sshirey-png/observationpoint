@@ -58,6 +58,10 @@ body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-fon
         <div class="stat"><div class="stat-val" id="sTPs">—</div><div class="stat-label">TouchPoints</div></div>
         <div class="stat"><div class="stat-val" id="sAvg">—</div><div class="stat-label">Avg / Person</div></div>
     </div>
+    <div style="display:flex;gap:6px;margin-bottom:12px">
+        <button class="filter-chip active" id="viewDirect" onclick="setView('direct')">My Direct Reports</button>
+        <button class="filter-chip" id="viewAll" onclick="setView('all')">All Staff</button>
+    </div>
     <input class="search" type="text" placeholder="Search staff..." oninput="filterStaff(this.value)">
     <div class="filters" id="filters"></div>
     <div id="staffList"></div>
@@ -104,9 +108,19 @@ function renderCard(s){
     </a>`;
 }
 
+let currentView = 'direct';
+
+function setView(view){
+    currentView = view;
+    document.getElementById('viewDirect').classList.toggle('active', view==='direct');
+    document.getElementById('viewAll').classList.toggle('active', view==='all');
+    document.getElementById('staffList').innerHTML = '<div class="loading">Loading...</div>';
+    load();
+}
+
 async function load(){
     try {
-        const r = await fetch('/api/my-team');
+        const r = await fetch(`/api/my-team?view=${currentView}`);
         if(!r.ok) throw new Error(r.status);
         const d = await r.json();
         const staff = d.staff;
