@@ -168,8 +168,8 @@ body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-fon
 
 <script>
 const params = new URLSearchParams(location.search);
-const TEACHER_EMAIL = (params.get('teacher') || 'marcus.williams@demo.local').toLowerCase();
-const DATA_URL = 'teacher_history_demo.json';
+const TEACHER_EMAIL = (params.get('teacher') || '').toLowerCase();
+const DATA_URLS = ['teacher_history.json', 'teacher_history_demo.json'];
 
 const DIM_ORDER = {
     teacher: ['T1','T2','T3','T4','T5'],
@@ -423,27 +423,33 @@ function renderTimeline(teacher, filter, dims){
 }
 
 async function load(){
-    try {
-        const r = await fetch(DATA_URL);
-        const data = await r.json();
-        const teacher = data.teachers[TEACHER_EMAIL];
-        if(!teacher){
-            const available = Object.keys(data.teachers).map(e => {
-                const t = data.teachers[e];
-                return `<a href="?teacher=${e}" style="color:#e47727">${t.name}</a>`;
-            }).join(' · ');
-            document.getElementById('loading').innerHTML =
-                `<div>No data for <b>${TEACHER_EMAIL}</b></div>
-                 <div style="margin-top:12px;font-size:12px;line-height:1.8">Try: ${available}</div>`;
-            return;
-        }
-        render(teacher, data.school_years);
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
-    } catch(e){
-        console.error(e);
-        document.getElementById('loading').textContent = 'Failed to load teacher history';
+    let data = null;
+    for(const url of DATA_URLS){
+        try {
+            const r = await fetch(url);
+            if(r.ok){ data = await r.json(); break; }
+        } catch(e){}
     }
+    if(!data){
+        document.getElementById('loading').textContent = 'Failed to load teacher history';
+        return;
+    }
+    const emails = Object.keys(data.teachers);
+    const email = TEACHER_EMAIL || emails[0] || '';
+    const teacher = data.teachers[email];
+    if(!teacher){
+        const available = emails.slice(0,20).map(e => {
+            const t = data.teachers[e];
+            return `<a href="?teacher=${e}" style="color:#e47727">${t.name}</a>`;
+        }).join(' · ');
+        document.getElementById('loading').innerHTML =
+            `<div>No data for <b>${email}</b></div>
+             <div style="margin-top:12px;font-size:12px;line-height:1.8">Try: ${available}</div>`;
+        return;
+    }
+    render(teacher, data.school_years);
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
 }
 load();
 </script>
