@@ -81,7 +81,7 @@ def get_teacher_history(teacher_email=None, school=None, observer_email=None):
 def _get_teacher_history_inner(conn, teacher_email=None, school=None, observer_email=None):
     cur = conn.cursor()
 
-    where = "WHERE 1=1"
+    where = "WHERE st.is_active = TRUE"
     params = []
     if teacher_email:
         where += " AND t.teacher_email = %s"
