@@ -6,9 +6,11 @@
     "2025-2026"
   ],
   "network_kpis": {
-    "observations_this_year": 1817,
-    "teachers_observed": 233,
-    "pmap_teachers": 256,
+    "observations": 947,
+    "observations_teachers": 176,
+    "fundamentals": 721,
+    "fundamentals_teachers": 175,
+    "pmap_teachers": 198,
     "total_teachers": 187
   },
   "network_avg": {
@@ -150,9 +152,9 @@
     }
   },
   "needs_attention_by_school": {
-    "Phillis Wheatley Community School": 547,
-    "Samuel J Green Charter School": 287,
-    "Langston Hughes Academy": 283,
-    "Arthur Ashe Charter School": 421
+    "Arthur Ashe Charter School": 41,
+    "Langston Hughes Academy": 35,
+    "Phillis Wheatley Community School": 41,
+    "Samuel J Green Charter School": 33
   }
 }

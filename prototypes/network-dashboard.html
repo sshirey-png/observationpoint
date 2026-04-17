@@ -145,11 +145,12 @@ function render(d){
     const k = d.network_kpis;
     const pmapPct = k.total_teachers ? Math.round(k.pmap_teachers/k.total_teachers*100) : 0;
 
+    const attnTotal = Object.values(d.needs_attention_by_school).reduce((a,b)=>a+b,0);
     document.getElementById('kpis').innerHTML = `
-        <div class="kpi"><div class="kpi-val blue">${k.observations_this_year}</div><div class="kpi-label">Observations</div><div class="kpi-sub">2025-26</div></div>
-        <div class="kpi"><div class="kpi-val green">${k.teachers_observed}</div><div class="kpi-label">Teachers Observed</div><div class="kpi-sub">This year</div></div>
-        <div class="kpi"><div class="kpi-val ${pmapPct>=80?'green':pmapPct>=50?'orange':'red'}">${pmapPct}%</div><div class="kpi-label">PMAP Coverage</div><div class="kpi-sub">${k.pmap_teachers} of ${k.total_teachers}</div></div>
-        <div class="kpi"><div class="kpi-val orange">${Object.values(d.needs_attention_by_school).reduce((a,b)=>a+b,0)}</div><div class="kpi-label">Need Attention</div><div class="kpi-sub">30+ days no obs</div></div>
+        <div class="kpi"><div class="kpi-val blue">${k.observations}</div><div class="kpi-label">Observations</div><div class="kpi-sub">${k.observations_teachers} teachers</div></div>
+        <div class="kpi"><div class="kpi-val blue">${k.fundamentals}</div><div class="kpi-label">Fundamentals</div><div class="kpi-sub">${k.fundamentals_teachers} teachers</div></div>
+        <div class="kpi"><div class="kpi-val ${pmapPct>=80?'green':pmapPct>=50?'orange':'red'}">${pmapPct}%</div><div class="kpi-label">PMAP Coverage</div><div class="kpi-sub">${k.pmap_teachers} of ${k.total_teachers} teachers</div></div>
+        <div class="kpi"><div class="kpi-val ${attnTotal>50?'red':'orange'}">${attnTotal}</div><div class="kpi-label">Need Attention</div><div class="kpi-sub">30+ days no obs</div></div>
     `;
 
     // Heatmap
