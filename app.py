@@ -1,40 +1,33 @@
 """
-ObservationPoint — Main Flask Application
-AI-powered classroom observation and coaching platform.
-Standalone for FirstLine Schools, designed to integrate into TalentPoint.
+ObservationPoint — Flask Application
 """
 import os
 import json
 import secrets
-from flask import Flask, render_template, session, redirect, url_for, request, jsonify
+from flask import Flask, session, redirect, request, jsonify, send_from_directory
 from flask_cors import CORS
+from werkzeug.middleware.proxy_fix import ProxyFix
+from auth import init_oauth, oauth, get_current_user, require_auth
+import db
 
-from config import tenant, schools, current_school_year, PROJECT_ID, DATASET
-from auth import init_oauth, oauth, get_current_user, require_auth, can
-
-app = Flask(__name__)
+app = Flask(__name__, static_folder='prototypes', static_url_path='/static')
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 CORS(app)
-
-# Initialize OAuth
 init_oauth(app)
 
-# Build version for cache busting
 BUILD_VERSION = os.environ.get('BUILD_VERSION', '1')
+ALLOWED_DOMAIN = 'firstlineschools.org'
+DEV_MODE = os.environ.get('DEV_MODE', 'false').lower() == 'true'
+DEV_USER_EMAIL = os.environ.get('DEV_USER_EMAIL', 'sshirey@firstlineschools.org')
 
 
 # ------------------------------------------------------------------
-# Auth Routes
+# Auth
 # ------------------------------------------------------------------
 
 @app.route('/login')
 def login():
-    cfg = tenant()
-    return render_template('login.html', config=cfg, build=BUILD_VERSION)
-
-
-@app.route('/auth/google')
-def auth_google():
     redirect_uri = request.url_root.rstrip('/') + '/auth/callback'
     return oauth.google.authorize_redirect(redirect_uri)
 
@@ -43,90 +36,109 @@ def auth_google():
 def auth_callback():
     token = oauth.google.authorize_access_token()
     userinfo = token.get('userinfo', {})
-    email = userinfo.get('email', '')
-    name = userinfo.get('name', '')
+    email = userinfo.get('email', '').lower()
 
-    # Determine role from staff list
-    role = _get_user_role(email)
+    if not email.endswith(f'@{ALLOWED_DOMAIN}'):
+        return 'Access restricted to FirstLine Schools staff', 403
 
+    try:
+        staff = db.get_staff_by_email(email)
+    except Exception:
+        staff = None
     session['user'] = {
         'email': email,
-        'name': name,
+        'name': userinfo.get('name', ''),
         'picture': userinfo.get('picture', ''),
-        'role': role,
+        'school': staff.get('school', '') if staff else '',
+        'job_title': staff.get('job_title', '') if staff else '',
+        'job_function': staff.get('job_function', '') if staff else '',
     }
-    return redirect(url_for('index'))
+    return redirect('/')
 
 
 @app.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('login'))
+    return redirect('/login')
 
 
-def _get_user_role(email):
-    """Determine user role from staff_master_list_with_function."""
+@app.route('/api/health')
+def health():
     try:
-        from google.cloud import bigquery
-        client = bigquery.Client(project=PROJECT_ID)
-        sql = f"""
-            SELECT job_title, location, job_function
-            FROM `{PROJECT_ID}.talent_dashboard.staff_master_list_with_function`
-            WHERE LOWER(email) = LOWER(@email) AND status = 'Active'
-            LIMIT 1
-        """
-        job_config = bigquery.QueryJobConfig(
-            query_parameters=[
-                bigquery.ScalarQueryParameter("email", "STRING", email),
-            ]
-        )
-        rows = list(client.query(sql, job_config=job_config).result())
-        if rows:
-            jf = rows[0].get('job_function', '')
-            jt = (rows[0].get('job_title', '') or '').lower()
-            if any(t in jt for t in ['principal', 'dean', 'ap ', 'assistant principal']):
-                return 'leader'
-            if 'coordinator' in jt or 'coach' in jt:
-                return 'observer'
-            if jf == 'Leadership':
-                return 'leader'
-            if jf == 'Teacher':
-                return 'teacher'
-            return 'observer'
-    except Exception:
-        pass
+        conn = db.get_conn()
+        cur = conn.cursor()
+        cur.execute('SELECT 1')
+        conn.close()
+        return jsonify({'status': 'ok', 'db': 'connected', 'socket': db.DB_SOCKET or 'none'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'db': str(e), 'socket': db.DB_SOCKET or 'none'}), 500
 
-    # Admin fallback for Scott
-    if email.lower() in ['sshirey@firstlineschools.org']:
-        return 'admin'
-    return 'teacher'
+
+@app.route('/api/auth/status')
+def auth_status():
+    if DEV_MODE:
+        return jsonify({
+            'authenticated': True,
+            'user': {'email': DEV_USER_EMAIL, 'name': 'Dev User', 'picture': ''}
+        })
+    user = get_current_user()
+    if user:
+        return jsonify({'authenticated': True, 'user': user})
+    return jsonify({'authenticated': False})
 
 
 # ------------------------------------------------------------------
-# Cache Busting Redirect
+# Pages — serve prototypes as the frontend
 # ------------------------------------------------------------------
 
 @app.route('/')
-def root():
-    return redirect(url_for('index', v=BUILD_VERSION))
-
-
-# ------------------------------------------------------------------
-# Main App Route
-# ------------------------------------------------------------------
-
-@app.route('/app')
-@require_auth
 def index():
-    user = get_current_user()
-    cfg = tenant()
-    return render_template('app.html',
-        user=user,
-        config=cfg,
-        schools=schools(),
-        school_year=current_school_year(),
-        build=BUILD_VERSION,
-    )
+    if not DEV_MODE and not get_current_user():
+        return redirect('/login')
+    req_v = request.args.get('_v', '')
+    if req_v != BUILD_VERSION:
+        return redirect(f'/?_v={BUILD_VERSION}')
+    return send_from_directory('prototypes', 'index.html')
+
+
+@app.route('/<path:page>.html')
+def serve_page(page):
+    if not DEV_MODE and not get_current_user():
+        return redirect('/login')
+    return send_from_directory('prototypes', f'{page}.html')
+
+
+# ------------------------------------------------------------------
+# API: Teacher History (profile + my-team pages)
+# ------------------------------------------------------------------
+
+@app.route('/api/teacher_history')
+@require_auth
+def api_teacher_history():
+    teacher = request.args.get('teacher')
+    school = request.args.get('school')
+    data = db.get_teacher_history(teacher_email=teacher, school=school)
+    return jsonify(data)
+
+
+@app.route('/api/teacher/<email>')
+@require_auth
+def api_teacher_profile(email):
+    data = db.get_teacher_history(teacher_email=email)
+    teacher = data.get('teachers', {}).get(email.lower())
+    if not teacher:
+        return jsonify({'error': 'Not found'}), 404
+    return jsonify({'teacher': teacher, 'school_years': data['school_years']})
+
+
+# ------------------------------------------------------------------
+# API: Network Dashboard
+# ------------------------------------------------------------------
+
+@app.route('/api/network_dashboard')
+@require_auth
+def api_network_dashboard():
+    return jsonify(db.get_network_dashboard())
 
 
 # ------------------------------------------------------------------
@@ -139,254 +151,38 @@ def api_staff_search():
     q = request.args.get('q', '').strip()
     if len(q) < 2:
         return jsonify([])
-    try:
-        import db
-        results = db.search_staff(q, limit=15)
-        return jsonify(results)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    return jsonify(db.search_staff(q, limit=15))
 
 
 # ------------------------------------------------------------------
-# API: Save Observation
+# API: Save Touchpoint
 # ------------------------------------------------------------------
 
-@app.route('/api/observations', methods=['POST'])
+@app.route('/api/touchpoints', methods=['POST'])
 @require_auth
-def api_save_observation():
+def api_save_touchpoint():
     user = get_current_user()
     data = request.get_json()
     data['observer_email'] = user['email']
-    data['observer_name'] = user['name']
-    data['school_year'] = current_school_year()
-
+    data['school_year'] = '2025-2026'
     try:
-        import db
-        obs_id = db.save_observation(data)
-
-        # Save normalized scores
-        if data.get('scores'):
-            db.save_scores(obs_id, data.get('rubric_id', ''), data['scores'])
-
-        return jsonify({'status': 'ok', 'id': obs_id})
-    except Exception as e:
-        return jsonify({'status': 'error', 'error': str(e)}), 500
-
-
-# ------------------------------------------------------------------
-# API: Get Observations
-# ------------------------------------------------------------------
-
-@app.route('/api/observations')
-@require_auth
-def api_get_observations():
-    user = get_current_user()
-    filters = {
-        'school_year': request.args.get('school_year', current_school_year()),
-        'limit': int(request.args.get('limit', 50)),
-    }
-
-    # Leaders see their observations; admins see all
-    if user.get('role') not in ['admin']:
-        filters['observer_email'] = user['email']
-
-    if request.args.get('teacher_email'):
-        filters['teacher_email'] = request.args['teacher_email']
-    if request.args.get('school'):
-        filters['school'] = request.args['school']
-
-    try:
-        import db
-        results = db.get_observations(**filters)
-        return jsonify(results)
+        tp_id = db.save_touchpoint(data)
+        return jsonify({'id': tp_id})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 
 # ------------------------------------------------------------------
-# API: Transcribe Audio
+# API: Rubric + Form Configs
 # ------------------------------------------------------------------
 
-@app.route('/api/transcribe', methods=['POST'])
+@app.route('/api/forms/<form_id>')
 @require_auth
-def api_transcribe():
-    """Receive audio blob, transcribe via Google Cloud Speech-to-Text."""
-    if 'audio' not in request.files:
-        return jsonify({'error': 'No audio file'}), 400
-
-    audio_file = request.files['audio']
-    audio_bytes = audio_file.read()
-
-    try:
-        from google.cloud import speech
-        client = speech.SpeechClient()
-
-        audio = speech.RecognitionAudio(content=audio_bytes)
-        config = speech.RecognitionConfig(
-            encoding=speech.RecognitionConfig.AudioEncoding.WEBM_OPUS,
-            sample_rate_hertz=48000,
-            language_code='en-US',
-            enable_automatic_punctuation=True,
-            enable_word_time_offsets=True,
-            model='latest_long',
-        )
-
-        response = client.recognize(config=config, audio=audio)
-
-        transcript = ''
-        words = []
-        for result in response.results:
-            alt = result.alternatives[0]
-            transcript += alt.transcript + ' '
-            for word_info in alt.words:
-                words.append({
-                    'word': word_info.word,
-                    'start': word_info.start_time.total_seconds(),
-                    'end': word_info.end_time.total_seconds(),
-                })
-
-        return jsonify({
-            'transcript': transcript.strip(),
-            'words': words,
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
-# ------------------------------------------------------------------
-# API: AI Analysis
-# ------------------------------------------------------------------
-
-@app.route('/api/analyze', methods=['POST'])
-@require_auth
-def api_analyze():
-    """Send transcript + rubric to Claude for analysis."""
-    data = request.get_json()
-    transcript = data.get('transcript', '')
-    notes = data.get('notes', '')
-    rubric_id = data.get('rubric_id', 'fls_teacher_v1')
-    duration = data.get('duration_seconds', 0)
-
-    if not transcript and not notes:
-        return jsonify({'error': 'No transcript or notes provided'}), 400
-
-    try:
-        import anthropic
-
-        # Load rubric config
-        rubric_path = os.path.join(os.path.dirname(__file__), 'forms', f'rubric_teacher.json')
-        with open(rubric_path) as f:
-            rubric = json.load(f)
-
-        # Load action steps
-        actions_path = os.path.join(os.path.dirname(__file__), 'forms', 'action_steps_guide.json')
-        with open(actions_path) as f:
-            actions = json.load(f)
-
-        # Load vision
-        vision_path = os.path.join(os.path.dirname(__file__), 'forms', 'fls_vision.json')
-        with open(vision_path) as f:
-            vision = json.load(f)
-
-        # Build prompt
-        prompt = f"""You are an expert instructional coach analyzing a classroom observation for FirstLine Schools in New Orleans.
-
-FIRSTLINE VISION OF EXCELLENT CLASSROOMS:
-{json.dumps(vision['pillars'], indent=2)}
-
-SCORING GUIDE:
-- Few = Less than 50% of students
-- Some = 51-75%
-- Most = 76-90%
-- All = 90-100%
-
-RUBRIC DIMENSIONS:
-{json.dumps([{{'code': d['code'], 'name': d['name'], 'question': d['question']}} for d in rubric['dimensions']], indent=2)}
-
-SCALE: 1 (Needs Improvement) → 5 (Exemplary)
-
-OBSERVATION DURATION: {int(duration // 60)} minutes {int(duration % 60)} seconds
-
-OBSERVER NOTES:
-{notes}
-
-TRANSCRIPT:
-{transcript if transcript else '(No audio transcript available)'}
-
-Based on this evidence, provide:
-
-1. **summary**: A 2-3 sentence summary of what was observed in the classroom.
-
-2. **scores**: For each rubric dimension (t1_on_task through t5_demonstration), suggest a score (1-5) with a brief evidence-based rationale. Only suggest scores where you have sufficient evidence.
-
-3. **strengths**: 2-3 specific strengths observed, with evidence.
-
-4. **growth_areas**: 1-2 specific areas for growth, with evidence.
-
-5. **action_step**: Recommend ONE specific action step from the Get Better Faster guide. Include:
-   - category (e.g., "Routines & Procedures")
-   - action (the specific step)
-   - coaching_prompt (the question to ask the teacher)
-   - rtc_cue (real-time coaching cue for next visit)
-
-Respond in JSON format only."""
-
-        client = anthropic.Anthropic()
-        message = client.messages.create(
-            model='claude-sonnet-4-6',
-            max_tokens=2000,
-            messages=[{'role': 'user', 'content': prompt}],
-        )
-
-        # Parse response
-        response_text = message.content[0].text
-        # Try to extract JSON from response
-        if '```json' in response_text:
-            response_text = response_text.split('```json')[1].split('```')[0]
-        elif '```' in response_text:
-            response_text = response_text.split('```')[1].split('```')[0]
-
-        analysis = json.loads(response_text)
-        return jsonify(analysis)
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
-# ------------------------------------------------------------------
-# API: Rubric Configs
-# ------------------------------------------------------------------
-
-@app.route('/api/rubrics/<rubric_id>')
-@require_auth
-def api_get_rubric(rubric_id):
-    """Return rubric configuration JSON."""
-    safe_id = rubric_id.replace('..', '').replace('/', '')
-    rubric_path = os.path.join(os.path.dirname(__file__), 'forms', f'rubric_{safe_id}.json')
-    if not os.path.exists(rubric_path):
-        # Try direct filename
-        rubric_path = os.path.join(os.path.dirname(__file__), 'forms', f'{safe_id}.json')
-    if not os.path.exists(rubric_path):
-        return jsonify({'error': 'Rubric not found'}), 404
-
-    with open(rubric_path) as f:
-        return jsonify(json.load(f))
-
-
-@app.route('/api/action-steps')
-@require_auth
-def api_get_action_steps():
-    """Return action steps guide."""
-    path = os.path.join(os.path.dirname(__file__), 'forms', 'action_steps_guide.json')
-    with open(path) as f:
-        return jsonify(json.load(f))
-
-
-@app.route('/api/commitments')
-@require_auth
-def api_get_commitments():
-    """Return FLS commitments."""
-    path = os.path.join(os.path.dirname(__file__), 'forms', 'fls_commitments.json')
+def api_get_form(form_id):
+    safe_id = form_id.replace('..', '').replace('/', '')
+    path = os.path.join(os.path.dirname(__file__), 'forms', f'{safe_id}.json')
+    if not os.path.exists(path):
+        return jsonify({'error': 'Not found'}), 404
     with open(path) as f:
         return jsonify(json.load(f))
 
@@ -397,4 +193,5 @@ def api_get_commitments():
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    debug = os.environ.get('FLASK_DEBUG', 'true').lower() == 'true'
+    app.run(host='0.0.0.0', port=port, debug=debug)

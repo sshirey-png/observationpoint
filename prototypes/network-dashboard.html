@@ -121,9 +121,6 @@ body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-fon
 <div class="section-label">Score Distribution <span class="badge">2025-26 PMAPs</span></div>
 <div class="dist-card" id="distCard"></div>
 
-<!-- Needs Attention -->
-<div class="section-label">Needs Attention <span class="badge">No observation in 30+ days</span></div>
-<div class="attn-grid" id="attnGrid"></div>
 
 </div>
 
@@ -143,14 +140,10 @@ function covColor(pct){ return pct>=80?'#22c55e':pct>=50?'#eab308':'#dc2626'; }
 
 function render(d){
     const k = d.network_kpis;
-    const pmapPct = k.total_teachers ? Math.round(k.pmap_teachers/k.total_teachers*100) : 0;
-
-    const attnTotal = Object.values(d.needs_attention_by_school).reduce((a,b)=>a+b,0);
     document.getElementById('kpis').innerHTML = `
         <div class="kpi"><div class="kpi-val blue">${k.observations}</div><div class="kpi-label">Observations</div><div class="kpi-sub">${k.observations_teachers} teachers</div></div>
         <div class="kpi"><div class="kpi-val blue">${k.fundamentals}</div><div class="kpi-label">Fundamentals</div><div class="kpi-sub">${k.fundamentals_teachers} teachers</div></div>
-        <div class="kpi"><div class="kpi-val ${pmapPct>=80?'green':pmapPct>=50?'orange':'red'}">${pmapPct}%</div><div class="kpi-label">PMAP Coverage</div><div class="kpi-sub">${k.pmap_teachers} of ${k.total_teachers} teachers</div></div>
-        <div class="kpi"><div class="kpi-val ${attnTotal>50?'red':'orange'}">${attnTotal}</div><div class="kpi-label">Need Attention</div><div class="kpi-sub">30+ days no obs</div></div>
+        <div class="kpi"><div class="kpi-val blue">${k.total_teachers}</div><div class="kpi-label">Active Teachers</div><div class="kpi-sub">2025-26</div></div>
     `;
 
     // Heatmap
@@ -256,18 +249,12 @@ function render(d){
     });
     document.getElementById('distCard').innerHTML = dh;
 
-    // Needs attention
-    const attn = d.needs_attention_by_school;
-    let ah = '';
-    Object.keys(attn).sort((a,b)=>attn[b]-attn[a]).forEach(school => {
-        ah += `<div class="attn-card"><div class="attn-school">${SHORT_SCHOOLS(school)}</div><div class="attn-count">${attn[school]}</div><div class="attn-label">teachers 30+ days</div></div>`;
-    });
-    document.getElementById('attnGrid').innerHTML = ah;
 }
 
 async function load(){
     try {
-        const r = await fetch('network_dashboard_data.json');
+        let r = await fetch('/api/network_dashboard').catch(() => null);
+        if (!r || !r.ok) r = await fetch('network_dashboard_data.json');
         const d = await r.json();
         render(d);
         document.getElementById('loading').style.display = 'none';

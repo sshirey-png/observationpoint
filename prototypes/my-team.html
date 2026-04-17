@@ -14,7 +14,7 @@ body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-fon
 .nav-title{font-size:15px;font-weight:700;color:#fff;flex:1}.nav-title span{color:#e47727}
 .content{padding:16px 16px 40px}
 
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
 .stat{background:#fff;border-radius:10px;padding:10px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.04)}
 .stat-val{font-size:22px;font-weight:800}.stat-label{font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
 
@@ -26,8 +26,6 @@ body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-fon
 .search{width:100%;padding:10px 10px 10px 36px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:'Inter',sans-serif;outline:none;margin-bottom:12px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Ccircle cx='7' cy='7' r='4.5'/%3E%3Cpath d='m11 11 3 3'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:10px center}
 .search:focus{border-color:#e47727}
 
-.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;margin:12px 0 8px;display:flex;align-items:center;justify-content:space-between}
-
 .staff-card{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:12px;margin-bottom:8px;cursor:pointer;transition:all .15s;text-decoration:none;color:inherit;display:block}
 .staff-card:active{transform:scale(.98);box-shadow:0 2px 8px rgba(0,0,0,.08)}
 .staff-top{display:flex;align-items:center;gap:10px}
@@ -35,9 +33,7 @@ body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-fon
 .staff-name{font-size:14px;font-weight:600}
 .staff-meta{font-size:11px;color:#9ca3af}
 .staff-right{margin-left:auto;text-align:right;flex-shrink:0}
-.staff-days{font-size:14px;font-weight:700}
-.staff-days.ok{color:#059669}.staff-days.warn{color:#e47727}.staff-days.danger{color:#dc2626}
-.staff-days.none{color:#9ca3af}
+.staff-days{font-size:14px;font-weight:700;color:#6b7280}
 .staff-days-label{font-size:9px;color:#9ca3af;text-transform:uppercase}
 .staff-scores{display:flex;gap:3px;margin-top:8px;flex-wrap:wrap}
 .staff-sc{padding:2px 5px;border-radius:3px;font-size:10px;font-weight:700;background:#f5f7fa}
@@ -49,11 +45,6 @@ body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-fon
 .staff-trend .up{color:#059669}.staff-trend .down{color:#dc2626}.staff-trend .flat{color:#6b7280}
 .staff-bottom{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
 .staff-tag{font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px}
-
-.attention{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
-.attention-icon{width:28px;height:28px;border-radius:8px;background:#dc2626;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
-.attention-text{font-size:12px;color:#991b1b;font-weight:500}
-.attention-count{font-weight:800;font-size:14px}
 
 .loading{padding:60px 16px;text-align:center;color:#9ca3af;font-size:13px}
 </style>
@@ -73,12 +64,6 @@ body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-fon
     <div class="stat"><div class="stat-val" style="color:#2563eb" id="sStaff">—</div><div class="stat-label">Staff</div></div>
     <div class="stat"><div class="stat-val" style="color:#059669" id="sTPs">—</div><div class="stat-label">TouchPoints</div></div>
     <div class="stat"><div class="stat-val" style="color:#e47727" id="sAvg">—</div><div class="stat-label">Avg/Person</div></div>
-    <div class="stat"><div class="stat-val" style="color:#dc2626" id="sAttn">—</div><div class="stat-label">Need Attn</div></div>
-</div>
-
-<div class="attention" id="attentionBanner" style="display:none">
-    <div class="attention-icon">!</div>
-    <div class="attention-text"><span class="attention-count" id="attnCount">0</span> haven't been observed in 14+ days</div>
 </div>
 
 <input class="search" type="text" placeholder="Search staff..." oninput="filterStaff(this.value)">
@@ -88,16 +73,9 @@ body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-fon
     <div class="filter-chip" onclick="filterRole(this,'teacher')">Teachers</div>
     <div class="filter-chip" onclick="filterRole(this,'prek')">PreK</div>
     <div class="filter-chip" onclick="filterRole(this,'leader')">Leaders</div>
-    <div class="filter-chip" onclick="filterRole(this,'needs')">Needs Attention</div>
 </div>
 
-<div id="sectionAttention" style="display:none">
-    <div class="section-label"><span>Needs Attention</span><span style="color:#dc2626;font-size:10px">14+ days</span></div>
-    <div id="listAttention"></div>
-</div>
-
-<div class="section-label">On Track</div>
-<div id="listOnTrack"></div>
+<div id="staffList"></div>
 
 </div>
 
@@ -115,8 +93,7 @@ function initials(name){
 
 function daysBetween(d1, d2){
     if(!d1) return null;
-    const ms = (new Date(d2)) - (new Date(d1));
-    return Math.floor(ms / (1000*60*60*24));
+    return Math.floor(((new Date(d2)) - (new Date(d1))) / (1000*60*60*24));
 }
 
 function scoreClass(s){
@@ -124,24 +101,17 @@ function scoreClass(s){
     return 's' + Math.max(1, Math.min(5, Math.round(s)));
 }
 
-function daysClass(d){
-    if(d == null) return 'none';
-    if(d >= 14) return 'danger';
-    if(d >= 8) return 'warn';
-    return 'ok';
-}
-
 function renderCard(t){
     const pmapYrs = Object.keys(t.pmap_by_year).sort();
     const latestYr = pmapYrs[pmapYrs.length-1];
     const latestScores = latestYr ? t.pmap_by_year[latestYr] : {};
-    const dims = DIM_ORDER[t.role] || DIM_ORDER.teacher;
+    const role = t.job_function === 'Leadership' ? 'leader' : (t.job_function === 'Teacher' ? 'teacher' : 'teacher');
+    const dims = DIM_ORDER[role] || DIM_ORDER.teacher;
 
     const days = daysBetween(t.last_observation_date, new Date().toISOString().slice(0,10));
-    const dCls = daysClass(days);
     const daysHtml = days == null
-        ? '<div class="staff-days none">—</div><div class="staff-days-label">no obs</div>'
-        : `<div class="staff-days ${dCls}">${days}</div><div class="staff-days-label">days ago</div>`;
+        ? '<div class="staff-days">—</div><div class="staff-days-label">no obs</div>'
+        : `<div class="staff-days">${days}</div><div class="staff-days-label">days ago</div>`;
 
     let scoresHtml = '';
     if(latestYr){
@@ -174,15 +144,14 @@ function renderCard(t){
     }
 
     const tags = [];
-    if(days != null && days >= 14) tags.push('<div class="staff-tag" style="background:#fee2e2;color:#dc2626">Needs Obs</div>');
-    if(t.role === 'prek') tags.push('<div class="staff-tag" style="background:#fce7f3;color:#be185d">PreK / CLASS</div>');
-    if(t.role === 'leader') tags.push('<div class="staff-tag" style="background:#ede9fe;color:#7c3aed">Leader</div>');
+    if(role === 'prek') tags.push('<div class="staff-tag" style="background:#fce7f3;color:#be185d">PreK / CLASS</div>');
+    if(role === 'leader') tags.push('<div class="staff-tag" style="background:#ede9fe;color:#7c3aed">Leader</div>');
     tags.push(`<div class="staff-tag" style="background:#dbeafe;color:#2563eb">${t.touchpoint_count} TouchPoints</div>`);
 
-    const avBg = t.role === 'leader' ? '#7c3aed' : (t.role === 'prek' ? '#be185d' : (dCls==='danger'?'#dc2626':'#002f60'));
+    const avBg = role === 'leader' ? '#7c3aed' : (role === 'prek' ? '#be185d' : '#002f60');
 
     return `
-    <a class="staff-card" href="teacher-profile.html?teacher=${encodeURIComponent(t.email)}" data-role="${t.role}" data-needs="${days != null && days >= 14 ? '1' : '0'}">
+    <a class="staff-card" href="teacher-profile.html?teacher=${encodeURIComponent(t.email)}" data-role="${role}">
         <div class="staff-top">
             <div class="staff-av" style="background:${avBg}">${initials(t.name)}</div>
             <div><div class="staff-name">${t.name}</div><div class="staff-meta">${t.school}</div></div>
@@ -197,35 +166,19 @@ function renderCard(t){
 async function load(){
     try {
         let data = null;
-        for(const url of ['teacher_history.json','teacher_history_demo.json']){
+        for(const url of ['/api/teacher_history','teacher_history.json','teacher_history_demo.json']){
             try { const r = await fetch(url); if(r.ok){ data = await r.json(); break; } } catch(e){}
         }
         if(!data){ document.getElementById('loading').textContent = 'Failed to load'; return; }
-        const today = new Date().toISOString().slice(0,10);
         const teachers = Object.values(data.teachers).sort((a,b)=>a.name.localeCompare(b.name));
 
-        // Split needs vs ok
-        const needs = [];
-        const ok = [];
         let totalTPs = 0;
-        for(const t of teachers){
-            const days = daysBetween(t.last_observation_date, today);
-            totalTPs += t.touchpoint_count;
-            if(days != null && days >= 14) needs.push(t); else ok.push(t);
-        }
+        for(const t of teachers) totalTPs += t.touchpoint_count;
 
         document.getElementById('sStaff').textContent = teachers.length;
         document.getElementById('sTPs').textContent = totalTPs;
         document.getElementById('sAvg').textContent = teachers.length ? (totalTPs / teachers.length).toFixed(1) : '—';
-        document.getElementById('sAttn').textContent = needs.length;
-
-        if(needs.length){
-            document.getElementById('attnCount').textContent = `${needs.length} ${needs.length===1?'person':'people'}`;
-            document.getElementById('attentionBanner').style.display = '';
-            document.getElementById('sectionAttention').style.display = '';
-            document.getElementById('listAttention').innerHTML = needs.map(renderCard).join('');
-        }
-        document.getElementById('listOnTrack').innerHTML = ok.map(renderCard).join('');
+        document.getElementById('staffList').innerHTML = teachers.map(renderCard).join('');
 
         document.getElementById('loading').style.display = 'none';
         document.getElementById('app').style.display = '';
@@ -246,7 +199,6 @@ function filterRole(el, role){
     el.classList.add('active');
     document.querySelectorAll('.staff-card').forEach(c => {
         if(role === 'all') { c.style.display = ''; return; }
-        if(role === 'needs') { c.style.display = c.dataset.needs === '1' ? '' : 'none'; return; }
         c.style.display = c.dataset.role === role ? '' : 'none';
     });
 }

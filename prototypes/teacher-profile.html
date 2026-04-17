@@ -169,7 +169,7 @@ body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-fon
 <script>
 const params = new URLSearchParams(location.search);
 const TEACHER_EMAIL = (params.get('teacher') || '').toLowerCase();
-const DATA_URLS = ['teacher_history.json', 'teacher_history_demo.json'];
+const DATA_URLS = ['/api/teacher_history', 'teacher_history.json', 'teacher_history_demo.json'];
 
 const DIM_ORDER = {
     teacher: ['T1','T2','T3','T4','T5'],
