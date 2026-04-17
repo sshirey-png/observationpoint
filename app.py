@@ -112,6 +112,15 @@ def serve_page(page):
 # API: Teacher History (profile + my-team pages)
 # ------------------------------------------------------------------
 
+@app.route('/api/my-team')
+@require_auth
+def api_my_team():
+    user = get_current_user()
+    email = user['email'] if user else ''
+    data = db.get_my_team(email)
+    return jsonify(data)
+
+
 @app.route('/api/teacher_history')
 @require_auth
 def api_teacher_history():
@@ -127,8 +136,15 @@ def api_teacher_profile(email):
     data = db.get_teacher_history(teacher_email=email)
     teacher = data.get('teachers', {}).get(email.lower())
     if not teacher:
-        return jsonify({'error': 'Not found'}), 404
-    return jsonify({'teacher': teacher, 'school_years': data['school_years']})
+        staff = db.get_staff_by_email(email)
+        if not staff:
+            return jsonify({'error': 'Not found'}), 404
+        teacher = {
+            'email': staff['email'], 'name': f"{staff.get('first_name','')} {staff.get('last_name','')}".strip(),
+            'school': staff.get('school', ''), 'job_function': staff.get('job_function', ''),
+            'touchpoints': [], 'touchpoint_count': 0, 'pmap_by_year': {}, 'last_observation_date': None,
+        }
+    return jsonify({'teacher': teacher, 'school_years': data.get('school_years', [])})
 
 
 # ------------------------------------------------------------------

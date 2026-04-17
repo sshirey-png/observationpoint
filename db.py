@@ -67,7 +67,100 @@ def get_staff_by_email(email):
         conn.close()
 
 
-# --- Teacher History (for profile + my-team pages) ---
+# --- My Team (direct reports) ---
+
+def get_my_team(supervisor_email):
+    """Return direct reports for the logged-in user, with touchpoint history."""
+    conn = get_conn()
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT email, first_name, last_name, job_title, school, job_function
+            FROM staff
+            WHERE supervisor_email = %s AND is_active
+            ORDER BY last_name, first_name
+        """, (supervisor_email.lower(),))
+        reports = cur.fetchall()
+
+        if not reports:
+            return {'school_years': [], 'teachers': {}}
+
+        emails = [r[0] for r in reports]
+        staff_map = {r[0]: {'email': r[0], 'first_name': r[1], 'last_name': r[2],
+                            'job_title': r[3], 'school': r[4], 'job_function': r[5]} for r in reports}
+
+        cur.execute("""
+            SELECT t.id, t.form_type, t.teacher_email, t.school, t.school_year,
+                   t.observed_at, t.notes as rubric,
+                   s.dimension_code, s.score
+            FROM touchpoints t
+            JOIN scores s ON s.touchpoint_id = t.id
+            WHERE t.teacher_email = ANY(%s)
+            ORDER BY t.teacher_email, t.observed_at DESC
+        """, (emails,))
+
+        teachers = {}
+        tp_map = {}
+        for row in cur.fetchall():
+            tid, form_type, email, tp_school, sy, obs_at, rubric, dim_code, score = row
+            if email not in teachers:
+                s = staff_map.get(email, {})
+                teachers[email] = {
+                    'email': email,
+                    'name': f"{s.get('first_name','')} {s.get('last_name','')}".strip() or email,
+                    'school': s.get('school', tp_school or ''),
+                    'job_function': s.get('job_function', ''),
+                    'touchpoints': [],
+                    'pmap_by_year': {},
+                }
+            tp_key = str(tid)
+            if tp_key not in tp_map:
+                tp_map[tp_key] = {
+                    'id': tp_key, 'form_type': form_type, 'rubric': rubric or '',
+                    'school_year': sy,
+                    'date': obs_at.strftime('%Y-%m-%d') if obs_at else None,
+                    'scores': {}, '_email': email,
+                }
+            tp_map[tp_key]['scores'][dim_code] = float(score)
+
+        for tp in tp_map.values():
+            email = tp.pop('_email')
+            teachers[email]['touchpoints'].append(tp)
+
+        years_set = set()
+        for email, t in teachers.items():
+            t['touchpoints'].sort(key=lambda x: (x.get('date') or ''), reverse=True)
+            t['touchpoint_count'] = len(t['touchpoints'])
+            pmap_agg = defaultdict(lambda: defaultdict(list))
+            for tp in t['touchpoints']:
+                if tp['form_type'].startswith('pmap_'):
+                    for code, s in tp['scores'].items():
+                        pmap_agg[tp['school_year']][code].append(s)
+            t['pmap_by_year'] = {yr: {c: round(sum(v)/len(v),2) for c,v in dims.items()}
+                                 for yr, dims in pmap_agg.items()}
+            years_set.update(t['pmap_by_year'].keys())
+            obs_dates = [tp['date'] for tp in t['touchpoints']
+                         if tp['form_type'].startswith('observation_') and tp.get('date')]
+            t['last_observation_date'] = max(obs_dates) if obs_dates else None
+
+        # Include direct reports with no touchpoints
+        for email, s in staff_map.items():
+            if email not in teachers:
+                teachers[email] = {
+                    'email': email,
+                    'name': f"{s['first_name']} {s['last_name']}".strip() or email,
+                    'school': s.get('school', ''),
+                    'job_function': s.get('job_function', ''),
+                    'touchpoints': [], 'touchpoint_count': 0,
+                    'pmap_by_year': {}, 'last_observation_date': None,
+                }
+
+        return {'school_years': sorted(years_set), 'teachers': teachers}
+    finally:
+        conn.close()
+
+
+# --- Teacher History (for profile page) ---
 
 def get_teacher_history(teacher_email=None, school=None, observer_email=None):
     """Build teacher history JSON matching the shape the frontend expects."""

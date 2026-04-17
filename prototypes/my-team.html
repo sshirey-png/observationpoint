@@ -166,7 +166,7 @@ function renderCard(t){
 async function load(){
     try {
         let data = null;
-        for(const url of ['/api/teacher_history','teacher_history.json','teacher_history_demo.json']){
+        for(const url of ['/api/my-team','/api/teacher_history','teacher_history.json','teacher_history_demo.json']){
             try { const r = await fetch(url); if(r.ok){ data = await r.json(); break; } } catch(e){}
         }
         if(!data){ document.getElementById('loading').textContent = 'Failed to load'; return; }
