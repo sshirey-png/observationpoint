@@ -132,24 +132,47 @@ def auth_status():
 
 
 # ------------------------------------------------------------------
-# Pages
+# Pages — React app (primary) + vanilla JS prototypes (preserved)
 # ------------------------------------------------------------------
+
+REACT_DIR = os.path.join(os.path.dirname(__file__), 'frontend', 'dist')
 
 @app.route('/')
 def index():
     if not DEV_MODE and not get_current_user():
         return redirect('/login')
-    req_v = request.args.get('_v', '')
-    if req_v != BUILD_VERSION:
-        return redirect(f'/?_v={BUILD_VERSION}')
+    # Serve React app if built, otherwise fall back to vanilla JS
+    react_index = os.path.join(REACT_DIR, 'index.html')
+    if os.path.exists(react_index):
+        return send_from_directory(REACT_DIR, 'index.html')
     return send_from_directory('prototypes', 'index.html')
 
 
-@app.route('/<path:page>.html')
-def serve_page(page):
+@app.route('/app')
+@app.route('/app/')
+@app.route('/app/<path:path>')
+def serve_react(path=None):
+    """React Router handles all /app/* routes client-side."""
     if not DEV_MODE and not get_current_user():
         return redirect('/login')
-    return send_from_directory('prototypes', f'{page}.html')
+    react_index = os.path.join(REACT_DIR, 'index.html')
+    if os.path.exists(react_index):
+        return send_from_directory(REACT_DIR, 'index.html')
+    return 'React app not built. Run: cd frontend && npm run build', 404
+
+
+@app.route('/assets/<path:path>')
+def serve_react_assets(path):
+    """Serve React build assets (JS, CSS chunks)."""
+    return send_from_directory(os.path.join(REACT_DIR, 'assets'), path)
+
+
+# Vanilla JS prototypes — preserved at /prototypes/*
+@app.route('/prototypes/<path:filename>')
+def serve_prototype(filename):
+    if not DEV_MODE and not get_current_user():
+        return redirect('/login')
+    return send_from_directory('prototypes', filename)
 
 
 # ------------------------------------------------------------------

@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+/* FLS brand colors */
+@theme {
+  --color-fls-orange: #e47727;
+  --color-fls-navy: #002f60;
+  --color-fls-navy-light: #003d7a;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: #f5f7fa;
+  color: #111827;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100svh;
+}
+
+/* Score colors — data visualization, not judgment */
+.score-1 { background-color: #fee2e2; color: #b91c1c; }
+.score-2 { background-color: #ffedd5; color: #c2410c; }
+.score-3 { background-color: #fef3c7; color: #a16207; }
+.score-4 { background-color: #dcfce7; color: #059669; }
+.score-5 { background-color: #bbf7d0; color: #047857; }

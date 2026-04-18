@@ -4,3 +4,5 @@ grow_all_observations.json
 prototypes/teacher_history.json
 *.log
 .env
+frontend/node_modules/
+frontend/dist/
