@@ -65,7 +65,7 @@ def get_my_team(accessible_emails, school_year=None, direct_only_email=None):
     """Return staff list with touchpoint counts by type.
     If direct_only_email is set, only return that person's direct reports.
     Otherwise return all accessible_emails."""
-    if not accessible_emails:
+    if not accessible_emails and not direct_only_email:
         return {'staff': [], 'school_year': school_year or CURRENT_SCHOOL_YEAR}
 
     sy = school_year or CURRENT_SCHOOL_YEAR
