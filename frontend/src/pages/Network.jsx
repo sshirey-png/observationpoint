@@ -45,23 +45,23 @@ export default function Network() {
       <Nav title="Network Dashboard" />
 
       <div className="px-4 pt-4">
-        {/* KPIs */}
-        <div className="grid grid-cols-3 gap-2 mb-4">
-          <div className="bg-white rounded-[10px] p-2.5 text-center shadow-sm">
-            <div className="text-[22px] font-extrabold text-blue-600">{kpis.observations}</div>
-            <div className="text-[9px] text-gray-400 uppercase tracking-wide mt-0.5">Observations</div>
-            <div className="text-[10px] text-gray-400">{kpis.observations_teachers} teachers</div>
-          </div>
-          <div className="bg-white rounded-[10px] p-2.5 text-center shadow-sm">
-            <div className="text-[22px] font-extrabold text-blue-600">{kpis.fundamentals}</div>
-            <div className="text-[9px] text-gray-400 uppercase tracking-wide mt-0.5">Fundamentals</div>
-            <div className="text-[10px] text-gray-400">{kpis.fundamentals_teachers} teachers</div>
-          </div>
-          <div className="bg-white rounded-[10px] p-2.5 text-center shadow-sm">
-            <div className="text-[22px] font-extrabold text-blue-600">{kpis.total_teachers}</div>
-            <div className="text-[9px] text-gray-400 uppercase tracking-wide mt-0.5">Active Teachers</div>
-          </div>
-        </div>
+        {/* KPIs — total touchpoints across all types */}
+        {(() => {
+          const totalTPs = schoolNames.reduce((sum, name) => sum + (schools[name].total_touchpoints || 0), 0)
+          return (
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              <div className="bg-white rounded-[10px] p-2.5 text-center shadow-sm">
+                <div className="text-[22px] font-extrabold text-fls-navy">{totalTPs}</div>
+                <div className="text-[9px] text-gray-400 uppercase tracking-wide mt-0.5">Total TouchPoints</div>
+                <div className="text-[10px] text-gray-400">All types, all schools</div>
+              </div>
+              <div className="bg-white rounded-[10px] p-2.5 text-center shadow-sm">
+                <div className="text-[22px] font-extrabold text-fls-navy">{kpis.total_teachers}</div>
+                <div className="text-[9px] text-gray-400 uppercase tracking-wide mt-0.5">Active Teachers</div>
+              </div>
+            </div>
+          )
+        })()}
 
         {/* School Comparison Heatmap */}
         <div className="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-2">
