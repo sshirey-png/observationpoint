@@ -6,6 +6,7 @@ import Celebrate from './pages/Celebrate'
 import Fundamentals from './pages/Fundamentals'
 import SolicitFeedback from './pages/SolicitFeedback'
 import Meeting from './pages/Meeting'
+import PMAP from './pages/PMAP'
 
 /**
  * App — the root component. React Router handles navigation.
@@ -27,7 +28,7 @@ export default function App() {
         <Route path="/app/fundamentals" element={<Fundamentals />} />
         <Route path="/app/meeting" element={<Meeting />} />
         <Route path="/app/solicit" element={<SolicitFeedback />} />
-        {/* <Route path="/app/pmap" element={<PMAP />} /> */}
+        <Route path="/app/pmap" element={<PMAP />} />
         {/* Phase 3: Team + Profile */}
         {/* <Route path="/app/team" element={<Team />} /> */}
         {/* <Route path="/app/staff/:email" element={<StaffProfile />} /> */}
