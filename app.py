@@ -263,6 +263,152 @@ def api_save_touchpoint():
 
 
 # ------------------------------------------------------------------
+# API: AI Insights — natural language → SQL → results
+# ------------------------------------------------------------------
+
+INSIGHTS_SCHEMA = """
+Tables in the ObservationPoint PostgreSQL database:
+
+TABLE staff:
+  email TEXT (primary key), first_name TEXT, last_name TEXT, job_title TEXT,
+  school TEXT, job_function TEXT (Teacher/Leadership/Network/Support/Operations),
+  supervisor_email TEXT, hire_date DATE, is_active BOOLEAN
+
+TABLE touchpoints:
+  id UUID (primary key), form_type TEXT, teacher_email TEXT (FK staff.email),
+  observer_email TEXT, school TEXT, school_year TEXT (e.g. '2025-2026'),
+  observed_at TIMESTAMPTZ, status TEXT, notes TEXT, feedback TEXT
+
+  form_type values: observation_teacher, observation_fundamentals, observation_prek,
+    pmap_teacher, pmap_leader, pmap_prek, pmap_support, pmap_network,
+    self_reflection_teacher, self_reflection_leader, self_reflection_prek,
+    self_reflection_support, self_reflection_network,
+    quick_feedback, meeting_quick_meeting, meeting_data_meeting_(relay),
+    write_up, iap, celebrate, solicited_feedback
+
+TABLE scores:
+  id SERIAL, touchpoint_id UUID (FK touchpoints.id), dimension_code TEXT,
+  dimension_name TEXT, score NUMERIC, cycle INTEGER
+
+  dimension_code values: T1 (On Task), T2 (Community of Learners),
+    T3 (Essential Content), T4 (Cognitive Engagement), T5 (Demonstration of Learning),
+    L1-L5 (Leadership), PK1-PK10 (PreK CLASS), M1-M5 (Fundamentals minutes)
+
+School names: Arthur Ashe Charter School, Langston Hughes Academy,
+  Phillis Wheatley Community School, Samuel J Green Charter School, FirstLine Network
+"""
+
+@app.route('/api/insights', methods=['POST'])
+@require_auth
+def api_insights():
+    data = request.get_json()
+    question = (data.get('question') or '').strip()
+    if not question:
+        return jsonify({'error': 'No question provided'}), 400
+
+    try:
+        import anthropic
+        client = anthropic.Anthropic()
+
+        # Ask Claude to generate SQL
+        msg = client.messages.create(
+            model='claude-sonnet-4-6',
+            max_tokens=1000,
+            messages=[{
+                'role': 'user',
+                'content': f"""You are a SQL expert for a K-12 teacher observation database (PostgreSQL).
+
+{INSIGHTS_SCHEMA}
+
+User question: "{question}"
+
+Generate ONLY a SELECT query to answer this question. Rules:
+- Only SELECT statements. No INSERT, UPDATE, DELETE, DROP, ALTER, or CREATE.
+- Use proper JOINs between tables.
+- Limit results to 50 rows max.
+- Return useful columns with clear aliases.
+- If the question can't be answered from this schema, return: SELECT 'Question cannot be answered from available data' as error
+
+Return ONLY the SQL. No explanation, no markdown fences, no comments."""
+            }],
+        )
+
+        sql = msg.content[0].text.strip()
+
+        # Strip markdown fences if present
+        if sql.startswith('```'):
+            sql = sql.split('\n', 1)[1] if '\n' in sql else sql[3:]
+        if sql.endswith('```'):
+            sql = sql[:-3]
+        sql = sql.strip()
+
+        # Validate: only SELECT allowed
+        sql_upper = sql.upper().strip()
+        if not sql_upper.startswith('SELECT'):
+            return jsonify({'error': 'Invalid query generated', 'sql': sql}), 400
+        forbidden = ['INSERT', 'UPDATE', 'DELETE', 'DROP', 'ALTER', 'CREATE', 'TRUNCATE', 'GRANT', 'REVOKE']
+        for word in forbidden:
+            if word in sql_upper.split('SELECT', 1)[0] or f' {word} ' in f' {sql_upper} ':
+                return jsonify({'error': f'Forbidden SQL operation: {word}', 'sql': sql}), 400
+
+        # Execute
+        conn = db.get_conn()
+        try:
+            cur = conn.cursor()
+            cur.execute(sql)
+            columns = [desc[0] for desc in cur.description] if cur.description else []
+            rows = cur.fetchall()
+
+            # Convert to serializable format
+            results = []
+            for row in rows:
+                record = {}
+                for i, col in enumerate(columns):
+                    val = row[i]
+                    if hasattr(val, 'isoformat'):
+                        val = val.isoformat()
+                    elif isinstance(val, (int, float, str, bool)) or val is None:
+                        pass
+                    else:
+                        val = str(val)
+                    record[col] = val
+                results.append(record)
+
+            # Ask Claude to summarize the results
+            summary_msg = client.messages.create(
+                model='claude-sonnet-4-6',
+                max_tokens=500,
+                messages=[{
+                    'role': 'user',
+                    'content': f"""The user asked: "{question}"
+
+The query returned {len(results)} rows with columns: {columns}
+
+First 10 rows: {json.dumps(results[:10])}
+
+Write a brief, clear 1-3 sentence answer to the user's question based on these results. Be specific with numbers. Do not mention SQL or databases."""
+                }],
+            )
+
+            answer = summary_msg.content[0].text.strip()
+
+            return jsonify({
+                'question': question,
+                'answer': answer,
+                'sql': sql,
+                'columns': columns,
+                'rows': results[:50],
+                'total': len(results),
+            })
+        finally:
+            conn.close()
+
+    except Exception as e:
+        log.error(f"Insights error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# ------------------------------------------------------------------
 # API: Form Configs
 # ------------------------------------------------------------------
 

@@ -9,6 +9,8 @@ import Meeting from './pages/Meeting'
 import PMAP from './pages/PMAP'
 import Team from './pages/Team'
 import StaffProfile from './pages/StaffProfile'
+import Insights from './pages/Insights'
+import Network from './pages/Network'
 
 /**
  * App — the root component. React Router handles navigation.
@@ -33,10 +35,8 @@ export default function App() {
         <Route path="/app/pmap" element={<PMAP />} />
         <Route path="/app/team" element={<Team />} />
         <Route path="/app/staff/:email" element={<StaffProfile />} />
-        {/* Phase 4: Insights */}
-        {/* <Route path="/app/insights" element={<Insights />} /> */}
-        {/* Phase 5: Network */}
-        {/* <Route path="/app/network" element={<Network />} /> */}
+        <Route path="/app/insights" element={<Insights />} />
+        <Route path="/app/network" element={<Network />} />
       </Routes>
     </BrowserRouter>
   )
