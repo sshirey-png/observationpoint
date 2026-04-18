@@ -4,6 +4,8 @@ import Observe from './pages/Observe'
 import QuickFeedback from './pages/QuickFeedback'
 import Celebrate from './pages/Celebrate'
 import Fundamentals from './pages/Fundamentals'
+import SolicitFeedback from './pages/SolicitFeedback'
+import Meeting from './pages/Meeting'
 
 /**
  * App — the root component. React Router handles navigation.
@@ -23,8 +25,8 @@ export default function App() {
         <Route path="/app/feedback" element={<QuickFeedback />} />
         <Route path="/app/celebrate" element={<Celebrate />} />
         <Route path="/app/fundamentals" element={<Fundamentals />} />
-        {/* <Route path="/app/meeting" element={<Meeting />} /> */}
-        {/* <Route path="/app/solicit" element={<SolicitFeedback />} /> */}
+        <Route path="/app/meeting" element={<Meeting />} />
+        <Route path="/app/solicit" element={<SolicitFeedback />} />
         {/* <Route path="/app/pmap" element={<PMAP />} /> */}
         {/* Phase 3: Team + Profile */}
         {/* <Route path="/app/team" element={<Team />} /> */}
