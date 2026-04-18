@@ -249,7 +249,8 @@ function render(d){
 async function load(){
     try {
         let r = await fetch('/api/network').catch(() => null);
-        if (!r || !r.ok) r = await fetch('network_dashboard_data.json');
+        if(r && r.status === 401){ window.location.href='/login'; return; }
+        if (!r || !r.ok){ document.getElementById('loading').textContent='Failed to load dashboard'; return; }
         const d = await r.json();
         render(d);
         document.getElementById('loading').style.display = 'none';

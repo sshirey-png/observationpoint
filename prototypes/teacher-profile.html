@@ -433,6 +433,7 @@ async function load(){
     }
     try {
         const r = await fetch(`/api/staff/${encodeURIComponent(TEACHER_EMAIL)}`);
+        if(r.status === 401){ window.location.href='/login'; return; }
         if(r.status === 403){
             document.getElementById('loading').textContent = 'Access denied';
             return;
