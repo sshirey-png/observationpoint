@@ -56,6 +56,10 @@ body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-fon
 .yoy-delta.up{color:#059669}
 .yoy-delta.down{color:#dc2626}
 
+/* Missing touchpoint type styles */
+.dot-fb{background:#ca8a04}.dot-meet{background:#16a34a}.dot-disc{background:#dc2626}
+.type-fb{background:#fef3c7;color:#ca8a04}.type-meet{background:#dcfce7;color:#16a34a}.type-disc{background:#fee2e2;color:#dc2626}
+
 /* Current scores */
 .trend-section{padding:0 16px}
 .trend-card{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:16px}
@@ -132,30 +136,26 @@ body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-fon
 </div>
 
 <!-- Stats -->
-<div class="stats">
-    <div class="stat"><div class="stat-val blue" id="sTouchpoints">—</div><div class="stat-label">TouchPoints</div></div>
-    <div class="stat"><div class="stat-val green" id="sLastPmap">—</div><div class="stat-label">Last PMAP Avg</div></div>
-    <div class="stat"><div class="stat-val orange" id="sDaysSince">—</div><div class="stat-label">Days Since Obs</div></div>
-    <div class="stat"><div class="stat-val muted" id="sYears">—</div><div class="stat-label">PMAP Years</div></div>
-</div>
+<div class="stats" id="statsRow"></div>
 
-<!-- Year-over-year PMAP Grid -->
-<div class="section-label">Year-Over-Year PMAP Scores</div>
-<div class="yoy-wrap">
-    <div class="yoy-card">
-        <div class="yoy-title">PMAP Ratings by Year</div>
-        <div class="yoy-sub" id="yoySub">—</div>
-        <table class="yoy-table" id="yoyTable"></table>
+<!-- Year-over-year PMAP Grid (hidden for unscored staff) -->
+<div id="scoredSections" style="display:none">
+    <div class="section-label">Year-Over-Year PMAP Scores</div>
+    <div class="yoy-wrap">
+        <div class="yoy-card">
+            <div class="yoy-title">PMAP Ratings by Year</div>
+            <div class="yoy-sub" id="yoySub">—</div>
+            <table class="yoy-table" id="yoyTable"></table>
+        </div>
     </div>
-</div>
 
-<!-- Current Scores (from latest PMAP) -->
-<div class="section-label">Latest PMAP Rubric Scores</div>
-<div class="trend-section">
-    <div class="trend-card">
-        <div class="trend-title" id="trendTitle">Latest PMAP</div>
-        <div class="trend-sub" id="trendSub">—</div>
-        <div id="trendRows"></div>
+    <div class="section-label">Latest PMAP Rubric Scores</div>
+    <div class="trend-section">
+        <div class="trend-card">
+            <div class="trend-title" id="trendTitle">Latest PMAP</div>
+            <div class="trend-sub" id="trendSub">—</div>
+            <div id="trendRows"></div>
+        </div>
     </div>
 </div>
 
@@ -241,26 +241,31 @@ function render(teacher, allYears){
     if(pmapYrs.length) metaBits.push(`${pmapYrs.length} year${pmapYrs.length>1?'s':''} of PMAP history`);
     document.getElementById('pMeta').textContent = metaBits.join(' · ');
 
-    // Stats
-    document.getElementById('sTouchpoints').textContent = teacher.touchpoint_count;
+    // Stats — adapt to whether this person has scored PMAPs
+    const hasScores = pmapYrs.length > 0;
+    const statsRow = document.getElementById('statsRow');
 
-    const latestYr = pmapYrs[pmapYrs.length-1];
-    if(latestYr){
+    if(hasScores){
+        const latestYr = pmapYrs[pmapYrs.length-1];
         const dims = teacher.pmap_by_year[latestYr];
         const vals = Object.values(dims);
-        const avg = vals.length ? (vals.reduce((a,b)=>a+b,0) / vals.length) : null;
-        document.getElementById('sLastPmap').textContent = avg ? avg.toFixed(1) : '—';
+        const avg = vals.length ? (vals.reduce((a,b)=>a+b,0) / vals.length).toFixed(1) : '—';
+        const days = teacher.last_observation_date ? daysBetween(teacher.last_observation_date, new Date().toISOString().slice(0,10)) : '—';
+        statsRow.innerHTML = `
+            <div class="stat"><div class="stat-val blue">${teacher.touchpoint_count}</div><div class="stat-label">TouchPoints</div></div>
+            <div class="stat"><div class="stat-val green">${avg}</div><div class="stat-label">Last PMAP Avg</div></div>
+            <div class="stat"><div class="stat-val muted">${days}</div><div class="stat-label">Days Since Obs</div></div>
+            <div class="stat"><div class="stat-val muted">${pmapYrs.length}</div><div class="stat-label">PMAP Years</div></div>
+        `;
+        document.getElementById('scoredSections').style.display = '';
     } else {
-        document.getElementById('sLastPmap').textContent = '—';
+        statsRow.innerHTML = `
+            <div class="stat"><div class="stat-val blue">${teacher.touchpoint_count}</div><div class="stat-label">TouchPoints</div></div>
+            <div class="stat"><div class="stat-val muted">${teacher.job_title || teacher.job_function || ''}</div><div class="stat-label">Role</div></div>
+        `;
+        document.getElementById('scoredSections').style.display = 'none';
     }
-
-    if(teacher.last_observation_date){
-        const days = daysBetween(teacher.last_observation_date, new Date().toISOString().slice(0,10));
-        document.getElementById('sDaysSince').textContent = days;
-    } else {
-        document.getElementById('sDaysSince').textContent = '—';
-    }
-    document.getElementById('sYears').textContent = pmapYrs.length;
+    const latestYr = hasScores ? pmapYrs[pmapYrs.length-1] : null;
 
     // Dimension set (teacher / leader / prek)
     const dimSet = detectDimSet(teacher);
@@ -342,6 +347,8 @@ function render(teacher, allYears){
         {key:'observation', label:'Observations'},
         {key:'self_reflection', label:'Self-Reflections'},
         {key:'fundamentals', label:'Fundamentals'},
+        {key:'meeting', label:'Meetings'},
+        {key:'feedback', label:'Feedback'},
     ];
     let filterHtml = '';
     for(const f of filters){
@@ -364,6 +371,8 @@ function matchesFilter(formType, filter){
     if(filter === 'observation') return formType === 'observation_teacher' || formType === 'observation_prek';
     if(filter === 'self_reflection') return formType.startsWith('self_reflection_');
     if(filter === 'fundamentals') return formType === 'observation_fundamentals';
+    if(filter === 'meeting') return formType.startsWith('meeting_');
+    if(filter === 'feedback') return formType === 'quick_feedback';
     return true;
 }
 
@@ -435,6 +444,9 @@ async function load(){
         const r = await fetch(`/api/staff/${encodeURIComponent(TEACHER_EMAIL)}`);
         if(r.status === 401){ window.location.href='/login'; return; }
         if(r.status === 403){
+            document.getElementById('loading').textContent = 'Access denied — this person is not in your team';
+            return;
+        }
             document.getElementById('loading').textContent = 'Access denied';
             return;
         }
