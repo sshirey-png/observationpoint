@@ -1,36 +1,33 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import Nav from '../components/Nav'
 import StaffPicker from '../components/StaffPicker'
 import RubricCard from '../components/RubricCard'
+import RecordingBar from '../components/RecordingBar'
+import ActionSteps from '../components/ActionSteps'
 import { api } from '../lib/api'
+import { TEACHER_RUBRIC } from '../lib/rubric-descriptors'
 
 /**
  * Observe — the teacher observation form.
- * This is the core product experience: leader walks into classroom,
- * picks teacher, scores T1-T5, writes feedback, publishes.
+ * Faithful port of prototypes/teacher-observation.html.
  *
- * State lives here. Child components receive props and call onChange.
+ * Flow: pick teacher → record (optional) → notes → score T1-T5 →
+ *       feedback (See It / Do It) → action step → publish
  */
-
-const RUBRIC = [
-  { code: 'T1', name: 'On Task', question: 'Are all students engaged in the work of the lesson from start to finish?', required: true },
-  { code: 'T2', name: 'Community of Learners', question: 'Are all students active members of a joyful and supportive classroom community?' },
-  { code: 'T3', name: 'Essential Content', question: 'Are all students working with content aligned to appropriate standards?' },
-  { code: 'T4', name: 'Cognitive Engagement', question: 'Are all students responsible for doing the thinking?' },
-  { code: 'T5', name: 'Demonstration of Learning', question: 'Do all students demonstrate that they are learning?' },
-]
-
 export default function Observe() {
   const navigate = useNavigate()
 
-  // All form state in one place
+  // Form state
   const [teacher, setTeacher] = useState(null)
   const [scores, setScores] = useState({})
   const [notes, setNotes] = useState('')
   const [seeItSuccess, setSeeItSuccess] = useState('')
   const [seeItGrowth, setSeeItGrowth] = useState('')
   const [doItPractice, setDoItPractice] = useState('')
+  const [actionStep, setActionStep] = useState(null)
+  const [customStep, setCustomStep] = useState('')
+  const [aiEnabled, setAiEnabled] = useState(true)
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
 
@@ -53,6 +50,7 @@ export default function Observe() {
           see_it_growth: seeItGrowth,
           do_it_practice: doItPractice,
         }),
+        action_step: actionStep ? JSON.stringify(actionStep) : customStep || null,
       })
       setDone(true)
     } catch (e) {
@@ -61,6 +59,7 @@ export default function Observe() {
     setSaving(false)
   }
 
+  // Success screen
   if (done) {
     return (
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -74,12 +73,24 @@ export default function Observe() {
           <div className="text-sm text-gray-500 mb-5">
             {teacher?.first_name} {teacher?.last_name} has been notified
           </div>
-          <button
-            onClick={() => navigate('/app/team')}
-            className="bg-fls-orange text-white px-8 py-3 rounded-xl font-semibold"
-          >
-            Done
-          </button>
+          <div className="flex gap-2 justify-center">
+            <button
+              onClick={() => navigate('/')}
+              className="bg-fls-orange text-white px-8 py-3 rounded-xl font-semibold"
+            >
+              Done
+            </button>
+            <button
+              onClick={() => {
+                setDone(false); setTeacher(null); setScores({});
+                setNotes(''); setSeeItSuccess(''); setSeeItGrowth('');
+                setDoItPractice(''); setActionStep(null); setCustomStep('');
+              }}
+              className="border border-gray-200 px-6 py-3 rounded-xl font-semibold text-sm"
+            >
+              New Observation
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -89,10 +100,32 @@ export default function Observe() {
     <div className="pb-24">
       <Nav title="Teacher Observation" />
 
-      {/* Step 1: Pick teacher */}
+      {/* Teacher picker + History link */}
       <StaffPicker selected={teacher} onSelect={setTeacher} />
+      {teacher && (
+        <div className="flex items-center gap-2 px-4 py-2 bg-white border-b border-gray-200">
+          <Link
+            to={`/app/staff/${teacher.email}`}
+            target="_blank"
+            className="flex items-center gap-1 px-2.5 py-1.5 border border-gray-200 rounded-lg text-[11px] font-semibold text-fls-navy no-underline"
+          >
+            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 16 16">
+              <path d="M3 8h10m-4-4 4 4-4 4" />
+            </svg>
+            History
+          </Link>
+          <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-blue-100 text-blue-600">
+            Teacher Obs
+          </span>
+        </div>
+      )}
 
       <div className="px-4">
+        {/* Recording bar */}
+        <div className="mt-4">
+          <RecordingBar onToggleAI={setAiEnabled} />
+        </div>
+
         {/* Notes */}
         <div className="mt-4">
           <div className="text-[13px] font-semibold mb-1.5">Observation Notes</div>
@@ -101,7 +134,7 @@ export default function Observe() {
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Type observations here..."
             rows={3}
-            className="w-full px-3 py-3 border border-gray-200 rounded-[10px] text-sm font-[Inter] outline-none focus:border-fls-orange resize-y placeholder:text-gray-400"
+            className="w-full px-3 py-3 border border-gray-200 rounded-[10px] text-sm outline-none focus:border-fls-orange resize-y placeholder:text-gray-400"
           />
         </div>
 
@@ -113,12 +146,13 @@ export default function Observe() {
           Score at least one area. A rating of 1 requires explanation.
         </div>
 
-        {RUBRIC.map((dim) => (
+        {TEACHER_RUBRIC.map((dim) => (
           <RubricCard
             key={dim.code}
             code={dim.code}
             name={dim.name}
             question={dim.question}
+            descriptors={dim.descriptors}
             required={dim.required}
             value={scores[dim.code] || null}
             onChange={(v) => setScore(dim.code, v)}
@@ -137,7 +171,7 @@ export default function Observe() {
             onChange={(e) => setSeeItSuccess(e.target.value)}
             placeholder="What's working well in this classroom?"
             rows={2}
-            className="w-full px-3 py-3 border border-gray-200 rounded-[10px] text-sm font-[Inter] outline-none focus:border-fls-orange resize-y placeholder:text-gray-400"
+            className="w-full px-3 py-3 border border-gray-200 rounded-[10px] text-sm outline-none focus:border-fls-orange resize-y placeholder:text-gray-400"
           />
         </div>
 
@@ -148,7 +182,7 @@ export default function Observe() {
             onChange={(e) => setSeeItGrowth(e.target.value)}
             placeholder="Where is there opportunity to grow?"
             rows={2}
-            className="w-full px-3 py-3 border border-gray-200 rounded-[10px] text-sm font-[Inter] outline-none focus:border-fls-orange resize-y placeholder:text-gray-400"
+            className="w-full px-3 py-3 border border-gray-200 rounded-[10px] text-sm outline-none focus:border-fls-orange resize-y placeholder:text-gray-400"
           />
         </div>
 
@@ -159,9 +193,24 @@ export default function Observe() {
             onChange={(e) => setDoItPractice(e.target.value)}
             placeholder="What was practiced during the debrief?"
             rows={2}
-            className="w-full px-3 py-3 border border-gray-200 rounded-[10px] text-sm font-[Inter] outline-none focus:border-fls-orange resize-y placeholder:text-gray-400"
+            className="w-full px-3 py-3 border border-gray-200 rounded-[10px] text-sm outline-none focus:border-fls-orange resize-y placeholder:text-gray-400"
           />
         </div>
+
+        <div className="h-px bg-gray-200 my-5" />
+
+        {/* Action Steps */}
+        <div className="text-base font-bold mb-1">Action Step</div>
+        <div className="text-xs text-gray-400 mb-3">
+          Select a rubric area, then choose an action step from Get Better Faster
+        </div>
+
+        <ActionSteps
+          selected={actionStep}
+          onChange={setActionStep}
+          customStep={customStep}
+          onCustomChange={setCustomStep}
+        />
       </div>
 
       {/* Bottom bar */}

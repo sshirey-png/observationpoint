@@ -36,12 +36,12 @@ export default function Home() {
         <div className="grid grid-cols-3 gap-2">
           {[
             { to: '/app/observe', label: 'Observation', emoji: '👁' },
-            { to: '/app/observe', label: 'Fundamentals', emoji: '⏱' },
-            { to: '/app/observe', label: 'Quick Feedback', emoji: '💬' },
-            { to: '/app/observe', label: 'Celebrate', emoji: '🎉' },
-            { to: '/app/observe', label: 'Meeting', emoji: '🤝' },
-            { to: '/app/observe', label: 'Solicit Feedback', emoji: '📝' },
-            { to: '/app/observe', label: 'PMAP', emoji: '📋' },
+            { to: '/app/fundamentals', label: 'Fundamentals', emoji: '⏱' },
+            { to: '/app/feedback', label: 'Quick Feedback', emoji: '💬' },
+            { to: '/app/celebrate', label: 'Celebrate', emoji: '🎉' },
+            { to: '/app/meeting', label: 'Meeting', emoji: '🤝' },
+            { to: '/app/solicit', label: 'Solicit Feedback', emoji: '📝' },
+            { to: '/app/pmap', label: 'PMAP', emoji: '📋' },
           ].map(item => (
             <Link
               key={item.label}
