@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import Nav from '../components/Nav'
 import StaffPicker from '../components/StaffPicker'
 import { api } from '../lib/api'
@@ -12,6 +12,8 @@ import { api } from '../lib/api'
 
 export default function Fundamentals() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const teacherParam = searchParams.get('teacher')
   const [teacher, setTeacher] = useState(null)
   const [classSize, setClassSize] = useState('')
   const [counts, setCounts] = useState(['', '', '', '', ''])
@@ -158,7 +160,7 @@ export default function Fundamentals() {
   return (
     <div className="pb-24">
       <Nav title="Fundamentals" />
-      <StaffPicker selected={teacher} onSelect={setTeacher} />
+      <StaffPicker selected={teacher} onSelect={setTeacher} initialEmail={teacherParam} />
 
       <div className="px-4">
         {/* Timer */}

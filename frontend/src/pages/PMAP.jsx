@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import Nav from '../components/Nav'
 import StaffPicker from '../components/StaffPicker'
 import RubricCard from '../components/RubricCard'
@@ -37,6 +37,8 @@ function TrackButton({ label, value, onChange }) {
 
 export default function PMAP() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const teacherParam = searchParams.get('teacher')
   const [teacher, setTeacher] = useState(null)
 
   // Meeting Checklist
@@ -140,7 +142,7 @@ export default function PMAP() {
   return (
     <div className="pb-24">
       <Nav title="PMAP — Teacher" />
-      <StaffPicker selected={teacher} onSelect={setTeacher} />
+      <StaffPicker selected={teacher} onSelect={setTeacher} initialEmail={teacherParam} />
       {teacher && (
         <div className="flex items-center gap-2 px-4 py-2 bg-white border-b border-gray-200">
           <Link to={`/app/staff/${teacher.email}`} target="_blank"

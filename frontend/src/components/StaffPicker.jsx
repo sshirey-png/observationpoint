@@ -1,20 +1,35 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { api } from '../lib/api'
 
 /**
  * StaffPicker — search and select a staff member.
  * Used in every form. Hits /api/staff/search, returns matches.
- * Auto-detects form type from staff's job_function.
+ * Supports pre-selection via initialEmail prop (from URL ?teacher=).
  *
  * Props:
  *   onSelect(staff) — called when a staff member is picked
  *   selected — the currently selected staff member (or null)
+ *   initialEmail — if set, auto-fetch and select this staff member on mount
  */
-export default function StaffPicker({ onSelect, selected }) {
+export default function StaffPicker({ onSelect, selected, initialEmail }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
   const timer = useRef(null)
+  const didInit = useRef(false)
+
+  // Pre-select from initialEmail prop (e.g., from ?teacher= URL param)
+  useEffect(() => {
+    if (initialEmail && !selected && !didInit.current) {
+      didInit.current = true
+      api.get(`/api/staff/search?q=${encodeURIComponent(initialEmail)}`).then(data => {
+        if (data && data.length > 0) {
+          const match = data.find(s => s.email === initialEmail) || data[0]
+          onSelect(match)
+        }
+      })
+    }
+  }, [initialEmail])
 
   function handleInput(q) {
     setQuery(q)

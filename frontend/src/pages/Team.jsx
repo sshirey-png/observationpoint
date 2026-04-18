@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import Nav from '../components/Nav'
 import { api } from '../lib/api'
 
@@ -20,11 +20,17 @@ function daysSince(dateStr) {
 }
 
 export default function Team() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [staff, setStaff] = useState([])
-  const [view, setView] = useState('direct')
+  const [view, setView] = useState(searchParams.get('view') || 'direct')
   const [search, setSearch] = useState('')
   const [filterFn, setFilterFn] = useState('all')
   const [loading, setLoading] = useState(true)
+
+  function changeView(v) {
+    setView(v)
+    setSearchParams({ view: v }, { replace: true })
+  }
 
   async function load(v) {
     setLoading(true)
@@ -73,13 +79,13 @@ export default function Team() {
         {/* View toggle */}
         <div className="flex gap-1.5 mb-3">
           <button
-            onClick={() => setView('direct')}
+            onClick={() => changeView('direct')}
             className={`px-3.5 py-2 rounded-full text-xs font-semibold border transition-all ${
               view === 'direct' ? 'bg-fls-navy text-white border-fls-navy' : 'bg-white text-gray-600 border-gray-200'
             }`}
           >My Direct Reports</button>
           <button
-            onClick={() => setView('all')}
+            onClick={() => changeView('all')}
             className={`px-3.5 py-2 rounded-full text-xs font-semibold border transition-all ${
               view === 'all' ? 'bg-fls-navy text-white border-fls-navy' : 'bg-white text-gray-600 border-gray-200'
             }`}

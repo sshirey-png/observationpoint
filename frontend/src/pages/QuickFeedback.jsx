@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import Nav from '../components/Nav'
 import StaffPicker from '../components/StaffPicker'
 import { api } from '../lib/api'
@@ -14,6 +14,8 @@ const TAGS = ['Culture', 'Instruction', 'Routines', 'Engagement', 'Kagan', 'Paci
 
 export default function QuickFeedback() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const teacherParam = searchParams.get('teacher')
   const [teacher, setTeacher] = useState(null)
   const [note, setNote] = useState('')
   const [tags, setTags] = useState([])
@@ -70,7 +72,7 @@ export default function QuickFeedback() {
   return (
     <div className="pb-24">
       <Nav title="Quick Feedback" />
-      <StaffPicker selected={teacher} onSelect={setTeacher} />
+      <StaffPicker selected={teacher} onSelect={setTeacher} initialEmail={teacherParam} />
 
       <div className="px-4 pt-4">
         <div className="text-base font-bold mb-1">Quick Feedback</div>

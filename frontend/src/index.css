@@ -19,6 +19,15 @@ body {
   min-height: 100svh;
 }
 
+/* Slide-up animation for modal/drawer */
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slide-up 0.25s ease-out;
+}
+
 /* Score colors — data visualization, not judgment */
 .score-1 { background-color: #fee2e2; color: #b91c1c; }
 .score-2 { background-color: #ffedd5; color: #c2410c; }

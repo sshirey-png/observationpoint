@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import Nav from '../components/Nav'
 import StaffPicker from '../components/StaffPicker'
 import RubricCard from '../components/RubricCard'
@@ -17,6 +17,8 @@ import { TEACHER_RUBRIC } from '../lib/rubric-descriptors'
  */
 export default function Observe() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const teacherParam = searchParams.get('teacher')
 
   // Form state
   const [teacher, setTeacher] = useState(null)
@@ -101,7 +103,7 @@ export default function Observe() {
       <Nav title="Teacher Observation" />
 
       {/* Teacher picker + History link */}
-      <StaffPicker selected={teacher} onSelect={setTeacher} />
+      <StaffPicker selected={teacher} onSelect={setTeacher} initialEmail={teacherParam} />
       {teacher && (
         <div className="flex items-center gap-2 px-4 py-2 bg-white border-b border-gray-200">
           <Link

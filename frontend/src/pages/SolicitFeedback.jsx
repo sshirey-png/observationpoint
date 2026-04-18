@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import Nav from '../components/Nav'
 import StaffPicker from '../components/StaffPicker'
 import { api } from '../lib/api'
@@ -54,6 +54,8 @@ function PulseScale({ label, lowLabel, midLabel, highLabel, value, onChange }) {
 
 export default function SolicitFeedback() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const teacherParam = searchParams.get('teacher')
   const [teacher, setTeacher] = useState(null)
   const [selectedQuestion, setSelectedQuestion] = useState('')
   const [customQuestion, setCustomQuestion] = useState('')
@@ -112,7 +114,7 @@ export default function SolicitFeedback() {
   return (
     <div className="pb-24">
       <Nav title="Solicit Feedback" />
-      <StaffPicker selected={teacher} onSelect={setTeacher} />
+      <StaffPicker selected={teacher} onSelect={setTeacher} initialEmail={teacherParam} />
 
       <div className="px-4 pt-4">
         <div className="text-base font-bold mb-1">Solicited Feedback</div>

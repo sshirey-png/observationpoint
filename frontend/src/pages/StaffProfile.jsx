@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import Nav from '../components/Nav'
+import TouchpointDetail from '../components/TouchpointDetail'
 import { api } from '../lib/api'
+import { dimName } from '../lib/dimensions'
 
 /**
  * StaffProfile — full touchpoint history for one person.
@@ -44,7 +46,7 @@ function ScorePill({ code, score }) {
   const color = SCORE_COLORS[Math.max(1, Math.min(5, rounded))]
   return (
     <span className="text-[11px] font-bold px-1.5 py-0.5 rounded" style={{ background: color + '20', color }}>
-      {code}: {rounded}
+      {dimName(code)}: {rounded}
     </span>
   )
 }
@@ -54,6 +56,7 @@ export default function StaffProfile() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
+  const [selectedTP, setSelectedTP] = useState(null)
 
   useEffect(() => {
     async function load() {
@@ -122,16 +125,33 @@ export default function StaffProfile() {
             </div>
           </div>
         </div>
-        <div className="flex gap-2 mt-3.5">
-          <Link to="/app/observe" className="flex-1 py-2.5 rounded-[10px] border border-gray-200 text-center text-xs font-semibold text-gray-600 no-underline">Observe</Link>
-          <Link to="/app/feedback" className="flex-1 py-2.5 rounded-[10px] border border-gray-200 text-center text-xs font-semibold text-gray-600 no-underline">Feedback</Link>
-          <Link to="/app/celebrate" className="flex-1 py-2.5 rounded-[10px] border border-gray-200 text-center text-xs font-semibold text-gray-600 no-underline">Celebrate</Link>
-          <Link to="/app/meeting" className="flex-1 py-2.5 rounded-[10px] border border-gray-200 text-center text-xs font-semibold text-gray-600 no-underline">Meeting</Link>
+        <div className="flex flex-wrap gap-1.5 mt-3.5">
+          {(() => {
+            const t = `?teacher=${encodeURIComponent(email)}`
+            const jf = staff.job_function
+            const isTeacher = jf === 'Teacher'
+            const buttons = []
+            if (isTeacher) {
+              buttons.push({ to: `/app/observe${t}`, label: 'Observe' })
+              buttons.push({ to: `/app/fundamentals${t}`, label: 'Fundamentals' })
+            }
+            buttons.push({ to: `/app/feedback${t}`, label: 'Feedback' })
+            buttons.push({ to: `/app/celebrate${t}`, label: 'Celebrate' })
+            buttons.push({ to: `/app/meeting${t}`, label: 'Meeting' })
+            buttons.push({ to: `/app/solicit${t}`, label: 'Solicit' })
+            buttons.push({ to: `/app/pmap${t}`, label: 'PMAP' })
+            return buttons.map(b => (
+              <Link key={b.label} to={b.to}
+                className="px-3 py-2 rounded-[10px] border border-gray-200 text-center text-[11px] font-semibold text-gray-600 no-underline">
+                {b.label}
+              </Link>
+            ))
+          })()}
         </div>
       </div>
 
-      {/* Stats */}
-      <div className={`grid ${hasScores ? 'grid-cols-3' : 'grid-cols-2'} gap-2 px-4 py-3`}>
+      {/* Stats — touchpoint count, and PMAP avg only if scored */}
+      <div className={`grid ${hasScores ? 'grid-cols-2' : 'grid-cols-1'} gap-2 px-4 py-3`}>
         <div className="bg-white rounded-[10px] p-2.5 text-center shadow-sm">
           <div className="text-[22px] font-extrabold text-blue-600">{touchpoint_count}</div>
           <div className="text-[9px] text-gray-400 uppercase tracking-wide mt-0.5">TouchPoints</div>
@@ -148,10 +168,6 @@ export default function StaffProfile() {
             <div className="text-[9px] text-gray-400 uppercase tracking-wide mt-0.5">Last PMAP Avg</div>
           </div>
         )}
-        <div className="bg-white rounded-[10px] p-2.5 text-center shadow-sm">
-          <div className="text-[22px] font-extrabold text-gray-400">{staff.job_function || '—'}</div>
-          <div className="text-[9px] text-gray-400 uppercase tracking-wide mt-0.5">Role</div>
-        </div>
       </div>
 
       <div className="px-4">
@@ -165,7 +181,7 @@ export default function StaffProfile() {
               <table className="w-full border-collapse text-[13px]">
                 <thead>
                   <tr>
-                    <th className="text-left text-[10px] font-bold text-gray-400 uppercase px-2 py-1.5 border-b border-gray-200">Dim</th>
+                    <th className="text-left text-[10px] font-bold text-gray-400 uppercase px-2 py-1.5 border-b border-gray-200"></th>
                     {pmapYrs.map(yr => (
                       <th key={yr} className="text-center text-[10px] font-bold text-gray-400 uppercase px-1 py-1.5 border-b border-gray-200">
                         {yr.slice(2, 4)}–{yr.slice(7, 9)}
@@ -176,7 +192,7 @@ export default function StaffProfile() {
                 <tbody>
                   {dims.map(code => (
                     <tr key={code}>
-                      <td className="text-xs font-bold text-gray-700 px-2 py-2 border-b border-gray-50">{code}</td>
+                      <td className="text-xs font-bold text-gray-700 px-2 py-2 border-b border-gray-50">{dimName(code)}</td>
                       {pmapYrs.map((yr, i) => {
                         const s = pmap_by_year[yr]?.[code]
                         const prev = i > 0 ? pmap_by_year[pmapYrs[i - 1]]?.[code] : null
@@ -249,7 +265,7 @@ export default function StaffProfile() {
                     <div className="flex-1 h-px bg-gray-200" />
                   </div>
                 )}
-                <div className="bg-white rounded-[10px] p-3 shadow-sm">
+                <div className="bg-white rounded-[10px] p-3 shadow-sm cursor-pointer active:scale-[.98] transition-transform" onClick={() => setSelectedTP(tp)}>
                   <div className="flex items-center justify-between mb-1">
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${meta.color}`}>
                       {meta.label}
@@ -272,6 +288,11 @@ export default function StaffProfile() {
           })}
         </div>
       </div>
+
+      {/* Touchpoint detail modal */}
+      {selectedTP && (
+        <TouchpointDetail touchpoint={selectedTP} onClose={() => setSelectedTP(null)} />
+      )}
     </div>
   )
 }

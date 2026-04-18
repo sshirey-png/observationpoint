@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import Nav from '../components/Nav'
 import { api } from '../lib/api'
+import { dimName } from '../lib/dimensions'
 
 /**
  * Network — school comparison dashboard.
@@ -73,7 +74,7 @@ export default function Network() {
                 <th className="text-left text-[10px] font-bold text-gray-400 uppercase px-2 py-1.5 border-b border-gray-200">School</th>
                 {DIMS.map(d => (
                   <th key={d} className="text-center text-[10px] font-bold text-gray-400 uppercase px-1 py-1.5 border-b border-gray-200">
-                    {d}
+                    {dimName(d)}
                   </th>
                 ))}
               </tr>
@@ -143,7 +144,7 @@ export default function Network() {
                     const color = v != null ? scoreColor(v) : '#d1d5db'
                     return (
                       <div key={d} className="flex-1 text-center py-1.5 rounded-md" style={{ background: v ? color + '10' : '#f5f7fa' }}>
-                        <div className="text-[10px] font-semibold text-gray-400">{d}</div>
+                        <div className="text-[10px] font-semibold text-gray-400">{dimName(d)}</div>
                         <div className="text-base font-extrabold mt-0.5" style={{ color: v ? color : '#d1d5db' }}>
                           {v != null ? v.toFixed(1) : '—'}
                         </div>
@@ -178,7 +179,7 @@ export default function Network() {
                   const years = Object.keys(network_trends).sort()
                   return (
                     <div key={d} className="flex items-center gap-2">
-                      <div className="w-6 text-xs font-bold text-gray-700">{d}</div>
+                      <div className="w-6 text-xs font-bold text-gray-700">{dimName(d)}</div>
                       <div className="flex-1 flex items-center gap-1">
                         {years.map(yr => {
                           const v = network_trends[yr]?.[d]
@@ -212,7 +213,7 @@ export default function Network() {
                 if (!total) return null
                 return (
                   <div key={d} className="flex items-center gap-2 py-1.5">
-                    <div className="w-6 text-xs font-bold text-gray-700">{d}</div>
+                    <div className="w-6 text-xs font-bold text-gray-700">{dimName(d)}</div>
                     <div className="flex-1 flex gap-0.5 h-6 items-end">
                       {[1, 2, 3, 4, 5].map(s => {
                         const count = dd[String(s)] || 0
