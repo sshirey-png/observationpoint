@@ -11,15 +11,6 @@ export default function Home() {
       <Nav showBack={false} />
       <div className="p-4 space-y-3">
 
-        {/* Primary action: observe */}
-        <Link
-          to="/app/observe"
-          className="block bg-fls-orange text-white rounded-xl p-5 no-underline"
-        >
-          <div className="text-lg font-bold">Quick Observe</div>
-          <div className="text-sm opacity-80 mt-1">Start a classroom observation</div>
-        </Link>
-
         {/* Team + Network row */}
         <div className="grid grid-cols-2 gap-3">
           <Link
@@ -49,6 +40,7 @@ export default function Home() {
             { to: '/app/observe', label: 'Quick Feedback', emoji: '💬' },
             { to: '/app/observe', label: 'Celebrate', emoji: '🎉' },
             { to: '/app/observe', label: 'Meeting', emoji: '🤝' },
+            { to: '/app/observe', label: 'Solicit Feedback', emoji: '📝' },
             { to: '/app/observe', label: 'PMAP', emoji: '📋' },
           ].map(item => (
             <Link
