@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Profile — Fundamentals Trend</title>
+<title>Profile — Trends</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -20,14 +20,109 @@ body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-fon
 .profile-name{font-size:20px;font-weight:800;letter-spacing:-.02em}
 .profile-meta{font-size:13px;color:#6b7280;margin-top:2px}
 .log-btn{padding:10px 14px;border-radius:10px;background:#002f60;color:#fff;border:0;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;margin-top:14px;box-shadow:0 2px 6px rgba(0,47,96,.15)}
-.log-btn:hover{background:#1e40af}
-.log-btn:active{transform:scale(.98)}
+.log-btn:hover{background:#1e40af}.log-btn:active{transform:scale(.98)}
 .log-btn-ic{font-size:14px;color:#fbbe82}
-.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.tile{background:#fff;border:1px solid transparent;border-radius:10px;padding:11px 4px;text-align:center;text-decoration:none;color:inherit;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:7px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
-.tile:active{transform:scale(.96);border-color:#e47727}
-.tile-ic{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px}
-.tile-lbl{font-size:11px;font-weight:600;color:#374151}
+
+/* Category toggle bar */
+.cat-bar{position:sticky;top:50px;z-index:50;background:#fff;padding:10px 12px 12px;border-bottom:1px solid #e5e7eb;display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.cat-bar::-webkit-scrollbar{display:none}
+.cat-tab{padding:7px 13px;border-radius:18px;background:#f5f7fa;font-size:12px;font-weight:700;color:#6b7280;cursor:pointer;white-space:nowrap;border:1.5px solid transparent;transition:all .15s;flex-shrink:0}
+.cat-tab.on{background:#002f60;color:#fff;border-color:#002f60}
+.cat-tab:not(.on):hover{border-color:#e47727;color:#e47727}
+
+.content{padding:16px;max-width:760px;margin:0 auto;padding-bottom:40px}
+.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;margin:18px 0 8px}
+
+.cat-view{display:none}
+.cat-view.on{display:block}
+
+/* HERO — sparkline/chart area */
+.hero{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,47,96,.06);margin-bottom:14px;border:1px solid #e5e7eb}
+.hero-caption{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#e47727;margin-bottom:4px}
+.hero-headline{font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1.2;margin-bottom:4px}
+.hero-sub{font-size:13px;color:#6b7280;margin-bottom:18px}
+.spark-wrap{position:relative;height:180px;margin:0 -4px}
+.spark-grid line{stroke:#f3f4f6;stroke-width:1}
+.spark-axis{font-size:10px;fill:#9ca3af;font-family:'Inter',sans-serif}
+.spark-area{opacity:.35}
+.spark-line{fill:none;stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
+.spark-pt{stroke:#fff;stroke-width:3}
+.spark-label{font-size:10px;font-weight:700;fill:#374151;font-family:'Inter',sans-serif}
+
+/* 3-col summary tiles (different from action tiles) */
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.stat{background:#fff;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);text-align:center}
+.stat-val{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.stat-val.up{color:#059669}.stat-val.muted{color:#6b7280}.stat-val.orange{color:#e47727}
+.stat-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-top:2px}
+
+/* Compare callout */
+.compare{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;margin-bottom:14px}
+.compare.blue{background:#eff6ff;border-color:#bfdbfe}
+.compare-icon{width:32px;height:32px;border-radius:8px;background:#e47727;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800}
+.compare.blue .compare-icon{background:#002f60}
+.compare-text{font-size:13px;color:#7c2d12;line-height:1.4}
+.compare.blue .compare-text{color:#1e3a8a}
+.compare-text b{color:#002f60}
+
+/* Visit / observation / touchpoint cards */
+.record-card{background:#fff;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:10px;cursor:pointer}
+.record-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.record-date{font-size:13px;font-weight:700}
+.record-pct{font-size:16px;font-weight:800;color:#059669}
+.record-pct.med{color:#ca8a04}.record-pct.low{color:#dc2626}
+.record-meta{font-size:11px;color:#9ca3af;margin-top:2px}
+.record-bar-bg{height:6px;background:#f3f4f6;border-radius:3px;margin-top:10px;overflow:hidden}
+.record-bar{height:100%;background:linear-gradient(90deg,#e47727,#059669);border-radius:3px}
+.record-delta{font-size:11px;color:#6b7280;margin-top:6px}
+.record-delta .up{color:#059669;font-weight:700}
+.record-scores{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}
+.rscore{padding:3px 7px;border-radius:5px;font-size:11px;font-weight:700}
+.s1{background:#fee2e2;color:#b91c1c}.s2{background:#ffedd5;color:#c2410c}
+.s3{background:#fef3c7;color:#a16207}.s4{background:#dcfce7;color:#059669}.s5{background:#bbf7d0;color:#047857}
+.record-note{font-size:12px;color:#374151;margin-top:8px;line-height:1.45;font-style:italic;padding-left:8px;border-left:2px solid #e5e7eb}
+
+/* Small multiples for observations */
+.mini-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px}
+.mini{background:#fff;border-radius:10px;padding:10px 8px;box-shadow:0 1px 3px rgba(0,0,0,.05);text-align:center;cursor:pointer}
+.mini:hover{border:1.5px solid #e47727;padding:8.5px 6.5px}
+.mini-name{font-size:9px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.04em}
+.mini-val{font-size:18px;font-weight:800;margin-top:4px}
+.mini-val.s4{color:#059669}.mini-val.s3{color:#a16207}.mini-val.s2{color:#c2410c}
+.mini-trend{margin-top:6px;height:20px}
+.mini-arrow{font-size:10px;font-weight:800;margin-top:2px}
+.mini-arrow.up{color:#059669}.mini-arrow.down{color:#dc2626}.mini-arrow.flat{color:#9ca3af}
+
+/* PMAP Year-over-Year grid */
+.yoy-card{background:#fff;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:14px;overflow-x:auto}
+.yoy-title{font-size:14px;font-weight:700;margin-bottom:3px}
+.yoy-sub{font-size:11px;color:#9ca3af;margin-bottom:12px}
+.yoy-table{width:100%;border-collapse:collapse;font-size:13px}
+.yoy-table th{text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#9ca3af;padding:6px 4px;border-bottom:1px solid #e5e7eb}
+.yoy-table th.dim-col{text-align:left;padding-left:8px}
+.yoy-table td{padding:8px 4px;text-align:center;border-bottom:1px solid #f3f4f6}
+.yoy-table td.dim-label{text-align:left;padding-left:8px;font-weight:700;color:#374151;font-size:12px}
+.yoy-table tr:last-child td{border-bottom:none}
+.yoy-score{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.yoy-score.empty{background:#f5f7fa;color:#d1d5db;font-size:11px}
+
+/* Frequency bar chart */
+.freq-card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:14px}
+.freq-title{font-size:14px;font-weight:700;margin-bottom:12px}
+.freq-bars{display:flex;align-items:flex-end;gap:6px;height:80px}
+.freq-bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;justify-content:flex-end}
+.freq-bar-fill{width:100%;border-radius:3px 3px 0 0;min-height:4px;background:#e47727}
+.freq-bar-fill.ca{background:#be185d}.freq-bar-fill.me{background:#16a34a}.freq-bar-fill.fb{background:#ca8a04}.freq-bar-fill.sr{background:#7c3aed}
+.freq-bar-lbl{font-size:9px;font-weight:700;color:#9ca3af;text-transform:uppercase}
+
+/* Action tile (in modal) */
+.tiles-modal{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.tile-m{background:#fff;border:1px solid transparent;border-radius:10px;padding:11px 4px;text-align:center;text-decoration:none;color:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.tile-m:active{transform:scale(.96);border-color:#e47727}
+.tile-m-ic{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px}
+.tile-m-lbl{font-size:11px;font-weight:600;color:#374151}
+
+/* Modal */
 .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:900;opacity:0;pointer-events:none;transition:opacity .22s}
 .backdrop.open{opacity:1;pointer-events:auto}
 .log-modal{position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:22px 22px 0 0;max-height:85vh;overflow-y:auto;z-index:901;transform:translateY(100%);transition:transform .28s cubic-bezier(.2,.8,.3,1);box-shadow:0 -10px 32px rgba(0,0,0,.22)}
@@ -45,67 +140,12 @@ details.modal-section summary::-webkit-details-marker{display:none}
 .modal-chev{width:20px;height:20px;border-radius:6px;background:#e5e7eb;color:#6b7280;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;transition:transform .2s,background .2s}
 details[open] .modal-chev{transform:rotate(90deg);background:#fff7ed;color:#e47727}
 .modal-sec-count{font-size:10px;color:#9ca3af;font-weight:700;padding:2px 8px;border-radius:10px;background:#f5f7fa}
+
+/* FAB */
 .fab{position:fixed;bottom:20px;right:20px;z-index:200;cursor:pointer}
 .fab-btn{width:56px;height:56px;border-radius:18px;background:linear-gradient(135deg,#002f60,#1e40af);color:#fbbe82;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;box-shadow:0 6px 20px rgba(0,47,96,.3);position:relative;z-index:2}
 .fab-pulse{position:absolute;top:0;left:0;right:0;bottom:0;border-radius:18px;background:#002f60;opacity:0;animation:pulse 2.4s infinite;z-index:1}
 @keyframes pulse{0%{transform:scale(1);opacity:.4}70%{transform:scale(1.4);opacity:0}100%{transform:scale(1.4);opacity:0}}
-
-.content{padding:16px;max-width:760px;margin:0 auto;padding-bottom:40px}
-.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;margin:18px 0 8px}
-
-/* HERO — sparkline */
-.hero{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,47,96,.06);margin-bottom:14px;border:1px solid #e5e7eb}
-.hero-caption{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#e47727;margin-bottom:4px}
-.hero-headline{font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1.2;margin-bottom:4px}
-.hero-sub{font-size:13px;color:#6b7280;margin-bottom:18px}
-.spark-wrap{position:relative;height:180px;margin:0 -4px}
-.spark-grid line{stroke:#f3f4f6;stroke-width:1}
-.spark-axis{font-size:10px;fill:#9ca3af;font-family:'Inter',sans-serif}
-.spark-area{fill:url(#g1);opacity:.5}
-.spark-line{fill:none;stroke:#e47727;stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
-.spark-pt{fill:#e47727;stroke:#fff;stroke-width:3}
-.spark-pt.last{fill:#059669}
-.spark-label{font-size:10px;font-weight:700;fill:#374151;font-family:'Inter',sans-serif}
-
-/* Summary stats */
-.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
-.tile{background:#fff;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);text-align:center}
-.tile-val{font-size:24px;font-weight:800;letter-spacing:-.02em}
-.tile-val.up{color:#059669}
-.tile-val.muted{color:#6b7280}
-.tile-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-top:2px}
-
-/* Dimension breakdown */
-.dims-card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:14px}
-.dims-title{font-size:14px;font-weight:700;margin-bottom:3px}
-.dims-sub{font-size:11px;color:#9ca3af;margin-bottom:14px}
-.dim-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f3f4f6}
-.dim-row:last-child{border-bottom:none}
-.dim-code{font-size:12px;font-weight:700;width:28px;color:#374151}
-.dim-name{font-size:12px;color:#6b7280;flex:1}
-.dim-dots{display:flex;gap:3px}
-.dim-dot{width:10px;height:10px;border-radius:50%;background:#e5e7eb}
-.dim-dot.filled{background:#e47727}
-.dim-score{font-size:13px;font-weight:700;color:#111827;width:28px;text-align:right;font-variant-numeric:tabular-nums}
-.dim-delta{font-size:10px;font-weight:700;color:#059669;width:34px;text-align:right}
-
-/* Visit list */
-.visit-card{background:#fff;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:10px;cursor:pointer}
-.visit-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.visit-date{font-size:13px;font-weight:700}
-.visit-pct{font-size:16px;font-weight:800;color:#059669}
-.visit-pct.med{color:#ca8a04}.visit-pct.low{color:#dc2626}
-.visit-meta{font-size:11px;color:#9ca3af;margin-top:2px}
-.visit-bar-bg{height:6px;background:#f3f4f6;border-radius:3px;margin-top:10px;overflow:hidden}
-.visit-bar{height:100%;background:linear-gradient(90deg,#e47727,#059669);border-radius:3px}
-.visit-delta{font-size:11px;color:#6b7280;margin-top:6px}
-.visit-delta .up{color:#059669;font-weight:700}
-
-/* Compare to school */
-.compare{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;margin-bottom:14px}
-.compare-icon{width:32px;height:32px;border-radius:8px;background:#e47727;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800}
-.compare-text{font-size:13px;color:#7c2d12;line-height:1.4}
-.compare-text b{color:#002f60}
 </style>
 </head>
 <body>
@@ -113,7 +153,7 @@ details[open] .modal-chev{transform:rotate(90deg);background:#fff7ed;color:#e477
 <nav class="nav">
     <a class="nav-back" href="design-options.html"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></a>
     <div class="nav-title">Observation<span>Point</span></div>
-    <div class="nav-tag">Profile · Trend</div>
+    <div class="nav-tag">Profile · Trends</div>
 </nav>
 
 <div class="profile-header">
@@ -124,207 +164,279 @@ details[open] .modal-chev{transform:rotate(90deg);background:#fff7ed;color:#e477
             <div class="profile-meta">Teacher · Samuel J. Green · 5th Grade Math</div>
         </div>
     </div>
-    <button class="log-btn" onclick="openLogModal()">
-        <span class="log-btn-ic">+</span> Log a touchpoint
-    </button>
+    <button class="log-btn" onclick="openLogModal()"><span class="log-btn-ic">+</span> Log a touchpoint</button>
+</div>
+
+<!-- Category toggle -->
+<div class="cat-bar">
+    <div class="cat-tab on" data-cat="fundamentals">Fundamentals</div>
+    <div class="cat-tab" data-cat="observations">Observations</div>
+    <div class="cat-tab" data-cat="pmap">PMAP</div>
+    <div class="cat-tab" data-cat="reflection">Self-Reflection</div>
+    <div class="cat-tab" data-cat="feedback">Quick FB</div>
+    <div class="cat-tab" data-cat="celebrate">Celebrate</div>
+    <div class="cat-tab" data-cat="meetings">Meetings</div>
 </div>
 
 <div class="content">
 
-<!-- HERO: fundamentals trend -->
-<div class="hero">
-    <div class="hero-caption">Fundamentals · On-task</div>
-    <div class="hero-headline">62% → 89%</div>
-    <div class="hero-sub">Six visits across 3 years · +27 points</div>
-
-    <div class="spark-wrap">
-        <svg viewBox="0 0 600 180" preserveAspectRatio="none" width="100%" height="100%">
-            <defs>
-                <linearGradient id="g1" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stop-color="#e47727" stop-opacity=".35"/>
-                    <stop offset="100%" stop-color="#e47727" stop-opacity="0"/>
-                </linearGradient>
-            </defs>
-            <g class="spark-grid">
-                <line x1="0" y1="30" x2="600" y2="30"/>
-                <line x1="0" y1="70" x2="600" y2="70"/>
-                <line x1="0" y1="110" x2="600" y2="110"/>
-                <line x1="0" y1="150" x2="600" y2="150"/>
-            </g>
-            <text class="spark-axis" x="2" y="34">100%</text>
-            <text class="spark-axis" x="2" y="74">85%</text>
-            <text class="spark-axis" x="2" y="114">70%</text>
-            <text class="spark-axis" x="2" y="154">55%</text>
-
-            <!-- Data: 62, 71, 78, 84, 82, 89 → mapped to y -->
-            <!-- y = 180 - ((val-50)*(180/50))  roughly -->
-            <path class="spark-area" d="M 50 151 L 150 125 L 250 105 L 350 87 L 450 93 L 550 73 L 550 180 L 50 180 Z"/>
-            <path class="spark-line" d="M 50 151 L 150 125 L 250 105 L 350 87 L 450 93 L 550 73"/>
-
-            <circle class="spark-pt" cx="50" cy="151" r="5"/>
-            <circle class="spark-pt" cx="150" cy="125" r="5"/>
-            <circle class="spark-pt" cx="250" cy="105" r="5"/>
-            <circle class="spark-pt" cx="350" cy="87" r="5"/>
-            <circle class="spark-pt" cx="450" cy="93" r="5"/>
-            <circle class="spark-pt last" cx="550" cy="73" r="6"/>
-
-            <text class="spark-label" x="50" y="170" text-anchor="middle">Feb '24</text>
-            <text class="spark-label" x="150" y="170" text-anchor="middle">Oct '24</text>
-            <text class="spark-label" x="250" y="170" text-anchor="middle">Feb '25</text>
-            <text class="spark-label" x="350" y="170" text-anchor="middle">Oct '25</text>
-            <text class="spark-label" x="450" y="170" text-anchor="middle">Jan '26</text>
-            <text class="spark-label" x="550" y="170" text-anchor="middle">Apr '26</text>
-        </svg>
+<!-- ============= FUNDAMENTALS ============= -->
+<div class="cat-view on" data-view="fundamentals">
+    <div class="hero">
+        <div class="hero-caption">Fundamentals · On-task</div>
+        <div class="hero-headline">62% → 89%</div>
+        <div class="hero-sub">Six visits across 3 years · +27 points</div>
+        <div class="spark-wrap">
+            <svg viewBox="0 0 600 180" preserveAspectRatio="none" width="100%" height="100%">
+                <defs><linearGradient id="gf" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#e47727" stop-opacity=".5"/><stop offset="100%" stop-color="#e47727" stop-opacity="0"/></linearGradient></defs>
+                <g class="spark-grid"><line x1="0" y1="30" x2="600" y2="30"/><line x1="0" y1="70" x2="600" y2="70"/><line x1="0" y1="110" x2="600" y2="110"/><line x1="0" y1="150" x2="600" y2="150"/></g>
+                <text class="spark-axis" x="2" y="34">100%</text><text class="spark-axis" x="2" y="74">85%</text><text class="spark-axis" x="2" y="114">70%</text><text class="spark-axis" x="2" y="154">55%</text>
+                <path class="spark-area" fill="url(#gf)" d="M 50 151 L 150 125 L 250 105 L 350 87 L 450 93 L 550 73 L 550 180 L 50 180 Z"/>
+                <path class="spark-line" stroke="#e47727" d="M 50 151 L 150 125 L 250 105 L 350 87 L 450 93 L 550 73"/>
+                <circle class="spark-pt" fill="#e47727" cx="50" cy="151" r="5"/>
+                <circle class="spark-pt" fill="#e47727" cx="150" cy="125" r="5"/>
+                <circle class="spark-pt" fill="#e47727" cx="250" cy="105" r="5"/>
+                <circle class="spark-pt" fill="#e47727" cx="350" cy="87" r="5"/>
+                <circle class="spark-pt" fill="#e47727" cx="450" cy="93" r="5"/>
+                <circle class="spark-pt" fill="#059669" cx="550" cy="73" r="6"/>
+                <text class="spark-label" x="50" y="170" text-anchor="middle">Feb '24</text><text class="spark-label" x="150" y="170" text-anchor="middle">Oct '24</text><text class="spark-label" x="250" y="170" text-anchor="middle">Feb '25</text><text class="spark-label" x="350" y="170" text-anchor="middle">Oct '25</text><text class="spark-label" x="450" y="170" text-anchor="middle">Jan '26</text><text class="spark-label" x="550" y="170" text-anchor="middle">Apr '26</text>
+            </svg>
+        </div>
     </div>
+
+    <div class="compare">
+        <div class="compare-icon">↑</div>
+        <div class="compare-text">Marcus is <b>+6 points above</b> Green's average of 83% on-task and trending up for the third consecutive visit.</div>
+    </div>
+
+    <div class="stat-row">
+        <div class="stat"><div class="stat-val up">89%</div><div class="stat-lbl">Most recent</div></div>
+        <div class="stat"><div class="stat-val">82%</div><div class="stat-lbl">Year avg</div></div>
+        <div class="stat"><div class="stat-val muted">6</div><div class="stat-lbl">Total visits</div></div>
+    </div>
+
+    <div class="section-label">All Fundamentals Visits</div>
+    <div class="record-card"><div class="record-head"><div><div class="record-date">April 18, 2026</div><div class="record-meta">J. Mitchell · 5th period</div></div><div class="record-pct">89%</div></div><div class="record-bar-bg"><div class="record-bar" style="width:89%"></div></div><div class="record-delta">23 of 26 students on-task · <span class="up">+7 from Jan</span></div></div>
+    <div class="record-card"><div class="record-head"><div><div class="record-date">January 14, 2026</div><div class="record-meta">J. Mitchell · 3rd period</div></div><div class="record-pct">82%</div></div><div class="record-bar-bg"><div class="record-bar" style="width:82%"></div></div><div class="record-delta">22 of 27 students on-task</div></div>
+    <div class="record-card"><div class="record-head"><div><div class="record-date">October 25, 2025</div><div class="record-meta">T. Parker · 2nd period</div></div><div class="record-pct">84%</div></div><div class="record-bar-bg"><div class="record-bar" style="width:84%"></div></div><div class="record-delta">21 of 25 students on-task</div></div>
+    <div class="record-card"><div class="record-head"><div><div class="record-date">February 19, 2025</div><div class="record-meta">J. Mitchell · 5th period</div></div><div class="record-pct med">78%</div></div><div class="record-bar-bg"><div class="record-bar" style="width:78%"></div></div><div class="record-delta">20 of 26 students on-task · <span class="up">+16 from Oct</span></div></div>
+    <div class="record-card"><div class="record-head"><div><div class="record-date">October 26, 2024</div><div class="record-meta">T. Parker · 3rd period</div></div><div class="record-pct med">71%</div></div><div class="record-bar-bg"><div class="record-bar" style="width:71%"></div></div><div class="record-delta">19 of 27 students on-task</div></div>
+    <div class="record-card"><div class="record-head"><div><div class="record-date">February 13, 2024</div><div class="record-meta">K. Davis · 2nd period</div></div><div class="record-pct low">62%</div></div><div class="record-bar-bg"><div class="record-bar" style="width:62%"></div></div><div class="record-delta">16 of 26 students on-task · baseline</div></div>
 </div>
 
-<!-- Compare to school -->
-<div class="compare">
-    <div class="compare-icon">↑</div>
-    <div class="compare-text">Marcus is <b>+6 points above</b> Green's average of 83% on-task and trending up for the third consecutive visit.</div>
+<!-- ============= OBSERVATIONS ============= -->
+<div class="cat-view" data-view="observations">
+    <div class="hero">
+        <div class="hero-caption">Observations · 5 dimensions</div>
+        <div class="hero-headline">3.8 avg · most recent</div>
+        <div class="hero-sub">8 observations across 3 years · Demo &amp; Content up, CoL &amp; Cog Eng holding</div>
+        <div class="spark-wrap">
+            <svg viewBox="0 0 600 180" preserveAspectRatio="none" width="100%" height="100%">
+                <g class="spark-grid"><line x1="0" y1="30" x2="600" y2="30"/><line x1="0" y1="75" x2="600" y2="75"/><line x1="0" y1="120" x2="600" y2="120"/></g>
+                <text class="spark-axis" x="2" y="34">5</text><text class="spark-axis" x="2" y="79">3</text><text class="spark-axis" x="2" y="124">1</text>
+
+                <!-- 5 dimension lines, 8 observations -->
+                <!-- x positions for 8 obs: 60, 130, 200, 270, 340, 410, 480, 550 -->
+                <!-- y = 165 - (val-1)*33 on 1-5 scale -->
+                <!-- Demo: 3 3 3 3 4 4 4 4 -->
+                <path class="spark-line" stroke="#059669" stroke-width="2.5" opacity=".85" d="M 60 99 L 130 99 L 200 99 L 270 99 L 340 66 L 410 66 L 480 66 L 550 66"/>
+                <!-- On Task: 3 4 4 4 4 4 4 4 -->
+                <path class="spark-line" stroke="#2563eb" stroke-width="2.5" opacity=".75" d="M 60 99 L 130 66 L 200 66 L 270 66 L 340 66 L 410 66 L 480 66 L 550 66"/>
+                <!-- Content: 3 3 3 3 3 4 4 4 -->
+                <path class="spark-line" stroke="#7c3aed" stroke-width="2.5" opacity=".75" d="M 60 99 L 130 99 L 200 99 L 270 99 L 340 99 L 410 66 L 480 66 L 550 66"/>
+                <!-- CoL: 2 3 3 3 3 3 3 3 -->
+                <path class="spark-line" stroke="#e47727" stroke-width="2.5" opacity=".85" d="M 60 132 L 130 99 L 200 99 L 270 99 L 340 99 L 410 99 L 480 99 L 550 99"/>
+                <!-- Cog Eng: 2 3 3 3 3 3 3 3 -->
+                <path class="spark-line" stroke="#ca8a04" stroke-width="2.5" opacity=".75" d="M 60 132 L 130 99 L 200 99 L 270 99 L 340 99 L 410 99 L 480 99 L 550 99"/>
+
+                <text class="spark-label" x="60" y="175" text-anchor="middle">'24</text><text class="spark-label" x="200" y="175" text-anchor="middle">'25</text><text class="spark-label" x="340" y="175" text-anchor="middle">'26 start</text><text class="spark-label" x="550" y="175" text-anchor="middle">now</text>
+            </svg>
+        </div>
+
+        <!-- Mini legend -->
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:10px;font-weight:700">
+            <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:3px;background:#2563eb"></div>On Task</div>
+            <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:3px;background:#e47727"></div>CoL</div>
+            <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:3px;background:#7c3aed"></div>Content</div>
+            <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:3px;background:#ca8a04"></div>Cog Eng</div>
+            <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:3px;background:#059669"></div>Demo</div>
+        </div>
+    </div>
+
+    <!-- Small multiples — per-dimension latest -->
+    <div class="section-label">By Dimension · most recent</div>
+    <div class="mini-row">
+        <div class="mini"><div class="mini-name">On Task</div><div class="mini-val s4">4</div><div class="mini-arrow flat">— held</div></div>
+        <div class="mini"><div class="mini-name">CoL</div><div class="mini-val s3">3</div><div class="mini-arrow flat">— held</div></div>
+        <div class="mini"><div class="mini-name">Content</div><div class="mini-val s4">4</div><div class="mini-arrow up">↑ ×1 yr</div></div>
+        <div class="mini"><div class="mini-name">Cog Eng</div><div class="mini-val s3">3</div><div class="mini-arrow flat">— edge</div></div>
+        <div class="mini"><div class="mini-name">Demo</div><div class="mini-val s4">4</div><div class="mini-arrow up">↑ in Jan</div></div>
+    </div>
+
+    <div class="compare blue">
+        <div class="compare-icon">i</div>
+        <div class="compare-text"><b>Demo of Learning</b> moved up in January after the cold-call grid cycle. <b>CoL</b> has held at 3 for 5 touchpoints — potential focus.</div>
+    </div>
+
+    <div class="section-label">Recent Observations</div>
+    <div class="record-card"><div class="record-head"><div><div class="record-date">April 18, 2026</div><div class="record-meta">J. Mitchell · 5th period</div></div></div><div class="record-scores"><span class="rscore s4">On 4</span><span class="rscore s3">CoL 3</span><span class="rscore s4">Content 4</span><span class="rscore s3">Cog 3</span><span class="rscore s4">Demo 4</span></div></div>
+    <div class="record-card"><div class="record-head"><div><div class="record-date">January 14, 2026</div><div class="record-meta">J. Mitchell · 3rd period · Cycle 3 close</div></div></div><div class="record-scores"><span class="rscore s4">On 4</span><span class="rscore s3">CoL 3</span><span class="rscore s4">Content 4</span><span class="rscore s3">Cog 3</span><span class="rscore s4">Demo 4</span></div><div class="record-note">Cold-call grid visible. Demo moved 3 → 4.</div></div>
+    <div class="record-card"><div class="record-head"><div><div class="record-date">September 16, 2025</div><div class="record-meta">J. Mitchell · 5th period · year start</div></div></div><div class="record-scores"><span class="rscore s4">On 4</span><span class="rscore s2">CoL 2</span><span class="rscore s4">Content 4</span><span class="rscore s3">Cog 3</span><span class="rscore s4">Demo 4</span></div></div>
+    <div class="record-card"><div class="record-head"><div><div class="record-date">April 21, 2025</div><div class="record-meta">T. Parker</div></div></div><div class="record-scores"><span class="rscore s4">On 4</span><span class="rscore s3">CoL 3</span><span class="rscore s3">Content 3</span><span class="rscore s3">Cog 3</span><span class="rscore s2">Demo 2</span></div></div>
+    <div class="record-card"><div class="record-head"><div><div class="record-date">January 20, 2025</div><div class="record-meta">J. Mitchell</div></div></div><div class="record-scores"><span class="rscore s4">On 4</span><span class="rscore s3">CoL 3</span><span class="rscore s3">Content 3</span><span class="rscore s3">Cog 3</span><span class="rscore s3">Demo 3</span></div></div>
 </div>
 
-<!-- Summary tiles -->
-<div class="tiles">
-    <div class="tile"><div class="tile-val up">89%</div><div class="tile-label">Most recent</div></div>
-    <div class="tile"><div class="tile-val">82%</div><div class="tile-label">This year avg</div></div>
-    <div class="tile"><div class="tile-val muted">6</div><div class="tile-label">Total visits</div></div>
+<!-- ============= PMAP ============= -->
+<div class="cat-view" data-view="pmap">
+    <div class="hero">
+        <div class="hero-caption">PMAP · Year-over-Year</div>
+        <div class="hero-headline">3.6 avg · Nov 2025</div>
+        <div class="hero-sub">Most recent PMAP · next due <b>Mar 6, 2026</b> (teacher cycle 2)</div>
+    </div>
+
+    <div class="compare blue">
+        <div class="compare-icon">i</div>
+        <div class="compare-text">Marcus's 3-year PMAP shape: <b>On Task</b> +1, <b>CoL</b> +1 (early), <b>Content</b> +1, <b>Cog Eng</b> +1 (early), <b>Demo</b> +1. Steady improvement in all 5 dimensions.</div>
+    </div>
+
+    <div class="yoy-card">
+        <div class="yoy-title">PMAP ratings by year</div>
+        <div class="yoy-sub">Nov 2023 · Nov 2024 · Nov 2025</div>
+        <table class="yoy-table">
+            <thead><tr><th class="dim-col">Dimension</th><th>23-24</th><th>24-25</th><th>25-26</th></tr></thead>
+            <tbody>
+                <tr><td class="dim-label">On Task</td><td><span class="yoy-score s3">3</span></td><td><span class="yoy-score s4">4</span></td><td><span class="yoy-score s4">4</span></td></tr>
+                <tr><td class="dim-label">Community of Learners</td><td><span class="yoy-score s2">2</span></td><td><span class="yoy-score s3">3</span></td><td><span class="yoy-score s3">3</span></td></tr>
+                <tr><td class="dim-label">Essential Content</td><td><span class="yoy-score s3">3</span></td><td><span class="yoy-score s3">3</span></td><td><span class="yoy-score s4">4</span></td></tr>
+                <tr><td class="dim-label">Cognitive Engagement</td><td><span class="yoy-score s2">2</span></td><td><span class="yoy-score s3">3</span></td><td><span class="yoy-score s3">3</span></td></tr>
+                <tr><td class="dim-label">Demonstration of Learning</td><td><span class="yoy-score s3">3</span></td><td><span class="yoy-score s3">3</span></td><td><span class="yoy-score s4">4</span></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section-label">PMAPs on record</div>
+    <div class="record-card"><div class="record-head"><div><div class="record-date">November 13, 2025</div><div class="record-meta">Mid-year · J. Mitchell</div></div></div><div class="record-scores"><span class="rscore s4">On 4</span><span class="rscore s3">CoL 3</span><span class="rscore s4">Content 4</span><span class="rscore s3">Cog 3</span><span class="rscore s4">Demo 4</span></div></div>
+    <div class="record-card"><div class="record-head"><div><div class="record-date">November 20, 2024</div><div class="record-meta">Mid-year · J. Mitchell</div></div></div><div class="record-scores"><span class="rscore s4">On 4</span><span class="rscore s3">CoL 3</span><span class="rscore s3">Content 3</span><span class="rscore s3">Cog 3</span><span class="rscore s3">Demo 3</span></div></div>
+    <div class="record-card"><div class="record-head"><div><div class="record-date">March 21, 2024</div><div class="record-meta">End-of-year · K. Davis</div></div></div><div class="record-scores"><span class="rscore s3">On 3</span><span class="rscore s2">CoL 2</span><span class="rscore s3">Content 3</span><span class="rscore s2">Cog 2</span><span class="rscore s3">Demo 3</span></div></div>
 </div>
 
-<!-- Dimension breakdown -->
-<div class="section-label">By Fundamentals Dimension — last visit</div>
-<div class="dims-card">
-    <div class="dims-title">M1–M5 · April 18, 2026</div>
-    <div class="dims-sub">0–4 scale · composite from last observation</div>
+<!-- ============= SELF-REFLECTION ============= -->
+<div class="cat-view" data-view="reflection">
+    <div class="hero">
+        <div class="hero-caption">Self-Reflection · Marcus's view</div>
+        <div class="hero-headline">Aligned on 4 of 5 dimensions</div>
+        <div class="hero-sub">Marcus's self-scores match observer scores on every dimension except <b>Community of Learners</b> (he rates higher)</div>
+    </div>
 
-    <div class="dim-row">
-        <div class="dim-code">M1</div>
-        <div class="dim-name">Teacher Presence</div>
-        <div class="dim-dots">
-            <div class="dim-dot filled"></div><div class="dim-dot filled"></div>
-            <div class="dim-dot filled"></div><div class="dim-dot filled"></div>
-        </div>
-        <div class="dim-score">3.6</div>
-        <div class="dim-delta">+0.1</div>
+    <div class="section-label">Latest alignment · Mar 19, 2026</div>
+    <div class="yoy-card">
+        <table class="yoy-table">
+            <thead><tr><th class="dim-col">Dimension</th><th>Observer</th><th>Self</th><th>Gap</th></tr></thead>
+            <tbody>
+                <tr><td class="dim-label">On Task</td><td><span class="yoy-score s4">4</span></td><td><span class="yoy-score s4">4</span></td><td style="color:#9ca3af;font-size:11px;font-weight:700">aligned</td></tr>
+                <tr><td class="dim-label">Community of Learners</td><td><span class="yoy-score s3">3</span></td><td><span class="yoy-score s4">4</span></td><td style="color:#e47727;font-size:11px;font-weight:700">+1 self</td></tr>
+                <tr><td class="dim-label">Essential Content</td><td><span class="yoy-score s4">4</span></td><td><span class="yoy-score s4">4</span></td><td style="color:#9ca3af;font-size:11px;font-weight:700">aligned</td></tr>
+                <tr><td class="dim-label">Cognitive Engagement</td><td><span class="yoy-score s3">3</span></td><td><span class="yoy-score s3">3</span></td><td style="color:#9ca3af;font-size:11px;font-weight:700">aligned</td></tr>
+                <tr><td class="dim-label">Demonstration of Learning</td><td><span class="yoy-score s4">4</span></td><td><span class="yoy-score s4">4</span></td><td style="color:#9ca3af;font-size:11px;font-weight:700">aligned</td></tr>
+            </tbody>
+        </table>
     </div>
-    <div class="dim-row">
-        <div class="dim-code">M2</div>
-        <div class="dim-name">Routines & Procedures</div>
-        <div class="dim-dots">
-            <div class="dim-dot filled"></div><div class="dim-dot filled"></div>
-            <div class="dim-dot filled"></div><div class="dim-dot filled"></div>
-        </div>
-        <div class="dim-score">3.8</div>
-        <div class="dim-delta">flat</div>
-    </div>
-    <div class="dim-row">
-        <div class="dim-code">M3</div>
-        <div class="dim-name">Smooth Transitions</div>
-        <div class="dim-dots">
-            <div class="dim-dot filled"></div><div class="dim-dot filled"></div>
-            <div class="dim-dot filled"></div><div class="dim-dot"></div>
-        </div>
-        <div class="dim-score">3.4</div>
-        <div class="dim-delta">-0.1</div>
-    </div>
-    <div class="dim-row">
-        <div class="dim-code">M4</div>
-        <div class="dim-name">Academic Urgency</div>
-        <div class="dim-dots">
-            <div class="dim-dot filled"></div><div class="dim-dot filled"></div>
-            <div class="dim-dot filled"></div><div class="dim-dot filled"></div>
-        </div>
-        <div class="dim-score">3.6</div>
-        <div class="dim-delta">+0.2</div>
-    </div>
-    <div class="dim-row">
-        <div class="dim-code">M5</div>
-        <div class="dim-name">Student Engagement</div>
-        <div class="dim-dots">
-            <div class="dim-dot filled"></div><div class="dim-dot filled"></div>
-            <div class="dim-dot filled"></div><div class="dim-dot filled"></div>
-        </div>
-        <div class="dim-score">3.8</div>
-        <div class="dim-delta">+0.3</div>
-    </div>
+
+    <div class="section-label">Self-Reflections on record</div>
+    <div class="record-card"><div class="record-head"><div><div class="record-date">March 19, 2026</div><div class="record-meta">Self-submitted</div></div></div><div class="record-scores"><span class="rscore s4">On 4</span><span class="rscore s3">CoL 3</span><span class="rscore s4">Content 4</span><span class="rscore s3">Cog 3</span><span class="rscore s4">Demo 4</span></div><div class="record-note">"Transitions are my growth edge — warm-up to mini-lesson handoff runs long."</div></div>
+    <div class="record-card"><div class="record-head"><div><div class="record-date">October 21, 2025</div><div class="record-meta">Self-submitted · year start</div></div></div><div class="record-scores"><span class="rscore s4">On 4</span><span class="rscore s3">CoL 3</span><span class="rscore s4">Content 4</span><span class="rscore s3">Cog 3</span><span class="rscore s4">Demo 4</span></div></div>
+    <div class="record-card"><div class="record-head"><div><div class="record-date">March 3, 2025</div><div class="record-meta">Self-submitted</div></div></div><div class="record-scores"><span class="rscore s4">On 4</span><span class="rscore s3">CoL 3</span><span class="rscore s3">Content 3</span><span class="rscore s3">Cog 3</span><span class="rscore s3">Demo 3</span></div></div>
 </div>
 
-<!-- All visits -->
-<div class="section-label">All Visits</div>
-
-<div class="visit-card">
-    <div class="visit-head">
-        <div>
-            <div class="visit-date">April 18, 2026</div>
-            <div class="visit-meta">Observed by J. Mitchell · 5th period</div>
-        </div>
-        <div class="visit-pct">89%</div>
+<!-- ============= QUICK FEEDBACK ============= -->
+<div class="cat-view" data-view="feedback">
+    <div class="hero">
+        <div class="hero-caption">Quick Feedback</div>
+        <div class="hero-headline">8 notes this year</div>
+        <div class="hero-sub">Up from 3 last year · mostly from J. Mitchell (6) and T. Parker (2)</div>
     </div>
-    <div class="visit-bar-bg"><div class="visit-bar" style="width:89%"></div></div>
-    <div class="visit-delta">23 of 26 students on-task · <span class="up">+7 from Jan</span></div>
+
+    <div class="freq-card">
+        <div class="freq-title">Notes per month · 25-26 school year</div>
+        <div class="freq-bars">
+            <div class="freq-bar"><div class="freq-bar-fill fb" style="height:20%"></div><div class="freq-bar-lbl">Aug</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill fb" style="height:40%"></div><div class="freq-bar-lbl">Sep</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill fb" style="height:60%"></div><div class="freq-bar-lbl">Oct</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill fb" style="height:40%"></div><div class="freq-bar-lbl">Nov</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill fb" style="height:20%"></div><div class="freq-bar-lbl">Dec</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill fb" style="height:60%"></div><div class="freq-bar-lbl">Jan</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill fb" style="height:40%"></div><div class="freq-bar-lbl">Feb</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill fb" style="height:80%"></div><div class="freq-bar-lbl">Mar</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill fb" style="height:100%"></div><div class="freq-bar-lbl">Apr</div></div>
+        </div>
+    </div>
+
+    <div class="section-label">Recent Quick Feedback</div>
+    <div class="record-card"><div class="record-head"><div><div class="record-date">April 15, 2026</div><div class="record-meta">J. Mitchell</div></div></div><div class="record-note">"Nice warm-call on Jaden today. He's been quiet for two weeks and you caught that."</div></div>
+    <div class="record-card"><div class="record-head"><div><div class="record-date">March 22, 2026</div><div class="record-meta">T. Parker</div></div></div><div class="record-note">"Chart paper was spot-on — kids were referencing it during independent work."</div></div>
+    <div class="record-card"><div class="record-head"><div><div class="record-date">January 31, 2026</div><div class="record-meta">J. Mitchell</div></div></div><div class="record-note">"Warm-up to mini-lesson was 82 seconds today. Big improvement from 4+ minutes in the fall."</div></div>
 </div>
 
-<div class="visit-card">
-    <div class="visit-head">
-        <div>
-            <div class="visit-date">January 14, 2026</div>
-            <div class="visit-meta">Observed by J. Mitchell · 3rd period</div>
-        </div>
-        <div class="visit-pct">82%</div>
+<!-- ============= CELEBRATE ============= -->
+<div class="cat-view" data-view="celebrate">
+    <div class="hero">
+        <div class="hero-caption">Celebrations</div>
+        <div class="hero-headline">7 celebrations this year</div>
+        <div class="hero-sub">3 were shared publicly · most recent April 18</div>
     </div>
-    <div class="visit-bar-bg"><div class="visit-bar" style="width:82%"></div></div>
-    <div class="visit-delta">22 of 27 students on-task</div>
+
+    <div class="freq-card">
+        <div class="freq-title">Celebrations per month · 25-26</div>
+        <div class="freq-bars">
+            <div class="freq-bar"><div class="freq-bar-fill ca" style="height:0%"></div><div class="freq-bar-lbl">Aug</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill ca" style="height:30%"></div><div class="freq-bar-lbl">Sep</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill ca" style="height:60%"></div><div class="freq-bar-lbl">Oct</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill ca" style="height:90%"></div><div class="freq-bar-lbl">Nov</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill ca" style="height:60%"></div><div class="freq-bar-lbl">Dec</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill ca" style="height:30%"></div><div class="freq-bar-lbl">Jan</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill ca" style="height:90%"></div><div class="freq-bar-lbl">Feb</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill ca" style="height:0%"></div><div class="freq-bar-lbl">Mar</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill ca" style="height:60%"></div><div class="freq-bar-lbl">Apr</div></div>
+        </div>
+    </div>
+
+    <div class="section-label">Recent Celebrations</div>
+    <div class="record-card"><div class="record-head"><div><div class="record-date">April 18, 2026</div><div class="record-meta">J. Mitchell · public</div></div></div><div class="record-note">"Marcus's cold-call grid is becoming a model for the grade-level team."</div></div>
+    <div class="record-card"><div class="record-head"><div><div class="record-date">February 5, 2026</div><div class="record-meta">K. Davis · public</div></div></div><div class="record-note">"Math team grew class avg from 62% to 78% this quarter. Marcus's data talks drive that."</div></div>
+    <div class="record-card"><div class="record-head"><div><div class="record-date">January 14, 2026</div><div class="record-meta">J. Mitchell</div></div></div><div class="record-note">"Demo of Learning moved 3 → 4 on this observation — direct result of the cold-call work."</div></div>
 </div>
 
-<div class="visit-card">
-    <div class="visit-head">
-        <div>
-            <div class="visit-date">October 25, 2025</div>
-            <div class="visit-meta">Observed by T. Parker · 2nd period</div>
-        </div>
-        <div class="visit-pct">84%</div>
+<!-- ============= MEETINGS ============= -->
+<div class="cat-view" data-view="meetings">
+    <div class="hero">
+        <div class="hero-caption">Meetings &amp; Data Relays</div>
+        <div class="hero-headline">5 meetings this year</div>
+        <div class="hero-sub">2 standard · 2 data relays · 1 reteach cycle</div>
     </div>
-    <div class="visit-bar-bg"><div class="visit-bar" style="width:84%"></div></div>
-    <div class="visit-delta">21 of 25 students on-task</div>
-</div>
 
-<div class="visit-card">
-    <div class="visit-head">
-        <div>
-            <div class="visit-date">February 19, 2025</div>
-            <div class="visit-meta">Observed by J. Mitchell · 5th period</div>
+    <div class="freq-card">
+        <div class="freq-title">Meetings per month · 25-26</div>
+        <div class="freq-bars">
+            <div class="freq-bar"><div class="freq-bar-fill me" style="height:0%"></div><div class="freq-bar-lbl">Aug</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill me" style="height:50%"></div><div class="freq-bar-lbl">Sep</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill me" style="height:0%"></div><div class="freq-bar-lbl">Oct</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill me" style="height:50%"></div><div class="freq-bar-lbl">Nov</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill me" style="height:100%"></div><div class="freq-bar-lbl">Dec</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill me" style="height:0%"></div><div class="freq-bar-lbl">Jan</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill me" style="height:50%"></div><div class="freq-bar-lbl">Feb</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill me" style="height:0%"></div><div class="freq-bar-lbl">Mar</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill me" style="height:50%"></div><div class="freq-bar-lbl">Apr</div></div>
         </div>
-        <div class="visit-pct med">78%</div>
     </div>
-    <div class="visit-bar-bg"><div class="visit-bar" style="width:78%"></div></div>
-    <div class="visit-delta">20 of 26 students on-task · <span class="up">+16 from Oct</span></div>
-</div>
 
-<div class="visit-card">
-    <div class="visit-head">
-        <div>
-            <div class="visit-date">October 26, 2024</div>
-            <div class="visit-meta">Observed by T. Parker · 3rd period</div>
-        </div>
-        <div class="visit-pct med">71%</div>
-    </div>
-    <div class="visit-bar-bg"><div class="visit-bar" style="width:71%"></div></div>
-    <div class="visit-delta">19 of 27 students on-task</div>
-</div>
-
-<div class="visit-card">
-    <div class="visit-head">
-        <div>
-            <div class="visit-date">February 13, 2024</div>
-            <div class="visit-meta">Observed by K. Davis · 2nd period</div>
-        </div>
-        <div class="visit-pct low">62%</div>
-    </div>
-    <div class="visit-bar-bg"><div class="visit-bar" style="width:62%"></div></div>
-    <div class="visit-delta">16 of 26 students on-task · baseline</div>
+    <div class="section-label">Meeting Notes</div>
+    <div class="record-card"><div class="record-head"><div><div class="record-date">December 3, 2025</div><div class="record-meta">J. Mitchell · standard</div></div></div><div class="record-note">"Cold-call grid is actually helping me see gaps I didn't notice before."</div></div>
+    <div class="record-card"><div class="record-head"><div><div class="record-date">November 8, 2025</div><div class="record-meta">J. Mitchell · data relay · DDI</div></div></div><div class="record-note">Discussed Q1 exit tickets. Focus shifted to "show your work" expectation.</div></div>
+    <div class="record-card"><div class="record-head"><div><div class="record-date">February 11, 2026</div><div class="record-meta">J. Mitchell · reteach cycle</div></div></div><div class="record-note">Marcus reviewed Jan obs. "Looking back at Demo going from 3 to 4, I can see what worked."</div></div>
 </div>
 
 </div>
+
 <!-- Log a touchpoint modal -->
 <div class="backdrop" id="bd" onclick="closeLogModal()"></div>
 <div class="log-modal" id="logModal">
@@ -335,33 +447,25 @@ details[open] .modal-chev{transform:rotate(90deg);background:#fff7ed;color:#e477
     </div>
     <div class="modal-body">
         <div class="modal-sec-lbl">Touchpoints</div>
-        <div class="tiles">
-            <a class="tile" href="teacher-observation.html?teacher=marcus.williams"><div class="tile-ic" style="background:#dbeafe">&#128065;</div><div class="tile-lbl">Observation</div></a>
-            <a class="tile" href="fundamentals.html?teacher=marcus.williams"><div class="tile-ic" style="background:#fef3c7">&#9201;</div><div class="tile-lbl">Fundamentals</div></a>
-            <a class="tile" href="meeting-data.html?teacher=marcus.williams"><div class="tile-ic" style="background:#f0fdf4">&#128172;</div><div class="tile-lbl">Data Meeting</div></a>
-            <a class="tile" href="quick-feedback.html?teacher=marcus.williams"><div class="tile-ic" style="background:#fef3c7">&#9889;</div><div class="tile-lbl">Quick Feedback</div></a>
-            <a class="tile" href="celebrate.html?teacher=marcus.williams"><div class="tile-ic" style="background:#dcfce7">&#127881;</div><div class="tile-lbl">Celebrate</div></a>
-            <a class="tile" href="solicited-feedback.html?teacher=marcus.williams"><div class="tile-ic" style="background:#dbeafe">&#128588;</div><div class="tile-lbl">Solicit FB</div></a>
+        <div class="tiles-modal">
+            <a class="tile-m" href="teacher-observation.html?teacher=marcus.williams"><div class="tile-m-ic" style="background:#dbeafe">&#128065;</div><div class="tile-m-lbl">Observation</div></a>
+            <a class="tile-m" href="fundamentals.html?teacher=marcus.williams"><div class="tile-m-ic" style="background:#fef3c7">&#9201;</div><div class="tile-m-lbl">Fundamentals</div></a>
+            <a class="tile-m" href="meeting-data.html?teacher=marcus.williams"><div class="tile-m-ic" style="background:#f0fdf4">&#128172;</div><div class="tile-m-lbl">Data Meeting</div></a>
+            <a class="tile-m" href="quick-feedback.html?teacher=marcus.williams"><div class="tile-m-ic" style="background:#fef3c7">&#9889;</div><div class="tile-m-lbl">Quick Feedback</div></a>
+            <a class="tile-m" href="celebrate.html?teacher=marcus.williams"><div class="tile-m-ic" style="background:#dcfce7">&#127881;</div><div class="tile-m-lbl">Celebrate</div></a>
+            <a class="tile-m" href="solicited-feedback.html?teacher=marcus.williams"><div class="tile-m-ic" style="background:#dbeafe">&#128588;</div><div class="tile-m-lbl">Solicit FB</div></a>
         </div>
         <details class="modal-section">
-            <summary>
-                <div class="modal-chev">›</div>
-                <div class="modal-sec-lbl" style="margin:0;flex:1">Evaluations</div>
-                <div class="modal-sec-count">auto · Teacher</div>
-            </summary>
-            <div class="tiles" style="margin-top:10px">
-                <a class="tile" href="pmap-teacher.html?teacher=marcus.williams"><div class="tile-ic" style="background:#dcfce7">&#9989;</div><div class="tile-lbl">PMAP</div></a>
+            <summary><div class="modal-chev">›</div><div class="modal-sec-lbl" style="margin:0;flex:1">Evaluations</div><div class="modal-sec-count">auto · Teacher</div></summary>
+            <div class="tiles-modal" style="margin-top:10px">
+                <a class="tile-m" href="pmap-teacher.html?teacher=marcus.williams"><div class="tile-m-ic" style="background:#dcfce7">&#9989;</div><div class="tile-m-lbl">PMAP</div></a>
             </div>
         </details>
         <details class="modal-section">
-            <summary>
-                <div class="modal-chev">›</div>
-                <div class="modal-sec-lbl" style="margin:0;flex:1">Discipline</div>
-                <div class="modal-sec-count">2</div>
-            </summary>
-            <div class="tiles" style="margin-top:10px">
-                <a class="tile" href="iap.html?teacher=marcus.williams"><div class="tile-ic" style="background:#fee2e2">&#9888;</div><div class="tile-lbl">IAP</div></a>
-                <a class="tile" href="write-up.html?teacher=marcus.williams"><div class="tile-ic" style="background:#fee2e2">&#128221;</div><div class="tile-lbl">Write-Up</div></a>
+            <summary><div class="modal-chev">›</div><div class="modal-sec-lbl" style="margin:0;flex:1">Discipline</div><div class="modal-sec-count">2</div></summary>
+            <div class="tiles-modal" style="margin-top:10px">
+                <a class="tile-m" href="iap.html?teacher=marcus.williams"><div class="tile-m-ic" style="background:#fee2e2">&#9888;</div><div class="tile-m-lbl">IAP</div></a>
+                <a class="tile-m" href="write-up.html?teacher=marcus.williams"><div class="tile-m-ic" style="background:#fee2e2">&#128221;</div><div class="tile-m-lbl">Write-Up</div></a>
             </div>
         </details>
     </div>
@@ -374,6 +478,16 @@ details[open] .modal-chev{transform:rotate(90deg);background:#fff7ed;color:#e477
 </div>
 
 <script>
+// Category toggle
+document.querySelectorAll('.cat-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        const cat = tab.dataset.cat;
+        document.querySelectorAll('.cat-tab').forEach(t => t.classList.toggle('on', t.dataset.cat === cat));
+        document.querySelectorAll('.cat-view').forEach(v => v.classList.toggle('on', v.dataset.view === cat));
+        window.scrollTo({top: document.querySelector('.cat-bar').offsetTop, behavior: 'smooth'});
+    });
+});
+
 function openLogModal(){document.getElementById('logModal').classList.add('open');document.getElementById('bd').classList.add('open');document.body.style.overflow='hidden';}
 function closeLogModal(){document.getElementById('logModal').classList.remove('open');document.getElementById('bd').classList.remove('open');document.body.style.overflow='';}
 </script>
