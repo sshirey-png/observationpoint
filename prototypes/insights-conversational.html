@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Insights — Conversational</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.nav{position:sticky;top:0;z-index:100;background:#002f60;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.nav-back{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none}
+.nav-title{font-size:15px;font-weight:700;color:#fff;flex:1}.nav-title span{color:#e47727}
+.nav-tag{font-size:11px;font-weight:600;color:rgba(255,255,255,.7);padding:3px 8px;border-radius:6px;background:rgba(255,255,255,.1)}
+
+.layout{display:flex;flex-direction:column;height:calc(100vh - 50px)}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;max-width:860px;width:100%;margin:0 auto}
+
+/* Intro ribbon */
+.intro-bar{padding:14px 16px;background:linear-gradient(90deg,#002f60,#1e40af);color:#fff;font-size:12px;display:flex;align-items:center;gap:10px}
+.intro-badge{background:rgba(228,119,39,.25);color:#fbbe82;padding:3px 8px;border-radius:6px;font-weight:800;font-size:10px;letter-spacing:.05em;text-transform:uppercase}
+
+/* Chat messages */
+.messages{flex:1;overflow-y:auto;padding:18px 16px;display:flex;flex-direction:column;gap:18px}
+.msg{max-width:85%;animation:slideIn .2s}
+@keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.msg.user{align-self:flex-end;background:#002f60;color:#fff;padding:12px 16px;border-radius:16px 16px 4px 16px}
+.msg.user .msg-text{font-size:14px;line-height:1.4}
+
+.msg.ai{align-self:flex-start;max-width:100%}
+.ai-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.ai-badge{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#002f60,#1e40af);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800}
+.ai-lbl{font-size:11px;font-weight:700;color:#6b7280}
+.ai-lbl b{color:#111827}
+.ai-body{background:#fff;border-radius:4px 16px 16px 16px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05);font-size:14px;line-height:1.55;color:#111827}
+.ai-body b{color:#002f60}
+.ai-body .hl{background:#fff7ed;padding:1px 4px;border-radius:3px;font-weight:600}
+
+/* Inline data cards within AI response */
+.data-card{background:#f5f7fa;border-radius:10px;padding:12px;margin-top:10px;border-left:3px solid #e47727}
+.data-title{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#e47727;margin-bottom:8px}
+.data-row{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:13px}
+.data-row .label{color:#6b7280;flex:1}
+.data-row .value{font-weight:700;color:#111827;font-variant-numeric:tabular-nums}
+.data-row .value.green{color:#059669}
+.data-row .value.red{color:#dc2626}
+
+/* Inline mini bars */
+.mini-bars{display:flex;align-items:flex-end;gap:2px;height:36px;margin:10px 0}
+.mini-b{flex:1;background:#e47727;border-radius:2px 2px 0 0;min-height:3px}
+.mini-b.green{background:#059669}
+
+/* Sources */
+.sources{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb}
+.source{font-size:10px;color:#6b7280;padding:3px 8px;background:#fff;border:1px solid #e5e7eb;border-radius:5px;cursor:pointer;font-weight:600}
+.source:hover{background:#f5f7fa}
+
+/* Follow-up chips */
+.followups{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.followup{padding:6px 12px;background:#fff;border:1px solid #e5e7eb;border-radius:18px;font-size:12px;font-weight:600;color:#002f60;cursor:pointer}
+.followup:hover{background:#f5f7fa;border-color:#002f60}
+
+/* Thinking indicator */
+.thinking{display:inline-flex;gap:4px;padding:4px 0}
+.dot{width:6px;height:6px;border-radius:50%;background:#9ca3af;animation:pulse 1.4s infinite}
+.dot:nth-child(2){animation-delay:.2s}
+.dot:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,60%,100%{opacity:.3}30%{opacity:1}}
+
+/* Input bar */
+.input-bar{padding:12px 16px 16px;background:#fff;border-top:1px solid #e5e7eb;box-shadow:0 -4px 12px rgba(0,0,0,.03)}
+.input-box{display:flex;align-items:center;gap:8px;background:#f5f7fa;border-radius:12px;padding:4px 4px 4px 14px;border:1px solid #e5e7eb}
+.input-ico{color:#9ca3af;flex-shrink:0}
+.input{flex:1;border:0;outline:0;padding:12px 0;font-family:inherit;font-size:14px;background:transparent;color:#111827}
+.input::placeholder{color:#9ca3af}
+.send-btn{padding:10px 18px;background:#002f60;color:#fff;border:0;border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
+
+.sample-chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-top:8px}
+.sample{padding:5px 10px;background:#f5f7fa;border-radius:6px;font-size:11px;color:#6b7280;font-weight:600;white-space:nowrap;cursor:pointer;border:1px solid #e5e7eb}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+    <a class="nav-back" href="design-options.html"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></a>
+    <div class="nav-title">Observation<span>Point</span></div>
+    <div class="nav-tag">Insights · Chat</div>
+</nav>
+
+<div class="intro-bar">
+    <div class="intro-badge">Option C</div>
+    <div>Conversational · multi-turn with follow-ups · natural refinement of a question</div>
+</div>
+
+<div class="layout">
+<div class="main">
+
+<div class="messages">
+
+<!-- Starter AI message -->
+<div class="msg ai">
+    <div class="ai-head">
+        <div class="ai-badge">✦</div>
+        <div class="ai-lbl"><b>ObservationPoint</b> · ready</div>
+    </div>
+    <div class="ai-body">
+        Good Monday, Scott. 2,413 touchpoints across 187 teachers are ready to explore. Ask about a teacher, school, dimension, or time window — you can follow up with "just this school" or "compare to last year" and I'll carry the context forward.
+    </div>
+</div>
+
+<!-- User Q1 -->
+<div class="msg user">
+    <div class="msg-text">Show me teachers below 3 on T4</div>
+</div>
+
+<!-- AI A1 -->
+<div class="msg ai">
+    <div class="ai-head">
+        <div class="ai-badge">✦</div>
+        <div class="ai-lbl">12 teachers · 187 total</div>
+    </div>
+    <div class="ai-body">
+        <b>12 teachers</b> currently score below 3 on <b>T4 Cognitive Engagement</b>. This is the dimension that moved down the most network-wide this year, so it's worth looking at school-by-school.
+
+        <div class="data-card">
+            <div class="data-title">Below 3 on T4 · by school</div>
+            <div class="data-row"><div class="label">Phillis Wheatley</div><div class="value red">6</div></div>
+            <div class="data-row"><div class="label">Arthur Ashe</div><div class="value">3</div></div>
+            <div class="data-row"><div class="label">Samuel J. Green</div><div class="value">2</div></div>
+            <div class="data-row"><div class="label">Langston Hughes</div><div class="value green">1</div></div>
+        </div>
+
+        <div class="sources">
+            <div class="source">latest PMAP per teacher</div>
+            <div class="source">12 records cited</div>
+            <div class="source">data as of Apr 18</div>
+        </div>
+    </div>
+    <div class="followups">
+        <div class="followup">Just Wheatley →</div>
+        <div class="followup">Compare to last year →</div>
+        <div class="followup">Who dropped vs held →</div>
+        <div class="followup">Break down by grade →</div>
+    </div>
+</div>
+
+<!-- User Q2 -->
+<div class="msg user">
+    <div class="msg-text">Just Wheatley</div>
+</div>
+
+<!-- AI A2 -->
+<div class="msg ai">
+    <div class="ai-head">
+        <div class="ai-badge">✦</div>
+        <div class="ai-lbl">Wheatley · 6 teachers below 3 on T4</div>
+    </div>
+    <div class="ai-body">
+        <span class="hl">6 teachers at Wheatley</span> score below 3 on T4 — 13% of their 48 active teachers. <b>4 of 6 dropped</b> from a 3 last year.
+
+        <div class="data-card">
+            <div class="data-title">Teachers · Wheatley · T4 &lt; 3</div>
+            <div class="data-row"><div class="label">D. Thompson (3rd)</div><div class="value">2 (was 3)</div></div>
+            <div class="data-row"><div class="label">A. Smith (K)</div><div class="value">2 (was 3)</div></div>
+            <div class="data-row"><div class="label">R. Martin (5th)</div><div class="value">2 (was 3)</div></div>
+            <div class="data-row"><div class="label">J. Lee (PreK)</div><div class="value">2 (was 3)</div></div>
+            <div class="data-row"><div class="label">K. Anderson (4th)</div><div class="value">2 (new to FL)</div></div>
+            <div class="data-row"><div class="label">M. Carter (1st)</div><div class="value">1 (was 2)</div></div>
+        </div>
+
+        <div class="mini-bars">
+            <div class="mini-b" style="height:88%"></div>
+            <div class="mini-b" style="height:78%"></div>
+            <div class="mini-b" style="height:56%"></div>
+            <div class="mini-b" style="height:52%"></div>
+            <div class="mini-b" style="height:48%;background:#dc2626"></div>
+            <div class="mini-b" style="height:42%;background:#dc2626"></div>
+        </div>
+        <div style="font-size:11px;color:#6b7280;margin-top:-4px">T4 score · 2020-21 through 2025-26 (Wheatley network avg)</div>
+
+        <div class="sources">
+            <div class="source">26 observations cited</div>
+            <div class="source">6 teacher records</div>
+            <div class="source">PMAP25-26</div>
+        </div>
+    </div>
+    <div class="followups">
+        <div class="followup">Open D. Thompson profile →</div>
+        <div class="followup">What action steps were tried? →</div>
+        <div class="followup">Compare to Hughes →</div>
+        <div class="followup">What's driving the drop? →</div>
+    </div>
+</div>
+
+<!-- User Q3 -->
+<div class="msg user">
+    <div class="msg-text">What's driving the drop?</div>
+</div>
+
+<!-- AI A3 -->
+<div class="msg ai">
+    <div class="ai-head">
+        <div class="ai-badge">✦</div>
+        <div class="ai-lbl">Pattern analysis · Wheatley T4</div>
+    </div>
+    <div class="ai-body">
+        Three patterns show up in the <b>26 observations</b> that scored below 3 on T4 at Wheatley:
+
+        <div class="data-card">
+            <div class="data-title">What observers wrote — most frequent notes</div>
+            <div class="data-row"><div class="label">"teacher did the thinking"</div><div class="value">14×</div></div>
+            <div class="data-row"><div class="label">"no wait time"</div><div class="value">9×</div></div>
+            <div class="data-row"><div class="label">"single-response cold call"</div><div class="value">7×</div></div>
+            <div class="data-row"><div class="label">"no student-to-student"</div><div class="value">6×</div></div>
+        </div>
+
+        Most of these cluster around <span class="hl">pacing and release-of-responsibility</span>. Out of the 6 teachers, <b>4 are in their first or second year</b> — engagement is a skill that builds with time. Only <b>1 has had a coaching cycle</b> on T4 this year (M. Carter, which closed as flat).
+
+        <div class="sources">
+            <div class="source">26 observations</div>
+            <div class="source">text analysis · narrative fields</div>
+            <div class="source">staff tenure · HR data</div>
+        </div>
+    </div>
+    <div class="followups">
+        <div class="followup">Suggest a PD topic →</div>
+        <div class="followup">Which coaches on T4? →</div>
+        <div class="followup">Pull sample observation text →</div>
+        <div class="followup">Reset context →</div>
+    </div>
+</div>
+
+<!-- User Q4 (user follows up on the PD suggestion) -->
+<div class="msg user">
+    <div class="msg-text">Suggest a PD topic</div>
+</div>
+
+<!-- AI A4 -->
+<div class="msg ai">
+    <div class="ai-head">
+        <div class="ai-badge">✦</div>
+        <div class="ai-lbl">PD recommendation</div>
+    </div>
+    <div class="ai-body">
+        Given the pacing and release-of-responsibility pattern across these 6 teachers, I'd consider a <b>Lemov Technique 34 — Wait Time / Technique 36 — Cold Call grid</b> session as the first step.
+
+        <div class="data-card">
+            <div class="data-title">Why this pairing</div>
+            <div class="data-row"><div class="label">Addresses "no wait time"</div><div class="value green">9 of 26 notes</div></div>
+            <div class="data-row"><div class="label">Addresses "teacher did thinking"</div><div class="value green">14 of 26</div></div>
+            <div class="data-row"><div class="label">Worked for Marcus Williams</div><div class="value green">T5 +1</div></div>
+            <div class="data-row"><div class="label">Fits 60-minute slot</div><div class="value">yes</div></div>
+        </div>
+
+        Marcus Williams's T5 gain this year came from a cold-call grid cycle with J. Mitchell — <span class="hl">that coaching cycle is a ready-made case study</span>. Second session could focus on Teach Like a Champion's "Stretch It."
+
+        <div class="sources">
+            <div class="source">Marcus Williams · Cycle 3</div>
+            <div class="source">network text patterns</div>
+            <div class="source">coach availability · next 6 weeks</div>
+        </div>
+    </div>
+    <div class="followups">
+        <div class="followup">Draft a 60-min PD plan →</div>
+        <div class="followup">Schedule it with leaders →</div>
+        <div class="followup">Export this thread →</div>
+        <div class="followup">Start a new question →</div>
+    </div>
+</div>
+
+</div>
+
+<!-- Input -->
+<div class="input-bar">
+    <div class="input-box">
+        <div class="input-ico"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h12M4 9h12M4 14h8"/></svg></div>
+        <input class="input" type="text" placeholder="Ask a follow-up…">
+        <button class="send-btn">Send</button>
+    </div>
+    <div class="sample-chips">
+        <div class="sample">Open a profile</div>
+        <div class="sample">Compare schools</div>
+        <div class="sample">Change school year</div>
+        <div class="sample">Reset context</div>
+    </div>
+</div>
+
+</div>
+</div>
+
+</body>
+</html>

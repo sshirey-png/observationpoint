@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Network — Touchpoint Mix</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.nav{position:sticky;top:0;z-index:100;background:#002f60;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.nav-back{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none}
+.nav-title{font-size:15px;font-weight:700;color:#fff;flex:1}.nav-title span{color:#e47727}
+.nav-tag{font-size:11px;font-weight:600;color:rgba(255,255,255,.7);padding:3px 8px;border-radius:6px;background:rgba(255,255,255,.1)}
+
+.content{padding:16px;max-width:1100px;margin:0 auto;padding-bottom:40px}
+.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;margin:22px 0 10px}
+
+/* HERO */
+.hero{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,47,96,.06);margin-bottom:14px;border:1px solid #e5e7eb}
+.hero-cap{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#e47727}
+.hero-head{font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1.2;margin-top:4px}
+.hero-sub{font-size:13px;color:#6b7280;margin-top:4px;margin-bottom:18px}
+
+/* Stacked bar — network total */
+.stack{display:flex;height:44px;border-radius:10px;overflow:hidden;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.stack-seg{display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;transition:flex .5s}
+.t-obs{background:#2563eb}
+.t-fund{background:#0891b2}
+.t-fb{background:#ca8a04}
+.t-cel{background:#be185d}
+.t-pmap{background:#059669}
+.t-sr{background:#7c3aed}
+.t-meet{background:#16a34a}
+
+.legend-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:16px}
+@media(min-width:640px){.legend-grid{grid-template-columns:repeat(4,1fr)}}
+.legend-cell{display:flex;align-items:center;gap:8px}
+.legend-dot{width:14px;height:14px;border-radius:4px;flex-shrink:0}
+.legend-name{font-size:11px;font-weight:700}
+.legend-pct{font-size:11px;color:#9ca3af;font-weight:600}
+
+/* School stacks */
+.school-stack{background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:12px}
+.school-stack-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+.school-stack-name{font-size:14px;font-weight:800;color:#002f60}
+.school-stack-total{font-size:12px;color:#9ca3af;font-weight:600}
+.school-stack-meta{font-size:11px;color:#6b7280;margin-top:6px;line-height:1.5}
+
+/* Balance gauge */
+.balance-card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:14px}
+.bal-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f3f4f6}
+.bal-row:last-child{border-bottom:none}
+.bal-school{font-size:13px;font-weight:700;width:140px;flex-shrink:0}
+.bal-gauge{flex:1;height:16px;background:#f3f4f6;border-radius:8px;position:relative;overflow:hidden}
+.bal-marker{position:absolute;top:-2px;bottom:-2px;width:4px;background:#002f60;border-radius:2px}
+.bal-zone{position:absolute;top:0;bottom:0;background:linear-gradient(90deg,rgba(34,197,94,.2),rgba(34,197,94,.5),rgba(34,197,94,.2))}
+.bal-labels{display:flex;justify-content:space-between;font-size:9px;color:#9ca3af;font-weight:700;text-transform:uppercase;margin-top:4px;padding:0 4px}
+.bal-score{font-size:14px;font-weight:800;min-width:50px;text-align:right}
+.bal-score.balanced{color:#059669}
+.bal-score.skewed{color:#e47727}
+
+/* Diversity callouts */
+.callouts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.callout{padding:14px;border-radius:12px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.callout-cap{font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#9ca3af}
+.callout-val{font-size:22px;font-weight:800;margin-top:4px;letter-spacing:-.02em}
+.callout-text{font-size:12px;color:#6b7280;margin-top:4px;line-height:1.4}
+.callout-val.orange{color:#e47727}
+.callout-val.green{color:#059669}
+.callout-val.blue{color:#2563eb}
+
+/* Recognition ratio */
+.ratio-card{background:linear-gradient(135deg,#fef3c7,#fce7f3);border-radius:14px;padding:18px;margin-bottom:14px}
+.ratio-title{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#7c2d12}
+.ratio-head{font-size:19px;font-weight:800;margin-top:4px;letter-spacing:-.02em;color:#111827}
+.ratio-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.ratio-cell{background:rgba(255,255,255,.7);border-radius:10px;padding:10px;text-align:center}
+.ratio-sch{font-size:10px;font-weight:700;color:#002f60;text-transform:uppercase;letter-spacing:.04em}
+.ratio-val{font-size:20px;font-weight:800;margin-top:6px;letter-spacing:-.02em}
+.ratio-sub{font-size:10px;color:#6b7280;margin-top:2px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+    <a class="nav-back" href="design-options.html"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></a>
+    <div class="nav-title">Observation<span>Point</span></div>
+    <div class="nav-tag">Network · Mix</div>
+</nav>
+
+<div class="content">
+
+<!-- HERO -->
+<div class="hero">
+    <div class="hero-cap">Touchpoint Mix · this year</div>
+    <div class="hero-head">2,413 touchpoints across 7 types</div>
+    <div class="hero-sub">Not all coaching is scoring. This shows how leaders use the full toolkit — observation, feedback, celebration, meetings, and more.</div>
+
+    <div class="stack">
+        <div class="stack-seg t-obs" style="flex:947">Obs 39%</div>
+        <div class="stack-seg t-fund" style="flex:721">Fund 30%</div>
+        <div class="stack-seg t-fb" style="flex:284">FB 12%</div>
+        <div class="stack-seg t-cel" style="flex:188">Cel 8%</div>
+        <div class="stack-seg t-meet" style="flex:156">Meet 6%</div>
+        <div class="stack-seg t-sr" style="flex:87">SR 4%</div>
+        <div class="stack-seg t-pmap" style="flex:30">PMAP 1%</div>
+    </div>
+
+    <div class="legend-grid">
+        <div class="legend-cell"><div class="legend-dot t-obs"></div><div><div class="legend-name">Observations</div><div class="legend-pct">947 · 39%</div></div></div>
+        <div class="legend-cell"><div class="legend-dot t-fund"></div><div><div class="legend-name">Fundamentals</div><div class="legend-pct">721 · 30%</div></div></div>
+        <div class="legend-cell"><div class="legend-dot t-fb"></div><div><div class="legend-name">Quick feedback</div><div class="legend-pct">284 · 12%</div></div></div>
+        <div class="legend-cell"><div class="legend-dot t-cel"></div><div><div class="legend-name">Celebrations</div><div class="legend-pct">188 · 8%</div></div></div>
+        <div class="legend-cell"><div class="legend-dot t-meet"></div><div><div class="legend-name">Meetings</div><div class="legend-pct">156 · 6%</div></div></div>
+        <div class="legend-cell"><div class="legend-dot t-sr"></div><div><div class="legend-name">Self-reflections</div><div class="legend-pct">87 · 4%</div></div></div>
+        <div class="legend-cell"><div class="legend-dot t-pmap"></div><div><div class="legend-name">PMAPs</div><div class="legend-pct">30 · 1%</div></div></div>
+    </div>
+</div>
+
+<!-- School stacks -->
+<div class="section-label">By School · same scale</div>
+
+<div class="school-stack">
+    <div class="school-stack-head">
+        <div class="school-stack-name">Langston Hughes Academy</div>
+        <div class="school-stack-total">684 touchpoints</div>
+    </div>
+    <div class="stack" style="height:36px">
+        <div class="stack-seg t-obs" style="flex:258">Obs 38%</div>
+        <div class="stack-seg t-fund" style="flex:189">Fund 28%</div>
+        <div class="stack-seg t-fb" style="flex:96">FB 14%</div>
+        <div class="stack-seg t-cel" style="flex:72">Cel 11%</div>
+        <div class="stack-seg t-meet" style="flex:38">Meet 6%</div>
+        <div class="stack-seg t-sr" style="flex:22">SR</div>
+        <div class="stack-seg t-pmap" style="flex:9">&nbsp;</div>
+    </div>
+    <div class="school-stack-meta">Hughes uses the widest mix — highest share of celebrations and quick feedback in the network.</div>
+</div>
+
+<div class="school-stack">
+    <div class="school-stack-head">
+        <div class="school-stack-name">Samuel J. Green Charter School</div>
+        <div class="school-stack-total">578 touchpoints</div>
+    </div>
+    <div class="stack" style="height:36px">
+        <div class="stack-seg t-obs" style="flex:228">Obs 39%</div>
+        <div class="stack-seg t-fund" style="flex:184">Fund 32%</div>
+        <div class="stack-seg t-fb" style="flex:66">FB 11%</div>
+        <div class="stack-seg t-cel" style="flex:38">Cel 7%</div>
+        <div class="stack-seg t-meet" style="flex:41">Meet 7%</div>
+        <div class="stack-seg t-sr" style="flex:14">SR</div>
+        <div class="stack-seg t-pmap" style="flex:7">&nbsp;</div>
+    </div>
+    <div class="school-stack-meta">Green leans on meetings more than peer schools — 7% of all touchpoints are coaching conversations logged as meetings.</div>
+</div>
+
+<div class="school-stack">
+    <div class="school-stack-head">
+        <div class="school-stack-name">Arthur Ashe Charter School</div>
+        <div class="school-stack-total">643 touchpoints</div>
+    </div>
+    <div class="stack" style="height:36px">
+        <div class="stack-seg t-obs" style="flex:269">Obs 42%</div>
+        <div class="stack-seg t-fund" style="flex:207">Fund 32%</div>
+        <div class="stack-seg t-fb" style="flex:77">FB 12%</div>
+        <div class="stack-seg t-cel" style="flex:42">Cel 7%</div>
+        <div class="stack-seg t-meet" style="flex:27">Meet 4%</div>
+        <div class="stack-seg t-sr" style="flex:14">SR</div>
+        <div class="stack-seg t-pmap" style="flex:7">&nbsp;</div>
+    </div>
+    <div class="school-stack-meta">Ashe logs the most observations, but the lowest share of celebrations — a heavy evaluation mix, light recognition mix.</div>
+</div>
+
+<div class="school-stack">
+    <div class="school-stack-head">
+        <div class="school-stack-name">Phillis Wheatley Community School</div>
+        <div class="school-stack-total">508 touchpoints</div>
+    </div>
+    <div class="stack" style="height:36px">
+        <div class="stack-seg t-obs" style="flex:192">Obs 38%</div>
+        <div class="stack-seg t-fund" style="flex:141">Fund 28%</div>
+        <div class="stack-seg t-fb" style="flex:45">FB 9%</div>
+        <div class="stack-seg t-cel" style="flex:36">Cel 7%</div>
+        <div class="stack-seg t-meet" style="flex:50">Meet 10%</div>
+        <div class="stack-seg t-sr" style="flex:37">SR 7%</div>
+        <div class="stack-seg t-pmap" style="flex:7">&nbsp;</div>
+    </div>
+    <div class="school-stack-meta">Wheatley has the most self-reflection usage (7%) and highest meeting share — heavy reflection mix, lighter live-observation cadence.</div>
+</div>
+
+<!-- Balance gauge -->
+<div class="section-label">Balance — evaluation vs recognition vs reflection</div>
+<div class="balance-card">
+    <div class="bal-row">
+        <div class="bal-school">Langston Hughes</div>
+        <div class="bal-gauge">
+            <div class="bal-zone" style="left:35%;width:30%"></div>
+            <div class="bal-marker" style="left:55%"></div>
+        </div>
+        <div class="bal-score balanced">Balanced</div>
+    </div>
+    <div class="bal-row">
+        <div class="bal-school">Samuel J. Green</div>
+        <div class="bal-gauge">
+            <div class="bal-zone" style="left:35%;width:30%"></div>
+            <div class="bal-marker" style="left:50%"></div>
+        </div>
+        <div class="bal-score balanced">Balanced</div>
+    </div>
+    <div class="bal-row">
+        <div class="bal-school">Arthur Ashe</div>
+        <div class="bal-gauge">
+            <div class="bal-zone" style="left:35%;width:30%"></div>
+            <div class="bal-marker" style="left:78%"></div>
+        </div>
+        <div class="bal-score skewed">Eval-heavy</div>
+    </div>
+    <div class="bal-row">
+        <div class="bal-school">Phillis Wheatley</div>
+        <div class="bal-gauge">
+            <div class="bal-zone" style="left:35%;width:30%"></div>
+            <div class="bal-marker" style="left:22%"></div>
+        </div>
+        <div class="bal-score skewed">Reflection-heavy</div>
+    </div>
+    <div class="bal-labels">
+        <span>Reflection</span>
+        <span>Balanced</span>
+        <span>Evaluation</span>
+    </div>
+</div>
+
+<!-- Recognition ratio -->
+<div class="ratio-card">
+    <div class="ratio-title">Recognition ratio</div>
+    <div class="ratio-head">Celebrations per 10 observations</div>
+    <div class="ratio-grid">
+        <div class="ratio-cell"><div class="ratio-sch">Hughes</div><div class="ratio-val" style="color:#059669">2.8</div><div class="ratio-sub">highest</div></div>
+        <div class="ratio-cell"><div class="ratio-sch">Wheatley</div><div class="ratio-val" style="color:#e47727">1.9</div><div class="ratio-sub">—</div></div>
+        <div class="ratio-cell"><div class="ratio-sch">Green</div><div class="ratio-val" style="color:#e47727">1.7</div><div class="ratio-sub">—</div></div>
+        <div class="ratio-cell"><div class="ratio-sch">Ashe</div><div class="ratio-val" style="color:#dc2626">1.6</div><div class="ratio-sub">lowest</div></div>
+    </div>
+</div>
+
+<!-- Diversity -->
+<div class="section-label">Type Diversity — how many types each school uses regularly</div>
+<div class="callouts">
+    <div class="callout">
+        <div class="callout-cap">Hughes</div>
+        <div class="callout-val green">6 of 7</div>
+        <div class="callout-text">Uses all types except PMAP (rare by design). Full-toolkit school.</div>
+    </div>
+    <div class="callout">
+        <div class="callout-cap">Wheatley</div>
+        <div class="callout-val blue">6 of 7</div>
+        <div class="callout-text">Heavy on reflection and meetings — unique profile.</div>
+    </div>
+    <div class="callout">
+        <div class="callout-cap">Green</div>
+        <div class="callout-val orange">5 of 7</div>
+        <div class="callout-text">Self-reflection rare; otherwise well-distributed.</div>
+    </div>
+    <div class="callout">
+        <div class="callout-cap">Ashe</div>
+        <div class="callout-val orange">5 of 7</div>
+        <div class="callout-text">Rarely uses meetings or reflection — evaluation-focused.</div>
+    </div>
+</div>
+
+</div>
+</body>
+</html>

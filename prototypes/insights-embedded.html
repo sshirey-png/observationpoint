@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Insights — Embedded Everywhere</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.nav{position:sticky;top:0;z-index:100;background:#002f60;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.nav-back{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none}
+.nav-title{font-size:15px;font-weight:700;color:#fff;flex:1}.nav-title span{color:#e47727}
+.nav-tag{font-size:11px;font-weight:600;color:rgba(255,255,255,.7);padding:3px 8px;border-radius:6px;background:rgba(255,255,255,.1)}
+
+.content{padding:16px;max-width:900px;margin:0 auto;padding-bottom:40px}
+.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;margin:22px 0 10px}
+
+/* Descriptor at top */
+.intro{background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:16px;border-left:4px solid #e47727}
+.intro-cap{font-size:11px;font-weight:800;color:#e47727;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.intro-head{font-size:16px;font-weight:800;letter-spacing:-.01em}
+.intro-sub{font-size:12px;color:#6b7280;margin-top:4px;line-height:1.5}
+
+/* Page mock shells */
+.mock{background:#fff;border-radius:14px;margin-bottom:18px;box-shadow:0 2px 8px rgba(0,0,0,.06);overflow:hidden;border:1px solid #e5e7eb}
+.mock-head{padding:10px 14px;background:#f5f7fa;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:8px;font-size:11px;color:#6b7280;font-weight:600}
+.mock-url{flex:1;background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:4px 10px;font-family:ui-monospace,monospace;font-size:11px;color:#374151}
+.mock-body{padding:16px}
+
+/* Embedded search — context aware */
+.emb-search{background:linear-gradient(135deg,#002f60 0%,#1e40af 100%);border-radius:12px;padding:14px;margin-bottom:14px;color:#fff;position:relative;overflow:hidden}
+.emb-cap{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#fbbe82;margin-bottom:6px}
+.emb-ctx{font-size:11px;color:rgba(255,255,255,.75);margin-bottom:8px}
+.emb-ctx b{color:#fff;font-weight:700}
+.emb-box{display:flex;align-items:center;gap:10px;background:#fff;border-radius:10px;padding:4px 4px 4px 14px}
+.emb-ico{color:#9ca3af;flex-shrink:0}
+.emb-input{flex:1;border:0;outline:0;padding:10px 0;font-family:inherit;font-size:13px;color:#111827;background:transparent}
+.emb-input::placeholder{color:#9ca3af}
+.emb-btn{padding:8px 12px;background:#e47727;color:#fff;border:0;border-radius:6px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer}
+.emb-hints{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.emb-hint{font-size:11px;color:#fff;background:rgba(255,255,255,.12);padding:4px 10px;border-radius:6px;cursor:pointer;transition:background .15s;white-space:nowrap}
+.emb-hint:hover{background:rgba(255,255,255,.2)}
+
+/* Existing page content stubs */
+.page-head{padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid #f3f4f6}
+.page-head-title{font-size:18px;font-weight:800;letter-spacing:-.01em}
+.page-head-sub{font-size:12px;color:#6b7280;margin-top:2px}
+.stub-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stub-card{background:#f5f7fa;border-radius:10px;padding:14px;text-align:center;border:1px dashed #e5e7eb}
+.stub-val{font-size:22px;font-weight:800;color:#002f60}
+.stub-lbl{font-size:10px;color:#9ca3af;text-transform:uppercase;font-weight:700;margin-top:2px}
+
+/* Teacher mock */
+.t-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f3f4f6}
+.t-row:last-child{border-bottom:none}
+.t-av{width:30px;height:30px;border-radius:50%;background:#002f60;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.t-name{font-size:13px;font-weight:700;flex:1}
+.t-score{font-size:12px;color:#6b7280}
+
+/* Floating button */
+.fab-mock{position:relative;height:80px;background:#f5f7fa;border-radius:10px;border:1px dashed #e5e7eb;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:11px;font-weight:600;margin-top:14px}
+.fab{position:absolute;bottom:12px;right:12px;width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,#002f60,#1e40af);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,47,96,.3);font-size:18px;font-weight:800}
+.fab-label{position:absolute;bottom:20px;right:76px;background:#111827;color:#fff;padding:6px 10px;border-radius:6px;font-size:11px;font-weight:600;white-space:nowrap}
+.fab-label::after{content:"";position:absolute;right:-6px;top:50%;transform:translateY(-50%);border-left:6px solid #111827;border-top:5px solid transparent;border-bottom:5px solid transparent}
+
+/* Result preview */
+.result-preview{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px;margin-top:12px;display:none}
+.result-preview.show{display:block}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+    <a class="nav-back" href="design-options.html"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></a>
+    <div class="nav-title">Observation<span>Point</span></div>
+    <div class="nav-tag">Insights · Embedded</div>
+</nav>
+
+<div class="content">
+
+<div class="intro">
+    <div class="intro-cap">AI Insights placement · option A</div>
+    <div class="intro-head">Embedded on every page</div>
+    <div class="intro-sub">A context-aware search bar lives at the top of My Team, Profile, and Network. When you're on Marcus's profile, it defaults to asking questions about Marcus. On the Network page, it asks about the network. Same interface, different context.</div>
+</div>
+
+<!-- Mock 1: My Team page -->
+<div class="mock">
+    <div class="mock-head">
+        <div class="mock-url">observationpoint.org/app/my-team</div>
+    </div>
+    <div class="mock-body">
+
+        <div class="emb-search">
+            <div class="emb-cap">✦ Ask about your 12 teachers</div>
+            <div class="emb-ctx">Context: <b>Your team</b> · J. Mitchell · Hughes · 12 direct teachers</div>
+            <div class="emb-box">
+                <div class="emb-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7" cy="7" r="5"/><path d="M11 11l4 4"/></svg></div>
+                <input class="emb-input" type="text" placeholder="Ask about your team…">
+                <button class="emb-btn">Ask</button>
+            </div>
+            <div class="emb-hints">
+                <div class="emb-hint">Who hasn't been observed?</div>
+                <div class="emb-hint">Who's improving fastest?</div>
+                <div class="emb-hint">Last week summary</div>
+            </div>
+        </div>
+
+        <div class="page-head">
+            <div class="page-head-title">My Team</div>
+            <div class="page-head-sub">12 teachers · Samuel J. Green</div>
+        </div>
+        <div class="t-row"><div class="t-av">MW</div><div class="t-name">Marcus Williams</div><div class="t-score">T avg 3.4</div></div>
+        <div class="t-row"><div class="t-av">AR</div><div class="t-name">A. Rivera</div><div class="t-score">T avg 3.6</div></div>
+        <div class="t-row"><div class="t-av">LG</div><div class="t-name">L. Green</div><div class="t-score">T avg 3.2</div></div>
+
+    </div>
+</div>
+
+<!-- Mock 2: Staff Profile -->
+<div class="mock">
+    <div class="mock-head">
+        <div class="mock-url">observationpoint.org/app/profile/marcus.williams</div>
+    </div>
+    <div class="mock-body">
+
+        <div class="emb-search">
+            <div class="emb-cap">✦ Ask about Marcus</div>
+            <div class="emb-ctx">Context: <b>Marcus Williams</b> · 27 touchpoints · Samuel J. Green · 5th Grade Math</div>
+            <div class="emb-box">
+                <div class="emb-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7" cy="7" r="5"/><path d="M11 11l4 4"/></svg></div>
+                <input class="emb-input" type="text" placeholder="Ask something about Marcus…">
+                <button class="emb-btn">Ask</button>
+            </div>
+            <div class="emb-hints">
+                <div class="emb-hint">What has improved?</div>
+                <div class="emb-hint">Open action items?</div>
+                <div class="emb-hint">Compare to last year</div>
+                <div class="emb-hint">Summarize April meeting</div>
+            </div>
+        </div>
+
+        <div class="page-head">
+            <div class="page-head-title">Marcus Williams</div>
+            <div class="page-head-sub">Teacher · Samuel J. Green</div>
+        </div>
+        <div class="stub-cards">
+            <div class="stub-card"><div class="stub-val">89%</div><div class="stub-lbl">On-task</div></div>
+            <div class="stub-card"><div class="stub-val">27</div><div class="stub-lbl">Touchpoints</div></div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Mock 3: Network page -->
+<div class="mock">
+    <div class="mock-head">
+        <div class="mock-url">observationpoint.org/app/network</div>
+    </div>
+    <div class="mock-body">
+
+        <div class="emb-search">
+            <div class="emb-cap">✦ Ask about the network</div>
+            <div class="emb-ctx">Context: <b>FirstLine Schools</b> · 4 schools · 187 teachers · 2,413 touchpoints</div>
+            <div class="emb-box">
+                <div class="emb-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7" cy="7" r="5"/><path d="M11 11l4 4"/></svg></div>
+                <input class="emb-input" type="text" placeholder="Ask about the network…">
+                <button class="emb-btn">Ask</button>
+            </div>
+            <div class="emb-hints">
+                <div class="emb-hint">Which school gained the most on T5?</div>
+                <div class="emb-hint">Recognition ratio by school</div>
+                <div class="emb-hint">Coverage gaps</div>
+            </div>
+        </div>
+
+        <div class="page-head">
+            <div class="page-head-title">Network Dashboard</div>
+            <div class="page-head-sub">FirstLine Schools · 25-26</div>
+        </div>
+        <div class="stub-cards">
+            <div class="stub-card"><div class="stub-val">84%</div><div class="stub-lbl">Network on-task</div></div>
+            <div class="stub-card"><div class="stub-val">2,413</div><div class="stub-lbl">Touchpoints YTD</div></div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Mock 4: After you press Ask -->
+<div class="intro" style="border-color:#059669">
+    <div class="intro-cap" style="color:#059669">After you press Ask — in-context answer</div>
+    <div class="intro-head">The answer lands right where you asked</div>
+    <div class="intro-sub">No new tab. No route change. You stay on Marcus's profile; the answer slots in below the search bar and links to the specific touchpoints it used.</div>
+</div>
+
+<div class="mock">
+    <div class="mock-head">
+        <div class="mock-url">observationpoint.org/app/profile/marcus.williams</div>
+    </div>
+    <div class="mock-body">
+
+        <div class="emb-search">
+            <div class="emb-cap">✦ Ask about Marcus</div>
+            <div class="emb-ctx">Context: <b>Marcus Williams</b> · 27 touchpoints</div>
+            <div class="emb-box">
+                <div class="emb-ico"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7" cy="7" r="5"/><path d="M11 11l4 4"/></svg></div>
+                <input class="emb-input" type="text" value="What's improved most for Marcus this year?">
+                <button class="emb-btn">Asked</button>
+            </div>
+        </div>
+
+        <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:16px;margin-bottom:14px">
+            <div style="font-size:10px;font-weight:800;color:#059669;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Answer · 2 touchpoints cited</div>
+            <div style="font-size:14px;line-height:1.5;color:#111827">
+                <b>Student engagement (T5)</b> has improved the most this year — from 3 in Oct 2025 to 4 in Jan 2026, and held at 4 in April. This coincided with the "cold-call grid" action step from Cycle 3 (Nov-Jan), which closed as <i>Improved</i>. The second-biggest gain was fundamentals on-task (78% → 89%).
+            </div>
+            <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+                <div style="font-size:11px;padding:4px 8px;background:#fff;border-radius:6px;color:#059669;font-weight:600">Jan 14 observation</div>
+                <div style="font-size:11px;padding:4px 8px;background:#fff;border-radius:6px;color:#059669;font-weight:600">Apr 18 fundamentals</div>
+                <div style="font-size:11px;padding:4px 8px;background:#fff;border-radius:6px;color:#059669;font-weight:600">Cycle 3 meta</div>
+            </div>
+        </div>
+
+        <div class="page-head">
+            <div class="page-head-title">Marcus Williams</div>
+            <div class="page-head-sub">Teacher · Samuel J. Green</div>
+        </div>
+        <div class="stub-cards">
+            <div class="stub-card"><div class="stub-val">89%</div><div class="stub-lbl">On-task</div></div>
+            <div class="stub-card"><div class="stub-val">27</div><div class="stub-lbl">Touchpoints</div></div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Alt: floating button mock -->
+<div class="intro">
+    <div class="intro-cap">Alternate · floating button</div>
+    <div class="intro-head">Same idea, less UI real estate</div>
+    <div class="intro-sub">Instead of the hero bar, a single floating button in the bottom right that expands into the search. Less screen space, a touch less discoverable.</div>
+</div>
+
+<div class="mock">
+    <div class="mock-head">
+        <div class="mock-url">observationpoint.org/app/profile/marcus.williams</div>
+    </div>
+    <div class="mock-body">
+        <div class="page-head">
+            <div class="page-head-title">Marcus Williams</div>
+            <div class="page-head-sub">Teacher · Samuel J. Green</div>
+        </div>
+        <div class="stub-cards">
+            <div class="stub-card"><div class="stub-val">89%</div><div class="stub-lbl">On-task</div></div>
+            <div class="stub-card"><div class="stub-val">27</div><div class="stub-lbl">Touchpoints</div></div>
+        </div>
+        <div class="fab-mock">
+            page content area
+            <div class="fab-label">Ask about Marcus</div>
+            <div class="fab">✦</div>
+        </div>
+    </div>
+</div>
+
+</div>
+</body>
+</html>

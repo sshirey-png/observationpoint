@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Network — Leader Activity</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.nav{position:sticky;top:0;z-index:100;background:#002f60;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.nav-back{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none}
+.nav-title{font-size:15px;font-weight:700;color:#fff;flex:1}.nav-title span{color:#e47727}
+.nav-tag{font-size:11px;font-weight:600;color:rgba(255,255,255,.7);padding:3px 8px;border-radius:6px;background:rgba(255,255,255,.1)}
+
+.content{padding:16px;max-width:1100px;margin:0 auto;padding-bottom:40px}
+.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;margin:22px 0 10px}
+
+/* HERO */
+.hero{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,47,96,.06);margin-bottom:14px;border:1px solid #e5e7eb}
+.hero-cap{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#e47727}
+.hero-head{font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1.2;margin-top:4px}
+.hero-sub{font-size:13px;color:#6b7280;margin-top:4px}
+
+/* Leader leaderboard */
+.leaderboard{background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:14px}
+.lb-title{font-size:14px;font-weight:800;margin-bottom:3px}
+.lb-sub{font-size:11px;color:#9ca3af;margin-bottom:14px}
+.lb-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f3f4f6}
+.lb-row:last-child{border-bottom:none}
+.lb-rank{font-size:15px;font-weight:800;color:#9ca3af;width:22px;text-align:center;font-variant-numeric:tabular-nums}
+.lb-av{width:38px;height:38px;border-radius:50%;background:#002f60;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.lb-av.green{background:#059669}.lb-av.orange{background:#e47727}.lb-av.purple{background:#7c3aed}
+.lb-who{flex:1;min-width:0}
+.lb-name{font-size:13px;font-weight:700}
+.lb-meta{font-size:11px;color:#9ca3af;font-weight:600;margin-top:1px}
+.lb-stack{width:120px;height:10px;background:#f3f4f6;border-radius:5px;overflow:hidden;display:flex}
+.lb-seg{height:100%}
+.seg-obs{background:#2563eb}.seg-fund{background:#0891b2}.seg-fb{background:#ca8a04}.seg-cel{background:#be185d}.seg-meet{background:#16a34a}
+.lb-total{font-size:16px;font-weight:800;min-width:32px;text-align:right;font-variant-numeric:tabular-nums}
+
+/* Cadence bar */
+.cad-bar{display:flex;gap:2px;margin-top:6px;height:5px}
+.cad-week{flex:1;border-radius:1px;background:#e5e7eb}
+.cad-week.on{background:#059669}
+.cad-week.med{background:#fbbe82}
+
+/* Stats grid */
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+@media(min-width:640px){.stats-grid{grid-template-columns:repeat(4,1fr)}}
+.stat{background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);text-align:center}
+.stat-cap{font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em}
+.stat-val{font-size:26px;font-weight:800;letter-spacing:-.02em;margin-top:4px}
+.stat-val.orange{color:#e47727}
+.stat-val.green{color:#059669}
+.stat-val.navy{color:#002f60}
+.stat-sub{font-size:11px;color:#6b7280;margin-top:3px}
+
+/* Who observes whom */
+.matrix-card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:14px;overflow-x:auto}
+.mx-title{font-size:14px;font-weight:800;margin-bottom:3px}
+.mx-sub{font-size:11px;color:#9ca3af;margin-bottom:14px}
+.mx-table{width:100%;border-collapse:collapse;font-size:12px;min-width:520px}
+.mx-table th{text-align:left;padding:8px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#9ca3af;border-bottom:1px solid #e5e7eb}
+.mx-table td{padding:10px;border-bottom:1px solid #f3f4f6;vertical-align:middle}
+.mx-table tr:last-child td{border-bottom:none}
+.mx-leader{font-weight:700;color:#111827;font-size:12px}
+.mx-role{font-size:10px;color:#9ca3af;font-weight:600;display:block;margin-top:1px}
+.mx-school{font-size:11px;color:#6b7280}
+.mx-chip{display:inline-block;padding:3px 8px;border-radius:5px;background:#e5e7eb;font-size:11px;font-weight:700;color:#374151;margin-right:4px}
+.mx-chip.hot{background:#dcfce7;color:#059669}
+
+/* Week view */
+.week-card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:14px}
+.week-title{font-size:14px;font-weight:800;margin-bottom:3px}
+.week-sub{font-size:11px;color:#9ca3af;margin-bottom:14px}
+.week-row{display:flex;align-items:center;gap:8px;padding:8px 0}
+.week-day{font-size:10px;font-weight:700;color:#9ca3af;width:36px;text-transform:uppercase}
+.week-dots{flex:1;display:flex;flex-wrap:wrap;gap:4px}
+.week-t{width:10px;height:10px;border-radius:50%}
+.wt-obs{background:#2563eb}.wt-fund{background:#0891b2}.wt-fb{background:#ca8a04}.wt-cel{background:#be185d}.wt-meet{background:#16a34a}
+.week-count{font-size:12px;font-weight:700;color:#374151;width:24px;text-align:right}
+
+/* Deep & wide */
+.dw-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dw-card{padding:14px;background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.dw-cap{font-size:10px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em}
+.dw-name{font-size:13px;font-weight:700;margin-top:4px}
+.dw-val{font-size:24px;font-weight:800;letter-spacing:-.02em;margin-top:4px;color:#002f60}
+.dw-sub{font-size:11px;color:#6b7280;margin-top:4px;line-height:1.4}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+    <a class="nav-back" href="design-options.html"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></a>
+    <div class="nav-title">Observation<span>Point</span></div>
+    <div class="nav-tag">Network · Leaders</div>
+</nav>
+
+<div class="content">
+
+<!-- HERO -->
+<div class="hero">
+    <div class="hero-cap">Leader Activity · last 30 days</div>
+    <div class="hero-head">Who is in classrooms?</div>
+    <div class="hero-sub">How coaching load distributes across principals, APs, and instructional leads. Data, not judgment — balanced teams split work differently than single-observer schools.</div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+    <div class="stat"><div class="stat-cap">Active leaders</div><div class="stat-val navy">12</div><div class="stat-sub">who logged 1+ touchpoint</div></div>
+    <div class="stat"><div class="stat-cap">Network total</div><div class="stat-val orange">72</div><div class="stat-sub">touchpoints this month</div></div>
+    <div class="stat"><div class="stat-cap">Median / leader</div><div class="stat-val">5</div><div class="stat-sub">touchpoints per person</div></div>
+    <div class="stat"><div class="stat-cap">Leader range</div><div class="stat-val green">1–14</div><div class="stat-sub">most to least</div></div>
+</div>
+
+<!-- Leaderboard -->
+<div class="leaderboard">
+    <div class="lb-title">Top observers · last 30 days</div>
+    <div class="lb-sub">Bar shows each leader's type mix. Line below shows active weeks.</div>
+
+    <div class="lb-row">
+        <div class="lb-rank">1</div>
+        <div class="lb-av">JM</div>
+        <div class="lb-who">
+            <div class="lb-name">J. Mitchell</div>
+            <div class="lb-meta">Principal · Hughes</div>
+            <div class="cad-bar"><div class="cad-week on"></div><div class="cad-week on"></div><div class="cad-week on"></div><div class="cad-week on"></div><div class="cad-week med"></div></div>
+        </div>
+        <div class="lb-stack"><div class="lb-seg seg-obs" style="width:42%"></div><div class="lb-seg seg-fund" style="width:25%"></div><div class="lb-seg seg-fb" style="width:16%"></div><div class="lb-seg seg-cel" style="width:10%"></div><div class="lb-seg seg-meet" style="width:7%"></div></div>
+        <div class="lb-total">14</div>
+    </div>
+
+    <div class="lb-row">
+        <div class="lb-rank">2</div>
+        <div class="lb-av green">TP</div>
+        <div class="lb-who">
+            <div class="lb-name">T. Parker</div>
+            <div class="lb-meta">AP Instruction · Green</div>
+            <div class="cad-bar"><div class="cad-week on"></div><div class="cad-week med"></div><div class="cad-week on"></div><div class="cad-week on"></div><div class="cad-week on"></div></div>
+        </div>
+        <div class="lb-stack"><div class="lb-seg seg-obs" style="width:35%"></div><div class="lb-seg seg-fund" style="width:30%"></div><div class="lb-seg seg-fb" style="width:15%"></div><div class="lb-seg seg-cel" style="width:10%"></div><div class="lb-seg seg-meet" style="width:10%"></div></div>
+        <div class="lb-total">11</div>
+    </div>
+
+    <div class="lb-row">
+        <div class="lb-rank">3</div>
+        <div class="lb-av orange">KD</div>
+        <div class="lb-who">
+            <div class="lb-name">K. Davis</div>
+            <div class="lb-meta">IL · Hughes</div>
+            <div class="cad-bar"><div class="cad-week on"></div><div class="cad-week on"></div><div class="cad-week med"></div><div class="cad-week on"></div><div class="cad-week on"></div></div>
+        </div>
+        <div class="lb-stack"><div class="lb-seg seg-obs" style="width:50%"></div><div class="lb-seg seg-fund" style="width:30%"></div><div class="lb-seg seg-fb" style="width:10%"></div><div class="lb-seg seg-cel" style="width:5%"></div><div class="lb-seg seg-meet" style="width:5%"></div></div>
+        <div class="lb-total">10</div>
+    </div>
+
+    <div class="lb-row">
+        <div class="lb-rank">4</div>
+        <div class="lb-av purple">SR</div>
+        <div class="lb-who">
+            <div class="lb-name">S. Robinson</div>
+            <div class="lb-meta">Principal · Ashe</div>
+            <div class="cad-bar"><div class="cad-week med"></div><div class="cad-week on"></div><div class="cad-week med"></div><div class="cad-week on"></div><div class="cad-week med"></div></div>
+        </div>
+        <div class="lb-stack"><div class="lb-seg seg-obs" style="width:60%"></div><div class="lb-seg seg-fund" style="width:25%"></div><div class="lb-seg seg-fb" style="width:10%"></div><div class="lb-seg seg-cel" style="width:5%"></div></div>
+        <div class="lb-total">8</div>
+    </div>
+
+    <div class="lb-row">
+        <div class="lb-rank">5</div>
+        <div class="lb-av green">MB</div>
+        <div class="lb-who">
+            <div class="lb-name">M. Brown</div>
+            <div class="lb-meta">IL · Green</div>
+            <div class="cad-bar"><div class="cad-week on"></div><div class="cad-week med"></div><div class="cad-week on"></div><div class="cad-week med"></div><div class="cad-week med"></div></div>
+        </div>
+        <div class="lb-stack"><div class="lb-seg seg-obs" style="width:30%"></div><div class="lb-seg seg-fund" style="width:40%"></div><div class="lb-seg seg-fb" style="width:15%"></div><div class="lb-seg seg-cel" style="width:15%"></div></div>
+        <div class="lb-total">6</div>
+    </div>
+
+    <div class="lb-row">
+        <div class="lb-rank">6</div>
+        <div class="lb-av">RL</div>
+        <div class="lb-who">
+            <div class="lb-name">R. Lewis</div>
+            <div class="lb-meta">AP · Wheatley</div>
+            <div class="cad-bar"><div class="cad-week med"></div><div class="cad-week"></div><div class="cad-week on"></div><div class="cad-week med"></div><div class="cad-week"></div></div>
+        </div>
+        <div class="lb-stack"><div class="lb-seg seg-obs" style="width:55%"></div><div class="lb-seg seg-fund" style="width:25%"></div><div class="lb-seg seg-fb" style="width:5%"></div><div class="lb-seg seg-cel" style="width:5%"></div><div class="lb-seg seg-meet" style="width:10%"></div></div>
+        <div class="lb-total">5</div>
+    </div>
+
+    <div class="lb-row">
+        <div class="lb-rank">7</div>
+        <div class="lb-av orange">DH</div>
+        <div class="lb-who">
+            <div class="lb-name">D. Hall</div>
+            <div class="lb-meta">Principal · Wheatley</div>
+            <div class="cad-bar"><div class="cad-week"></div><div class="cad-week med"></div><div class="cad-week"></div><div class="cad-week med"></div><div class="cad-week"></div></div>
+        </div>
+        <div class="lb-stack"><div class="lb-seg seg-obs" style="width:50%"></div><div class="lb-seg seg-fund" style="width:25%"></div><div class="lb-seg seg-fb" style="width:0%"></div><div class="lb-seg seg-cel" style="width:0%"></div><div class="lb-seg seg-meet" style="width:25%"></div></div>
+        <div class="lb-total">4</div>
+    </div>
+</div>
+
+<!-- Who observes whom -->
+<div class="matrix-card">
+    <div class="mx-title">Who observes whom — school spread</div>
+    <div class="mx-sub">How many unique teachers has each leader touched this year?</div>
+    <table class="mx-table">
+        <thead>
+            <tr><th>Leader</th><th>School</th><th>Unique teachers</th><th>Coverage</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><div class="mx-leader">J. Mitchell<span class="mx-role">Principal</span></div></td><td class="mx-school">Hughes</td><td><span class="mx-chip hot">32 / 51</span></td><td>63%</td></tr>
+            <tr><td><div class="mx-leader">T. Parker<span class="mx-role">AP Instruction</span></div></td><td class="mx-school">Green</td><td><span class="mx-chip hot">29 / 43</span></td><td>67%</td></tr>
+            <tr><td><div class="mx-leader">K. Davis<span class="mx-role">IL</span></div></td><td class="mx-school">Hughes</td><td><span class="mx-chip">24 / 51</span></td><td>47%</td></tr>
+            <tr><td><div class="mx-leader">S. Robinson<span class="mx-role">Principal</span></div></td><td class="mx-school">Ashe</td><td><span class="mx-chip">22 / 54</span></td><td>41%</td></tr>
+            <tr><td><div class="mx-leader">M. Brown<span class="mx-role">IL</span></div></td><td class="mx-school">Green</td><td><span class="mx-chip">16 / 43</span></td><td>37%</td></tr>
+            <tr><td><div class="mx-leader">R. Lewis<span class="mx-role">AP</span></div></td><td class="mx-school">Wheatley</td><td><span class="mx-chip">14 / 48</span></td><td>29%</td></tr>
+            <tr><td><div class="mx-leader">D. Hall<span class="mx-role">Principal</span></div></td><td class="mx-school">Wheatley</td><td><span class="mx-chip">9 / 48</span></td><td>19%</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Deep vs wide -->
+<div class="section-label">Deep or Wide? — how leaders cover their teachers</div>
+<div class="dw-grid">
+    <div class="dw-card">
+        <div class="dw-cap">Deep coaches</div>
+        <div class="dw-name">J. Mitchell · Hughes</div>
+        <div class="dw-val">3.2 touches / teacher</div>
+        <div class="dw-sub">Fewer teachers, more repeat visits — coaching model.</div>
+    </div>
+    <div class="dw-card">
+        <div class="dw-cap">Wide coverage</div>
+        <div class="dw-name">S. Robinson · Ashe</div>
+        <div class="dw-val">1.4 touches / teacher</div>
+        <div class="dw-sub">Many teachers, one visit each — breadth model.</div>
+    </div>
+</div>
+
+</div>
+</body>
+</html>

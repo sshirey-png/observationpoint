@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ObservationPoint — Design Options</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.nav{position:sticky;top:0;z-index:100;background:#002f60;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.nav-title{font-size:15px;font-weight:700;color:#fff;flex:1}.nav-title span{color:#e47727}
+.nav-tag{font-size:11px;font-weight:600;color:rgba(255,255,255,.7);padding:3px 8px;border-radius:6px;background:rgba(255,255,255,.1)}
+
+.hero{background:linear-gradient(135deg,#002f60 0%,#1e40af 100%);color:#fff;padding:32px 20px 36px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;top:-40px;right:-40px;width:220px;height:220px;background:radial-gradient(circle,rgba(228,119,39,.18),transparent 70%);border-radius:50%}
+.hero-cap{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#fbbe82;position:relative}
+.hero-head{font-size:28px;font-weight:800;letter-spacing:-.02em;line-height:1.15;margin-top:6px;position:relative}
+.hero-sub{font-size:14px;color:rgba(255,255,255,.85);margin-top:10px;max-width:640px;margin-left:auto;margin-right:auto;line-height:1.55;position:relative}
+.hero-meta{font-size:11px;color:rgba(255,255,255,.55);margin-top:14px;position:relative;font-weight:600;letter-spacing:.03em}
+
+.content{padding:20px 16px 40px;max-width:980px;margin:0 auto}
+
+.group{margin-bottom:30px}
+.group-head{padding:0 4px 10px;margin-bottom:14px;display:flex;align-items:baseline;gap:10px}
+.group-title{font-size:18px;font-weight:800;letter-spacing:-.01em}
+.group-count{font-size:11px;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.group-desc{font-size:13px;color:#6b7280;padding:0 4px;margin-bottom:14px;line-height:1.55}
+
+.cards{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:640px){.cards{grid-template-columns:1fr 1fr}}
+@media(min-width:960px){.cards{grid-template-columns:1fr 1fr 1fr}}
+
+.card{background:#fff;border-radius:14px;padding:18px;text-decoration:none;color:inherit;box-shadow:0 1px 3px rgba(0,0,0,.05);transition:all .2s;display:flex;flex-direction:column;gap:8px;border:1px solid transparent;position:relative;overflow:hidden}
+.card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,47,96,.1);border-color:#e47727}
+.card-letter{position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:8px;background:#002f60;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800}
+.card-tag{font-size:10px;font-weight:800;color:#e47727;text-transform:uppercase;letter-spacing:.06em}
+.card-title{font-size:16px;font-weight:800;letter-spacing:-.01em;padding-right:40px;line-height:1.25}
+.card-hook{font-size:12px;color:#6b7280;line-height:1.5;flex:1}
+.card-foot{font-size:11px;color:#9ca3af;font-weight:700;margin-top:6px}
+
+.card-profile{border-top:3px solid #e47727}
+.card-network{border-top:3px solid #002f60}
+.card-insights{border-top:3px solid #059669}
+.card-profile .card-letter{background:#e47727}
+.card-insights .card-letter{background:#059669}
+
+.loop{background:#fff;border-radius:14px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-top:14px;border-left:4px solid #e47727}
+.loop-cap{font-size:10px;font-weight:800;color:#e47727;text-transform:uppercase;letter-spacing:.06em}
+.loop-title{font-size:14px;font-weight:800;margin-top:3px}
+.loop-steps{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.loop-step{font-size:11px;font-weight:600;color:#374151;padding:4px 10px;background:#f5f7fa;border-radius:6px}
+.loop-step.arrow{background:none;color:#9ca3af;padding:4px 0}
+
+.footer{text-align:center;color:#9ca3af;font-size:11px;margin-top:28px;padding:0 16px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+    <div class="nav-title">Observation<span>Point</span></div>
+    <div class="nav-tag">Design Options</div>
+</nav>
+
+<div class="hero">
+    <div class="hero-cap">Design brainstorm · pick one per row · refine · demo</div>
+    <div class="hero-head">13 ways to see a teacher and a network.</div>
+    <div class="hero-sub">The dashboards we built were a "scores viewer." These 13 prototypes each try a different answer to the real question: what would a leader actually open on a Monday morning? React to any card, and we'll refine from there.</div>
+    <div class="hero-meta">Apr 18, 2026 · demo data · Marcus Williams + Samuel J. Green as the sample teacher &amp; school</div>
+</div>
+
+<div class="content">
+
+<!-- Staff Profile group -->
+<div class="group">
+    <div class="group-head">
+        <div class="group-title">Staff Profile — 5 options</div>
+        <div class="group-count">Beyond scores</div>
+    </div>
+    <div class="group-desc">Same header and actions — different hero. Each option picks a different "thing worth seeing first" about this person: their trend, their cadence, their coaching arc, their story, or their praise wall.</div>
+
+    <div class="cards">
+        <a class="card card-profile" href="profile-fundamentals-trend.html">
+            <div class="card-letter">A</div>
+            <div class="card-tag">Fundamentals Trend</div>
+            <div class="card-title">On-task over time</div>
+            <div class="card-hook">Sparkline hero showing percent-on-task across 6 visits. "62% → 89%" as the story. Dimension breakdown and school comparison below.</div>
+            <div class="card-foot">Open →</div>
+        </a>
+
+        <a class="card card-profile" href="profile-touchpoint-heatmap.html">
+            <div class="card-letter">B</div>
+            <div class="card-tag">Touchpoint Cadence</div>
+            <div class="card-title">Calendar heat strip</div>
+            <div class="card-hook">GitHub-style activity grid across 3 years. Shows when Marcus has been observed, coached, or recognized — and when it's been quiet. Type mix below.</div>
+            <div class="card-foot">Open →</div>
+        </a>
+
+        <a class="card card-profile" href="profile-coaching-cycle.html">
+            <div class="card-letter">C</div>
+            <div class="card-tag">Coaching Cycle</div>
+            <div class="card-title">The arc, not the score</div>
+            <div class="card-hook">Each cycle connects observation → action step → follow-up → outcome. Current cycle at top, past cycles below. "Did this coaching actually move?"</div>
+            <div class="card-foot">Open →</div>
+        </a>
+
+        <a class="card card-profile" href="profile-ai-summary.html">
+            <div class="card-letter">D</div>
+            <div class="card-tag">AI Summary</div>
+            <div class="card-title">What's Marcus working on?</div>
+            <div class="card-hook">AI-synthesized paragraph of the last 3 meetings + observation + self-reflection. Recurring themes, direct quotes, open action items.</div>
+            <div class="card-foot">Open →</div>
+        </a>
+
+        <a class="card card-profile" href="profile-feedback-wall.html">
+            <div class="card-letter">E</div>
+            <div class="card-tag">Feedback Wall</div>
+            <div class="card-title">The praise board</div>
+            <div class="card-hook">Pinterest-style masonry wall of every celebration, quick feedback, and observer note. Warm and recognition-first — the best of what was said.</div>
+            <div class="card-foot">Open →</div>
+        </a>
+    </div>
+</div>
+
+<!-- Network Dashboard group -->
+<div class="group">
+    <div class="group-head">
+        <div class="group-title">Network Dashboard — 5 options</div>
+        <div class="group-count">Beyond score heatmaps</div>
+    </div>
+    <div class="group-desc">Same 4 schools, same real KPI base — different lens. Each option picks a different "thing worth knowing about the network": cadence, fundamentals, touchpoint mix, leader load, or a pure question-first view.</div>
+
+    <div class="cards">
+        <a class="card card-network" href="network-activity-pulse.html">
+            <div class="card-letter">F</div>
+            <div class="card-tag">Activity Pulse</div>
+            <div class="card-title">Who's in classrooms this month?</div>
+            <div class="card-hook">Horizontal bars per school with type-mix baked in. Coverage rings, cadence gauges, quiet-teacher counts. "Where is the network active — where is it quiet?"</div>
+            <div class="card-foot">Open →</div>
+        </a>
+
+        <a class="card card-network" href="network-fundamentals.html">
+            <div class="card-letter">G</div>
+            <div class="card-tag">Fundamentals</div>
+            <div class="card-title">On-task %, not PMAP scores</div>
+            <div class="card-hook">Hero dial of network 84% on-task. School bars with network-avg line. M1-M5 breakdown per school. 3-year trend. Observer-spread data-quality note.</div>
+            <div class="card-foot">Open →</div>
+        </a>
+
+        <a class="card card-network" href="network-touchpoint-mix.html">
+            <div class="card-letter">H</div>
+            <div class="card-tag">Touchpoint Mix</div>
+            <div class="card-title">What's each school actually doing?</div>
+            <div class="card-hook">Stacked bars show balance of observation, fundamentals, feedback, celebration, meeting, SR, PMAP. Who's eval-heavy? Who's recognition-rich? Who's reflection-leaning?</div>
+            <div class="card-foot">Open →</div>
+        </a>
+
+        <a class="card card-network" href="network-leader-activity.html">
+            <div class="card-letter">I</div>
+            <div class="card-tag">Leader Activity</div>
+            <div class="card-title">Who is observing whom?</div>
+            <div class="card-hook">Leaderboard of leaders with type-mix bars and activity dots. Coverage per leader. "Deep vs wide" comparison — coaching model vs breadth model.</div>
+            <div class="card-foot">Open →</div>
+        </a>
+
+        <a class="card card-network" href="network-ai-first.html">
+            <div class="card-letter">J</div>
+            <div class="card-tag">AI-First</div>
+            <div class="card-title">No dashboard — just ask</div>
+            <div class="card-hook">The network "dashboard" is a search bar and 6 auto-generated insights. What if the default state is asking questions, and charts show up when they answer one?</div>
+            <div class="card-foot">Open →</div>
+        </a>
+    </div>
+</div>
+
+<!-- AI Insights group -->
+<div class="group">
+    <div class="group-head">
+        <div class="group-title">AI Insights — 3 placement options</div>
+        <div class="group-count">Where AI lives in the app</div>
+    </div>
+    <div class="group-desc">The AI isn't just a page — it's a pattern. Three ideas for how it shows up: embedded everywhere, suggested findings, or a chat you can follow up in.</div>
+
+    <div class="cards">
+        <a class="card card-insights" href="insights-embedded.html">
+            <div class="card-letter">K</div>
+            <div class="card-tag">Embedded</div>
+            <div class="card-title">On every page, context-aware</div>
+            <div class="card-hook">Search bar at top of Team, Profile, Network — it knows what page you're on and defaults to that scope. Ask about Marcus on Marcus's page. Ask about the network on the network page.</div>
+            <div class="card-foot">Open →</div>
+        </a>
+
+        <a class="card card-insights" href="insights-suggested.html">
+            <div class="card-letter">L</div>
+            <div class="card-tag">Suggested Findings</div>
+            <div class="card-title">Monday briefing</div>
+            <div class="card-hook">8 pre-generated insights updated nightly: coverage gaps, trend shifts, improvement stories, outliers. Thumbs-up/down trains what lands in your feed.</div>
+            <div class="card-foot">Open →</div>
+        </a>
+
+        <a class="card card-insights" href="insights-conversational.html">
+            <div class="card-letter">M</div>
+            <div class="card-tag">Conversational</div>
+            <div class="card-title">Chat with follow-ups</div>
+            <div class="card-hook">"Teachers below 3 on T4" → "Just Wheatley" → "What's driving it?" → "Suggest a PD topic." Multi-turn with context held — natural refinement of a question.</div>
+            <div class="card-foot">Open →</div>
+        </a>
+    </div>
+</div>
+
+<!-- Workflow loop -->
+<div class="loop">
+    <div class="loop-cap">Your process</div>
+    <div class="loop-title">brainstorm → dialogue → draft → demo → refine → deploy</div>
+    <div class="loop-steps">
+        <div class="loop-step">Scan all 13</div>
+        <div class="loop-step arrow">→</div>
+        <div class="loop-step">React to what works</div>
+        <div class="loop-step arrow">→</div>
+        <div class="loop-step">Pick 1-2 per row to push</div>
+        <div class="loop-step arrow">→</div>
+        <div class="loop-step">Draft stronger</div>
+        <div class="loop-step arrow">→</div>
+        <div class="loop-step">Demo again</div>
+        <div class="loop-step arrow">→</div>
+        <div class="loop-step">Ship</div>
+    </div>
+</div>
+
+<div class="footer">
+    ObservationPoint · FirstLine Schools · all demo data · <a href="index.html" style="color:#002f60">← back to prototype index</a>
+</div>
+
+</div>
+</body>
+</html>

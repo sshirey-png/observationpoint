@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Insights — Suggested Findings</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.nav{position:sticky;top:0;z-index:100;background:#002f60;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.nav-back{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none}
+.nav-title{font-size:15px;font-weight:700;color:#fff;flex:1}.nav-title span{color:#e47727}
+.nav-tag{font-size:11px;font-weight:600;color:rgba(255,255,255,.7);padding:3px 8px;border-radius:6px;background:rgba(255,255,255,.1)}
+
+.content{padding:16px;max-width:900px;margin:0 auto;padding-bottom:40px}
+.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;margin:22px 0 10px}
+
+/* Intro */
+.intro{background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:16px;border-left:4px solid #e47727}
+.intro-cap{font-size:11px;font-weight:800;color:#e47727;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.intro-head{font-size:16px;font-weight:800;letter-spacing:-.01em}
+.intro-sub{font-size:12px;color:#6b7280;margin-top:4px;line-height:1.5}
+
+/* Hero — Monday briefing */
+.briefing{background:linear-gradient(135deg,#002f60 0%,#1e40af 100%);color:#fff;border-radius:16px;padding:22px;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:0 6px 20px rgba(0,47,96,.15)}
+.briefing::before{content:"";position:absolute;top:-30px;right:-30px;width:140px;height:140px;background:radial-gradient(circle,rgba(228,119,39,.2),transparent 70%);border-radius:50%}
+.br-cap{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#fbbe82;position:relative}
+.br-head{font-size:22px;font-weight:800;margin-top:4px;letter-spacing:-.02em;position:relative}
+.br-sub{font-size:13px;color:rgba(255,255,255,.8);margin-top:6px;position:relative}
+.br-meta{display:flex;gap:16px;margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.15);position:relative}
+.br-m{flex:1}
+.br-val{font-size:20px;font-weight:800;letter-spacing:-.02em}
+.br-val.yellow{color:#fbbe82}
+.br-val.green{color:#86efac}
+.br-lbl{font-size:10px;color:rgba(255,255,255,.65);text-transform:uppercase;font-weight:700;letter-spacing:.05em;margin-top:2px}
+
+/* Insight cards */
+.ins-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:16px}
+@media(min-width:720px){.ins-grid{grid-template-columns:1fr 1fr}}
+
+.ins{background:#fff;border-radius:14px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.06);cursor:pointer;transition:all .2s;position:relative;overflow:hidden;border:1px solid #e5e7eb}
+.ins:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.1)}
+
+.ins-priority{position:absolute;top:0;right:0;padding:4px 10px;border-radius:0 14px 0 10px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#fff}
+.p-hot{background:#dc2626}.p-warm{background:#e47727}.p-neutral{background:#0891b2}.p-good{background:#059669}.p-info{background:#6b7280}
+
+.ins-cap{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-right:60px}
+.ins-spark{width:26px;height:26px;border-radius:8px;background:#fff7ed;color:#e47727;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.ins-spark.green{background:#dcfce7;color:#059669}
+.ins-spark.red{background:#fee2e2;color:#dc2626}
+.ins-spark.blue{background:#dbeafe;color:#2563eb}
+.ins-cap-text{font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.06em}
+
+.ins-head{font-size:17px;font-weight:800;letter-spacing:-.01em;line-height:1.3;margin-bottom:8px}
+.ins-head b{color:#e47727}
+.ins-head b.green{color:#059669}
+.ins-head b.red{color:#dc2626}
+.ins-head b.blue{color:#2563eb}
+
+.ins-body{font-size:12px;color:#6b7280;line-height:1.55;margin-bottom:12px}
+
+.ins-foot{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid #f3f4f6;gap:10px;margin-top:auto}
+.ins-src{font-size:10px;color:#9ca3af;font-weight:600}
+.ins-cta{font-size:11px;font-weight:800;color:#e47727;cursor:pointer}
+
+/* Mini-chart: sparkline or bar */
+.ins-chart{margin:4px 0 10px;height:48px}
+.ins-bars{display:flex;align-items:flex-end;gap:3px;height:42px}
+.ins-bar{flex:1;background:#e47727;border-radius:2px 2px 0 0}
+.ins-bar.green{background:#059669}
+.ins-bar.muted{background:#fbbe82}
+
+/* Categories row */
+.cats{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;overflow-x:auto}
+.cat{padding:8px 14px;border-radius:20px;background:#fff;font-size:11px;font-weight:700;color:#6b7280;border:1px solid #e5e7eb;cursor:pointer;white-space:nowrap}
+.cat.active{background:#002f60;color:#fff;border-color:#002f60}
+.cat-count{background:rgba(255,255,255,.2);padding:1px 6px;border-radius:10px;margin-left:5px;font-size:10px}
+.cat.active .cat-count{background:rgba(255,255,255,.25)}
+
+/* Daily / Weekly strip */
+.strip{display:flex;gap:8px;margin-bottom:16px}
+.strip-tab{flex:1;background:#fff;padding:10px 14px;border-radius:10px;cursor:pointer;border:1px solid #e5e7eb}
+.strip-tab.active{background:#002f60;color:#fff;border-color:#002f60}
+.strip-tab-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;opacity:.7}
+.strip-tab-ct{font-size:16px;font-weight:800;margin-top:2px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+    <a class="nav-back" href="design-options.html"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></a>
+    <div class="nav-title">Observation<span>Point</span></div>
+    <div class="nav-tag">Insights · Suggested</div>
+</nav>
+
+<div class="content">
+
+<div class="intro">
+    <div class="intro-cap">AI Insights placement · option B</div>
+    <div class="intro-head">Suggested findings — the dashboard tells you what to look at</div>
+    <div class="intro-sub">Instead of you asking questions, ObservationPoint analyzes the data nightly and surfaces 6-12 findings worth knowing: trend shifts, coverage gaps, improvement stories, outliers. You scroll; the insights scroll with you.</div>
+</div>
+
+<!-- Monday briefing hero -->
+<div class="briefing">
+    <div class="br-cap">Your Monday briefing · April 20, 2026</div>
+    <div class="br-head">8 things worth looking at this week</div>
+    <div class="br-sub">Updated nightly from 2,413 touchpoints · tap any card to drill in</div>
+    <div class="br-meta">
+        <div class="br-m"><div class="br-val yellow">2</div><div class="br-lbl">Flagged</div></div>
+        <div class="br-m"><div class="br-val">3</div><div class="br-lbl">Notable</div></div>
+        <div class="br-m"><div class="br-val green">3</div><div class="br-lbl">Celebrate</div></div>
+    </div>
+</div>
+
+<!-- Time strip -->
+<div class="strip">
+    <div class="strip-tab active">
+        <div class="strip-tab-lbl">This week</div>
+        <div class="strip-tab-ct">8 insights</div>
+    </div>
+    <div class="strip-tab">
+        <div class="strip-tab-lbl">This month</div>
+        <div class="strip-tab-ct">17 insights</div>
+    </div>
+    <div class="strip-tab">
+        <div class="strip-tab-lbl">This year</div>
+        <div class="strip-tab-ct">42 insights</div>
+    </div>
+</div>
+
+<!-- Category filters -->
+<div class="cats">
+    <div class="cat active">All <span class="cat-count">8</span></div>
+    <div class="cat">Coverage <span class="cat-count">2</span></div>
+    <div class="cat">Scoring <span class="cat-count">2</span></div>
+    <div class="cat">Growth <span class="cat-count">3</span></div>
+    <div class="cat">Correlation <span class="cat-count">1</span></div>
+</div>
+
+<!-- Insight cards -->
+<div class="ins-grid">
+
+<div class="ins">
+    <div class="ins-priority p-hot">Flagged</div>
+    <div class="ins-cap"><div class="ins-spark red">!</div><div class="ins-cap-text">Coverage gap · Wheatley</div></div>
+    <div class="ins-head"><b class="red">26 teachers</b> at Wheatley haven't had a touchpoint in 30+ days.</div>
+    <div class="ins-chart">
+        <div class="ins-bars">
+            <div class="ins-bar muted" style="height:20%"></div>
+            <div class="ins-bar muted" style="height:24%"></div>
+            <div class="ins-bar" style="height:32%;background:#dc2626"></div>
+            <div class="ins-bar" style="height:42%;background:#dc2626"></div>
+            <div class="ins-bar" style="height:48%;background:#dc2626"></div>
+            <div class="ins-bar" style="height:55%;background:#dc2626"></div>
+            <div class="ins-bar" style="height:62%;background:#dc2626"></div>
+            <div class="ins-bar" style="height:72%;background:#dc2626"></div>
+        </div>
+    </div>
+    <div class="ins-body">That's 54% of Wheatley's active teachers — up from 41% a month ago. No single observer has visited more than 14 teachers this year.</div>
+    <div class="ins-foot">
+        <div class="ins-src">Updated 2h ago · 8 weeks data</div>
+        <div class="ins-cta">See list →</div>
+    </div>
+</div>
+
+<div class="ins">
+    <div class="ins-priority p-warm">Flagged</div>
+    <div class="ins-cap"><div class="ins-spark red">↓</div><div class="ins-cap-text">Score trend · T4</div></div>
+    <div class="ins-head">T4 Cognitive Engagement <b class="red">dropped -0.10</b> network-wide this year.</div>
+    <div class="ins-chart">
+        <div class="ins-bars">
+            <div class="ins-bar" style="height:80%;background:#059669"></div>
+            <div class="ins-bar" style="height:75%;background:#059669"></div>
+            <div class="ins-bar" style="height:72%;background:#e47727"></div>
+            <div class="ins-bar" style="height:68%;background:#e47727"></div>
+            <div class="ins-bar" style="height:65%;background:#dc2626"></div>
+            <div class="ins-bar" style="height:62%;background:#dc2626"></div>
+        </div>
+    </div>
+    <div class="ins-body">Only dimension to move down network-wide this year. Wheatley drove most of the decline (-0.41). T5 up +0.3 over the same period.</div>
+    <div class="ins-foot">
+        <div class="ins-src">3 school years of data</div>
+        <div class="ins-cta">By school →</div>
+    </div>
+</div>
+
+<div class="ins">
+    <div class="ins-priority p-good">Celebrate</div>
+    <div class="ins-cap"><div class="ins-spark green">★</div><div class="ins-cap-text">Improvement story</div></div>
+    <div class="ins-head">Marcus Williams moved from <b class="green">62% → 89%</b> on-task over 6 visits.</div>
+    <div class="ins-chart">
+        <div class="ins-bars">
+            <div class="ins-bar" style="height:20%;background:#dc2626"></div>
+            <div class="ins-bar" style="height:38%;background:#e47727"></div>
+            <div class="ins-bar" style="height:55%;background:#e47727"></div>
+            <div class="ins-bar" style="height:72%;background:#059669"></div>
+            <div class="ins-bar" style="height:68%;background:#059669"></div>
+            <div class="ins-bar" style="height:92%;background:#059669"></div>
+        </div>
+    </div>
+    <div class="ins-body">Biggest individual fundamentals gain in the network this year. Trajectory aligns with Oct 2025 cold-call cycle with J. Mitchell — worth surfacing in principal PD.</div>
+    <div class="ins-foot">
+        <div class="ins-src">Samuel J. Green</div>
+        <div class="ins-cta">Open profile →</div>
+    </div>
+</div>
+
+<div class="ins">
+    <div class="ins-priority p-neutral">Notable</div>
+    <div class="ins-cap"><div class="ins-spark blue">~</div><div class="ins-cap-text">Pattern · balance</div></div>
+    <div class="ins-head">Ashe logs <b class="blue">42% observations, 7% celebrations</b> — most eval-heavy mix.</div>
+    <div class="ins-body">Recognition ratio (celebrations per 10 observations): Hughes 2.8 · Wheatley 1.9 · Green 1.7 · <b>Ashe 1.6</b>. Worth talking about in next leader huddle.</div>
+    <div class="ins-foot">
+        <div class="ins-src">2,413 touchpoints</div>
+        <div class="ins-cta">Compare schools →</div>
+    </div>
+</div>
+
+<div class="ins">
+    <div class="ins-priority p-good">Celebrate</div>
+    <div class="ins-cap"><div class="ins-spark green">↑</div><div class="ins-cap-text">Network gain</div></div>
+    <div class="ins-head">T5 Demonstration of Learning <b class="green">up +0.3</b> across the network.</div>
+    <div class="ins-body">Strongest single-dimension gain in 3 years. Hughes drove most of the lift (+0.4). Consider: share Hughes's T5 routines across schools.</div>
+    <div class="ins-foot">
+        <div class="ins-src">187 teachers · 947 observations</div>
+        <div class="ins-cta">See Hughes →</div>
+    </div>
+</div>
+
+<div class="ins">
+    <div class="ins-priority p-info">Correlation</div>
+    <div class="ins-cap"><div class="ins-spark">≈</div><div class="ins-cap-text">Leading indicator</div></div>
+    <div class="ins-head">Teachers with <b>3+ meetings</b> this year improved T2 by <b class="green">+0.4</b>.</div>
+    <div class="ins-body">Teachers with 0-1 meetings improved T2 by +0.1. Not causal, but meetings appear as a meaningful leading indicator. Meetings have ranged widely by school.</div>
+    <div class="ins-foot">
+        <div class="ins-src">187 teachers</div>
+        <div class="ins-cta">Run analysis →</div>
+    </div>
+</div>
+
+<div class="ins">
+    <div class="ins-priority p-good">Celebrate</div>
+    <div class="ins-cap"><div class="ins-spark green">⭑</div><div class="ins-cap-text">Coaching cycle</div></div>
+    <div class="ins-head">J. Mitchell closed <b class="green">3 of 3</b> coaching cycles this year — all improved.</div>
+    <div class="ins-body">Cycle close-rate: Mitchell 100% · Parker 67% · Davis 50%. Worth surfacing what's making Mitchell's cycles stick.</div>
+    <div class="ins-foot">
+        <div class="ins-src">Hughes · Principal</div>
+        <div class="ins-cta">See cycles →</div>
+    </div>
+</div>
+
+<div class="ins">
+    <div class="ins-priority p-neutral">Notable</div>
+    <div class="ins-cap"><div class="ins-spark blue">→</div><div class="ins-cap-text">Self-reflection usage</div></div>
+    <div class="ins-head">Wheatley uses self-reflection <b class="blue">4× more</b> than Ashe.</div>
+    <div class="ins-body">87 self-reflections network-wide; Wheatley accounts for 37. Unique profile — could be context (staffing stability, leader turnover) or intent.</div>
+    <div class="ins-foot">
+        <div class="ins-src">All schools · 25-26</div>
+        <div class="ins-cta">Context →</div>
+    </div>
+</div>
+
+</div>
+
+<!-- Feedback block -->
+<div class="intro" style="border-color:#6b7280">
+    <div class="intro-cap" style="color:#6b7280">Thumbs up / down</div>
+    <div class="intro-head">Tell ObservationPoint what was useful</div>
+    <div class="intro-sub">Each card has a thumbs-up/thumbs-down. The system learns which insight types land with your role (principal vs network leader) and which to filter out of your feed.</div>
+</div>
+
+</div>
+</body>
+</html>

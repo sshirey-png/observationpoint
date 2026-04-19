@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Profile — Fundamentals Trend</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.nav{position:sticky;top:0;z-index:100;background:#002f60;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.nav-back{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none}
+.nav-title{font-size:15px;font-weight:700;color:#fff;flex:1}.nav-title span{color:#e47727}
+.nav-tag{font-size:11px;font-weight:600;color:rgba(255,255,255,.7);padding:3px 8px;border-radius:6px;background:rgba(255,255,255,.1)}
+
+.profile-header{background:#fff;padding:20px 16px;border-bottom:1px solid #e5e7eb}
+.profile-top{display:flex;align-items:center;gap:14px}
+.profile-av{width:56px;height:56px;border-radius:14px;background:#002f60;color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;flex-shrink:0}
+.profile-name{font-size:20px;font-weight:800;letter-spacing:-.02em}
+.profile-meta{font-size:13px;color:#6b7280;margin-top:2px}
+.profile-actions{display:flex;gap:8px;margin-top:14px}
+.profile-action{flex:1;padding:10px;border-radius:10px;border:1.5px solid #e5e7eb;background:#fff;text-align:center;font-size:12px;font-weight:600;cursor:pointer;color:#6b7280}
+
+.content{padding:16px;max-width:760px;margin:0 auto;padding-bottom:40px}
+.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;margin:18px 0 8px}
+
+/* HERO — sparkline */
+.hero{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,47,96,.06);margin-bottom:14px;border:1px solid #e5e7eb}
+.hero-caption{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#e47727;margin-bottom:4px}
+.hero-headline{font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1.2;margin-bottom:4px}
+.hero-sub{font-size:13px;color:#6b7280;margin-bottom:18px}
+.spark-wrap{position:relative;height:180px;margin:0 -4px}
+.spark-grid line{stroke:#f3f4f6;stroke-width:1}
+.spark-axis{font-size:10px;fill:#9ca3af;font-family:'Inter',sans-serif}
+.spark-area{fill:url(#g1);opacity:.5}
+.spark-line{fill:none;stroke:#e47727;stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
+.spark-pt{fill:#e47727;stroke:#fff;stroke-width:3}
+.spark-pt.last{fill:#059669}
+.spark-label{font-size:10px;font-weight:700;fill:#374151;font-family:'Inter',sans-serif}
+
+/* Summary stats */
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.tile{background:#fff;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);text-align:center}
+.tile-val{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.tile-val.up{color:#059669}
+.tile-val.muted{color:#6b7280}
+.tile-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-top:2px}
+
+/* Dimension breakdown */
+.dims-card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:14px}
+.dims-title{font-size:14px;font-weight:700;margin-bottom:3px}
+.dims-sub{font-size:11px;color:#9ca3af;margin-bottom:14px}
+.dim-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f3f4f6}
+.dim-row:last-child{border-bottom:none}
+.dim-code{font-size:12px;font-weight:700;width:28px;color:#374151}
+.dim-name{font-size:12px;color:#6b7280;flex:1}
+.dim-dots{display:flex;gap:3px}
+.dim-dot{width:10px;height:10px;border-radius:50%;background:#e5e7eb}
+.dim-dot.filled{background:#e47727}
+.dim-score{font-size:13px;font-weight:700;color:#111827;width:28px;text-align:right;font-variant-numeric:tabular-nums}
+.dim-delta{font-size:10px;font-weight:700;color:#059669;width:34px;text-align:right}
+
+/* Visit list */
+.visit-card{background:#fff;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:10px;cursor:pointer}
+.visit-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.visit-date{font-size:13px;font-weight:700}
+.visit-pct{font-size:16px;font-weight:800;color:#059669}
+.visit-pct.med{color:#ca8a04}.visit-pct.low{color:#dc2626}
+.visit-meta{font-size:11px;color:#9ca3af;margin-top:2px}
+.visit-bar-bg{height:6px;background:#f3f4f6;border-radius:3px;margin-top:10px;overflow:hidden}
+.visit-bar{height:100%;background:linear-gradient(90deg,#e47727,#059669);border-radius:3px}
+.visit-delta{font-size:11px;color:#6b7280;margin-top:6px}
+.visit-delta .up{color:#059669;font-weight:700}
+
+/* Compare to school */
+.compare{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;margin-bottom:14px}
+.compare-icon{width:32px;height:32px;border-radius:8px;background:#e47727;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800}
+.compare-text{font-size:13px;color:#7c2d12;line-height:1.4}
+.compare-text b{color:#002f60}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+    <a class="nav-back" href="design-options.html"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></a>
+    <div class="nav-title">Observation<span>Point</span></div>
+    <div class="nav-tag">Profile · Trend</div>
+</nav>
+
+<div class="profile-header">
+    <div class="profile-top">
+        <div class="profile-av">MW</div>
+        <div>
+            <div class="profile-name">Marcus Williams</div>
+            <div class="profile-meta">Teacher · Samuel J. Green · 5th Grade Math</div>
+        </div>
+    </div>
+    <div class="profile-actions">
+        <div class="profile-action">Observe</div>
+        <div class="profile-action">Feedback</div>
+        <div class="profile-action">Celebrate</div>
+        <div class="profile-action">Meeting</div>
+    </div>
+</div>
+
+<div class="content">
+
+<!-- HERO: fundamentals trend -->
+<div class="hero">
+    <div class="hero-caption">Fundamentals · On-task</div>
+    <div class="hero-headline">62% → 89%</div>
+    <div class="hero-sub">Six visits across 3 years · +27 points</div>
+
+    <div class="spark-wrap">
+        <svg viewBox="0 0 600 180" preserveAspectRatio="none" width="100%" height="100%">
+            <defs>
+                <linearGradient id="g1" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stop-color="#e47727" stop-opacity=".35"/>
+                    <stop offset="100%" stop-color="#e47727" stop-opacity="0"/>
+                </linearGradient>
+            </defs>
+            <g class="spark-grid">
+                <line x1="0" y1="30" x2="600" y2="30"/>
+                <line x1="0" y1="70" x2="600" y2="70"/>
+                <line x1="0" y1="110" x2="600" y2="110"/>
+                <line x1="0" y1="150" x2="600" y2="150"/>
+            </g>
+            <text class="spark-axis" x="2" y="34">100%</text>
+            <text class="spark-axis" x="2" y="74">85%</text>
+            <text class="spark-axis" x="2" y="114">70%</text>
+            <text class="spark-axis" x="2" y="154">55%</text>
+
+            <!-- Data: 62, 71, 78, 84, 82, 89 → mapped to y -->
+            <!-- y = 180 - ((val-50)*(180/50))  roughly -->
+            <path class="spark-area" d="M 50 151 L 150 125 L 250 105 L 350 87 L 450 93 L 550 73 L 550 180 L 50 180 Z"/>
+            <path class="spark-line" d="M 50 151 L 150 125 L 250 105 L 350 87 L 450 93 L 550 73"/>
+
+            <circle class="spark-pt" cx="50" cy="151" r="5"/>
+            <circle class="spark-pt" cx="150" cy="125" r="5"/>
+            <circle class="spark-pt" cx="250" cy="105" r="5"/>
+            <circle class="spark-pt" cx="350" cy="87" r="5"/>
+            <circle class="spark-pt" cx="450" cy="93" r="5"/>
+            <circle class="spark-pt last" cx="550" cy="73" r="6"/>
+
+            <text class="spark-label" x="50" y="170" text-anchor="middle">Feb '24</text>
+            <text class="spark-label" x="150" y="170" text-anchor="middle">Oct '24</text>
+            <text class="spark-label" x="250" y="170" text-anchor="middle">Feb '25</text>
+            <text class="spark-label" x="350" y="170" text-anchor="middle">Oct '25</text>
+            <text class="spark-label" x="450" y="170" text-anchor="middle">Jan '26</text>
+            <text class="spark-label" x="550" y="170" text-anchor="middle">Apr '26</text>
+        </svg>
+    </div>
+</div>
+
+<!-- Compare to school -->
+<div class="compare">
+    <div class="compare-icon">↑</div>
+    <div class="compare-text">Marcus is <b>+6 points above</b> Green's average of 83% on-task and trending up for the third consecutive visit.</div>
+</div>
+
+<!-- Summary tiles -->
+<div class="tiles">
+    <div class="tile"><div class="tile-val up">89%</div><div class="tile-label">Most recent</div></div>
+    <div class="tile"><div class="tile-val">82%</div><div class="tile-label">This year avg</div></div>
+    <div class="tile"><div class="tile-val muted">6</div><div class="tile-label">Total visits</div></div>
+</div>
+
+<!-- Dimension breakdown -->
+<div class="section-label">By Fundamentals Dimension — last visit</div>
+<div class="dims-card">
+    <div class="dims-title">M1–M5 · April 18, 2026</div>
+    <div class="dims-sub">0–4 scale · composite from last observation</div>
+
+    <div class="dim-row">
+        <div class="dim-code">M1</div>
+        <div class="dim-name">Teacher Presence</div>
+        <div class="dim-dots">
+            <div class="dim-dot filled"></div><div class="dim-dot filled"></div>
+            <div class="dim-dot filled"></div><div class="dim-dot filled"></div>
+        </div>
+        <div class="dim-score">3.6</div>
+        <div class="dim-delta">+0.1</div>
+    </div>
+    <div class="dim-row">
+        <div class="dim-code">M2</div>
+        <div class="dim-name">Routines & Procedures</div>
+        <div class="dim-dots">
+            <div class="dim-dot filled"></div><div class="dim-dot filled"></div>
+            <div class="dim-dot filled"></div><div class="dim-dot filled"></div>
+        </div>
+        <div class="dim-score">3.8</div>
+        <div class="dim-delta">flat</div>
+    </div>
+    <div class="dim-row">
+        <div class="dim-code">M3</div>
+        <div class="dim-name">Smooth Transitions</div>
+        <div class="dim-dots">
+            <div class="dim-dot filled"></div><div class="dim-dot filled"></div>
+            <div class="dim-dot filled"></div><div class="dim-dot"></div>
+        </div>
+        <div class="dim-score">3.4</div>
+        <div class="dim-delta">-0.1</div>
+    </div>
+    <div class="dim-row">
+        <div class="dim-code">M4</div>
+        <div class="dim-name">Academic Urgency</div>
+        <div class="dim-dots">
+            <div class="dim-dot filled"></div><div class="dim-dot filled"></div>
+            <div class="dim-dot filled"></div><div class="dim-dot filled"></div>
+        </div>
+        <div class="dim-score">3.6</div>
+        <div class="dim-delta">+0.2</div>
+    </div>
+    <div class="dim-row">
+        <div class="dim-code">M5</div>
+        <div class="dim-name">Student Engagement</div>
+        <div class="dim-dots">
+            <div class="dim-dot filled"></div><div class="dim-dot filled"></div>
+            <div class="dim-dot filled"></div><div class="dim-dot filled"></div>
+        </div>
+        <div class="dim-score">3.8</div>
+        <div class="dim-delta">+0.3</div>
+    </div>
+</div>
+
+<!-- All visits -->
+<div class="section-label">All Visits</div>
+
+<div class="visit-card">
+    <div class="visit-head">
+        <div>
+            <div class="visit-date">April 18, 2026</div>
+            <div class="visit-meta">Observed by J. Mitchell · 5th period</div>
+        </div>
+        <div class="visit-pct">89%</div>
+    </div>
+    <div class="visit-bar-bg"><div class="visit-bar" style="width:89%"></div></div>
+    <div class="visit-delta">23 of 26 students on-task · <span class="up">+7 from Jan</span></div>
+</div>
+
+<div class="visit-card">
+    <div class="visit-head">
+        <div>
+            <div class="visit-date">January 14, 2026</div>
+            <div class="visit-meta">Observed by J. Mitchell · 3rd period</div>
+        </div>
+        <div class="visit-pct">82%</div>
+    </div>
+    <div class="visit-bar-bg"><div class="visit-bar" style="width:82%"></div></div>
+    <div class="visit-delta">22 of 27 students on-task</div>
+</div>
+
+<div class="visit-card">
+    <div class="visit-head">
+        <div>
+            <div class="visit-date">October 25, 2025</div>
+            <div class="visit-meta">Observed by T. Parker · 2nd period</div>
+        </div>
+        <div class="visit-pct">84%</div>
+    </div>
+    <div class="visit-bar-bg"><div class="visit-bar" style="width:84%"></div></div>
+    <div class="visit-delta">21 of 25 students on-task</div>
+</div>
+
+<div class="visit-card">
+    <div class="visit-head">
+        <div>
+            <div class="visit-date">February 19, 2025</div>
+            <div class="visit-meta">Observed by J. Mitchell · 5th period</div>
+        </div>
+        <div class="visit-pct med">78%</div>
+    </div>
+    <div class="visit-bar-bg"><div class="visit-bar" style="width:78%"></div></div>
+    <div class="visit-delta">20 of 26 students on-task · <span class="up">+16 from Oct</span></div>
+</div>
+
+<div class="visit-card">
+    <div class="visit-head">
+        <div>
+            <div class="visit-date">October 26, 2024</div>
+            <div class="visit-meta">Observed by T. Parker · 3rd period</div>
+        </div>
+        <div class="visit-pct med">71%</div>
+    </div>
+    <div class="visit-bar-bg"><div class="visit-bar" style="width:71%"></div></div>
+    <div class="visit-delta">19 of 27 students on-task</div>
+</div>
+
+<div class="visit-card">
+    <div class="visit-head">
+        <div>
+            <div class="visit-date">February 13, 2024</div>
+            <div class="visit-meta">Observed by K. Davis · 2nd period</div>
+        </div>
+        <div class="visit-pct low">62%</div>
+    </div>
+    <div class="visit-bar-bg"><div class="visit-bar" style="width:62%"></div></div>
+    <div class="visit-delta">16 of 26 students on-task · baseline</div>
+</div>
+
+</div>
+</body>
+</html>

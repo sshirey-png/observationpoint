@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Profile — Coaching Cycle</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.nav{position:sticky;top:0;z-index:100;background:#002f60;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.nav-back{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none}
+.nav-title{font-size:15px;font-weight:700;color:#fff;flex:1}.nav-title span{color:#e47727}
+.nav-tag{font-size:11px;font-weight:600;color:rgba(255,255,255,.7);padding:3px 8px;border-radius:6px;background:rgba(255,255,255,.1)}
+
+.profile-header{background:#fff;padding:20px 16px;border-bottom:1px solid #e5e7eb}
+.profile-top{display:flex;align-items:center;gap:14px}
+.profile-av{width:56px;height:56px;border-radius:14px;background:#002f60;color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;flex-shrink:0}
+.profile-name{font-size:20px;font-weight:800;letter-spacing:-.02em}
+.profile-meta{font-size:13px;color:#6b7280;margin-top:2px}
+.profile-actions{display:flex;gap:8px;margin-top:14px}
+.profile-action{flex:1;padding:10px;border-radius:10px;border:1.5px solid #e5e7eb;background:#fff;text-align:center;font-size:12px;font-weight:600;cursor:pointer;color:#6b7280}
+
+.content{padding:16px;max-width:760px;margin:0 auto;padding-bottom:40px}
+.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;margin:20px 0 10px}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#002f60 0%,#1e40af 100%);color:#fff;border-radius:14px;padding:22px;box-shadow:0 4px 16px rgba(0,47,96,.15);margin-bottom:16px}
+.hero-caption{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fbbe82;margin-bottom:8px}
+.hero-headline{font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1.25;margin-bottom:8px}
+.hero-sub{font-size:13px;color:rgba(255,255,255,.8);line-height:1.5}
+.hero-metrics{display:flex;gap:16px;margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.15)}
+.hero-m{flex:1}
+.hero-m-val{font-size:24px;font-weight:800;color:#fff;letter-spacing:-.02em}
+.hero-m-val.up{color:#86efac}
+.hero-m-lbl{font-size:10px;color:rgba(255,255,255,.65);text-transform:uppercase;font-weight:700;letter-spacing:.05em;margin-top:2px}
+
+/* Cycle card */
+.cycle-card{background:#fff;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:14px;overflow:hidden;border:1px solid #e5e7eb}
+.cycle-head{padding:16px 16px 14px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.cycle-title{font-size:14px;font-weight:800}
+.cycle-range{font-size:11px;color:#9ca3af;font-weight:600}
+.cycle-status{font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.04em}
+.status-improved{background:#dcfce7;color:#059669}
+.status-flat{background:#fef3c7;color:#a16207}
+.status-open{background:#dbeafe;color:#2563eb}
+
+.steps{padding:0 16px 16px}
+.step{display:flex;gap:14px;padding-top:16px;position:relative}
+.step-rail{display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:32px}
+.step-dot{width:32px;height:32px;border-radius:50%;background:#002f60;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;z-index:2}
+.step-dot.orange{background:#e47727}
+.step-dot.green{background:#059669}
+.step-dot.muted{background:#e5e7eb;color:#6b7280}
+.step-line{flex:1;width:2px;background:#e5e7eb;margin-top:4px;min-height:20px}
+.step-body{flex:1;padding-bottom:8px}
+.step-when{font-size:11px;color:#9ca3af;font-weight:600}
+.step-what{font-size:14px;font-weight:700;margin-top:2px;line-height:1.3}
+.step-detail{font-size:12px;color:#6b7280;margin-top:6px;line-height:1.5;padding:10px 12px;background:#f5f7fa;border-radius:8px;border-left:3px solid #e5e7eb}
+.step-detail.orange{border-left-color:#e47727;background:#fff7ed}
+.step-detail.green{border-left-color:#059669;background:#f0fdf4}
+.step-detail b{color:#111827}
+.step-scores{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}
+.step-score{padding:3px 7px;border-radius:5px;font-size:11px;font-weight:700}
+.s1{background:#fee2e2;color:#b91c1c}.s2{background:#ffedd5;color:#c2410c}
+.s3{background:#fef3c7;color:#a16207}.s4{background:#dcfce7;color:#059669}.s5{background:#bbf7d0;color:#047857}
+.delta{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;margin-left:4px}
+.delta.up{color:#059669}.delta.down{color:#dc2626}
+
+/* Open cycle */
+.open-next{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#fff;border:1.5px dashed #e47727;border-radius:10px;margin-top:12px}
+.open-icon{width:28px;height:28px;border-radius:8px;background:#e47727;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0}
+.open-text{font-size:12px;color:#7c2d12}
+
+/* Past cycles collapsed */
+.past-list{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden}
+.past-item{padding:14px 16px;border-bottom:1px solid #f3f4f6;cursor:pointer;display:flex;align-items:center;gap:12px}
+.past-item:last-child{border-bottom:none}
+.past-mark{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.past-mark.green{background:#059669}.past-mark.yellow{background:#eab308}
+.past-body{flex:1}
+.past-title{font-size:13px;font-weight:600}
+.past-meta{font-size:11px;color:#9ca3af;margin-top:2px}
+.past-arrow{font-size:14px;color:#d1d5db}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+    <a class="nav-back" href="design-options.html"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></a>
+    <div class="nav-title">Observation<span>Point</span></div>
+    <div class="nav-tag">Profile · Cycles</div>
+</nav>
+
+<div class="profile-header">
+    <div class="profile-top">
+        <div class="profile-av">MW</div>
+        <div>
+            <div class="profile-name">Marcus Williams</div>
+            <div class="profile-meta">Teacher · Samuel J. Green · 5th Grade Math</div>
+        </div>
+    </div>
+    <div class="profile-actions">
+        <div class="profile-action">Observe</div>
+        <div class="profile-action">Feedback</div>
+        <div class="profile-action">Celebrate</div>
+        <div class="profile-action">Meeting</div>
+    </div>
+</div>
+
+<div class="content">
+
+<!-- HERO -->
+<div class="hero">
+    <div class="hero-caption">Coaching Story · 2025-26</div>
+    <div class="hero-headline">3 cycles closed · 1 in progress</div>
+    <div class="hero-sub">Each cycle connects an observation to an action step, a follow-up visit, and what changed. Growth isn't the score — it's the arc.</div>
+    <div class="hero-metrics">
+        <div class="hero-m"><div class="hero-m-val up">+1.2</div><div class="hero-m-lbl">Net T2 gain</div></div>
+        <div class="hero-m"><div class="hero-m-val">28 days</div><div class="hero-m-lbl">Avg cycle length</div></div>
+        <div class="hero-m"><div class="hero-m-val up">3/3</div><div class="hero-m-lbl">Closed-loop hits</div></div>
+    </div>
+</div>
+
+<!-- Current cycle -->
+<div class="section-label">Current Cycle · in progress</div>
+
+<div class="cycle-card">
+    <div class="cycle-head">
+        <div>
+            <div class="cycle-title">Cycle 4 · Classroom Management</div>
+            <div class="cycle-range">opened Apr 18 · follow-up scheduled</div>
+        </div>
+        <div class="cycle-status status-open">Open</div>
+    </div>
+
+    <div class="steps">
+        <div class="step">
+            <div class="step-rail">
+                <div class="step-dot orange">1</div>
+                <div class="step-line"></div>
+            </div>
+            <div class="step-body">
+                <div class="step-when">April 18, 2026 · 5th period</div>
+                <div class="step-what">Observation — T2 dipped back to 2</div>
+                <div class="step-scores">
+                    <span class="step-score s4">T1·4</span>
+                    <span class="step-score s2">T2·2</span>
+                    <span class="step-score s4">T3·4</span>
+                    <span class="step-score s3">T4·3</span>
+                    <span class="step-score s4">T5·4</span>
+                </div>
+                <div class="step-detail orange"><b>Noted:</b> Transitions between warm-up and mini-lesson ran long (5+ min); several students off-task during the handoff.</div>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-rail">
+                <div class="step-dot orange">2</div>
+                <div class="step-line"></div>
+            </div>
+            <div class="step-body">
+                <div class="step-when">action step — Get Better Faster</div>
+                <div class="step-what">Tighten transitions with a 90-second timer</div>
+                <div class="step-detail"><b>Practice:</b> Use a visible countdown timer for warm-up → mini-lesson transition. Narrate the last 10 seconds. Target: transition complete in 90 seconds.</div>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-rail">
+                <div class="step-dot muted">3</div>
+            </div>
+            <div class="step-body">
+                <div class="step-when">follow-up planned</div>
+                <div class="step-what">Check-in visit · May 2 · 5th period</div>
+                <div class="step-detail">Will measure transition time + re-score T2. Target: T2 back to 3+.</div>
+            </div>
+        </div>
+    </div>
+
+    <div style="padding:0 16px 16px">
+        <div class="open-next">
+            <div class="open-icon">→</div>
+            <div class="open-text">Schedule the follow-up visit — or adjust the action step after talking with Marcus.</div>
+        </div>
+    </div>
+</div>
+
+<!-- Most recent closed cycle -->
+<div class="section-label">Most Recent Closed Cycle</div>
+
+<div class="cycle-card">
+    <div class="cycle-head">
+        <div>
+            <div class="cycle-title">Cycle 3 · Student Engagement</div>
+            <div class="cycle-range">Oct 25 → Jan 14 · 11 weeks</div>
+        </div>
+        <div class="cycle-status status-improved">Improved</div>
+    </div>
+
+    <div class="steps">
+        <div class="step">
+            <div class="step-rail">
+                <div class="step-dot">1</div>
+                <div class="step-line"></div>
+            </div>
+            <div class="step-body">
+                <div class="step-when">October 25, 2025 · Fundamentals</div>
+                <div class="step-what">M5 (engagement) lowest at 3.5</div>
+                <div class="step-detail"><b>Noted:</b> On-task at 84%, but small group of disengaged students in back corner were not called on once in 25 minutes.</div>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-rail">
+                <div class="step-dot">2</div>
+                <div class="step-line"></div>
+            </div>
+            <div class="step-body">
+                <div class="step-when">action step</div>
+                <div class="step-what">Cold-call grid — every student 3× per lesson</div>
+                <div class="step-detail"><b>Practice:</b> Pre-planned cold-call grid, tracked on clipboard. Minimum 3 named calls per student per period.</div>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-rail">
+                <div class="step-dot green">3</div>
+            </div>
+            <div class="step-body">
+                <div class="step-when">January 14, 2026 · Observation</div>
+                <div class="step-what">T5 moved to 4 <span class="delta up">▲ +1</span></div>
+                <div class="step-scores">
+                    <span class="step-score s4">T1·4</span>
+                    <span class="step-score s3">T2·3</span>
+                    <span class="step-score s4">T3·4</span>
+                    <span class="step-score s3">T4·3</span>
+                    <span class="step-score s4">T5·4</span>
+                </div>
+                <div class="step-detail green"><b>Result:</b> Cold-call grid visible on clipboard. Every observed student engaged at least once. Back-corner group participated in full-group discussion.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Past cycles -->
+<div class="section-label">Past Cycles — 2023-24 through 2024-25</div>
+<div class="past-list">
+    <div class="past-item">
+        <div class="past-mark green"></div>
+        <div class="past-body">
+            <div class="past-title">Cycle 2 · Routines & procedures</div>
+            <div class="past-meta">Feb 19 → Apr 21, 2025 · improved T2 2 → 3</div>
+        </div>
+        <div class="past-arrow">›</div>
+    </div>
+    <div class="past-item">
+        <div class="past-mark green"></div>
+        <div class="past-body">
+            <div class="past-title">Cycle 1 · Academic urgency</div>
+            <div class="past-meta">Sept 2024 → Nov 2024 · improved T4 2 → 3</div>
+        </div>
+        <div class="past-arrow">›</div>
+    </div>
+    <div class="past-item">
+        <div class="past-mark yellow"></div>
+        <div class="past-body">
+            <div class="past-title">Pre-cycle · Baseline fundamentals</div>
+            <div class="past-meta">Feb 2024 · 62% on-task (first observation)</div>
+        </div>
+        <div class="past-arrow">›</div>
+    </div>
+</div>
+
+</div>
+</body>
+</html>

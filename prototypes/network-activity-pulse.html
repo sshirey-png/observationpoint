@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Network — Activity Pulse</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.nav{position:sticky;top:0;z-index:100;background:#002f60;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.nav-back{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none}
+.nav-title{font-size:15px;font-weight:700;color:#fff;flex:1}.nav-title span{color:#e47727}
+.nav-tag{font-size:11px;font-weight:600;color:rgba(255,255,255,.7);padding:3px 8px;border-radius:6px;background:rgba(255,255,255,.1)}
+
+.content{padding:16px;max-width:1100px;margin:0 auto;padding-bottom:40px}
+.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;margin:22px 0 10px}
+
+/* HERO — network pulse */
+.pulse-hero{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,47,96,.06);margin-bottom:14px;border:1px solid #e5e7eb}
+.pulse-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:18px}
+.pulse-caption{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#e47727}
+.pulse-headline{font-size:24px;font-weight:800;letter-spacing:-.02em;line-height:1.2;margin-top:4px}
+.pulse-sub{font-size:13px;color:#6b7280;margin-top:4px}
+.pulse-window{font-size:11px;color:#9ca3af;font-weight:600;text-align:right;white-space:nowrap}
+
+/* School rows with bar chart */
+.pulse-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f3f4f6}
+.pulse-row:last-child{border-bottom:none}
+.pulse-school{font-size:13px;font-weight:700;width:150px;flex-shrink:0}
+.pulse-school-sub{font-size:10px;color:#9ca3af;font-weight:600;margin-top:2px}
+.pulse-bar-wrap{flex:1;display:flex;align-items:center;gap:8px}
+.pulse-bar-bg{flex:1;height:22px;background:#f5f7fa;border-radius:6px;position:relative;overflow:hidden}
+.pulse-bar{height:100%;border-radius:6px;display:flex;align-items:center;padding-left:10px;color:#fff;font-size:11px;font-weight:700;transition:width .3s}
+.pulse-bar.high{background:linear-gradient(90deg,#059669,#10b981)}
+.pulse-bar.med{background:linear-gradient(90deg,#e47727,#fbbe82)}
+.pulse-bar.low{background:linear-gradient(90deg,#dc2626,#f87171)}
+.pulse-count{font-size:14px;font-weight:800;min-width:50px;text-align:right;font-variant-numeric:tabular-nums}
+
+/* Weekly dots */
+.weeks-row{display:flex;gap:4px;margin-top:6px}
+.week-dot{flex:1;height:6px;border-radius:2px;background:#e5e7eb}
+.week-dot.on{background:#059669}
+.week-dot.med{background:#fbbe82}
+.week-dot.low{background:#fee2e2}
+
+/* Two column layout */
+.grid-2{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:780px){.grid-2{grid-template-columns:1fr 1fr}}
+
+/* Cards */
+.card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.card-title{font-size:14px;font-weight:700;margin-bottom:3px}
+.card-sub{font-size:11px;color:#9ca3af;margin-bottom:14px}
+
+/* Coverage ring */
+.rings{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.ring-cell{text-align:center}
+.ring-svg{width:64px;height:64px;display:inline-block}
+.ring-bg{fill:none;stroke:#f3f4f6;stroke-width:7}
+.ring-fg{fill:none;stroke:#002f60;stroke-width:7;stroke-linecap:round;transform:rotate(-90deg);transform-origin:center}
+.ring-text{font-size:15px;font-weight:800;fill:#002f60;text-anchor:middle;dominant-baseline:central}
+.ring-label{font-size:11px;font-weight:700;margin-top:4px}
+.ring-sub{font-size:10px;color:#9ca3af}
+
+/* Cadence */
+.cadence-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f3f4f6}
+.cadence-row:last-child{border-bottom:none}
+.cadence-label{font-size:12px;font-weight:600;color:#374151;flex:1}
+.cadence-val{font-size:14px;font-weight:800}
+.cadence-val.good{color:#059669}.cadence-val.warn{color:#e47727}.cadence-val.bad{color:#dc2626}
+.cadence-meta{font-size:10px;color:#9ca3af;font-weight:600}
+
+/* This week card */
+.this-week{background:linear-gradient(135deg,#002f60,#1e40af);color:#fff;border-radius:14px;padding:18px;margin-bottom:14px;box-shadow:0 4px 16px rgba(0,47,96,.15)}
+.tw-caption{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fbbe82}
+.tw-head{font-size:18px;font-weight:800;margin-top:4px;letter-spacing:-.01em}
+.tw-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.tw-cell{text-align:center;padding:10px;background:rgba(255,255,255,.08);border-radius:10px}
+.tw-val{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.tw-val.red{color:#fca5a5}
+.tw-val.amber{color:#fbbe82}
+.tw-val.green{color:#86efac}
+.tw-lbl{font-size:10px;color:rgba(255,255,255,.7);text-transform:uppercase;font-weight:700;letter-spacing:.05em;margin-top:2px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+    <a class="nav-back" href="design-options.html"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></a>
+    <div class="nav-title">Observation<span>Point</span></div>
+    <div class="nav-tag">Network · Pulse</div>
+</nav>
+
+<div class="content">
+
+<!-- Current week snapshot -->
+<div class="this-week">
+    <div class="tw-caption">This Week · Apr 14 – Apr 18</div>
+    <div class="tw-head">Network cadence at a glance</div>
+    <div class="tw-grid">
+        <div class="tw-cell"><div class="tw-val green">37</div><div class="tw-lbl">Touchpoints</div></div>
+        <div class="tw-cell"><div class="tw-val amber">29</div><div class="tw-lbl">Teachers</div></div>
+        <div class="tw-cell"><div class="tw-val green">9</div><div class="tw-lbl">Active leaders</div></div>
+        <div class="tw-cell"><div class="tw-val red">2</div><div class="tw-lbl">Quiet schools</div></div>
+    </div>
+</div>
+
+<!-- Pulse chart -->
+<div class="pulse-hero">
+    <div class="pulse-top">
+        <div>
+            <div class="pulse-caption">Activity Pulse · last 30 days</div>
+            <div class="pulse-headline">Who is observing — and who is quiet?</div>
+            <div class="pulse-sub">Each bar is total touchpoints of any type logged this month. Dots below show weekly distribution.</div>
+        </div>
+        <div class="pulse-window">Mar 19 — Apr 18</div>
+    </div>
+
+    <div class="pulse-row">
+        <div>
+            <div class="pulse-school">Langston Hughes</div>
+            <div class="pulse-school-sub">51 teachers · 14 observed</div>
+        </div>
+        <div class="pulse-bar-wrap">
+            <div class="pulse-bar-bg"><div class="pulse-bar high" style="width:92%">14 obs · 8 fdbk · 6 cel · 3 meet</div></div>
+            <div class="pulse-count">31</div>
+        </div>
+    </div>
+    <div style="margin-left:162px">
+        <div class="weeks-row">
+            <div class="week-dot on"></div>
+            <div class="week-dot on"></div>
+            <div class="week-dot on"></div>
+            <div class="week-dot on"></div>
+            <div class="week-dot on"></div>
+        </div>
+    </div>
+
+    <div class="pulse-row">
+        <div>
+            <div class="pulse-school">Samuel J. Green</div>
+            <div class="pulse-school-sub">43 teachers · 7 observed</div>
+        </div>
+        <div class="pulse-bar-wrap">
+            <div class="pulse-bar-bg"><div class="pulse-bar med" style="width:68%">7 obs · 5 fdbk · 4 cel · 1 meet</div></div>
+            <div class="pulse-count">17</div>
+        </div>
+    </div>
+    <div style="margin-left:162px">
+        <div class="weeks-row">
+            <div class="week-dot med"></div>
+            <div class="week-dot on"></div>
+            <div class="week-dot low"></div>
+            <div class="week-dot on"></div>
+            <div class="week-dot med"></div>
+        </div>
+    </div>
+
+    <div class="pulse-row">
+        <div>
+            <div class="pulse-school">Arthur Ashe</div>
+            <div class="pulse-school-sub">54 teachers · 8 observed</div>
+        </div>
+        <div class="pulse-bar-wrap">
+            <div class="pulse-bar-bg"><div class="pulse-bar med" style="width:62%">8 obs · 3 fdbk · 3 cel · 1 meet</div></div>
+            <div class="pulse-count">15</div>
+        </div>
+    </div>
+    <div style="margin-left:162px">
+        <div class="weeks-row">
+            <div class="week-dot on"></div>
+            <div class="week-dot med"></div>
+            <div class="week-dot low"></div>
+            <div class="week-dot med"></div>
+            <div class="week-dot low"></div>
+        </div>
+    </div>
+
+    <div class="pulse-row">
+        <div>
+            <div class="pulse-school">Phillis Wheatley</div>
+            <div class="pulse-school-sub">48 teachers · 8 observed</div>
+        </div>
+        <div class="pulse-bar-wrap">
+            <div class="pulse-bar-bg"><div class="pulse-bar low" style="width:38%">8 obs · 1 fdbk</div></div>
+            <div class="pulse-count">9</div>
+        </div>
+    </div>
+    <div style="margin-left:162px">
+        <div class="weeks-row">
+            <div class="week-dot low"></div>
+            <div class="week-dot low"></div>
+            <div class="week-dot on"></div>
+            <div class="week-dot low"></div>
+            <div class="week-dot low"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Two column details -->
+<div class="grid-2">
+    <div class="card">
+        <div class="card-title">Coverage — teachers observed this month</div>
+        <div class="card-sub">% of each school's teachers with at least one touchpoint</div>
+        <div class="rings">
+            <div class="ring-cell">
+                <svg class="ring-svg" viewBox="0 0 64 64">
+                    <circle class="ring-bg" cx="32" cy="32" r="26"/>
+                    <circle class="ring-fg" cx="32" cy="32" r="26" stroke-dasharray="47 164" style="stroke:#059669"/>
+                    <text class="ring-text" x="32" y="32">29%</text>
+                </svg>
+                <div class="ring-label">Hughes</div>
+                <div class="ring-sub">14/51</div>
+            </div>
+            <div class="ring-cell">
+                <svg class="ring-svg" viewBox="0 0 64 64">
+                    <circle class="ring-bg" cx="32" cy="32" r="26"/>
+                    <circle class="ring-fg" cx="32" cy="32" r="26" stroke-dasharray="29 164" style="stroke:#e47727"/>
+                    <text class="ring-text" x="32" y="32">18%</text>
+                </svg>
+                <div class="ring-label">Green</div>
+                <div class="ring-sub">7/43</div>
+            </div>
+            <div class="ring-cell">
+                <svg class="ring-svg" viewBox="0 0 64 64">
+                    <circle class="ring-bg" cx="32" cy="32" r="26"/>
+                    <circle class="ring-fg" cx="32" cy="32" r="26" stroke-dasharray="26 164" style="stroke:#e47727"/>
+                    <text class="ring-text" x="32" y="32">16%</text>
+                </svg>
+                <div class="ring-label">Ashe</div>
+                <div class="ring-sub">8/54</div>
+            </div>
+            <div class="ring-cell">
+                <svg class="ring-svg" viewBox="0 0 64 64">
+                    <circle class="ring-bg" cx="32" cy="32" r="26"/>
+                    <circle class="ring-fg" cx="32" cy="32" r="26" stroke-dasharray="26 164" style="stroke:#dc2626"/>
+                    <text class="ring-text" x="32" y="32">16%</text>
+                </svg>
+                <div class="ring-label">Wheatley</div>
+                <div class="ring-sub">8/48</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Cadence — average days between touchpoints</div>
+        <div class="card-sub">Lower is steadier</div>
+        <div class="cadence-row">
+            <div class="cadence-label">Langston Hughes</div>
+            <div class="cadence-val good">11 days</div>
+            <div class="cadence-meta">last touch 1 day ago</div>
+        </div>
+        <div class="cadence-row">
+            <div class="cadence-label">Samuel J. Green</div>
+            <div class="cadence-val warn">18 days</div>
+            <div class="cadence-meta">last touch 3 days ago</div>
+        </div>
+        <div class="cadence-row">
+            <div class="cadence-label">Arthur Ashe</div>
+            <div class="cadence-val warn">21 days</div>
+            <div class="cadence-meta">last touch 4 days ago</div>
+        </div>
+        <div class="cadence-row">
+            <div class="cadence-label">Phillis Wheatley</div>
+            <div class="cadence-val bad">34 days</div>
+            <div class="cadence-meta">last touch 9 days ago</div>
+        </div>
+    </div>
+</div>
+
+<!-- Quiet teachers -->
+<div class="section-label">Teachers With No Touchpoint in 30+ days — per school</div>
+
+<div class="grid-2">
+    <div class="card">
+        <div class="card-title">Quiet Classrooms</div>
+        <div class="card-sub">Present data, no judgment — may reflect assignment coverage</div>
+        <div class="cadence-row">
+            <div class="cadence-label">Langston Hughes</div>
+            <div class="cadence-val good">8</div>
+            <div class="cadence-meta">of 51</div>
+        </div>
+        <div class="cadence-row">
+            <div class="cadence-label">Samuel J. Green</div>
+            <div class="cadence-val warn">14</div>
+            <div class="cadence-meta">of 43</div>
+        </div>
+        <div class="cadence-row">
+            <div class="cadence-label">Arthur Ashe</div>
+            <div class="cadence-val warn">22</div>
+            <div class="cadence-meta">of 54</div>
+        </div>
+        <div class="cadence-row">
+            <div class="cadence-label">Phillis Wheatley</div>
+            <div class="cadence-val bad">26</div>
+            <div class="cadence-meta">of 48</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Active leaders · last 30 days</div>
+        <div class="card-sub">Who is logging the touchpoints</div>
+        <div class="cadence-row">
+            <div class="cadence-label">Hughes · 4 leaders</div>
+            <div class="cadence-val good">31</div>
+            <div class="cadence-meta">7.8/leader</div>
+        </div>
+        <div class="cadence-row">
+            <div class="cadence-label">Green · 3 leaders</div>
+            <div class="cadence-val">17</div>
+            <div class="cadence-meta">5.7/leader</div>
+        </div>
+        <div class="cadence-row">
+            <div class="cadence-label">Ashe · 3 leaders</div>
+            <div class="cadence-val">15</div>
+            <div class="cadence-meta">5.0/leader</div>
+        </div>
+        <div class="cadence-row">
+            <div class="cadence-label">Wheatley · 2 leaders</div>
+            <div class="cadence-val warn">9</div>
+            <div class="cadence-meta">4.5/leader</div>
+        </div>
+    </div>
+</div>
+
+</div>
+</body>
+</html>
