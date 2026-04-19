@@ -466,8 +466,10 @@ function send(){
     ask(v);
 }
 
-// init
-applyCtx('profile');
+// init — honor ?ctx= query param from the calling page
+const urlCtx = new URLSearchParams(location.search).get('ctx');
+const initCtx = (urlCtx && CTX[urlCtx]) ? urlCtx : 'profile';
+switchPage(initCtx);
 </script>
 </body>
 </html>
