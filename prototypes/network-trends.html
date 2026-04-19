@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Network — Trends</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.nav{position:sticky;top:0;z-index:100;background:#002f60;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.nav-back{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none}
+.nav-title{font-size:15px;font-weight:700;color:#fff;flex:1}.nav-title span{color:#e47727}
+.nav-tag{font-size:11px;font-weight:600;color:rgba(255,255,255,.7);padding:3px 8px;border-radius:6px;background:rgba(255,255,255,.1)}
+
+.page-header{background:#fff;padding:20px 16px;border-bottom:1px solid #e5e7eb}
+.page-title{font-size:20px;font-weight:800;letter-spacing:-.02em}
+.page-meta{font-size:13px;color:#6b7280;margin-top:2px}
+
+/* Category toggle */
+.cat-bar{position:sticky;top:50px;z-index:50;background:#fff;padding:10px 12px 12px;border-bottom:1px solid #e5e7eb;display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.cat-bar::-webkit-scrollbar{display:none}
+.cat-tab{padding:7px 13px;border-radius:18px;background:#f5f7fa;font-size:12px;font-weight:700;color:#6b7280;cursor:pointer;white-space:nowrap;border:1.5px solid transparent;transition:all .15s;flex-shrink:0}
+.cat-tab.on{background:#002f60;color:#fff;border-color:#002f60}
+.cat-tab:not(.on):hover{border-color:#e47727;color:#e47727}
+
+.content{padding:16px;max-width:900px;margin:0 auto;padding-bottom:40px}
+.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;margin:18px 0 8px}
+
+.cat-view{display:none}
+.cat-view.on{display:block}
+
+/* Hero */
+.hero{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,47,96,.06);margin-bottom:14px;border:1px solid #e5e7eb}
+.hero-cap{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#e47727;margin-bottom:4px}
+.hero-head{font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1.2;margin-bottom:4px}
+.hero-sub{font-size:13px;color:#6b7280;margin-bottom:18px}
+.spark-wrap{position:relative;height:160px;margin:0 -4px}
+.spark-grid line{stroke:#f3f4f6;stroke-width:1}
+.spark-axis{font-size:10px;fill:#9ca3af;font-family:'Inter',sans-serif}
+.spark-line{fill:none;stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
+.spark-pt{stroke:#fff;stroke-width:3}
+.spark-label{font-size:10px;font-weight:700;fill:#374151;font-family:'Inter',sans-serif}
+
+/* Stats */
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.stat{background:#fff;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);text-align:center}
+.stat-val{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.stat-val.up{color:#059669}.stat-val.muted{color:#6b7280}.stat-val.orange{color:#e47727}
+.stat-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-top:2px}
+
+/* School comparison rows */
+.school-row{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #f3f4f6}
+.school-row:last-child{border-bottom:none}
+.school-name{width:160px;flex-shrink:0}
+.school-name-t{font-size:13px;font-weight:700}
+.school-name-m{font-size:10px;color:#9ca3af;font-weight:600;margin-top:2px}
+.bar-wrap{flex:1;height:24px;background:#f5f7fa;border-radius:7px;position:relative;overflow:hidden}
+.bar-fill{height:100%;border-radius:7px;display:flex;align-items:center;justify-content:flex-end;padding-right:10px;color:#fff;font-size:12px;font-weight:800;transition:width .5s}
+.bar-fill.high{background:linear-gradient(90deg,#059669,#10b981)}
+.bar-fill.mid{background:linear-gradient(90deg,#e47727,#fbbe82)}
+.bar-fill.low{background:linear-gradient(90deg,#dc2626,#f87171)}
+.bar-avg-line{position:absolute;top:0;bottom:0;width:2px;background:#002f60;opacity:.7}
+.bar-yoy{font-size:11px;color:#9ca3af;font-weight:600;min-width:56px;text-align:right}
+
+/* Schools container */
+.schools-card{background:#fff;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:14px}
+.schools-title{font-size:14px;font-weight:700;margin-bottom:3px}
+.schools-sub{font-size:11px;color:#9ca3af;margin-bottom:10px}
+
+/* Callout */
+.callout{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;margin-bottom:14px}
+.callout.orange{background:#fff7ed;border:1px solid #fed7aa;color:#7c2d12}
+.callout.blue{background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a}
+.callout.green{background:#f0fdf4;border:1px solid #86efac;color:#064e3b}
+.callout-ic{width:32px;height:32px;border-radius:8px;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800}
+.callout.orange .callout-ic{background:#e47727}
+.callout.blue .callout-ic{background:#002f60}
+.callout.green .callout-ic{background:#059669}
+.callout-txt{font-size:13px;line-height:1.45;flex:1}
+.callout-txt b{color:#002f60}
+
+/* YoY grid */
+.yoy-card{background:#fff;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:14px;overflow-x:auto}
+.yoy-table{width:100%;border-collapse:collapse;font-size:13px}
+.yoy-table th{text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#9ca3af;padding:6px 4px;border-bottom:1px solid #e5e7eb}
+.yoy-table th.dim-col{text-align:left;padding-left:8px}
+.yoy-table td{padding:8px 4px;text-align:center;border-bottom:1px solid #f3f4f6}
+.yoy-table td.dim-label{text-align:left;padding-left:8px;font-weight:700;color:#374151;font-size:12px}
+.yoy-table tr:last-child td{border-bottom:none}
+.yoy-score{display:inline-flex;align-items:center;justify-content:center;width:36px;height:28px;border-radius:6px;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.yoy-score.s2{background:#ffedd5;color:#c2410c}.yoy-score.s3{background:#fef3c7;color:#a16207}.yoy-score.s4{background:#dcfce7;color:#059669}
+
+/* Frequency */
+.freq-card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:14px}
+.freq-title{font-size:14px;font-weight:700;margin-bottom:12px}
+.freq-bars{display:flex;align-items:flex-end;gap:6px;height:80px}
+.freq-bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;justify-content:flex-end}
+.freq-bar-fill{width:100%;border-radius:3px 3px 0 0;min-height:4px;background:#e47727}
+.freq-bar-fill.ca{background:#be185d}.freq-bar-fill.me{background:#16a34a}.freq-bar-fill.fb{background:#ca8a04}.freq-bar-fill.sr{background:#7c3aed}
+.freq-bar-lbl{font-size:9px;font-weight:700;color:#9ca3af;text-transform:uppercase}
+
+/* Data quality note */
+.note-quality{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:11px 14px;font-size:12px;color:#7c2d12;line-height:1.45;margin-bottom:14px}
+.note-quality b{color:#002f60}
+
+/* FAB */
+.fab{position:fixed;bottom:20px;right:20px;z-index:200;cursor:pointer}
+.fab-btn{width:56px;height:56px;border-radius:18px;background:linear-gradient(135deg,#002f60,#1e40af);color:#fbbe82;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;box-shadow:0 6px 20px rgba(0,47,96,.3);position:relative;z-index:2}
+.fab-pulse{position:absolute;top:0;left:0;right:0;bottom:0;border-radius:18px;background:#002f60;opacity:0;animation:pulse 2.4s infinite;z-index:1}
+@keyframes pulse{0%{transform:scale(1);opacity:.4}70%{transform:scale(1.4);opacity:0}100%{transform:scale(1.4);opacity:0}}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+    <a class="nav-back" href="home-updated.html"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></a>
+    <div class="nav-title">Observation<span>Point</span></div>
+    <div class="nav-tag">Network · Trends</div>
+</nav>
+
+<div class="page-header">
+    <div class="page-title">Network Dashboard</div>
+    <div class="page-meta">FirstLine Schools · 4 schools · 187 teachers · 25-26</div>
+</div>
+
+<!-- Category toggle -->
+<div class="cat-bar">
+    <div class="cat-tab on" data-cat="fundamentals">Fundamentals</div>
+    <div class="cat-tab" data-cat="observations">Observations</div>
+    <div class="cat-tab" data-cat="pmap">PMAP</div>
+    <div class="cat-tab" data-cat="reflection">Self-Reflection</div>
+    <div class="cat-tab" data-cat="feedback">Quick FB</div>
+    <div class="cat-tab" data-cat="celebrate">Celebrate</div>
+    <div class="cat-tab" data-cat="meetings">Meetings</div>
+</div>
+
+<div class="content">
+
+<!-- FUNDAMENTALS -->
+<div class="cat-view on" data-view="fundamentals">
+    <div class="hero">
+        <div class="hero-cap">Fundamentals · On-task</div>
+        <div class="hero-head">Network on-task: 84%</div>
+        <div class="hero-sub">3-year rise from 74% · all 4 schools contributed to the lift</div>
+        <div class="spark-wrap">
+            <svg viewBox="0 0 600 160" preserveAspectRatio="none" width="100%" height="100%">
+                <defs><linearGradient id="gnf" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#e47727" stop-opacity=".45"/><stop offset="100%" stop-color="#e47727" stop-opacity="0"/></linearGradient></defs>
+                <g class="spark-grid"><line x1="0" y1="30" x2="600" y2="30"/><line x1="0" y1="70" x2="600" y2="70"/><line x1="0" y1="110" x2="600" y2="110"/></g>
+                <text class="spark-axis" x="2" y="34">100%</text><text class="spark-axis" x="2" y="74">80%</text><text class="spark-axis" x="2" y="114">60%</text>
+                <path fill="url(#gnf)" d="M 60 103 L 300 89 L 540 76 L 540 160 L 60 160 Z"/>
+                <path class="spark-line" stroke="#e47727" d="M 60 103 L 300 89 L 540 76"/>
+                <circle class="spark-pt" fill="#e47727" cx="60" cy="103" r="6"/>
+                <circle class="spark-pt" fill="#e47727" cx="300" cy="89" r="6"/>
+                <circle class="spark-pt" fill="#059669" cx="540" cy="76" r="7"/>
+                <text class="spark-label" x="60" y="135" text-anchor="middle">23-24 · 74%</text>
+                <text class="spark-label" x="300" y="135" text-anchor="middle">24-25 · 81%</text>
+                <text class="spark-label" x="540" y="135" text-anchor="middle">25-26 · 84%</text>
+            </svg>
+        </div>
+    </div>
+
+    <div class="stat-row">
+        <div class="stat"><div class="stat-val up">84%</div><div class="stat-lbl">Network avg</div></div>
+        <div class="stat"><div class="stat-val up">+10</div><div class="stat-lbl">3-yr lift</div></div>
+        <div class="stat"><div class="stat-val">721</div><div class="stat-lbl">Visits YTD</div></div>
+    </div>
+
+    <div class="schools-card">
+        <div class="schools-title">On-task · by school</div>
+        <div class="schools-sub">Navy line = network average (84%)</div>
+        <div class="school-row"><div class="school-name"><div class="school-name-t">Langston Hughes</div><div class="school-name-m">51 teachers · 201 visits</div></div><div class="bar-wrap"><div class="bar-fill high" style="width:91%">91%</div><div class="bar-avg-line" style="left:84%"></div></div><div class="bar-yoy">▲ +4 YoY</div></div>
+        <div class="school-row"><div class="school-name"><div class="school-name-t">Samuel J. Green</div><div class="school-name-m">43 teachers · 184 visits</div></div><div class="bar-wrap"><div class="bar-fill high" style="width:87%">87%</div><div class="bar-avg-line" style="left:84%"></div></div><div class="bar-yoy">▲ +5 YoY</div></div>
+        <div class="school-row"><div class="school-name"><div class="school-name-t">Arthur Ashe</div><div class="school-name-m">54 teachers · 195 visits</div></div><div class="bar-wrap"><div class="bar-fill mid" style="width:82%">82%</div><div class="bar-avg-line" style="left:84%"></div></div><div class="bar-yoy">▲ +3 YoY</div></div>
+        <div class="school-row"><div class="school-name"><div class="school-name-t">Phillis Wheatley</div><div class="school-name-m">48 teachers · 141 visits</div></div><div class="bar-wrap"><div class="bar-fill mid" style="width:76%">76%</div><div class="bar-avg-line" style="left:84%"></div></div><div class="bar-yoy">— flat</div></div>
+    </div>
+
+    <div class="note-quality"><b>Data quality note:</b> Wheatley's 141 visits come from 2 observers; Hughes's 201 come from 4. Larger observer spread → more reliable average.</div>
+</div>
+
+<!-- OBSERVATIONS -->
+<div class="cat-view" data-view="observations">
+    <div class="hero">
+        <div class="hero-cap">Observations · 5 dimensions</div>
+        <div class="hero-head">Network avg · 3.3 across dimensions</div>
+        <div class="hero-sub">Demo of Learning rose +0.3 · Cognitive Engagement dropped -0.1 · everything else held or moved up</div>
+        <div class="spark-wrap">
+            <svg viewBox="0 0 600 160" preserveAspectRatio="none" width="100%" height="100%">
+                <g class="spark-grid"><line x1="0" y1="20" x2="600" y2="20"/><line x1="0" y1="70" x2="600" y2="70"/><line x1="0" y1="120" x2="600" y2="120"/></g>
+                <text class="spark-axis" x="2" y="24">4.0</text><text class="spark-axis" x="2" y="74">3.0</text><text class="spark-axis" x="2" y="124">2.0</text>
+
+                <!-- On Task: 3.4 → 3.3 → 3.4 -->
+                <path class="spark-line" stroke="#2563eb" stroke-width="2.5" opacity=".85" d="M 60 50 L 300 55 L 540 50"/>
+                <!-- CoL: 3.17 → 3.07 → 3.17 -->
+                <path class="spark-line" stroke="#e47727" stroke-width="2.5" opacity=".85" d="M 60 62 L 300 67 L 540 62"/>
+                <!-- Content: 3.36 → 3.21 → 3.31 -->
+                <path class="spark-line" stroke="#7c3aed" stroke-width="2.5" opacity=".85" d="M 60 52 L 300 60 L 540 55"/>
+                <!-- Cog Eng: 2.97 → 2.87 → 2.93 -->
+                <path class="spark-line" stroke="#ca8a04" stroke-width="2.5" opacity=".85" d="M 60 72 L 300 77 L 540 74"/>
+                <!-- Demo: 2.93 → 2.94 → 3.04 -->
+                <path class="spark-line" stroke="#059669" stroke-width="2.5" opacity=".85" d="M 60 74 L 300 73 L 540 68"/>
+
+                <text class="spark-label" x="60" y="145" text-anchor="middle">23-24</text>
+                <text class="spark-label" x="300" y="145" text-anchor="middle">24-25</text>
+                <text class="spark-label" x="540" y="145" text-anchor="middle">25-26</text>
+            </svg>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:10px;font-weight:700">
+            <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:3px;background:#2563eb"></div>On Task</div>
+            <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:3px;background:#e47727"></div>CoL</div>
+            <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:3px;background:#7c3aed"></div>Content</div>
+            <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:3px;background:#ca8a04"></div>Cog Eng</div>
+            <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:3px;background:#059669"></div>Demo</div>
+        </div>
+    </div>
+
+    <div class="stat-row">
+        <div class="stat"><div class="stat-val">947</div><div class="stat-lbl">Observations YTD</div></div>
+        <div class="stat"><div class="stat-val up">3.4</div><div class="stat-lbl">Highest (On)</div></div>
+        <div class="stat"><div class="stat-val orange">2.93</div><div class="stat-lbl">Lowest (Cog Eng)</div></div>
+    </div>
+
+    <div class="schools-card">
+        <div class="schools-title">PMAP averages · latest</div>
+        <div class="schools-sub">Network avg = 3.22 (navy line)</div>
+        <div class="school-row"><div class="school-name"><div class="school-name-t">Samuel J. Green</div><div class="school-name-m">3.48 avg</div></div><div class="bar-wrap"><div class="bar-fill high" style="width:87%">3.48</div><div class="bar-avg-line" style="left:81%"></div></div><div class="bar-yoy">▲ up</div></div>
+        <div class="school-row"><div class="school-name"><div class="school-name-t">Langston Hughes</div><div class="school-name-m">3.32 avg</div></div><div class="bar-wrap"><div class="bar-fill high" style="width:83%">3.32</div><div class="bar-avg-line" style="left:81%"></div></div><div class="bar-yoy">— held</div></div>
+        <div class="school-row"><div class="school-name"><div class="school-name-t">Arthur Ashe</div><div class="school-name-m">3.21 avg</div></div><div class="bar-wrap"><div class="bar-fill mid" style="width:80%">3.21</div><div class="bar-avg-line" style="left:81%"></div></div><div class="bar-yoy">— held</div></div>
+        <div class="school-row"><div class="school-name"><div class="school-name-t">Phillis Wheatley</div><div class="school-name-m">2.79 avg</div></div><div class="bar-wrap"><div class="bar-fill low" style="width:70%">2.79</div><div class="bar-avg-line" style="left:81%"></div></div><div class="bar-yoy">▼ down</div></div>
+    </div>
+</div>
+
+<!-- PMAP -->
+<div class="cat-view" data-view="pmap">
+    <div class="hero">
+        <div class="hero-cap">PMAP · Year-over-Year</div>
+        <div class="hero-head">Next cycle: Mar 6, 2026 (teachers)</div>
+        <div class="hero-sub">Leader cycles on different dates · Demo of Learning made the biggest 3-year gain (+0.11)</div>
+    </div>
+
+    <div class="callout orange">
+        <div class="callout-ic">!</div>
+        <div class="callout-txt"><b>Cognitive Engagement</b> is the only dimension that dropped network-wide this year (-0.04 from last year, -0.04 from 23-24). Worth a conversation at the next leader huddle.</div>
+    </div>
+
+    <div class="yoy-card">
+        <table class="yoy-table">
+            <thead><tr><th class="dim-col">Network PMAP avg</th><th>23-24</th><th>24-25</th><th>25-26</th><th>Δ 3-yr</th></tr></thead>
+            <tbody>
+                <tr><td class="dim-label">On Task</td><td><span class="yoy-score s3">3.4</span></td><td><span class="yoy-score s3">3.3</span></td><td><span class="yoy-score s3">3.4</span></td><td style="color:#9ca3af;font-weight:700">flat</td></tr>
+                <tr><td class="dim-label">Community of Learners</td><td><span class="yoy-score s3">3.17</span></td><td><span class="yoy-score s3">3.07</span></td><td><span class="yoy-score s3">3.17</span></td><td style="color:#9ca3af;font-weight:700">flat</td></tr>
+                <tr><td class="dim-label">Essential Content</td><td><span class="yoy-score s3">3.36</span></td><td><span class="yoy-score s3">3.21</span></td><td><span class="yoy-score s3">3.31</span></td><td style="color:#dc2626;font-weight:700">-0.05</td></tr>
+                <tr><td class="dim-label">Cognitive Engagement</td><td><span class="yoy-score s2">2.97</span></td><td><span class="yoy-score s2">2.87</span></td><td><span class="yoy-score s2">2.93</span></td><td style="color:#dc2626;font-weight:700">-0.04</td></tr>
+                <tr><td class="dim-label">Demonstration of Learning</td><td><span class="yoy-score s2">2.93</span></td><td><span class="yoy-score s2">2.94</span></td><td><span class="yoy-score s3">3.04</span></td><td style="color:#059669;font-weight:700">+0.11</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section-label">Coverage this cycle</div>
+    <div class="stat-row">
+        <div class="stat"><div class="stat-val">162</div><div class="stat-lbl">PMAPs completed</div></div>
+        <div class="stat"><div class="stat-val orange">25</div><div class="stat-lbl">Still open</div></div>
+        <div class="stat"><div class="stat-val muted">18d</div><div class="stat-lbl">Until next</div></div>
+    </div>
+</div>
+
+<!-- SELF-REFLECTION -->
+<div class="cat-view" data-view="reflection">
+    <div class="hero">
+        <div class="hero-cap">Self-Reflection</div>
+        <div class="hero-head">87 self-reflections submitted</div>
+        <div class="hero-sub">Wheatley leads submission rate at 77% · lowest at Ashe (34%)</div>
+    </div>
+
+    <div class="callout blue">
+        <div class="callout-ic">i</div>
+        <div class="callout-txt">Wheatley's high SR rate correlates with their lower observed scores — staff are self-aware. SR engagement isn't the gap; action on the reflections may be.</div>
+    </div>
+
+    <div class="schools-card">
+        <div class="schools-title">Submission rate by school</div>
+        <div class="schools-sub">% of active teachers who submitted SR this year</div>
+        <div class="school-row"><div class="school-name"><div class="school-name-t">Phillis Wheatley</div><div class="school-name-m">37 of 48</div></div><div class="bar-wrap"><div class="bar-fill high" style="width:77%">77%</div></div><div class="bar-yoy">highest</div></div>
+        <div class="school-row"><div class="school-name"><div class="school-name-t">Samuel J. Green</div><div class="school-name-m">14 of 43</div></div><div class="bar-wrap"><div class="bar-fill mid" style="width:33%">33%</div></div><div class="bar-yoy">—</div></div>
+        <div class="school-row"><div class="school-name"><div class="school-name-t">Langston Hughes</div><div class="school-name-m">22 of 51</div></div><div class="bar-wrap"><div class="bar-fill mid" style="width:43%">43%</div></div><div class="bar-yoy">—</div></div>
+        <div class="school-row"><div class="school-name"><div class="school-name-t">Arthur Ashe</div><div class="school-name-m">14 of 54</div></div><div class="bar-wrap"><div class="bar-fill low" style="width:26%">26%</div></div><div class="bar-yoy">lowest</div></div>
+    </div>
+
+    <div class="section-label">Observer-vs-Self alignment · network</div>
+    <div class="yoy-card">
+        <table class="yoy-table">
+            <thead><tr><th class="dim-col">Dimension</th><th>Observer</th><th>Self</th><th>Gap</th></tr></thead>
+            <tbody>
+                <tr><td class="dim-label">On Task</td><td><span class="yoy-score s3">3.4</span></td><td><span class="yoy-score s3">3.6</span></td><td style="color:#e47727;font-weight:700">+0.2 self</td></tr>
+                <tr><td class="dim-label">Community of Learners</td><td><span class="yoy-score s3">3.17</span></td><td><span class="yoy-score s3">3.5</span></td><td style="color:#e47727;font-weight:700">+0.33 self</td></tr>
+                <tr><td class="dim-label">Essential Content</td><td><span class="yoy-score s3">3.31</span></td><td><span class="yoy-score s3">3.4</span></td><td style="color:#9ca3af;font-weight:700">aligned</td></tr>
+                <tr><td class="dim-label">Cognitive Engagement</td><td><span class="yoy-score s2">2.93</span></td><td><span class="yoy-score s3">3.2</span></td><td style="color:#e47727;font-weight:700">+0.27 self</td></tr>
+                <tr><td class="dim-label">Demonstration of Learning</td><td><span class="yoy-score s3">3.04</span></td><td><span class="yoy-score s3">3.1</span></td><td style="color:#9ca3af;font-weight:700">aligned</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- QUICK FEEDBACK -->
+<div class="cat-view" data-view="feedback">
+    <div class="hero">
+        <div class="hero-cap">Quick Feedback</div>
+        <div class="hero-head">284 notes network-wide</div>
+        <div class="hero-sub">Up from 196 last year · J. Mitchell leads with 47 notes</div>
+    </div>
+
+    <div class="freq-card">
+        <div class="freq-title">Quick feedback per month · network · 25-26</div>
+        <div class="freq-bars">
+            <div class="freq-bar"><div class="freq-bar-fill fb" style="height:30%"></div><div class="freq-bar-lbl">Aug</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill fb" style="height:55%"></div><div class="freq-bar-lbl">Sep</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill fb" style="height:72%"></div><div class="freq-bar-lbl">Oct</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill fb" style="height:60%"></div><div class="freq-bar-lbl">Nov</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill fb" style="height:35%"></div><div class="freq-bar-lbl">Dec</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill fb" style="height:70%"></div><div class="freq-bar-lbl">Jan</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill fb" style="height:62%"></div><div class="freq-bar-lbl">Feb</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill fb" style="height:85%"></div><div class="freq-bar-lbl">Mar</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill fb" style="height:95%"></div><div class="freq-bar-lbl">Apr</div></div>
+        </div>
+    </div>
+
+    <div class="schools-card">
+        <div class="schools-title">Notes per school</div>
+        <div class="school-row"><div class="school-name"><div class="school-name-t">Langston Hughes</div></div><div class="bar-wrap"><div class="bar-fill high" style="width:100%">96</div></div><div class="bar-yoy">avg 1.9/teacher</div></div>
+        <div class="school-row"><div class="school-name"><div class="school-name-t">Arthur Ashe</div></div><div class="bar-wrap"><div class="bar-fill mid" style="width:80%">77</div></div><div class="bar-yoy">avg 1.4/teacher</div></div>
+        <div class="school-row"><div class="school-name"><div class="school-name-t">Samuel J. Green</div></div><div class="bar-wrap"><div class="bar-fill mid" style="width:69%">66</div></div><div class="bar-yoy">avg 1.5/teacher</div></div>
+        <div class="school-row"><div class="school-name"><div class="school-name-t">Phillis Wheatley</div></div><div class="bar-wrap"><div class="bar-fill low" style="width:47%">45</div></div><div class="bar-yoy">avg 0.9/teacher</div></div>
+    </div>
+</div>
+
+<!-- CELEBRATE -->
+<div class="cat-view" data-view="celebrate">
+    <div class="hero">
+        <div class="hero-cap">Celebrations</div>
+        <div class="hero-head">188 celebrations · 79 public</div>
+        <div class="hero-sub">Recognition ratio tells you how much each school balances celebration vs evaluation</div>
+    </div>
+
+    <div class="callout green">
+        <div class="callout-ic">★</div>
+        <div class="callout-txt">Hughes has the highest recognition ratio at <b>2.8 celebrations per 10 observations</b>. Ashe has the lowest at 1.6 — most evaluation-heavy school.</div>
+    </div>
+
+    <div class="schools-card">
+        <div class="schools-title">Celebrations per 10 observations</div>
+        <div class="schools-sub">Ratio signals culture balance</div>
+        <div class="school-row"><div class="school-name"><div class="school-name-t">Langston Hughes</div></div><div class="bar-wrap"><div class="bar-fill high" style="width:93%">2.8</div></div><div class="bar-yoy">highest</div></div>
+        <div class="school-row"><div class="school-name"><div class="school-name-t">Phillis Wheatley</div></div><div class="bar-wrap"><div class="bar-fill mid" style="width:63%">1.9</div></div><div class="bar-yoy">—</div></div>
+        <div class="school-row"><div class="school-name"><div class="school-name-t">Samuel J. Green</div></div><div class="bar-wrap"><div class="bar-fill mid" style="width:57%">1.7</div></div><div class="bar-yoy">—</div></div>
+        <div class="school-row"><div class="school-name"><div class="school-name-t">Arthur Ashe</div></div><div class="bar-wrap"><div class="bar-fill low" style="width:53%">1.6</div></div><div class="bar-yoy">lowest</div></div>
+    </div>
+
+    <div class="freq-card">
+        <div class="freq-title">Network celebrations per month · 25-26</div>
+        <div class="freq-bars">
+            <div class="freq-bar"><div class="freq-bar-fill ca" style="height:20%"></div><div class="freq-bar-lbl">Aug</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill ca" style="height:50%"></div><div class="freq-bar-lbl">Sep</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill ca" style="height:75%"></div><div class="freq-bar-lbl">Oct</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill ca" style="height:95%"></div><div class="freq-bar-lbl">Nov</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill ca" style="height:55%"></div><div class="freq-bar-lbl">Dec</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill ca" style="height:80%"></div><div class="freq-bar-lbl">Jan</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill ca" style="height:90%"></div><div class="freq-bar-lbl">Feb</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill ca" style="height:40%"></div><div class="freq-bar-lbl">Mar</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill ca" style="height:70%"></div><div class="freq-bar-lbl">Apr</div></div>
+        </div>
+    </div>
+</div>
+
+<!-- MEETINGS -->
+<div class="cat-view" data-view="meetings">
+    <div class="hero">
+        <div class="hero-cap">Meetings &amp; Data Relays</div>
+        <div class="hero-head">156 meetings this year</div>
+        <div class="hero-sub">Green uses meetings most (7% of all touchpoints) · Ashe uses them least (4%)</div>
+    </div>
+
+    <div class="callout blue">
+        <div class="callout-ic">i</div>
+        <div class="callout-txt">Teachers with <b>3+ meetings this year</b> improved their PMAP scores on Community of Learners by <b>+0.4</b> (vs +0.1 for teachers with 0-1 meetings). Meetings look like a leading indicator.</div>
+    </div>
+
+    <div class="schools-card">
+        <div class="schools-title">Meetings per teacher</div>
+        <div class="school-row"><div class="school-name"><div class="school-name-t">Samuel J. Green</div></div><div class="bar-wrap"><div class="bar-fill high" style="width:95%">0.95</div></div><div class="bar-yoy">leader</div></div>
+        <div class="school-row"><div class="school-name"><div class="school-name-t">Phillis Wheatley</div></div><div class="bar-wrap"><div class="bar-fill mid" style="width:82%">1.04</div></div><div class="bar-yoy">—</div></div>
+        <div class="school-row"><div class="school-name"><div class="school-name-t">Langston Hughes</div></div><div class="bar-wrap"><div class="bar-fill mid" style="width:54%">0.75</div></div><div class="bar-yoy">—</div></div>
+        <div class="school-row"><div class="school-name"><div class="school-name-t">Arthur Ashe</div></div><div class="bar-wrap"><div class="bar-fill low" style="width:40%">0.50</div></div><div class="bar-yoy">—</div></div>
+    </div>
+
+    <div class="freq-card">
+        <div class="freq-title">Meetings per month · network · 25-26</div>
+        <div class="freq-bars">
+            <div class="freq-bar"><div class="freq-bar-fill me" style="height:15%"></div><div class="freq-bar-lbl">Aug</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill me" style="height:45%"></div><div class="freq-bar-lbl">Sep</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill me" style="height:30%"></div><div class="freq-bar-lbl">Oct</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill me" style="height:60%"></div><div class="freq-bar-lbl">Nov</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill me" style="height:90%"></div><div class="freq-bar-lbl">Dec</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill me" style="height:50%"></div><div class="freq-bar-lbl">Jan</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill me" style="height:85%"></div><div class="freq-bar-lbl">Feb</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill me" style="height:65%"></div><div class="freq-bar-lbl">Mar</div></div>
+            <div class="freq-bar"><div class="freq-bar-fill me" style="height:70%"></div><div class="freq-bar-lbl">Apr</div></div>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<!-- AI floating button -->
+<div class="fab" onclick="location.href='insights-floating.html'">
+    <div class="fab-pulse"></div>
+    <div class="fab-btn">&#10022;</div>
+</div>
+
+<script>
+document.querySelectorAll('.cat-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        const cat = tab.dataset.cat;
+        document.querySelectorAll('.cat-tab').forEach(t => t.classList.toggle('on', t.dataset.cat === cat));
+        document.querySelectorAll('.cat-view').forEach(v => v.classList.toggle('on', v.dataset.view === cat));
+        window.scrollTo({top: document.querySelector('.cat-bar').offsetTop, behavior: 'smooth'});
+    });
+});
+</script>
+</body>
+</html>
