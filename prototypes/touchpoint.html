@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Touchpoint — ObservationPoint</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased;padding-bottom:70px}
+.nav{position:sticky;top:0;z-index:100;background:#002f60;padding:16px;display:flex;align-items:center;gap:12px}
+.nav-back{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none}
+.nav-title{font-size:16px;font-weight:700;color:#fff;flex:1;text-align:center}.nav-title span{color:#e47727}
+.nav-spacer{width:32px}
+
+.content{padding:16px;max-width:600px;margin:0 auto}
+.page-title{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:14px 0 4px}
+.page-sub{font-size:14px;color:#6b7280;margin-bottom:20px}
+.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;margin:20px 0 10px}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:16px;cursor:pointer;border:2px solid transparent;transition:all .2s;text-decoration:none;color:#111827;display:block}
+.card:active{transform:scale(.97);border-color:#e47727}
+.card-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;font-size:18px}
+.card-title{font-size:13px;font-weight:600;line-height:1.3}
+.card-sub{font-size:11px;color:#9ca3af;margin-top:2px}
+
+/* Collapsible sections */
+details.section{margin-top:8px}
+details.section summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:8px 0;margin-top:12px}
+details.section summary::-webkit-details-marker{display:none}
+.chev{width:20px;height:20px;border-radius:6px;background:#e5e7eb;color:#6b7280;display:flex;align-items:center;justify-content:center;transition:transform .2s,background .2s;font-size:10px;font-weight:800}
+details[open] .chev{transform:rotate(90deg);background:#fff7ed;color:#e47727}
+.section-label.collapsible{margin:0;flex:1}
+.section-count{font-size:10px;color:#9ca3af;font-weight:700;padding:2px 8px;border-radius:10px;background:#f5f7fa}
+
+/* Recent */
+.recent-item{display:flex;align-items:center;gap:12px;background:#fff;border-radius:12px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:8px;text-decoration:none;color:#111827}
+.ri-av{width:36px;height:36px;border-radius:8px;background:#002f60;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.ri-name{font-size:13px;font-weight:600}
+.ri-meta{font-size:11px;color:#9ca3af}
+.ri-badge{margin-left:auto;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;flex-shrink:0}
+
+/* Bottom nav — persistent 4-button */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:#fff;border-top:1px solid #e5e7eb;display:flex;padding:8px 8px 10px;gap:2px;box-shadow:0 -2px 10px rgba(0,0,0,.05)}
+.bn-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px;border-radius:10px;text-decoration:none;color:#9ca3af;cursor:pointer;font-family:inherit;background:none;border:0}
+.bn-btn.active{color:#002f60}
+.bn-btn.ai.active{color:#e47727}
+.bn-ic{width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800}
+.bn-btn.ai .bn-ic{color:#fbbe82}
+.bn-btn.ai.active .bn-ic{color:#e47727}
+.bn-lbl{font-size:10px;font-weight:700;letter-spacing:.02em}
+
+/* AI inline panel */
+.ai-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:900;opacity:0;pointer-events:none;transition:opacity .22s}
+.ai-backdrop.open{opacity:1;pointer-events:auto}
+.ai-panel{position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:22px 22px 0 0;max-height:88vh;z-index:901;transform:translateY(100%);transition:transform .28s cubic-bezier(.2,.8,.3,1);box-shadow:0 -10px 32px rgba(0,0,0,.22);display:flex;flex-direction:column}
+.ai-panel.open{transform:translateY(0)}
+.ai-handle{width:44px;height:4px;background:#e5e7eb;border-radius:3px;margin:10px auto 0}
+.ai-head{padding:16px 18px 14px;background:linear-gradient(135deg,#002f60,#1e40af);color:#fff;display:flex;align-items:center;gap:10px;border-radius:22px 22px 0 0;margin-top:-14px;padding-top:22px}
+.ai-badge{width:32px;height:32px;border-radius:10px;background:rgba(251,190,130,.2);color:#fbbe82;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800}
+.ai-title{flex:1}
+.ai-t{font-size:14px;font-weight:800}
+.ai-ctx{font-size:11px;color:rgba(255,255,255,.7);margin-top:1px}
+.ai-x{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:#fff}
+.ai-body{flex:1;overflow-y:auto;padding:14px 18px}
+.ai-intro{font-size:12px;color:#6b7280;line-height:1.5;margin-bottom:12px}
+.ai-sug{display:flex;gap:10px;padding:11px 13px;border-radius:10px;background:#f5f7fa;cursor:pointer;margin-bottom:6px;align-items:flex-start;border:1px solid transparent}
+.ai-sug:hover{background:#eef2f7;border-color:#e5e7eb}
+.ai-sug-q{flex:1;font-size:13px;color:#111827;font-weight:600;line-height:1.4}
+.ai-sug-ar{color:#e47727;font-weight:800;font-size:13px}
+.ai-input-bar{padding:10px 14px 14px;border-top:1px solid #e5e7eb;display:flex;gap:6px;background:#fff}
+.ai-input{flex:1;border:1px solid #e5e7eb;outline:0;padding:10px 14px;border-radius:20px;font-family:inherit;font-size:13px;background:#f5f7fa}
+.ai-input:focus{background:#fff;border-color:#002f60}
+.ai-send{padding:10px 16px;background:#002f60;color:#fff;border:0;border-radius:20px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.ai-msg{margin-bottom:10px}
+.ai-msg.user{max-width:85%;background:#002f60;color:#fff;padding:9px 13px;border-radius:14px 14px 3px 14px;font-size:13px;line-height:1.4;margin-left:auto}
+.ai-ans{background:#f5f7fa;border-radius:3px 14px 14px 14px;padding:11px 13px;font-size:13px;line-height:1.5;color:#111827}
+.ai-ans b{color:#002f60}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+    <a class="nav-back" href="home-updated.html"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></a>
+    <div class="nav-title">Observation<span>Point</span></div>
+    <div class="nav-spacer"></div>
+</nav>
+
+<div class="content">
+    <div class="page-title">Log a Touchpoint</div>
+    <div class="page-sub">Pick a form · you'll select the teacher on the next screen</div>
+
+    <!-- TouchPoints — 7 cards -->
+    <div class="section-label">TouchPoints</div>
+    <div class="grid">
+        <a class="card" href="teacher-observation.html">
+            <div class="card-icon" style="background:#dbeafe">&#128065;</div>
+            <div class="card-title">Observation</div>
+            <div class="card-sub">Classroom visit</div>
+        </a>
+        <a class="card" href="prek-observation.html">
+            <div class="card-icon" style="background:#fce7f3">&#127979;</div>
+            <div class="card-title">PreK Observation</div>
+            <div class="card-sub">CLASS PK1-PK10</div>
+        </a>
+        <a class="card" href="fundamentals.html">
+            <div class="card-icon" style="background:#fef3c7">&#9201;</div>
+            <div class="card-title">Fundamentals</div>
+            <div class="card-sub">5-min On Task %</div>
+        </a>
+        <a class="card" href="meeting-data.html">
+            <div class="card-icon" style="background:#f0fdf4">&#128172;</div>
+            <div class="card-title">Data Meeting</div>
+            <div class="card-sub">Relay DDI</div>
+        </a>
+        <a class="card" href="quick-feedback.html">
+            <div class="card-icon" style="background:#fef3c7">&#9889;</div>
+            <div class="card-title">Quick Feedback</div>
+            <div class="card-sub">Informal note</div>
+        </a>
+        <a class="card" href="celebrate.html">
+            <div class="card-icon" style="background:#dcfce7">&#127881;</div>
+            <div class="card-title">Celebrate / Praise</div>
+            <div class="card-sub">Recognize a win</div>
+        </a>
+        <a class="card" href="solicited-feedback.html">
+            <div class="card-icon" style="background:#dbeafe">&#128588;</div>
+            <div class="card-title">Solicited Feedback</div>
+            <div class="card-sub">Ask for input</div>
+        </a>
+    </div>
+
+    <!-- Evaluations -->
+    <details class="section">
+        <summary>
+            <div class="chev">›</div>
+            <div class="section-label collapsible">Evaluations</div>
+            <div class="section-count">auto · 5 variants</div>
+        </summary>
+        <div class="grid" style="margin-top:8px">
+            <a class="card" href="pmap-teacher.html"><div class="card-icon" style="background:#dcfce7">&#9989;</div><div class="card-title">PMAP: Teacher</div><div class="card-sub">On / CoL / Content / Cog Eng / Demo + Goals</div></a>
+            <a class="card" href="pmap-prek.html"><div class="card-icon" style="background:#dcfce7">&#9989;</div><div class="card-title">PMAP: PreK</div><div class="card-sub">3 CLASS Cycles</div></a>
+            <a class="card" href="pmap-leader.html"><div class="card-icon" style="background:#dcfce7">&#9989;</div><div class="card-title">PMAP: Leader</div><div class="card-sub">L1-L5 Competencies</div></a>
+            <a class="card" href="pmap-support.html"><div class="card-icon" style="background:#dcfce7">&#9989;</div><div class="card-title">PMAP: Support</div><div class="card-sub">Non-Instructional</div></a>
+            <a class="card" href="pmap-network.html"><div class="card-icon" style="background:#dcfce7">&#9989;</div><div class="card-title">PMAP: Network</div><div class="card-sub">Network Staff</div></a>
+        </div>
+    </details>
+
+    <!-- Self-Reflections -->
+    <details class="section">
+        <summary>
+            <div class="chev">›</div>
+            <div class="section-label collapsible">Self-Reflections</div>
+            <div class="section-count">auto · 5 variants</div>
+        </summary>
+        <div class="grid" style="margin-top:8px">
+            <a class="card" href="self-reflection-teacher.html"><div class="card-icon" style="background:#ede9fe">&#128156;</div><div class="card-title">SR: Teacher</div><div class="card-sub">Teacher self-score</div></a>
+            <a class="card" href="self-reflection-prek.html"><div class="card-icon" style="background:#ede9fe">&#128156;</div><div class="card-title">SR: PreK</div><div class="card-sub">CLASS self-score</div></a>
+            <a class="card" href="self-reflection-leader.html"><div class="card-icon" style="background:#ede9fe">&#128156;</div><div class="card-title">SR: Leader</div><div class="card-sub">L1-L5 self-score</div></a>
+            <a class="card" href="self-reflection-network.html"><div class="card-icon" style="background:#ede9fe">&#128156;</div><div class="card-title">SR: Network</div><div class="card-sub">Leadership + Commitments</div></a>
+            <a class="card" href="self-reflection-support.html"><div class="card-icon" style="background:#ede9fe">&#128156;</div><div class="card-title">SR: Support</div><div class="card-sub">Commitments + Career</div></a>
+        </div>
+    </details>
+
+    <!-- Discipline -->
+    <details class="section">
+        <summary>
+            <div class="chev">›</div>
+            <div class="section-label collapsible">Discipline</div>
+            <div class="section-count">2</div>
+        </summary>
+        <div class="grid" style="margin-top:8px">
+            <a class="card" href="iap.html"><div class="card-icon" style="background:#fee2e2">&#9888;</div><div class="card-title">IAP</div><div class="card-sub">Improvement Plan</div></a>
+            <a class="card" href="write-up.html"><div class="card-icon" style="background:#fee2e2">&#128221;</div><div class="card-title">Write-Up</div><div class="card-sub">Employee Discipline</div></a>
+        </div>
+    </details>
+
+    <!-- Recent TouchPoints -->
+    <div class="section-label" style="margin-top:24px">Recent TouchPoints</div>
+    <a class="recent-item" href="teacher-observation.html"><div class="ri-av">KB</div><div><div class="ri-name">Keisha Brown</div><div class="ri-meta">Langston Hughes · Apr 7</div></div><div class="ri-badge" style="background:#dbeafe;color:#2563eb">Observation</div></a>
+    <a class="recent-item" href="celebrate.html"><div class="ri-av">DC</div><div><div class="ri-name">David Chen</div><div class="ri-meta">Arthur Ashe · Apr 5</div></div><div class="ri-badge" style="background:#dcfce7;color:#059669">Celebrate</div></a>
+    <a class="recent-item" href="meeting-data.html"><div class="ri-av">AJ</div><div><div class="ri-name">Amara Johnson</div><div class="ri-meta">Live Oak · Apr 3</div></div><div class="ri-badge" style="background:#f0fdf4;color:#16a34a">Meeting</div></a>
+</div>
+
+<!-- Bottom nav -->
+<nav class="bottom-nav">
+    <a class="bn-btn" href="my-team.html"><div class="bn-ic">&#128101;</div><div class="bn-lbl">Team</div></a>
+    <a class="bn-btn active" href="touchpoint.html"><div class="bn-ic">&#43;</div><div class="bn-lbl">Touchpoint</div></a>
+    <a class="bn-btn" href="network-trends.html"><div class="bn-ic">&#128202;</div><div class="bn-lbl">Network</div></a>
+    <button class="bn-btn ai" onclick="openAI()"><div class="bn-ic">&#10022;</div><div class="bn-lbl">Ask</div></button>
+</nav>
+
+<!-- AI panel -->
+<div class="ai-backdrop" id="aiBd" onclick="closeAI()"></div>
+<div class="ai-panel" id="aiPanel">
+    <div class="ai-handle"></div>
+    <div class="ai-head">
+        <div class="ai-badge">&#10022;</div>
+        <div class="ai-title">
+            <div class="ai-t">Ask ObservationPoint</div>
+            <div class="ai-ctx">Scoped to touchpoint activity · full data access</div>
+        </div>
+        <div class="ai-x" onclick="closeAI()">×</div>
+    </div>
+    <div class="ai-body" id="aiBody">
+        <div class="ai-intro">Ask about touchpoint activity — or anything else. Input is open.</div>
+        <div class="ai-sug" onclick="askAI('How many touchpoints did I log this month?')"><div class="ai-sug-q">How many touchpoints did I log this month?</div><div class="ai-sug-ar">↑</div></div>
+        <div class="ai-sug" onclick="askAI('Who haven\'t I touched in 30 days?')"><div class="ai-sug-q">Who haven't I touched in 30 days?</div><div class="ai-sug-ar">↑</div></div>
+        <div class="ai-sug" onclick="askAI('What\'s the mix across observation / feedback / celebrate this year?')"><div class="ai-sug-q">What's the mix across observation / feedback / celebrate this year?</div><div class="ai-sug-ar">↑</div></div>
+    </div>
+    <div class="ai-input-bar">
+        <input class="ai-input" id="aiInput" placeholder="Ask anything…" onkeydown="if(event.key==='Enter')sendAI()">
+        <button class="ai-send" onclick="sendAI()">↑</button>
+    </div>
+</div>
+
+<script>
+function openAI(){document.getElementById('aiPanel').classList.add('open');document.getElementById('aiBd').classList.add('open');document.body.style.overflow='hidden';document.querySelector('.bn-btn.ai').classList.add('active');}
+function closeAI(){document.getElementById('aiPanel').classList.remove('open');document.getElementById('aiBd').classList.remove('open');document.body.style.overflow='';document.querySelector('.bn-btn.ai').classList.remove('active');}
+function askAI(q){const body=document.getElementById('aiBody');const u=document.createElement('div');u.className='ai-msg user';u.textContent=q;body.appendChild(u);setTimeout(()=>{const m=document.createElement('div');m.className='ai-msg';m.innerHTML='<div class="ai-ans">I\'d answer that live from your data. This prototype shows the pattern — a real build hits the API.</div>';body.appendChild(m);body.scrollTop=body.scrollHeight;},500);document.getElementById('aiInput').value='';body.scrollTop=body.scrollHeight;}
+function sendAI(){const v=document.getElementById('aiInput').value.trim();if(v)askAI(v);}
+</script>
+</body>
+</html>
