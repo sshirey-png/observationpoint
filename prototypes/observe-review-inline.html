@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Observe — Inline Per-Dimension</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.nav{position:sticky;top:0;z-index:100;background:#002f60;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.nav-back{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none}
+.nav-title{font-size:15px;font-weight:700;color:#fff;flex:1}.nav-title span{color:#e47727}
+.nav-tag{font-size:11px;font-weight:600;color:rgba(255,255,255,.7);padding:3px 8px;border-radius:6px;background:rgba(255,255,255,.1)}
+
+.tx{background:#fff;padding:16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:12px}
+.tx-av{width:44px;height:44px;border-radius:12px;background:#002f60;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px}
+.tx-name{font-size:15px;font-weight:800}
+.tx-meta{font-size:12px;color:#6b7280;margin-top:1px}
+
+.note-info{background:#eff6ff;border-bottom:1px solid #bfdbfe;padding:10px 16px;font-size:12px;color:#1e40af;display:flex;align-items:center;gap:8px}
+.note-info b{font-weight:800}
+
+.form{padding:16px;max-width:720px;margin:0 auto;padding-bottom:80px}
+.section-lbl{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;margin:18px 0 8px}
+
+.dim{background:#fff;border-radius:12px;padding:16px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.05);transition:box-shadow .2s}
+.dim.expanded{box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.dim-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.dim-info{flex:1}
+.dim-name{font-size:14px;font-weight:800;letter-spacing:-.01em}
+.dim-short{font-size:10px;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.recent-btn{padding:7px 10px;border:1.5px solid #e5e7eb;background:#fff;border-radius:8px;font-family:inherit;font-size:10px;font-weight:800;color:#6b7280;cursor:pointer;display:flex;align-items:center;gap:5px;text-transform:uppercase;letter-spacing:.04em}
+.recent-btn:hover{border-color:#e47727;color:#e47727}
+.recent-btn.active{background:#002f60;color:#fff;border-color:#002f60}
+.recent-btn .ic{width:6px;height:6px;border-radius:50%;background:#e47727}
+.recent-btn.active .ic{background:#fbbe82}
+
+.dim-q{font-size:12px;color:#6b7280;margin-bottom:14px;line-height:1.45;font-style:italic}
+.dim-scores{display:flex;gap:6px}
+.score-btn{flex:1;padding:12px 0;border-radius:8px;border:1.5px solid #e5e7eb;background:#fff;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;color:#9ca3af}
+.score-btn.sel{border-width:2px}
+.score-btn.s1.sel{border-color:#b91c1c;color:#b91c1c;background:#fee2e2}
+.score-btn.s2.sel{border-color:#c2410c;color:#c2410c;background:#ffedd5}
+.score-btn.s3.sel{border-color:#a16207;color:#a16207;background:#fef3c7}
+.score-btn.s4.sel{border-color:#059669;color:#059669;background:#dcfce7}
+.score-btn.s5.sel{border-color:#047857;color:#047857;background:#bbf7d0}
+
+/* Recent panel — inline expansion */
+.recent-panel{max-height:0;overflow:hidden;transition:max-height .3s ease-out;background:#f5f7fa;border-radius:8px;margin-top:12px}
+.recent-panel.open{max-height:500px;padding:12px}
+.recent-hdr{font-size:10px;font-weight:800;color:#e47727;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.recent-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #e5e7eb;font-size:12px}
+.recent-row:last-child{border-bottom:none}
+.recent-row-date{color:#9ca3af;font-weight:600;width:64px;font-size:11px}
+.recent-row-score{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0}
+.recent-row-score.s2{background:#ffedd5;color:#c2410c}
+.recent-row-score.s3{background:#fef3c7;color:#a16207}
+.recent-row-score.s4{background:#dcfce7;color:#059669}
+.recent-row-note{flex:1;color:#374151;line-height:1.45;font-size:12px}
+.recent-row-note b{color:#111827}
+.recent-spark{margin-top:10px;display:flex;align-items:flex-end;gap:4px;height:28px;padding:4px 0;border-top:1px solid #e5e7eb;padding-top:10px}
+.recent-spark-bar{flex:1;border-radius:2px 2px 0 0;background:#e47727;min-height:4px}
+.recent-spark-lbl{font-size:9px;color:#9ca3af;font-weight:700;margin-top:4px;text-align:center;flex:1}
+.recent-spark-ctx{font-size:11px;color:#6b7280;margin-top:8px;text-align:center}
+
+.notes-input{width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:13px;resize:vertical;min-height:60px}
+.submit{margin-top:24px;padding:14px;background:#002f60;color:#fff;border:0;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;width:100%;cursor:pointer}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+    <a class="nav-back" href="design-options.html"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></a>
+    <div class="nav-title">Observation<span>Point</span></div>
+    <div class="nav-tag">Observe · Inline</div>
+</nav>
+
+<div class="tx">
+    <div class="tx-av">MW</div>
+    <div>
+        <div class="tx-name">Marcus Williams</div>
+        <div class="tx-meta">Teacher · Samuel J. Green · 5th Grade Math</div>
+    </div>
+</div>
+
+<div class="note-info">
+    <b>Tip:</b> tap "Recent" on any dimension to see Marcus's history for just that dimension — scores, notes, trend.
+</div>
+
+<div class="form">
+
+<div class="section-lbl">Observation — April 19, 2026</div>
+
+<div class="dim">
+    <div class="dim-head">
+        <div class="dim-info">
+            <div class="dim-name">On Task</div>
+            <div class="dim-short">T1</div>
+        </div>
+        <button class="recent-btn" onclick="togglePanel('p1',this)"><div class="ic"></div>Recent</button>
+    </div>
+    <div class="dim-q">Are all students engaged in the work of the lesson from start to finish?</div>
+    <div class="dim-scores">
+        <button class="score-btn s1">1</button>
+        <button class="score-btn s2">2</button>
+        <button class="score-btn s3">3</button>
+        <button class="score-btn s4 sel">4</button>
+        <button class="score-btn s5">5</button>
+    </div>
+    <div class="recent-panel" id="p1">
+        <div class="recent-hdr">On Task · Marcus · last 5</div>
+        <div class="recent-row">
+            <div class="recent-row-date">Mar 19</div>
+            <div class="recent-row-score s4">4</div>
+            <div class="recent-row-note">Self-reflection · "transitions still my edge, but On-Task held"</div>
+        </div>
+        <div class="recent-row">
+            <div class="recent-row-date">Jan 14</div>
+            <div class="recent-row-score s4">4</div>
+            <div class="recent-row-note">Observation · cold-call grid visible</div>
+        </div>
+        <div class="recent-row">
+            <div class="recent-row-date">Nov 13</div>
+            <div class="recent-row-score s4">4</div>
+            <div class="recent-row-note">PMAP mid-year</div>
+        </div>
+        <div class="recent-row">
+            <div class="recent-row-date">Oct 21</div>
+            <div class="recent-row-score s4">4</div>
+            <div class="recent-row-note">Self-reflection</div>
+        </div>
+        <div class="recent-row">
+            <div class="recent-row-date">Sep 16</div>
+            <div class="recent-row-score s4">4</div>
+            <div class="recent-row-note">Observation · start-of-year baseline</div>
+        </div>
+        <div class="recent-spark-ctx">Stable at 4 for 5 touchpoints</div>
+    </div>
+</div>
+
+<div class="dim">
+    <div class="dim-head">
+        <div class="dim-info">
+            <div class="dim-name">Community of Learners</div>
+            <div class="dim-short">CoL · T2</div>
+        </div>
+        <button class="recent-btn active" onclick="togglePanel('p2',this)"><div class="ic"></div>Hide recent</button>
+    </div>
+    <div class="dim-q">Are all students active members of a joyful and supportive classroom community?</div>
+    <div class="dim-scores">
+        <button class="score-btn s1">1</button>
+        <button class="score-btn s2">2</button>
+        <button class="score-btn s3 sel">3</button>
+        <button class="score-btn s4">4</button>
+        <button class="score-btn s5">5</button>
+    </div>
+    <div class="recent-panel open" id="p2">
+        <div class="recent-hdr">Community of Learners · Marcus · last 5</div>
+        <div class="recent-row">
+            <div class="recent-row-date">Mar 19</div>
+            <div class="recent-row-score s3">3</div>
+            <div class="recent-row-note">Self-reflection · self-rated CoL at 3</div>
+        </div>
+        <div class="recent-row">
+            <div class="recent-row-date">Jan 14</div>
+            <div class="recent-row-score s3">3</div>
+            <div class="recent-row-note">Observation · warm tone; <b>redirects still happen mid-lesson</b></div>
+        </div>
+        <div class="recent-row">
+            <div class="recent-row-date">Nov 13</div>
+            <div class="recent-row-score s3">3</div>
+            <div class="recent-row-note">PMAP mid-year</div>
+        </div>
+        <div class="recent-row">
+            <div class="recent-row-date">Oct 21</div>
+            <div class="recent-row-score s3">3</div>
+            <div class="recent-row-note">Self-reflection</div>
+        </div>
+        <div class="recent-row">
+            <div class="recent-row-date">Sep 16</div>
+            <div class="recent-row-score s2">2</div>
+            <div class="recent-row-note">Observation · early-year; community still forming</div>
+        </div>
+        <div class="recent-spark">
+            <div class="recent-spark-bar" style="height:40%"></div>
+            <div class="recent-spark-bar" style="height:60%"></div>
+            <div class="recent-spark-bar" style="height:60%"></div>
+            <div class="recent-spark-bar" style="height:60%"></div>
+            <div class="recent-spark-bar" style="height:60%"></div>
+        </div>
+        <div class="recent-spark-ctx">CoL: 2 → 3 → 3 → 3 → 3</div>
+    </div>
+</div>
+
+<div class="dim">
+    <div class="dim-head">
+        <div class="dim-info">
+            <div class="dim-name">Essential Content</div>
+            <div class="dim-short">Content · T3</div>
+        </div>
+        <button class="recent-btn" onclick="togglePanel('p3',this)"><div class="ic"></div>Recent</button>
+    </div>
+    <div class="dim-q">Are all students working with content aligned to standards for their subject and grade?</div>
+    <div class="dim-scores">
+        <button class="score-btn s1">1</button>
+        <button class="score-btn s2">2</button>
+        <button class="score-btn s3">3</button>
+        <button class="score-btn s4 sel">4</button>
+        <button class="score-btn s5">5</button>
+    </div>
+    <div class="recent-panel" id="p3">
+        <div class="recent-hdr">Essential Content · Marcus · last 5</div>
+        <div class="recent-row"><div class="recent-row-date">Mar 19</div><div class="recent-row-score s4">4</div><div class="recent-row-note">Self-reflection</div></div>
+        <div class="recent-row"><div class="recent-row-date">Jan 14</div><div class="recent-row-score s4">4</div><div class="recent-row-note">Observation · fraction unit aligned to 5th-grade standards</div></div>
+        <div class="recent-row"><div class="recent-row-date">Nov 13</div><div class="recent-row-score s4">4</div><div class="recent-row-note">PMAP</div></div>
+        <div class="recent-spark-ctx">Stable at 4</div>
+    </div>
+</div>
+
+<div class="dim">
+    <div class="dim-head">
+        <div class="dim-info">
+            <div class="dim-name">Cognitive Engagement</div>
+            <div class="dim-short">Cog Eng · T4</div>
+        </div>
+        <button class="recent-btn" onclick="togglePanel('p4',this)"><div class="ic"></div>Recent</button>
+    </div>
+    <div class="dim-q">Are all students responsible for doing the thinking in this classroom?</div>
+    <div class="dim-scores">
+        <button class="score-btn s1">1</button>
+        <button class="score-btn s2">2</button>
+        <button class="score-btn s3 sel">3</button>
+        <button class="score-btn s4">4</button>
+        <button class="score-btn s5">5</button>
+    </div>
+    <div class="recent-panel" id="p4">
+        <div class="recent-hdr">Cognitive Engagement · Marcus · last 5</div>
+        <div class="recent-row"><div class="recent-row-date">Mar 19</div><div class="recent-row-score s3">3</div><div class="recent-row-note">Self-reflection</div></div>
+        <div class="recent-row"><div class="recent-row-date">Jan 14</div><div class="recent-row-score s3">3</div><div class="recent-row-note">Observation · cold-call grid helped some</div></div>
+        <div class="recent-row"><div class="recent-row-date">Nov 13</div><div class="recent-row-score s3">3</div><div class="recent-row-note">PMAP</div></div>
+        <div class="recent-spark-ctx">Stable at 3 — growth edge</div>
+    </div>
+</div>
+
+<div class="dim">
+    <div class="dim-head">
+        <div class="dim-info">
+            <div class="dim-name">Demonstration of Learning</div>
+            <div class="dim-short">Demo · T5</div>
+        </div>
+        <button class="recent-btn" onclick="togglePanel('p5',this)"><div class="ic"></div>Recent</button>
+    </div>
+    <div class="dim-q">Do all students demonstrate that they are learning?</div>
+    <div class="dim-scores">
+        <button class="score-btn s1">1</button>
+        <button class="score-btn s2">2</button>
+        <button class="score-btn s3">3</button>
+        <button class="score-btn s4 sel">4</button>
+        <button class="score-btn s5">5</button>
+    </div>
+    <div class="recent-panel" id="p5">
+        <div class="recent-hdr">Demonstration of Learning · Marcus · last 5</div>
+        <div class="recent-row"><div class="recent-row-date">Mar 19</div><div class="recent-row-score s4">4</div><div class="recent-row-note">Self-reflection</div></div>
+        <div class="recent-row"><div class="recent-row-date">Jan 14</div><div class="recent-row-score s4">4</div><div class="recent-row-note">Observation · <b>moved up from 3</b> · cold-call cycle closed</div></div>
+        <div class="recent-row"><div class="recent-row-date">Nov 13</div><div class="recent-row-score s3">3</div><div class="recent-row-note">PMAP</div></div>
+        <div class="recent-row"><div class="recent-row-date">Oct 21</div><div class="recent-row-score s3">3</div><div class="recent-row-note">Self-reflection · pre-cycle</div></div>
+        <div class="recent-row"><div class="recent-row-date">Sep 16</div><div class="recent-row-score s3">3</div><div class="recent-row-note">Observation · baseline</div></div>
+        <div class="recent-spark-ctx">Demo: 3 → 3 → 3 → 4 → 4 — improvement story</div>
+    </div>
+</div>
+
+<div class="section-lbl">Narrative Notes</div>
+<div class="dim">
+    <textarea class="notes-input" placeholder="What did you see? Evidence, examples, and next-step thinking."></textarea>
+</div>
+
+<button class="submit">Save Observation</button>
+
+</div>
+
+<script>
+function togglePanel(id, btn){
+    const p = document.getElementById(id);
+    const isOpen = p.classList.toggle('open');
+    btn.classList.toggle('active', isOpen);
+    btn.childNodes[1].textContent = isOpen ? 'Hide recent' : 'Recent';
+    btn.parentElement.parentElement.classList.toggle('expanded', isOpen);
+}
+document.querySelectorAll('.dim-scores').forEach(grp=>{
+    grp.querySelectorAll('.score-btn').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+            grp.querySelectorAll('.score-btn').forEach(b=>b.classList.remove('sel'));
+            btn.classList.add('sel');
+        });
+    });
+});
+</script>
+</body>
+</html>

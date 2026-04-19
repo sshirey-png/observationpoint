@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Observe — Pre-Form Splash</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.nav{position:sticky;top:0;z-index:100;background:#002f60;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.nav-back{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none}
+.nav-title{font-size:15px;font-weight:700;color:#fff;flex:1}.nav-title span{color:#e47727}
+.nav-tag{font-size:11px;font-weight:600;color:rgba(255,255,255,.7);padding:3px 8px;border-radius:6px;background:rgba(255,255,255,.1)}
+
+.tx{background:#fff;padding:16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:12px}
+.tx-av{width:44px;height:44px;border-radius:12px;background:#002f60;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px}
+.tx-name{font-size:15px;font-weight:800}
+.tx-meta{font-size:12px;color:#6b7280;margin-top:1px}
+
+.splash{padding:20px 16px 40px;max-width:720px;margin:0 auto}
+
+/* Splash hero */
+.hero{background:linear-gradient(135deg,#002f60 0%,#1e40af 100%);color:#fff;border-radius:16px;padding:22px;position:relative;overflow:hidden;margin-bottom:14px;box-shadow:0 6px 20px rgba(0,47,96,.15)}
+.hero::before{content:"";position:absolute;top:-30px;right:-30px;width:140px;height:140px;background:radial-gradient(circle,rgba(228,119,39,.25),transparent 70%);border-radius:50%}
+.hero-cap{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#fbbe82;position:relative}
+.hero-head{font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1.2;margin-top:4px;position:relative}
+.hero-sub{font-size:13px;color:rgba(255,255,255,.8);margin-top:6px;line-height:1.5;position:relative}
+
+/* Quick facts */
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.fact{background:#fff;border-radius:10px;padding:12px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.fact-v{font-size:20px;font-weight:800;letter-spacing:-.02em}
+.fact-v.green{color:#059669}.fact-v.navy{color:#002f60}.fact-v.orange{color:#e47727}
+.fact-l{font-size:10px;color:#9ca3af;text-transform:uppercase;font-weight:700;margin-top:2px;letter-spacing:.04em}
+
+/* Context sections */
+.card{background:#fff;border-radius:12px;padding:16px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.card-title{font-size:13px;font-weight:800;color:#e47727;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+.card-title.navy{color:#002f60}
+
+.cycle-stat{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px 14px;margin-bottom:12px}
+.cycle-stat-t{font-size:13px;font-weight:800}
+.cycle-stat-b{font-size:12px;color:#7c2d12;margin-top:4px;line-height:1.5}
+
+.yoy-grid{border-collapse:collapse;width:100%;font-size:12px}
+.yoy-grid th{text-align:center;padding:6px;font-size:10px;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #e5e7eb}
+.yoy-grid th:first-child{text-align:left}
+.yoy-grid td{padding:8px 6px;text-align:center;border-bottom:1px solid #f3f4f6}
+.yoy-grid td:first-child{text-align:left;font-weight:700;color:#374151}
+.yoy-grid tr:last-child td{border-bottom:none}
+.yoy-score{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;font-weight:700;font-size:12px}
+.yoy-score.s2{background:#ffedd5;color:#c2410c}
+.yoy-score.s3{background:#fef3c7;color:#a16207}
+.yoy-score.s4{background:#dcfce7;color:#059669}
+
+.latest-list{display:flex;flex-direction:column;gap:8px}
+.latest-row{display:flex;align-items:center;gap:10px;padding:10px;background:#f5f7fa;border-radius:8px}
+.latest-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.dot-obs{background:#2563eb}.dot-sr{background:#7c3aed}.dot-fund{background:#0891b2}.dot-pmap{background:#059669}
+.latest-date{font-size:11px;color:#9ca3af;font-weight:600;width:62px;flex-shrink:0}
+.latest-body{flex:1;font-size:12px;color:#374151;line-height:1.4}
+.latest-body b{color:#111827}
+
+.last-focus{background:linear-gradient(135deg,#fff7ed,#fff);border:1px solid #fed7aa;border-radius:12px;padding:14px;margin-bottom:14px}
+.last-focus-cap{font-size:10px;font-weight:800;color:#e47727;text-transform:uppercase;letter-spacing:.05em}
+.last-focus-body{font-size:13px;color:#111827;margin-top:4px;line-height:1.5}
+.last-focus-body b{color:#002f60}
+
+.cta{display:flex;gap:10px;margin-top:20px}
+.cta-btn{flex:1;padding:14px;border-radius:12px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;text-align:center;text-decoration:none;border:0}
+.cta-primary{background:#002f60;color:#fff;box-shadow:0 4px 12px rgba(0,47,96,.2)}
+.cta-secondary{background:#fff;color:#002f60;border:1.5px solid #002f60}
+
+.skip{text-align:center;margin-top:14px;font-size:12px;color:#9ca3af}
+.skip a{color:#6b7280;font-weight:700}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+    <a class="nav-back" href="design-options.html"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></a>
+    <div class="nav-title">Observation<span>Point</span></div>
+    <div class="nav-tag">Observe · Splash</div>
+</nav>
+
+<div class="tx">
+    <div class="tx-av">MW</div>
+    <div>
+        <div class="tx-name">Marcus Williams</div>
+        <div class="tx-meta">Teacher · Samuel J. Green · 5th Grade Math</div>
+    </div>
+</div>
+
+<div class="splash">
+
+<!-- Hero -->
+<div class="hero">
+    <div class="hero-cap">Before you observe · optional</div>
+    <div class="hero-head">A 30-second look at Marcus.</div>
+    <div class="hero-sub">You can skip this any time — or ask the app to skip it by default for you. Shown because it's been 14 days since the last data on Marcus.</div>
+</div>
+
+<!-- Facts strip -->
+<div class="facts">
+    <div class="fact"><div class="fact-v green">89%</div><div class="fact-l">On-task</div></div>
+    <div class="fact"><div class="fact-v navy">14d</div><div class="fact-l">Since last</div></div>
+    <div class="fact"><div class="fact-v orange">1</div><div class="fact-l">Open cycle</div></div>
+</div>
+
+<!-- What Marcus said recently -->
+<div class="last-focus">
+    <div class="last-focus-cap">Marcus's most recent self-reflection — Mar 19</div>
+    <div class="last-focus-body">"<b>Transitions are my growth edge</b> — warm-up to mini-lesson handoff runs long. I've been trying different timers but none of them stick."</div>
+</div>
+
+<!-- Open cycle -->
+<div class="card">
+    <div class="card-title">Open coaching cycle</div>
+    <div class="cycle-stat">
+        <div class="cycle-stat-t">Cycle 3 · closed Jan 14 (Improved)</div>
+        <div class="cycle-stat-b">Focus was <b>Demonstration of Learning</b>. The cold-call grid Marcus built helped him move Demo from 3 → 4. That pattern is now habit.</div>
+    </div>
+    <div class="cycle-stat" style="background:#eff6ff;border-color:#bfdbfe">
+        <div class="cycle-stat-t" style="color:#1e40af">Looking for cycle 4</div>
+        <div class="cycle-stat-b" style="color:#1e3a8a">Worth watching today: Community of Learners has held at 3 for 5 touchpoints. Not a drop — not a climb either.</div>
+    </div>
+</div>
+
+<!-- Year over year -->
+<div class="card">
+    <div class="card-title navy">Year-over-year · by dimension</div>
+    <table class="yoy-grid">
+        <thead>
+            <tr><th>Dimension</th><th>23-24</th><th>24-25</th><th>25-26</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>On Task</td><td><div class="yoy-score s3">3</div></td><td><div class="yoy-score s4">4</div></td><td><div class="yoy-score s4">4</div></td></tr>
+            <tr><td>Community of Learners</td><td><div class="yoy-score s2">2</div></td><td><div class="yoy-score s3">3</div></td><td><div class="yoy-score s3">3</div></td></tr>
+            <tr><td>Essential Content</td><td><div class="yoy-score s3">3</div></td><td><div class="yoy-score s3">3</div></td><td><div class="yoy-score s4">4</div></td></tr>
+            <tr><td>Cognitive Engagement</td><td><div class="yoy-score s2">2</div></td><td><div class="yoy-score s3">3</div></td><td><div class="yoy-score s3">3</div></td></tr>
+            <tr><td>Demonstration of Learning</td><td><div class="yoy-score s3">3</div></td><td><div class="yoy-score s3">3</div></td><td><div class="yoy-score s4">4</div></td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Latest 3 touchpoints -->
+<div class="card">
+    <div class="card-title">Last 3 touchpoints</div>
+    <div class="latest-list">
+        <div class="latest-row">
+            <div class="latest-dot dot-sr"></div>
+            <div class="latest-date">Mar 19</div>
+            <div class="latest-body"><b>Self-Reflection</b> — flagged transitions as growth edge</div>
+        </div>
+        <div class="latest-row">
+            <div class="latest-dot dot-fund"></div>
+            <div class="latest-date">Feb 6</div>
+            <div class="latest-body"><b>Fundamentals</b> — 89% on-task, 23 of 26 students</div>
+        </div>
+        <div class="latest-row">
+            <div class="latest-dot dot-obs"></div>
+            <div class="latest-date">Jan 14</div>
+            <div class="latest-body"><b>Observation</b> — Cycle 3 close, Demo moved 3 → 4</div>
+        </div>
+    </div>
+</div>
+
+<!-- CTAs -->
+<div class="cta">
+    <a href="observe-review-strip.html#form" class="cta-btn cta-secondary">See full history</a>
+    <a href="#" class="cta-btn cta-primary">Start observation →</a>
+</div>
+
+<div class="skip">
+    <a href="#">Always skip this screen — take me straight to the form</a>
+</div>
+
+</div>
+</body>
+</html>

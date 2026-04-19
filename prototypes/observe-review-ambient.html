@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Observe — Ambient Last Score</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.nav{position:sticky;top:0;z-index:100;background:#002f60;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.nav-back{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none}
+.nav-title{font-size:15px;font-weight:700;color:#fff;flex:1}.nav-title span{color:#e47727}
+.nav-tag{font-size:11px;font-weight:600;color:rgba(255,255,255,.7);padding:3px 8px;border-radius:6px;background:rgba(255,255,255,.1)}
+
+.tx{background:#fff;padding:16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:12px}
+.tx-av{width:44px;height:44px;border-radius:12px;background:#002f60;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px}
+.tx-name{font-size:15px;font-weight:800}
+.tx-meta{font-size:12px;color:#6b7280;margin-top:1px}
+
+/* Toggle for ambient visibility */
+.toggle-bar{background:#fff;padding:10px 16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.toggle-lbl{font-size:12px;color:#374151}
+.toggle-lbl b{color:#111827}
+.toggle{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;cursor:pointer}
+.switch{width:36px;height:20px;border-radius:10px;background:#e47727;position:relative;transition:background .2s}
+.switch::after{content:"";position:absolute;top:2px;left:18px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.switch.off{background:#d1d5db}
+.switch.off::after{left:2px}
+
+.form{padding:16px;max-width:720px;margin:0 auto;padding-bottom:80px}
+.section-lbl{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;margin:18px 0 8px}
+
+.dim{background:#fff;border-radius:12px;padding:16px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.dim-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}
+.dim-name{font-size:14px;font-weight:800;letter-spacing:-.01em}
+.dim-short{font-size:10px;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+
+/* Ambient trend row */
+.ambient{display:flex;align-items:center;gap:8px;margin:4px 0 12px;padding:8px 10px;background:#f5f7fa;border-radius:8px;font-size:11px;color:#6b7280;font-weight:600}
+.ambient-sparkline{display:flex;align-items:flex-end;gap:2px;height:20px;flex-shrink:0;width:60px}
+.spark-bar{flex:1;border-radius:1px;min-height:3px;background:#e47727;opacity:.6}
+.spark-bar.latest{opacity:1;background:#059669}
+.spark-bar.red{background:#dc2626;opacity:.7}
+.ambient-text{flex:1;line-height:1.35}
+.ambient-text b{color:#111827}
+.ambient-text .up{color:#059669;font-weight:800}
+.ambient-text .down{color:#dc2626;font-weight:800}
+.ambient-text .flat{color:#6b7280;font-weight:700}
+.ambient-last{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:5px;font-weight:800;font-size:11px;flex-shrink:0}
+.ambient-last.s2{background:#ffedd5;color:#c2410c}
+.ambient-last.s3{background:#fef3c7;color:#a16207}
+.ambient-last.s4{background:#dcfce7;color:#059669}
+
+.dim-q{font-size:12px;color:#6b7280;margin-bottom:14px;line-height:1.45;font-style:italic}
+.dim-scores{display:flex;gap:6px}
+.score-btn{flex:1;padding:12px 0;border-radius:8px;border:1.5px solid #e5e7eb;background:#fff;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;color:#9ca3af;position:relative}
+.score-btn.sel{border-width:2px}
+.score-btn.s1.sel{border-color:#b91c1c;color:#b91c1c;background:#fee2e2}
+.score-btn.s2.sel{border-color:#c2410c;color:#c2410c;background:#ffedd5}
+.score-btn.s3.sel{border-color:#a16207;color:#a16207;background:#fef3c7}
+.score-btn.s4.sel{border-color:#059669;color:#059669;background:#dcfce7}
+.score-btn.s5.sel{border-color:#047857;color:#047857;background:#bbf7d0}
+.score-btn.last-marker::after{content:"last";position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);font-size:8px;color:#9ca3af;font-weight:700;background:#fff;padding:0 3px;letter-spacing:.05em}
+
+.notes-input{width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:13px;resize:vertical;min-height:60px}
+.submit{margin-top:24px;padding:14px;background:#002f60;color:#fff;border:0;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;width:100%;cursor:pointer}
+
+/* When ambient is off, hide ambient rows AND last-markers */
+body.ambient-off .ambient{display:none}
+body.ambient-off .score-btn.last-marker::after{display:none}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+    <a class="nav-back" href="design-options.html"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></a>
+    <div class="nav-title">Observation<span>Point</span></div>
+    <div class="nav-tag">Observe · Ambient</div>
+</nav>
+
+<div class="tx">
+    <div class="tx-av">MW</div>
+    <div>
+        <div class="tx-name">Marcus Williams</div>
+        <div class="tx-meta">Teacher · Samuel J. Green · 5th Grade Math</div>
+    </div>
+</div>
+
+<div class="toggle-bar">
+    <div class="toggle-lbl"><b>Show recent data while scoring</b></div>
+    <div class="toggle" onclick="toggleAmbient(this)">
+        <span class="toggle-state">On</span>
+        <div class="switch"></div>
+    </div>
+</div>
+
+<div class="form">
+
+<div class="section-lbl">Observation — April 19, 2026</div>
+
+<div class="dim">
+    <div class="dim-head"><div><div class="dim-name">On Task</div><div class="dim-short">T1</div></div></div>
+    <div class="ambient">
+        <div class="ambient-sparkline">
+            <div class="spark-bar" style="height:75%"></div>
+            <div class="spark-bar" style="height:75%"></div>
+            <div class="spark-bar" style="height:75%"></div>
+            <div class="spark-bar" style="height:75%"></div>
+            <div class="spark-bar latest" style="height:75%"></div>
+        </div>
+        <div class="ambient-text">Last 5: <b>stable at 4</b> · <span class="flat">flat</span></div>
+        <div class="ambient-last s4">4</div>
+    </div>
+    <div class="dim-q">Are all students engaged in the work of the lesson from start to finish?</div>
+    <div class="dim-scores">
+        <button class="score-btn s1">1</button><button class="score-btn s2">2</button>
+        <button class="score-btn s3">3</button><button class="score-btn s4 sel last-marker">4</button><button class="score-btn s5">5</button>
+    </div>
+</div>
+
+<div class="dim">
+    <div class="dim-head"><div><div class="dim-name">Community of Learners</div><div class="dim-short">CoL · T2</div></div></div>
+    <div class="ambient">
+        <div class="ambient-sparkline">
+            <div class="spark-bar" style="height:40%"></div>
+            <div class="spark-bar" style="height:60%"></div>
+            <div class="spark-bar" style="height:60%"></div>
+            <div class="spark-bar" style="height:60%"></div>
+            <div class="spark-bar latest" style="height:60%"></div>
+        </div>
+        <div class="ambient-text">Last 5: <b>held at 3</b> · moved up once from 2 → 3 early year · <span class="flat">flat</span></div>
+        <div class="ambient-last s3">3</div>
+    </div>
+    <div class="dim-q">Are all students active members of a joyful and supportive classroom community?</div>
+    <div class="dim-scores">
+        <button class="score-btn s1">1</button><button class="score-btn s2">2</button>
+        <button class="score-btn s3 sel last-marker">3</button><button class="score-btn s4">4</button><button class="score-btn s5">5</button>
+    </div>
+</div>
+
+<div class="dim">
+    <div class="dim-head"><div><div class="dim-name">Essential Content</div><div class="dim-short">Content · T3</div></div></div>
+    <div class="ambient">
+        <div class="ambient-sparkline">
+            <div class="spark-bar" style="height:60%"></div>
+            <div class="spark-bar" style="height:60%"></div>
+            <div class="spark-bar" style="height:75%"></div>
+            <div class="spark-bar" style="height:75%"></div>
+            <div class="spark-bar latest" style="height:75%"></div>
+        </div>
+        <div class="ambient-text">Last 5: moved 3 → 4 mid-year · <span class="up">▲ up</span></div>
+        <div class="ambient-last s4">4</div>
+    </div>
+    <div class="dim-q">Are all students working with content aligned to standards for their subject and grade?</div>
+    <div class="dim-scores">
+        <button class="score-btn s1">1</button><button class="score-btn s2">2</button>
+        <button class="score-btn s3">3</button><button class="score-btn s4 sel last-marker">4</button><button class="score-btn s5">5</button>
+    </div>
+</div>
+
+<div class="dim">
+    <div class="dim-head"><div><div class="dim-name">Cognitive Engagement</div><div class="dim-short">Cog Eng · T4</div></div></div>
+    <div class="ambient">
+        <div class="ambient-sparkline">
+            <div class="spark-bar" style="height:60%"></div>
+            <div class="spark-bar" style="height:60%"></div>
+            <div class="spark-bar" style="height:60%"></div>
+            <div class="spark-bar" style="height:60%"></div>
+            <div class="spark-bar latest" style="height:60%"></div>
+        </div>
+        <div class="ambient-text">Last 5: <b>stable at 3</b> · Marcus's growth edge · <span class="flat">flat</span></div>
+        <div class="ambient-last s3">3</div>
+    </div>
+    <div class="dim-q">Are all students responsible for doing the thinking in this classroom?</div>
+    <div class="dim-scores">
+        <button class="score-btn s1">1</button><button class="score-btn s2">2</button>
+        <button class="score-btn s3 sel last-marker">3</button><button class="score-btn s4">4</button><button class="score-btn s5">5</button>
+    </div>
+</div>
+
+<div class="dim">
+    <div class="dim-head"><div><div class="dim-name">Demonstration of Learning</div><div class="dim-short">Demo · T5</div></div></div>
+    <div class="ambient">
+        <div class="ambient-sparkline">
+            <div class="spark-bar" style="height:60%"></div>
+            <div class="spark-bar" style="height:60%"></div>
+            <div class="spark-bar" style="height:60%"></div>
+            <div class="spark-bar" style="height:75%"></div>
+            <div class="spark-bar latest" style="height:75%"></div>
+        </div>
+        <div class="ambient-text">Last 5: moved 3 → 4 in Jan · <span class="up">▲ up</span> · cold-call grid cycle close</div>
+        <div class="ambient-last s4">4</div>
+    </div>
+    <div class="dim-q">Do all students demonstrate that they are learning?</div>
+    <div class="dim-scores">
+        <button class="score-btn s1">1</button><button class="score-btn s2">2</button>
+        <button class="score-btn s3">3</button><button class="score-btn s4 sel last-marker">4</button><button class="score-btn s5">5</button>
+    </div>
+</div>
+
+<div class="section-lbl">Narrative Notes</div>
+<div class="dim"><textarea class="notes-input" placeholder="What did you see? Evidence, examples, and next-step thinking."></textarea></div>
+
+<button class="submit">Save Observation</button>
+
+</div>
+
+<script>
+function toggleAmbient(el){
+    document.body.classList.toggle('ambient-off');
+    el.querySelector('.switch').classList.toggle('off');
+    el.querySelector('.toggle-state').textContent = document.body.classList.contains('ambient-off') ? 'Off' : 'On';
+}
+document.querySelectorAll('.dim-scores').forEach(grp=>{
+    grp.querySelectorAll('.score-btn').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+            grp.querySelectorAll('.score-btn').forEach(b=>b.classList.remove('sel'));
+            btn.classList.add('sel');
+        });
+    });
+});
+</script>
+</body>
+</html>

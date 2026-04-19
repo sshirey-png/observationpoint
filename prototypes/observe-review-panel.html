@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Observe — Side Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.nav{position:sticky;top:0;z-index:100;background:#002f60;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.nav-back{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none}
+.nav-title{font-size:15px;font-weight:700;color:#fff;flex:1}.nav-title span{color:#e47727}
+.nav-tag{font-size:11px;font-weight:600;color:rgba(255,255,255,.7);padding:3px 8px;border-radius:6px;background:rgba(255,255,255,.1)}
+
+.tx{background:#fff;padding:16px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:12px}
+.tx-av{width:44px;height:44px;border-radius:12px;background:#002f60;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px}
+.tx-name{font-size:15px;font-weight:800}
+.tx-meta{font-size:12px;color:#6b7280;margin-top:1px}
+
+.layout{display:flex;gap:0;transition:gap .2s}
+.form-area{flex:1;padding:16px;max-width:720px;margin:0 auto;padding-bottom:80px;transition:margin .25s}
+
+/* Floating button (mobile) / default closed */
+.fab{position:fixed;bottom:20px;right:20px;z-index:200;padding:14px 18px;background:#e47727;color:#fff;border:0;border-radius:14px;font-family:inherit;font-size:13px;font-weight:800;box-shadow:0 6px 18px rgba(228,119,39,.3);cursor:pointer;display:flex;align-items:center;gap:8px}
+.fab-ic{width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px}
+
+/* Panel (desktop: side; mobile: bottom sheet) */
+.panel{position:fixed;right:0;top:0;bottom:0;width:min(420px,100%);background:#fff;box-shadow:-4px 0 20px rgba(0,0,0,.12);z-index:150;transform:translateX(100%);transition:transform .3s}
+.panel.open{transform:translateX(0)}
+.panel-nav{background:#002f60;color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:2}
+.panel-title{flex:1;font-size:14px;font-weight:800}
+.panel-close{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px}
+.panel-body{padding:16px;overflow-y:auto;height:calc(100% - 58px)}
+
+.panel-section{font-size:10px;font-weight:800;color:#e47727;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 8px}
+.panel-section:first-child{margin-top:0}
+
+.cycle{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px;margin-bottom:10px}
+.cycle-t{font-size:13px;font-weight:800}
+.cycle-f{font-size:12px;color:#7c2d12;margin-top:4px;line-height:1.45}
+
+.filter-tabs{display:flex;gap:4px;margin-bottom:10px;overflow-x:auto;padding-bottom:2px}
+.ftab{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;background:#f5f7fa;color:#6b7280;cursor:pointer;white-space:nowrap}
+.ftab.on{background:#002f60;color:#fff}
+
+.tp{background:#f5f7fa;border-radius:10px;padding:11px;margin-bottom:8px;border-left:3px solid #2563eb}
+.tp.pmap{border-left-color:#059669}
+.tp.sr{border-left-color:#7c3aed}
+.tp.fund{border-left-color:#0891b2}
+.tp.fb{border-left-color:#ca8a04}
+.tp-top{display:flex;justify-content:space-between;margin-bottom:4px}
+.tp-type{font-size:10px;font-weight:800;color:#2563eb;text-transform:uppercase;letter-spacing:.04em}
+.pmap .tp-type{color:#059669}.sr .tp-type{color:#7c3aed}.fund .tp-type{color:#0891b2}.fb .tp-type{color:#ca8a04}
+.tp-date{font-size:11px;color:#9ca3af;font-weight:600}
+.tp-scores{display:flex;gap:3px;margin-top:6px;flex-wrap:wrap}
+.chip{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:#fff;color:#6b7280}
+.chip.s2{background:#ffedd5;color:#c2410c}.chip.s3{background:#fef3c7;color:#a16207}.chip.s4{background:#dcfce7;color:#059669}
+.tp-note{font-size:12px;color:#374151;margin-top:6px;line-height:1.45}
+.tp-note b{color:#111827}
+
+/* Form styles */
+.section-lbl{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;margin:18px 0 8px}
+.dim{background:#fff;border-radius:12px;padding:16px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.dim-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}
+.dim-name{font-size:14px;font-weight:800;letter-spacing:-.01em}
+.dim-short{font-size:10px;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.dim-q{font-size:12px;color:#6b7280;margin-bottom:14px;line-height:1.45;font-style:italic}
+.dim-scores{display:flex;gap:6px}
+.score-btn{flex:1;padding:12px 0;border-radius:8px;border:1.5px solid #e5e7eb;background:#fff;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;color:#9ca3af}
+.score-btn.sel{border-width:2px}
+.score-btn.s2.sel{border-color:#c2410c;color:#c2410c;background:#ffedd5}
+.score-btn.s3.sel{border-color:#a16207;color:#a16207;background:#fef3c7}
+.score-btn.s4.sel{border-color:#059669;color:#059669;background:#dcfce7}
+.notes-input{width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;font-family:inherit;font-size:13px;resize:vertical;min-height:60px}
+.submit{margin-top:24px;padding:14px;background:#002f60;color:#fff;border:0;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;width:100%;cursor:pointer}
+
+/* Desktop: when panel is open, form shifts */
+@media(min-width:900px){
+    body.panel-open .form-area{max-width:720px;margin-right:420px}
+    .panel{top:50px}
+}
+
+/* Mobile: bottom sheet behavior */
+@media(max-width:899px){
+    .panel{top:auto;right:0;bottom:0;left:0;width:100%;height:75vh;border-radius:16px 16px 0 0;transform:translateY(100%)}
+    .panel.open{transform:translateY(0)}
+    .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:140;display:none}
+    .backdrop.open{display:block}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+    <a class="nav-back" href="design-options.html"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></a>
+    <div class="nav-title">Observation<span>Point</span></div>
+    <div class="nav-tag">Observe · Panel</div>
+</nav>
+
+<div class="tx">
+    <div class="tx-av">MW</div>
+    <div>
+        <div class="tx-name">Marcus Williams</div>
+        <div class="tx-meta">Teacher · Samuel J. Green · 5th Grade Math</div>
+    </div>
+</div>
+
+<div class="layout">
+<div class="form-area" id="form">
+
+<div class="section-lbl">Observation — April 19, 2026</div>
+
+<div class="dim">
+    <div class="dim-head"><div><div class="dim-name">On Task</div><div class="dim-short">T1</div></div></div>
+    <div class="dim-q">Are all students engaged in the work of the lesson from start to finish?</div>
+    <div class="dim-scores">
+        <button class="score-btn s1">1</button><button class="score-btn s2">2</button>
+        <button class="score-btn s3">3</button><button class="score-btn s4 sel">4</button><button class="score-btn s5">5</button>
+    </div>
+</div>
+
+<div class="dim">
+    <div class="dim-head"><div><div class="dim-name">Community of Learners</div><div class="dim-short">CoL · T2</div></div></div>
+    <div class="dim-q">Are all students active members of a joyful and supportive classroom community?</div>
+    <div class="dim-scores">
+        <button class="score-btn s1">1</button><button class="score-btn s2">2</button>
+        <button class="score-btn s3 sel">3</button><button class="score-btn s4">4</button><button class="score-btn s5">5</button>
+    </div>
+</div>
+
+<div class="dim">
+    <div class="dim-head"><div><div class="dim-name">Essential Content</div><div class="dim-short">Content · T3</div></div></div>
+    <div class="dim-q">Are all students working with content aligned to standards for their subject and grade?</div>
+    <div class="dim-scores">
+        <button class="score-btn s1">1</button><button class="score-btn s2">2</button>
+        <button class="score-btn s3">3</button><button class="score-btn s4 sel">4</button><button class="score-btn s5">5</button>
+    </div>
+</div>
+
+<div class="dim">
+    <div class="dim-head"><div><div class="dim-name">Cognitive Engagement</div><div class="dim-short">Cog Eng · T4</div></div></div>
+    <div class="dim-q">Are all students responsible for doing the thinking in this classroom?</div>
+    <div class="dim-scores">
+        <button class="score-btn s1">1</button><button class="score-btn s2">2</button>
+        <button class="score-btn s3 sel">3</button><button class="score-btn s4">4</button><button class="score-btn s5">5</button>
+    </div>
+</div>
+
+<div class="dim">
+    <div class="dim-head"><div><div class="dim-name">Demonstration of Learning</div><div class="dim-short">Demo · T5</div></div></div>
+    <div class="dim-q">Do all students demonstrate that they are learning?</div>
+    <div class="dim-scores">
+        <button class="score-btn s1">1</button><button class="score-btn s2">2</button>
+        <button class="score-btn s3">3</button><button class="score-btn s4 sel">4</button><button class="score-btn s5">5</button>
+    </div>
+</div>
+
+<div class="section-lbl">Narrative Notes</div>
+<div class="dim"><textarea class="notes-input" placeholder="What did you see? Evidence, examples, and next-step thinking."></textarea></div>
+
+<button class="submit">Save Observation</button>
+
+</div>
+</div>
+
+<!-- Floating review button -->
+<button class="fab" onclick="openPanel()"><div class="fab-ic">i</div>Review recent</button>
+
+<div class="backdrop" id="bd" onclick="closePanel()"></div>
+
+<!-- Panel -->
+<div class="panel" id="pnl">
+    <div class="panel-nav">
+        <div class="panel-title">Recent — Marcus Williams</div>
+        <div class="panel-close" onclick="closePanel()">×</div>
+    </div>
+    <div class="panel-body">
+
+        <div class="panel-section">Open cycle</div>
+        <div class="cycle">
+            <div class="cycle-t">Cycle 3 · closed Jan 14 (Improved)</div>
+            <div class="cycle-f">Focus was Demonstration of Learning — cold-call grid helped Marcus move from 3 → 4.</div>
+        </div>
+
+        <div class="panel-section">Filter</div>
+        <div class="filter-tabs">
+            <div class="ftab on">All</div>
+            <div class="ftab">Obs</div>
+            <div class="ftab">Fund</div>
+            <div class="ftab">PMAP</div>
+            <div class="ftab">SR</div>
+            <div class="ftab">Feedback</div>
+        </div>
+
+        <div class="panel-section">Touchpoints · last 5</div>
+
+        <div class="tp sr">
+            <div class="tp-top"><div class="tp-type">Self-Reflection</div><div class="tp-date">Mar 19</div></div>
+            <div class="tp-scores">
+                <div class="chip s4">On 4</div><div class="chip s3">CoL 3</div>
+                <div class="chip s4">Cont 4</div><div class="chip s3">Cog 3</div><div class="chip s4">Demo 4</div>
+            </div>
+            <div class="tp-note">Self-flagged: transitions are my edge — <b>warm-up to mini-lesson handoff runs long.</b></div>
+        </div>
+
+        <div class="tp fund">
+            <div class="tp-top"><div class="tp-type">Fundamentals</div><div class="tp-date">Feb 6</div></div>
+            <div class="tp-note"><b>89% on-task</b> · 23 of 26 students · 5-min sample</div>
+        </div>
+
+        <div class="tp">
+            <div class="tp-top"><div class="tp-type">Observation</div><div class="tp-date">Jan 14</div></div>
+            <div class="tp-scores">
+                <div class="chip s4">On 4</div><div class="chip s3">CoL 3</div>
+                <div class="chip s4">Cont 4</div><div class="chip s3">Cog 3</div><div class="chip s4">Demo 4</div>
+            </div>
+            <div class="tp-note">Cold-call grid visible. <b>Demo moved 3 → 4.</b> Cycle 3 closed as Improved.</div>
+        </div>
+
+        <div class="tp fb">
+            <div class="tp-top"><div class="tp-type">Quick Feedback</div><div class="tp-date">Dec 3</div></div>
+            <div class="tp-note">"Cold-call grid is actually helping me see gaps I didn't notice before." — K. Davis</div>
+        </div>
+
+        <div class="tp pmap">
+            <div class="tp-top"><div class="tp-type">PMAP · mid-year</div><div class="tp-date">Nov 13</div></div>
+            <div class="tp-scores">
+                <div class="chip s4">On 4</div><div class="chip s3">CoL 3</div>
+                <div class="chip s4">Cont 4</div><div class="chip s3">Cog 3</div><div class="chip s4">Demo 4</div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+function openPanel(){
+    document.getElementById('pnl').classList.add('open');
+    document.getElementById('bd').classList.add('open');
+    document.body.classList.add('panel-open');
+    document.querySelector('.fab').style.display='none';
+}
+function closePanel(){
+    document.getElementById('pnl').classList.remove('open');
+    document.getElementById('bd').classList.remove('open');
+    document.body.classList.remove('panel-open');
+    document.querySelector('.fab').style.display='flex';
+}
+document.querySelectorAll('.dim-scores').forEach(grp=>{
+    grp.querySelectorAll('.score-btn').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+            grp.querySelectorAll('.score-btn').forEach(b=>b.classList.remove('sel'));
+            btn.classList.add('sel');
+        });
+    });
+});
+</script>
+</body>
+</html>
