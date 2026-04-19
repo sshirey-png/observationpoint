@@ -46,7 +46,7 @@ body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-fon
 <body>
 
 <nav class="nav">
-    <div class="nav-back" onclick="location.href='index.html'"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></div>
+    <div class="nav-back" onclick="location.href='home-updated.html'"><svg width="18" height="18" fill="none" stroke="white" stroke-width="2"><path d="M15 9H3m0 0l5-5M3 9l5 5"/></svg></div>
     <div class="nav-title">My Team</div>
 </nav>
 
@@ -91,7 +91,7 @@ function renderCard(s){
     if(!types.length) types.push('<span class="staff-type">No touchpoints</span>');
 
     return `
-    <a class="staff-card" href="teacher-profile.html?teacher=${encodeURIComponent(s.email)}" data-school="${s.school}" data-function="${s.job_function}">
+    <a class="staff-card" href="profile-fundamentals-trend.html?teacher=${encodeURIComponent(s.email)}" data-school="${s.school}" data-function="${s.job_function}">
         <div class="staff-top">
             <div class="staff-av">${initials(s.name)}</div>
             <div>
