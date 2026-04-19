@@ -118,10 +118,31 @@ function setView(view){
     load();
 }
 
+const DEMO_STAFF = [
+    {email:'marcus.williams@demo.local',name:'Marcus Williams',school:'Samuel J. Green',job_title:'Teacher',job_function:'Teacher',touchpoint_count:27,obs_count:8,pmap_count:3,fund_count:6,sr_count:3,meeting_count:5,days_since_last:1},
+    {email:'alexis.rivera@demo.local',name:'Alexis Rivera',school:'Samuel J. Green',job_title:'Teacher',job_function:'Teacher',touchpoint_count:22,obs_count:7,pmap_count:3,fund_count:5,sr_count:3,meeting_count:3,days_since_last:3},
+    {email:'lenny.green@demo.local',name:'Lenny Green',school:'Samuel J. Green',job_title:'Teacher',job_function:'Teacher',touchpoint_count:16,obs_count:6,pmap_count:2,fund_count:4,sr_count:2,meeting_count:2,days_since_last:8},
+    {email:'kim.thompson@demo.local',name:'Kim Thompson',school:'Samuel J. Green',job_title:'Teacher · K',job_function:'Teacher',touchpoint_count:19,obs_count:6,pmap_count:2,fund_count:5,sr_count:3,meeting_count:3,days_since_last:2},
+    {email:'jada.watson@demo.local',name:'Jada Watson',school:'Samuel J. Green',job_title:'Teacher · 2nd',job_function:'Teacher',touchpoint_count:12,obs_count:4,pmap_count:2,fund_count:3,sr_count:2,meeting_count:1,days_since_last:14},
+    {email:'derek.chen@demo.local',name:'Derek Chen',school:'Samuel J. Green',job_title:'Teacher · 4th',job_function:'Teacher',touchpoint_count:18,obs_count:6,pmap_count:2,fund_count:4,sr_count:3,meeting_count:3,days_since_last:5},
+    {email:'sasha.patel@demo.local',name:'Sasha Patel',school:'Samuel J. Green',job_title:'Teacher · PreK',job_function:'Teacher',touchpoint_count:14,obs_count:5,pmap_count:2,fund_count:3,sr_count:2,meeting_count:2,days_since_last:11},
+];
+
+function useDemo(){ return location.hostname.endsWith('.github.io') || location.protocol === 'file:'; }
+
 async function load(){
     try {
+        // On GitHub Pages or local file, use demo data
+        if(useDemo()){
+            renderFromData({staff: DEMO_STAFF});
+            return;
+        }
         const r = await fetch(`/api/my-team?view=${currentView}`);
-        if(r.status === 401 || r.status === 403){ window.location.href='/login'; return; }
+        if(r.status === 401 || r.status === 403){
+            // API not available — fall back to demo
+            renderFromData({staff: DEMO_STAFF});
+            return;
+        }
         if(!r.ok) throw new Error(r.status);
         const d = await r.json();
         const staff = d.staff;
@@ -158,8 +179,31 @@ async function load(){
         document.getElementById('app').style.display='';
     } catch(e){
         console.error(e);
-        document.getElementById('loading').textContent = 'Failed to load team. Please sign in.';
+        // Fall back to demo data instead of failing
+        renderFromData({staff: DEMO_STAFF});
     }
+}
+
+function renderFromData(d){
+    const staff = d.staff;
+    if(!staff.length){
+        document.getElementById('loading').style.display='none';
+        document.getElementById('app').style.display='';
+        document.getElementById('staffList').innerHTML='<div class="empty">No direct reports found</div>';
+        return;
+    }
+    let totalTPs = 0;
+    const fnSet = new Set();
+    staff.forEach(s => { totalTPs += s.touchpoint_count; if(s.job_function) fnSet.add(s.job_function); });
+    document.getElementById('sStaff').textContent = staff.length;
+    document.getElementById('sTPs').textContent = totalTPs;
+    document.getElementById('sAvg').textContent = staff.length ? (totalTPs/staff.length).toFixed(1) : '—';
+    let chips = '<div class="filter-chip active" onclick="applyFilter(this,\'all\')">All</div>';
+    fnSet.forEach(fn => { chips += `<div class="filter-chip" onclick="applyFilter(this,'fn:${fn}')">${fn}</div>`; });
+    document.getElementById('filters').innerHTML = chips;
+    document.getElementById('staffList').innerHTML = staff.map(renderCard).join('');
+    document.getElementById('loading').style.display='none';
+    document.getElementById('app').style.display='';
 }
 
 function filterStaff(q){
