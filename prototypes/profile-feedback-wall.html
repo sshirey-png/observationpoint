@@ -19,20 +19,11 @@ body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-fon
 .profile-av{width:56px;height:56px;border-radius:14px;background:#002f60;color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;flex-shrink:0}
 .profile-name{font-size:20px;font-weight:800;letter-spacing:-.02em}
 .profile-meta{font-size:13px;color:#6b7280;margin-top:2px}
-.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:14px}
-.tile{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:10px 4px;text-align:center;text-decoration:none;color:inherit;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:5px}
-.tile:active{transform:scale(.96)}
-.tile:hover{border-color:#e47727}
-.tile-ic{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff}
-.tile-lbl{font-size:10px;font-weight:700;color:#374151;letter-spacing:.02em}
-.tile-obs .tile-ic{background:#2563eb}
-.tile-fb .tile-ic{background:#ca8a04}
-.tile-cel .tile-ic{background:#be185d}
-.tile-fund .tile-ic{background:#0891b2}
-.tile-sol .tile-ic{background:#7c3aed}
-.tile-meet .tile-ic{background:#16a34a}
-.tile-pmap .tile-ic{background:#059669}
-.tile-ai .tile-ic{background:linear-gradient(135deg,#002f60,#1e40af);color:#fbbe82}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.tile{background:#fff;border:1px solid transparent;border-radius:10px;padding:10px 4px;text-align:center;text-decoration:none;color:inherit;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:6px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.tile:active{transform:scale(.96);border-color:#e47727}
+.tile-ic{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.tile-lbl{font-size:10px;font-weight:600;color:#374151}
 
 .content{padding:16px;max-width:900px;margin:0 auto;padding-bottom:40px}
 
@@ -103,14 +94,14 @@ body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-fon
         </div>
     </div>
     <div class="tiles">
-        <div class="tile tile-obs"><div class="tile-ic">O</div><div class="tile-lbl">Observe</div></div>
-        <div class="tile tile-fb"><div class="tile-ic">Q</div><div class="tile-lbl">Quick FB</div></div>
-        <div class="tile tile-cel"><div class="tile-ic">C</div><div class="tile-lbl">Celebrate</div></div>
-        <div class="tile tile-fund"><div class="tile-ic">F</div><div class="tile-lbl">Fundamentals</div></div>
-        <div class="tile tile-sol"><div class="tile-ic">S</div><div class="tile-lbl">Solicit FB</div></div>
-        <div class="tile tile-meet"><div class="tile-ic">M</div><div class="tile-lbl">Meeting</div></div>
-        <div class="tile tile-pmap"><div class="tile-ic">P</div><div class="tile-lbl">PMAP</div></div>
-        <div class="tile tile-ai"><div class="tile-ic">✦</div><div class="tile-lbl">Insights</div></div>
+        <a class="tile" href="teacher-observation.html"><div class="tile-ic" style="background:#dbeafe">&#128065;</div><div class="tile-lbl">Observe</div></a>
+        <a class="tile" href="quick-feedback.html"><div class="tile-ic" style="background:#fef3c7">&#9889;</div><div class="tile-lbl">Quick FB</div></a>
+        <a class="tile" href="celebrate.html"><div class="tile-ic" style="background:#dcfce7">&#127881;</div><div class="tile-lbl">Celebrate</div></a>
+        <a class="tile" href="fundamentals.html"><div class="tile-ic" style="background:#fef3c7">&#9201;</div><div class="tile-lbl">Fund</div></a>
+        <a class="tile" href="solicited-feedback.html"><div class="tile-ic" style="background:#dbeafe">&#128588;</div><div class="tile-lbl">Solicit</div></a>
+        <a class="tile" href="meeting-data.html"><div class="tile-ic" style="background:#f0fdf4">&#128172;</div><div class="tile-lbl">Meeting</div></a>
+        <a class="tile" href="pmap-teacher.html"><div class="tile-ic" style="background:#dcfce7">&#9989;</div><div class="tile-lbl">PMAP</div></a>
+        <a class="tile" href="insights-floating.html"><div class="tile-ic" style="background:#fff7ed;color:#e47727">&#10022;</div><div class="tile-lbl">Insights</div></a>
     </div>
 </div>
 
