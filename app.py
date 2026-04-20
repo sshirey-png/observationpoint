@@ -141,11 +141,12 @@ REACT_DIR = os.path.join(os.path.dirname(__file__), 'frontend', 'dist')
 def index():
     if not DEV_MODE and not get_current_user():
         return redirect('/login')
-    # Serve React app if built, otherwise fall back to vanilla JS
+    # React app is canonical. Prototypes remain reachable at /prototypes/*
+    # as design reference. Home.jsx handles the 4-button landing.
     react_index = os.path.join(REACT_DIR, 'index.html')
     if os.path.exists(react_index):
         return send_from_directory(REACT_DIR, 'index.html')
-    return send_from_directory('prototypes', 'index.html')
+    return send_from_directory('prototypes', 'home-updated.html')
 
 
 @app.route('/app')
