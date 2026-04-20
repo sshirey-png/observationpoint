@@ -211,6 +211,196 @@ def api_stop_impersonating():
     return jsonify({'ok': True})
 
 
+@app.route('/api/admin/enrich-narrative', methods=['POST', 'GET'])
+@require_auth
+@require_admin
+def api_enrich_narrative():
+    """ONE-TIME enrichment: pull every Grow observation, extract the
+    narrative content (textBoxes, valueText, comments) we missed on
+    original import, match to existing touchpoints in Postgres, update
+    their feedback_json + feedback fields.
+
+    Match key: (teacher_email, observed_at::date, rubric.name → form_type).
+    Idempotent: rerunning overwrites feedback_json with latest from Grow.
+
+    Query args:
+      dry_run=true (default) — don't write, just report match counts
+      limit=N             — process only first N Grow records (testing)
+    """
+    import base64, re, requests
+    from datetime import datetime
+
+    dry = request.args.get('dry_run', 'true').lower() != 'false'
+    limit = int(request.args.get('limit', '0') or 0)
+
+    client_id = os.environ.get('LDG_CLIENT_ID', '6fe43bd0-e8d1-4ce0-a9a9-2267c9a3df9b')
+    client_secret = os.environ.get('LDG_CLIENT_SECRET', '18eaec46-c6c9-4bcb-abf7-b36030485966')
+    base = 'https://grow-api.leveldata.com'
+
+    # Auth
+    creds = base64.b64encode(f'{client_id}:{client_secret}'.encode()).decode()
+    auth = requests.post(f'{base}/auth/client/token',
+        headers={'Authorization': f'Basic {creds}', 'Content-Type': 'application/x-www-form-urlencoded'},
+        timeout=30)
+    if auth.status_code != 200:
+        return jsonify({'error': 'Grow auth failed', 'body': auth.text[:300]}), 500
+    token = auth.json()['access_token']
+
+    # Determine form_type same way the original importer did (from rubric + type name)
+    def derive_form_type(rubric_name, type_name):
+        rn = (rubric_name or '').lower()
+        tn = (type_name or '').lower()
+        ft = 'observation_teacher'
+        if 'prek' in rn or 'pre-k' in rn:
+            ft = 'observation_prek'
+        if 'fundamental' in rn:
+            ft = 'observation_fundamentals'
+        if 'pmap' in tn:
+            ft = 'pmap_teacher'
+            if 'prek' in rn: ft = 'pmap_prek'
+            elif 'leader' in rn: ft = 'pmap_leader'
+            elif 'non-instructional' in rn or 'support' in rn: ft = 'pmap_support'
+            elif 'network' in rn: ft = 'pmap_network'
+        if 'self-reflection' in tn or 'self reflection' in tn:
+            ft = 'self_reflection_teacher'
+            if 'prek' in rn: ft = 'self_reflection_prek'
+            elif 'leader' in rn: ft = 'self_reflection_leader'
+            elif 'network' in rn: ft = 'self_reflection_network'
+            elif 'non-instructional' in rn or 'support' in rn: ft = 'self_reflection_support'
+        return ft
+
+    strip_tags = re.compile(r'<[^>]+>')
+
+    def extract_narrative(obs):
+        narrative = []
+        checkboxes_selected = []
+        for s in obs.get('observationScores', []) or []:
+            mid = s.get('measurement', '')
+            # textBoxes — the coaching narrative lives here
+            for tb in s.get('textBoxes', []) or []:
+                val = tb.get('value')
+                if val:
+                    txt = strip_tags.sub('', val).strip()
+                    if txt:
+                        narrative.append({'measurement': mid, 'text': txt})
+            # valueText — yes/no answers
+            if s.get('valueText'):
+                checkboxes_selected.append({'measurement': mid, 'selected': s['valueText']})
+            # checkboxes — which level was picked
+            for cb in s.get('checkboxes', []) or []:
+                if cb.get('value') is True:
+                    checkboxes_selected.append({'measurement': mid, 'selected': (cb.get('label') or '').strip()})
+        # Observation-level comments
+        comments = [c for c in (obs.get('comments') or []) if c]
+        return {
+            'grow_id': obs.get('_id'),
+            'narrative': narrative,
+            'checkboxes_selected': checkboxes_selected,
+            'comments': comments,
+        }
+
+    # Pull all observations from Grow
+    all_obs = []
+    skip = 0
+    page_size = 100
+    while True:
+        r = requests.get(f'{base}/external/observations',
+            headers={'Authorization': f'Bearer {token}'},
+            params={'limit': page_size, 'skip': skip},
+            timeout=60)
+        if r.status_code != 200:
+            break
+        records = r.json().get('data', [])
+        if not records:
+            break
+        all_obs.extend(records)
+        skip += page_size
+        if limit and len(all_obs) >= limit:
+            all_obs = all_obs[:limit]
+            break
+        if len(records) < page_size:
+            break
+
+    # For each, build narrative payload and try to match to a Postgres touchpoint
+    matched = 0
+    updated = 0
+    no_match = 0
+    updates_preview = []
+
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        for obs in all_obs:
+            teacher = obs.get('teacher') or {}
+            if isinstance(teacher, str): teacher = {}
+            teacher_email = (teacher.get('email') or '').lower()
+            observed_at = obs.get('observedAt') or obs.get('created')
+            if not teacher_email or not observed_at:
+                continue
+
+            rubric = obs.get('rubric') or {}
+            if isinstance(rubric, str): rubric = {}
+            rubric_name = rubric.get('name', '')
+            obs_type = obs.get('observationType')
+            # Grow API sometimes returns obs type as dict, sometimes as just an ID
+            type_name = obs_type.get('name', '') if isinstance(obs_type, dict) else ''
+            form_type = derive_form_type(rubric_name, type_name)
+
+            payload = extract_narrative(obs)
+            # Skip observations that have no narrative at all — no point updating
+            if not payload['narrative'] and not payload['checkboxes_selected'] and not payload['comments']:
+                continue
+
+            # Match by (teacher_email, observed_at date, form_type)
+            cur.execute("""
+                SELECT id FROM touchpoints
+                WHERE LOWER(teacher_email) = %s
+                  AND DATE(observed_at) = DATE(%s)
+                  AND form_type = %s
+                ORDER BY observed_at
+            """, (teacher_email, observed_at, form_type))
+            rows = cur.fetchall()
+            if not rows:
+                no_match += 1
+                continue
+            matched += len(rows)
+
+            plain_text = '\n\n'.join(n['text'] for n in payload['narrative'])
+
+            if not dry:
+                # Write feedback_json + feedback to each matching tp
+                for row in rows:
+                    cur.execute("""
+                        UPDATE touchpoints
+                        SET feedback_json = %s, feedback = %s
+                        WHERE id = %s
+                    """, (json.dumps(payload), plain_text or None, row['id']))
+                    updated += 1
+                conn.commit()
+            elif len(updates_preview) < 5:
+                updates_preview.append({
+                    'grow_id': payload['grow_id'],
+                    'teacher_email': teacher_email,
+                    'observed_at': observed_at,
+                    'form_type': form_type,
+                    'matched_tp_ids': [str(r['id']) for r in rows],
+                    'narrative_count': len(payload['narrative']),
+                    'sample_narrative': (payload['narrative'][0]['text'][:200] if payload['narrative'] else None),
+                })
+
+        return jsonify({
+            'dry_run': dry,
+            'grow_observations_pulled': len(all_obs),
+            'matches_found': matched,
+            'records_updated': updated,
+            'no_postgres_match': no_match,
+            'sample_updates': updates_preview if dry else None,
+            'note': 'Pass ?dry_run=false to actually write. Add ?limit=N to cap for testing.',
+        })
+    finally:
+        conn.close()
+
+
 @app.route('/api/admin/grow-raw-probe')
 @require_auth
 @require_admin
