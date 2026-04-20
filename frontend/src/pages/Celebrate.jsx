@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import Nav from '../components/Nav'
 import StaffPicker from '../components/StaffPicker'
 import { api } from '../lib/api'
+import FormShell from '../components/FormShell'
 
 /**
  * Celebrate — praise/recognition touchpoint.
@@ -97,6 +98,7 @@ export default function Celebrate() {
   }
 
   return (
+    <FormShell>
     <div className="pb-24">
       <Nav title="Celebrate" />
       <StaffPicker selected={teacher} onSelect={setTeacher} initialEmail={teacherParam} />
@@ -257,5 +259,6 @@ export default function Celebrate() {
         </button>
       </div>
     </div>
+    </FormShell>
   )
 }

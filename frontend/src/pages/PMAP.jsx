@@ -5,6 +5,7 @@ import StaffPicker from '../components/StaffPicker'
 import RubricCard from '../components/RubricCard'
 import { api } from '../lib/api'
 import { TEACHER_RUBRIC } from '../lib/rubric-descriptors'
+import FormShell from '../components/FormShell'
 
 /**
  * PMAP — Performance Map for Teachers.
@@ -140,6 +141,7 @@ export default function PMAP() {
   const inputClass = "w-full px-3 py-3 border border-gray-200 rounded-[10px] text-sm outline-none focus:border-fls-orange placeholder:text-gray-400"
 
   return (
+    <FormShell>
     <div className="pb-24">
       <Nav title="PMAP — Teacher" />
       <StaffPicker selected={teacher} onSelect={setTeacher} initialEmail={teacherParam} />
@@ -336,5 +338,6 @@ export default function PMAP() {
         </button>
       </div>
     </div>
+    </FormShell>
   )
 }

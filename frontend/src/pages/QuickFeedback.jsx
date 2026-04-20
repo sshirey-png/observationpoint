@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import Nav from '../components/Nav'
 import StaffPicker from '../components/StaffPicker'
 import { api } from '../lib/api'
+import FormShell from '../components/FormShell'
 
 /**
  * QuickFeedback — lightweight touchpoint. No rubric, no scoring.
@@ -70,6 +71,7 @@ export default function QuickFeedback() {
   }
 
   return (
+    <FormShell>
     <div className="pb-24">
       <Nav title="Quick Feedback" />
       <StaffPicker selected={teacher} onSelect={setTeacher} initialEmail={teacherParam} />
@@ -156,5 +158,6 @@ export default function QuickFeedback() {
         </button>
       </div>
     </div>
+    </FormShell>
   )
 }

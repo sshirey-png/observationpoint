@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import Nav from '../components/Nav'
 import StaffPicker from '../components/StaffPicker'
 import { api } from '../lib/api'
+import FormShell from '../components/FormShell'
 
 /**
  * Fundamentals — 5-minute on-task observation.
@@ -158,6 +159,7 @@ export default function Fundamentals() {
   }
 
   return (
+    <FormShell>
     <div className="pb-24">
       <Nav title="Fundamentals" />
       <StaffPicker selected={teacher} onSelect={setTeacher} initialEmail={teacherParam} />
@@ -294,5 +296,6 @@ export default function Fundamentals() {
         </button>
       </div>
     </div>
+    </FormShell>
   )
 }

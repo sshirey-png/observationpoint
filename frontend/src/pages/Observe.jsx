@@ -7,6 +7,7 @@ import RecordingBar from '../components/RecordingBar'
 import ActionSteps from '../components/ActionSteps'
 import { api } from '../lib/api'
 import { TEACHER_RUBRIC } from '../lib/rubric-descriptors'
+import FormShell from '../components/FormShell'
 
 /**
  * Observe — the teacher observation form.
@@ -99,6 +100,7 @@ export default function Observe() {
   }
 
   return (
+    <FormShell>
     <div className="pb-24">
       <Nav title="Teacher Observation" />
 
@@ -232,5 +234,6 @@ export default function Observe() {
         </button>
       </div>
     </div>
+    </FormShell>
   )
 }

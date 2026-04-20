@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import Nav from '../components/Nav'
 import StaffPicker from '../components/StaffPicker'
 import { api } from '../lib/api'
+import FormShell from '../components/FormShell'
 
 /**
  * Meeting — Data Meeting (Relay) form.
@@ -85,6 +86,7 @@ export default function Meeting() {
   const textareaClass = `${inputClass} resize-y`
 
   return (
+    <FormShell>
     <div className="pb-24">
       <Nav title="Data Meeting (Relay)" />
       <StaffPicker selected={teacher} onSelect={setTeacher} initialEmail={teacherParam} />
@@ -156,5 +158,6 @@ export default function Meeting() {
         </button>
       </div>
     </div>
+    </FormShell>
   )
 }

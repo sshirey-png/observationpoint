@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import Nav from '../components/Nav'
 import StaffPicker from '../components/StaffPicker'
 import { api } from '../lib/api'
+import FormShell from '../components/FormShell'
 
 /**
  * SolicitFeedback — ask a teacher for feedback.
@@ -112,6 +113,7 @@ export default function SolicitFeedback() {
   }
 
   return (
+    <FormShell>
     <div className="pb-24">
       <Nav title="Solicit Feedback" />
       <StaffPicker selected={teacher} onSelect={setTeacher} initialEmail={teacherParam} />
@@ -210,5 +212,6 @@ export default function SolicitFeedback() {
         </button>
       </div>
     </div>
+    </FormShell>
   )
 }
