@@ -71,16 +71,26 @@ function Empty({ msg }) {
   return <div className="bg-white rounded-xl p-6 text-center text-gray-400 text-sm shadow-sm">{msg}</div>
 }
 
+// Draft heuristic: records before ObservationPoint launch are from Grow import.
+// Real build replaces this with a `source` column on the touchpoints table.
+const LAUNCH_DATE = '2026-04-01'
+function isLegacyRecord(tp) {
+  return !!(tp.date && tp.date < LAUNCH_DATE)
+}
+
 function RecordCard({ tp, staffEmail, onClick }) {
   const scores = tp.scores || {}
   const label = FORM_LABEL[tp.form_type] || tp.form_type
   const isSelf = staffEmail && tp.observer_email && tp.observer_email.toLowerCase() === staffEmail.toLowerCase()
+  const legacy = isLegacyRecord(tp)
   // Show "tap to see full" only if the modal will actually reveal MORE than the card
   const hasExtra = !!(tp.feedback_json || tp.meeting_json || (tp.notes && tp.notes.length > 140))
   return (
     <button
       onClick={onClick}
-      className="block w-full text-left bg-white rounded-xl p-3.5 shadow-sm mb-2.5 border-0 cursor-pointer font-[inherit] active:scale-[.99] transition-transform"
+      className={`block w-full text-left rounded-xl p-3.5 shadow-sm mb-2.5 border-0 cursor-pointer font-[inherit] active:scale-[.99] transition-transform ${
+        legacy ? 'bg-gray-50' : 'bg-white'
+      }`}
     >
       <div className="flex items-center justify-between gap-2.5 mb-1">
         <div className="flex items-center gap-2 min-w-0 flex-wrap">
@@ -88,6 +98,14 @@ function RecordCard({ tp, staffEmail, onClick }) {
           <span className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-gray-100 text-gray-600 shrink-0">
             {label}
           </span>
+          {legacy && (
+            <span
+              className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-gray-200 text-gray-500 shrink-0"
+              title="Imported from Grow — structure may be thinner than new records"
+            >
+              Legacy
+            </span>
+          )}
           {isSelf ? (
             <span className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-purple-50 text-purple-700 shrink-0">
               Self
