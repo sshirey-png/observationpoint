@@ -215,23 +215,33 @@ def api_stop_impersonating():
 @require_auth
 @require_admin
 def api_enrich_narrative():
-    """ONE-TIME enrichment: pull every Grow observation, extract the
-    narrative content (textBoxes, valueText, comments) we missed on
-    original import, match to existing touchpoints in Postgres, update
-    their feedback_json + feedback fields.
+    """Paginated enrichment. Pulls a batch of Grow observations starting
+    at ?skip=N (page size ?limit=500), extracts narrative content we
+    missed on original import (textBoxes, valueText, comments), matches
+    to existing touchpoints in Postgres by (teacher_email, observed_at
+    date, derived form_type), writes feedback_json + plaintext feedback
+    column.
 
-    Match key: (teacher_email, observed_at::date, rubric.name → form_type).
-    Idempotent: rerunning overwrites feedback_json with latest from Grow.
+    Each call processes ONE batch and returns progress. Caller keeps
+    hitting with the returned next_skip until done=true. Idempotent:
+    re-running the same range overwrites with the same data.
 
     Query args:
-      dry_run=true (default) — don't write, just report match counts
-      limit=N             — process only first N Grow records (testing)
+      skip=0           — starting offset in Grow's sorted observation list
+      limit=500        — page size (≤ 500 keeps each request well under timeout)
+      dry_run=true     — report match counts without writing (default)
+      dry_run=false    — persist the feedback content
+
+    Response:
+      {skip, limit, grow_observations_pulled, matches_found, records_updated,
+       no_postgres_match, next_skip, done, sample_updates?}
     """
     import base64, re, requests
     from datetime import datetime
 
     dry = request.args.get('dry_run', 'true').lower() != 'false'
-    limit = int(request.args.get('limit', '0') or 0)
+    skip = int(request.args.get('skip', '0') or 0)
+    limit = min(int(request.args.get('limit', '500') or 500), 1000)
 
     client_id = os.environ.get('LDG_CLIENT_ID', '6fe43bd0-e8d1-4ce0-a9a9-2267c9a3df9b')
     client_secret = os.environ.get('LDG_CLIENT_SECRET', '18eaec46-c6c9-4bcb-abf7-b36030485966')
@@ -299,27 +309,16 @@ def api_enrich_narrative():
             'comments': comments,
         }
 
-    # Pull all observations from Grow
-    all_obs = []
-    skip = 0
-    page_size = 100
-    while True:
-        r = requests.get(f'{base}/external/observations',
-            headers={'Authorization': f'Bearer {token}'},
-            params={'limit': page_size, 'skip': skip},
-            timeout=60)
-        if r.status_code != 200:
-            break
-        records = r.json().get('data', [])
-        if not records:
-            break
-        all_obs.extend(records)
-        skip += page_size
-        if limit and len(all_obs) >= limit:
-            all_obs = all_obs[:limit]
-            break
-        if len(records) < page_size:
-            break
+    # Pull ONE batch from Grow starting at `skip`
+    r = requests.get(f'{base}/external/observations',
+        headers={'Authorization': f'Bearer {token}'},
+        params={'limit': limit, 'skip': skip},
+        timeout=60)
+    if r.status_code != 200:
+        return jsonify({'error': f'Grow fetch failed: {r.status_code}', 'body': r.text[:300]}), 500
+    page = r.json() or {}
+    all_obs = page.get('data', [])
+    grow_total = page.get('count', None)
 
     # For each, build narrative payload and try to match to a Postgres touchpoint
     matched = 0
@@ -388,17 +387,131 @@ def api_enrich_narrative():
                     'sample_narrative': (payload['narrative'][0]['text'][:200] if payload['narrative'] else None),
                 })
 
+        batch_size = len(all_obs)
+        next_skip = skip + batch_size
+        done = batch_size < limit or (grow_total is not None and next_skip >= grow_total)
         return jsonify({
             'dry_run': dry,
-            'grow_observations_pulled': len(all_obs),
+            'skip': skip,
+            'limit': limit,
+            'grow_total': grow_total,
+            'grow_observations_pulled': batch_size,
             'matches_found': matched,
             'records_updated': updated,
             'no_postgres_match': no_match,
+            'next_skip': next_skip,
+            'done': done,
             'sample_updates': updates_preview if dry else None,
-            'note': 'Pass ?dry_run=false to actually write. Add ?limit=N to cap for testing.',
+            'note': 'Hit again with the returned next_skip until done=true. Pass dry_run=false to persist.',
         })
     finally:
         conn.close()
+
+
+@app.route('/admin/enrich-narrative')
+@require_auth
+@require_admin
+def admin_enrich_narrative_page():
+    """Auto-driving HTML page for the enrichment run. Hit it once,
+    watch it page through batches until done. Shows live progress."""
+    return """<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Enrich Narrative — Admin</title>
+<style>
+body{font-family:Inter,system-ui,sans-serif;background:#f5f7fa;max-width:760px;margin:0 auto;padding:24px;color:#111827}
+h1{color:#002f60;margin-bottom:4px}.sub{color:#6b7280;font-size:14px;margin-bottom:24px}
+.card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:14px}
+.row{display:flex;align-items:center;gap:14px;margin-bottom:8px}.row b{color:#002f60}
+.bar{height:10px;background:#e5e7eb;border-radius:5px;overflow:hidden;margin:12px 0}
+.bar-fill{height:100%;background:linear-gradient(90deg,#e47727,#c2410c);transition:width .3s}
+button{padding:12px 20px;border:0;border-radius:10px;background:#002f60;color:#fff;font-weight:700;font-family:inherit;cursor:pointer;font-size:14px}
+button:disabled{opacity:.5;cursor:not-allowed}.stat{display:inline-block;margin-right:18px}.stat-val{font-size:22px;font-weight:800;color:#002f60}.stat-label{font-size:10px;text-transform:uppercase;color:#9ca3af;letter-spacing:.05em;display:block}
+pre{background:#f5f7fa;padding:12px;border-radius:8px;font-size:11px;overflow-x:auto;max-height:220px}
+.danger{background:#fef2f2;color:#991b1b;border:1px solid #fca5a5;padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:14px}
+.note{background:#fff7ed;color:#7c2d12;border:1px solid #fed7aa;padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:14px}
+</style></head>
+<body>
+<h1>Enrich Narrative from Grow</h1>
+<div class="sub">Pull textBoxes/valueText/comments from every Grow observation and write into matching Postgres touchpoints' feedback_json + feedback columns.</div>
+
+<div class="note">
+  <b>First: run a Dry Run</b> to confirm counts. Then click Write.<br>
+  Safe to close the tab — last completed skip is shown; rerunning resumes there.
+</div>
+
+<div class="card">
+  <div class="row">
+    <button id="dryBtn" onclick="run(true)">Dry Run</button>
+    <button id="writeBtn" onclick="run(false)">Write (dry_run=false)</button>
+    <button id="stopBtn" onclick="stop()" disabled>Stop</button>
+  </div>
+  <div class="bar"><div class="bar-fill" id="bar" style="width:0%"></div></div>
+  <div>
+    <span class="stat"><span class="stat-val" id="sProcessed">0</span><span class="stat-label">Processed</span></span>
+    <span class="stat"><span class="stat-val" id="sMatched">0</span><span class="stat-label">Matches</span></span>
+    <span class="stat"><span class="stat-val" id="sUpdated">0</span><span class="stat-label">Updated</span></span>
+    <span class="stat"><span class="stat-val" id="sNoMatch">0</span><span class="stat-label">No match</span></span>
+  </div>
+  <div id="status" class="sub" style="margin-top:12px">Ready.</div>
+</div>
+
+<div class="card" id="logCard" style="display:none">
+  <b>Last batch:</b>
+  <pre id="log"></pre>
+</div>
+
+<script>
+let running = false, stopReq = false, totals = {processed:0, matched:0, updated:0, noMatch:0}
+function el(id){return document.getElementById(id)}
+function fmt(n){return n.toLocaleString()}
+
+async function run(dry) {
+  if (running) return
+  running = true; stopReq = false
+  totals = {processed:0, matched:0, updated:0, noMatch:0}
+  el('dryBtn').disabled = true; el('writeBtn').disabled = true; el('stopBtn').disabled = false
+  el('logCard').style.display = 'block'
+
+  let skip = 0
+  while (!stopReq) {
+    el('status').textContent = `Processing batch at skip=${skip}…`
+    const url = `/api/admin/enrich-narrative?skip=${skip}&limit=500&dry_run=${dry}`
+    let r, d
+    try {
+      r = await fetch(url, {method: 'POST'})
+      d = await r.json()
+    } catch (e) {
+      el('status').textContent = `Batch failed at skip=${skip}: ${e.message}. Click the button again to resume from skip=${skip}.`
+      break
+    }
+    if (!r.ok) {
+      el('status').textContent = `Error at skip=${skip}: ${d.error || r.status}`
+      break
+    }
+    totals.processed += d.grow_observations_pulled || 0
+    totals.matched += d.matches_found || 0
+    totals.updated += d.records_updated || 0
+    totals.noMatch += d.no_postgres_match || 0
+    el('sProcessed').textContent = fmt(totals.processed)
+    el('sMatched').textContent = fmt(totals.matched)
+    el('sUpdated').textContent = fmt(totals.updated)
+    el('sNoMatch').textContent = fmt(totals.noMatch)
+    if (d.grow_total) {
+      el('bar').style.width = Math.min(100, (totals.processed / d.grow_total) * 100) + '%'
+    }
+    el('log').textContent = JSON.stringify(d, null, 2)
+    if (d.done) break
+    skip = d.next_skip
+  }
+  el('status').textContent = stopReq ? `Stopped at skip=${skip}. Resume by clicking a button.` : `Done. ${dry ? 'Dry run complete — click Write to persist.' : 'Write complete.'}`
+  el('dryBtn').disabled = false; el('writeBtn').disabled = false; el('stopBtn').disabled = true
+  running = false
+}
+function stop(){ stopReq = true }
+</script>
+</body></html>"""
 
 
 @app.route('/api/admin/grow-raw-probe')
