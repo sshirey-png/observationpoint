@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { api } from '../lib/api'
 
 /**
  * AIPanel — slide-up inline chat. Opens on the current page; never navigates.
@@ -79,16 +80,35 @@ export default function AIPanel({ open, onClose, context = 'home', subject = '' 
     return () => { document.body.style.overflow = '' }
   }, [open])
 
-  function ask(q) {
+  async function ask(q) {
     if (!q) return
     setMessages(prev => [...prev, { role: 'user', text: q }])
     setInput('')
-    setTimeout(() => {
-      setMessages(prev => [...prev, {
-        role: 'ai',
-        text: "I'd answer that live from your data. This prototype shows the interaction pattern — a real build hits the API.",
-      }])
-    }, 450)
+    // Add a thinking placeholder
+    setMessages(prev => [...prev, { role: 'ai', text: '…', thinking: true }])
+
+    try {
+      const r = await api.post('/api/insights', { question: q })
+      setMessages(prev => {
+        const next = [...prev]
+        next[next.length - 1] = {
+          role: 'ai',
+          text: r?.answer || "I couldn't produce an answer.",
+          total: r?.total,
+        }
+        return next
+      })
+    } catch (e) {
+      setMessages(prev => {
+        const next = [...prev]
+        next[next.length - 1] = {
+          role: 'ai',
+          text: `Sorry — ${e.message || 'that question failed'}. Try rephrasing?`,
+          error: true,
+        }
+        return next
+      })
+    }
   }
 
   if (!open) return (
@@ -140,8 +160,21 @@ export default function AIPanel({ open, onClose, context = 'home', subject = '' 
                   {m.text}
                 </div>
               ) : (
-                <div key={i} className="bg-gray-50 rounded-[14px] rounded-tl-[3px] px-3.5 py-2.5 text-sm leading-relaxed text-gray-900">
-                  {m.text}
+                <div key={i} className={`rounded-[14px] rounded-tl-[3px] px-3.5 py-2.5 text-sm leading-relaxed ${
+                  m.error ? 'bg-red-50 text-red-900' : 'bg-gray-50 text-gray-900'
+                }`}>
+                  {m.thinking ? (
+                    <span className="inline-flex gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-pulse" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-pulse" style={{ animationDelay: '150ms' }} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-pulse" style={{ animationDelay: '300ms' }} />
+                    </span>
+                  ) : m.text}
+                  {m.total != null && !m.thinking && (
+                    <div className="text-[10px] text-gray-400 mt-1.5 font-semibold uppercase tracking-wide">
+                      {m.total} record{m.total === 1 ? '' : 's'} analyzed
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

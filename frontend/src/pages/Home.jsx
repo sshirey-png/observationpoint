@@ -100,6 +100,9 @@ export default function Home() {
         <div className="text-center text-[11px] text-gray-400 font-semibold mt-5">
           ObservationPoint · designed with FirstLine Schools
         </div>
+        <div className="text-center text-[11px] mt-2">
+          <a href="/logout" className="text-gray-400 hover:text-fls-orange no-underline">Sign out</a>
+        </div>
       </div>
 
       <AIPanel open={aiOpen} onClose={() => setAiOpen(false)} context="home" />
