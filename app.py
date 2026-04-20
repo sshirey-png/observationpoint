@@ -211,6 +211,104 @@ def api_stop_impersonating():
     return jsonify({'ok': True})
 
 
+@app.route('/api/admin/data-audit-deep')
+@require_auth
+@require_admin
+def api_data_audit_deep():
+    """Deeper audit: is the qualitative content sitting in `feedback` or
+    `scores_json` columns that the initial audit missed?"""
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        cur.execute("""
+            SELECT
+              form_type,
+              COUNT(*) AS n,
+              COUNT(feedback) AS has_feedback_col,
+              COUNT(CASE WHEN feedback IS NOT NULL AND feedback <> '' THEN 1 END) AS feedback_non_empty,
+              AVG(LENGTH(feedback))::int AS feedback_avg_len,
+              MAX(LENGTH(feedback)) AS feedback_max_len,
+              COUNT(scores_json) AS has_scores_json,
+              COUNT(CASE WHEN notes IS NOT NULL AND LENGTH(notes) > 50 THEN 1 END) AS notes_substantial,
+              COUNT(CASE WHEN notes IS NOT NULL AND LENGTH(notes) > 200 THEN 1 END) AS notes_rich
+            FROM touchpoints
+            GROUP BY form_type
+            ORDER BY n DESC
+        """)
+        by_type = []
+        for r in cur.fetchall():
+            ft = r['form_type']
+            n = r['n']
+            # Sample a record that actually HAS feedback content
+            cur.execute("""
+                SELECT id, observed_at, LEFT(feedback, 400) AS fb_preview,
+                       LENGTH(feedback) AS fb_len, scores_json
+                FROM touchpoints
+                WHERE form_type = %s AND feedback IS NOT NULL AND feedback <> ''
+                ORDER BY LENGTH(feedback) DESC
+                LIMIT 1
+            """, (ft,))
+            rich_sample = cur.fetchone()
+
+            by_type.append({
+                'form_type': ft,
+                'count': n,
+                'pct_feedback_col':     round(100 * r['feedback_non_empty'] / n, 1) if n else 0,
+                'feedback_avg_len':     r['feedback_avg_len'],
+                'feedback_max_len':     r['feedback_max_len'],
+                'pct_scores_json':      round(100 * r['has_scores_json'] / n, 1) if n else 0,
+                'pct_notes_substantial_gt50':  round(100 * r['notes_substantial'] / n, 1) if n else 0,
+                'pct_notes_rich_gt200': round(100 * r['notes_rich'] / n, 1) if n else 0,
+                'richest_feedback_sample': {
+                    'observed_at': rich_sample['observed_at'].isoformat() if rich_sample and rich_sample['observed_at'] else None,
+                    'feedback_len': rich_sample['fb_len'] if rich_sample else 0,
+                    'feedback_preview': rich_sample['fb_preview'] if rich_sample else None,
+                    'scores_json_keys': list((rich_sample['scores_json'] or {}).keys()) if rich_sample and rich_sample.get('scores_json') else [],
+                } if rich_sample else None,
+            })
+
+        # What's in scores_json where it exists?
+        cur.execute("""
+            SELECT form_type, scores_json
+            FROM touchpoints
+            WHERE scores_json IS NOT NULL
+            LIMIT 5
+        """)
+        scores_json_samples = [dict(r) for r in cur.fetchall()]
+
+        # What is RB? Which form_types does RB appear in?
+        cur.execute("""
+            SELECT t.form_type, COUNT(*) AS n
+            FROM scores sc
+            JOIN touchpoints t ON sc.touchpoint_id = t.id
+            WHERE sc.dimension_code = 'RB'
+            GROUP BY t.form_type
+            ORDER BY n DESC
+        """)
+        rb_by_type = [dict(r) for r in cur.fetchall()]
+
+        # L1-L5 distribution for leader PMAPs
+        cur.execute("""
+            SELECT sc.dimension_code, COUNT(*) AS n
+            FROM scores sc
+            JOIN touchpoints t ON sc.touchpoint_id = t.id
+            WHERE t.form_type = 'pmap_leader'
+            GROUP BY sc.dimension_code
+            ORDER BY sc.dimension_code
+        """)
+        leader_pmap_dims = [dict(r) for r in cur.fetchall()]
+
+        return jsonify({
+            'by_form_type': by_type,
+            'scores_json_samples': scores_json_samples,
+            'rb_dimension_appears_in': rb_by_type,
+            'leader_pmap_dim_distribution': leader_pmap_dims,
+        })
+    finally:
+        conn.close()
+
+
 @app.route('/api/admin/data-audit')
 @require_auth
 @require_admin
