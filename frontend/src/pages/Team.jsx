@@ -1,12 +1,20 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import Nav from '../components/Nav'
+import BottomNav from '../components/BottomNav'
+import AIPanel from '../components/AIPanel'
 import { api } from '../lib/api'
 
 /**
- * Team — My Team page. Shows direct reports or all staff.
- * Each card shows touchpoint counts by type, last touchpoint date.
- * Tap card → staff profile.
+ * Team — My Team page. Real data from /api/my-team.
+ *
+ * Layout:
+ *   - Nav (logo + back arrow to home)
+ *   - Worth a look today — 3 AI-surfaced findings at top
+ *   - Stats strip (staff / touchpoints / avg)
+ *   - View toggle + search + job-function filters
+ *   - Staff list (tap → /app/staff/:email)
+ *   - Bottom nav (Team active)
+ *   - Inline AI panel
  */
 
 function initials(name) {
@@ -26,6 +34,7 @@ export default function Team() {
   const [search, setSearch] = useState('')
   const [filterFn, setFilterFn] = useState('all')
   const [loading, setLoading] = useState(true)
+  const [aiOpen, setAiOpen] = useState(false)
 
   function changeView(v) {
     setView(v)
@@ -34,18 +43,59 @@ export default function Team() {
 
   async function load(v) {
     setLoading(true)
-    const data = await api.get(`/api/my-team?view=${v}`)
-    if (data) setStaff(data.staff || [])
+    try {
+      const data = await api.get(`/api/my-team?view=${v}`)
+      if (data) setStaff(data.staff || [])
+    } catch (e) {
+      console.error('Failed to load team', e)
+      setStaff([])
+    }
     setLoading(false)
   }
 
   useEffect(() => { load(view) }, [view])
 
-  // Compute stats
-  const totalTPs = staff.reduce((sum, s) => sum + s.touchpoint_count, 0)
+  // Stats
+  const totalTPs = staff.reduce((sum, s) => sum + (s.touchpoint_count || 0), 0)
   const avg = staff.length ? (totalTPs / staff.length).toFixed(1) : '—'
 
-  // Build job function filter options from data
+  // "Worth a look today" — derived from staff data
+  const walItems = (() => {
+    const items = []
+    // biggest touchpoint count (rough proxy for "active teacher")
+    const top = [...staff].sort((a, b) => (b.touchpoint_count || 0) - (a.touchpoint_count || 0))[0]
+    if (top && top.touchpoint_count > 0) {
+      items.push({
+        icon: '↑', iconBg: '#059669',
+        text: <><b>{top.name}:</b> {top.touchpoint_count} touchpoints this year — most on your team</>,
+        to: `/app/staff/${encodeURIComponent(top.email)}`,
+      })
+    }
+    // longest-quiet teacher
+    const quiet = [...staff]
+      .filter(s => s.last_touchpoint_date)
+      .map(s => ({ ...s, _days: daysSince(s.last_touchpoint_date) }))
+      .sort((a, b) => b._days - a._days)[0]
+    if (quiet && quiet._days >= 21) {
+      items.push({
+        icon: '!', iconBg: '#e47727',
+        text: <><b>{quiet.name}</b> — no touchpoint in {quiet._days} days</>,
+        to: `/app/staff/${encodeURIComponent(quiet.email)}`,
+      })
+    }
+    // teachers with no touchpoints
+    const untouched = staff.filter(s => !s.last_touchpoint_date).length
+    if (untouched > 0) {
+      items.push({
+        icon: '⏱', iconBg: '#dc2626',
+        text: <><b>{untouched} teachers</b> have no touchpoints on record yet</>,
+        to: null,
+      })
+    }
+    return items.slice(0, 3)
+  })()
+
+  // Job function filter options from data
   const fnSet = [...new Set(staff.map(s => s.job_function).filter(Boolean))].sort()
 
   // Filter
@@ -56,10 +106,50 @@ export default function Team() {
   })
 
   return (
-    <div className="pb-10">
-      <Nav title="My Team" />
+    <div className="min-h-[100svh] bg-[#f5f7fa] pb-20">
+      <nav className="sticky top-0 z-50 bg-fls-navy px-4 py-4 flex items-center gap-3">
+        <Link to="/" className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center no-underline">
+          <svg width="18" height="18" fill="none" stroke="white" strokeWidth="2">
+            <path d="M15 9H3m0 0l5-5M3 9l5 5" />
+          </svg>
+        </Link>
+        <div className="flex-1 text-center text-[16px] font-bold text-white">
+          My Team
+        </div>
+        <div className="w-8" />
+      </nav>
 
-      <div className="px-4 pt-4">
+      <div className="px-4 pt-4 max-w-[600px] mx-auto">
+        {/* Worth a look today */}
+        {walItems.length > 0 && (
+          <div
+            className="rounded-[14px] p-3.5 mb-3.5 text-white shadow-[0_4px_14px_rgba(0,47,96,.15)]"
+            style={{ background: 'linear-gradient(135deg,#002f60,#1e40af)' }}
+          >
+            <div className="text-[10px] font-extrabold tracking-widest uppercase mb-2" style={{ color: '#fbbe82' }}>
+              ✦ Worth a look today
+            </div>
+            {walItems.map((item, i) => {
+              const inner = (
+                <>
+                  <div
+                    className="w-[26px] h-[26px] rounded-[7px] flex items-center justify-center shrink-0 text-xs font-extrabold"
+                    style={{ background: 'rgba(255,255,255,.12)', color: item.iconBg === '#059669' ? '#86efac' : item.iconBg === '#e47727' ? '#fbbe82' : '#fca5a5' }}
+                  >{item.icon}</div>
+                  <div className="flex-1 text-xs leading-snug" style={{ color: 'rgba(255,255,255,.9)' }}>
+                    {item.text}
+                  </div>
+                  <div className="text-white/40 text-sm">›</div>
+                </>
+              )
+              const cls = 'flex items-center gap-2.5 py-2 border-b border-white/10 last:border-0 no-underline'
+              return item.to
+                ? <Link key={i} to={item.to} className={cls}>{inner}</Link>
+                : <div key={i} className={cls}>{inner}</div>
+            })}
+          </div>
+        )}
+
         {/* Stats */}
         <div className="grid grid-cols-3 gap-2 mb-4">
           <div className="bg-white rounded-[10px] p-2.5 text-center shadow-sm">
@@ -98,27 +188,29 @@ export default function Team() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search staff..."
-          className="w-full px-3 py-2.5 pl-9 border border-gray-200 rounded-[10px] text-[13px] outline-none focus:border-fls-orange mb-3 bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%2716%27%20height=%2716%27%20fill=%27none%27%20stroke=%27%239ca3af%27%20stroke-width=%272%27%3E%3Ccircle%20cx=%277%27%20cy=%277%27%20r=%274.5%27/%3E%3Cpath%20d=%27m11%2011%203%203%27/%3E%3C/svg%3E')] bg-no-repeat bg-[10px_center]"
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-[10px] text-[13px] outline-none focus:border-fls-orange mb-3 bg-white"
         />
 
         {/* Job function filters */}
-        <div className="flex gap-1.5 mb-3 overflow-x-auto pb-1">
-          <button
-            onClick={() => setFilterFn('all')}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold border whitespace-nowrap ${
-              filterFn === 'all' ? 'bg-fls-navy text-white border-fls-navy' : 'bg-white border-gray-200'
-            }`}
-          >All</button>
-          {fnSet.map(fn => (
+        {fnSet.length > 1 && (
+          <div className="flex gap-1.5 mb-3 overflow-x-auto pb-1">
             <button
-              key={fn}
-              onClick={() => setFilterFn(fn)}
+              onClick={() => setFilterFn('all')}
               className={`px-3 py-1.5 rounded-full text-xs font-semibold border whitespace-nowrap ${
-                filterFn === fn ? 'bg-fls-navy text-white border-fls-navy' : 'bg-white border-gray-200'
+                filterFn === 'all' ? 'bg-fls-navy text-white border-fls-navy' : 'bg-white border-gray-200'
               }`}
-            >{fn}</button>
-          ))}
-        </div>
+            >All</button>
+            {fnSet.map(fn => (
+              <button
+                key={fn}
+                onClick={() => setFilterFn(fn)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold border whitespace-nowrap ${
+                  filterFn === fn ? 'bg-fls-navy text-white border-fls-navy' : 'bg-white border-gray-200'
+                }`}
+              >{fn}</button>
+            ))}
+          </div>
+        )}
 
         {/* Loading */}
         {loading && (
@@ -181,6 +273,9 @@ export default function Team() {
           })}
         </div>
       </div>
+
+      <BottomNav active="team" onAskClick={() => setAiOpen(true)} aiOpen={aiOpen} />
+      <AIPanel open={aiOpen} onClose={() => setAiOpen(false)} context="team" subject={`${staff.length} teachers`} />
     </div>
   )
 }
