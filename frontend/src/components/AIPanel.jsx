@@ -60,13 +60,18 @@ const CONTEXTS = {
 export default function AIPanel({ open, onClose, context = 'home', subject = '' }) {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
+  const [busy, setBusy] = useState(false)
   const bodyRef = useRef(null)
+  const inputRef = useRef(null)
   const cfg = CONTEXTS[context] || CONTEXTS.home
   const ctxText = typeof cfg.ctx === 'function' ? cfg.ctx(subject) : cfg.ctx
 
   // Reset chat when context changes or panel closes
   useEffect(() => {
-    if (!open) setMessages([])
+    if (!open) {
+      setMessages([])
+      setBusy(false)
+    }
   }, [open, context])
 
   // Auto-scroll on new messages
@@ -81,32 +86,36 @@ export default function AIPanel({ open, onClose, context = 'home', subject = '' 
   }, [open])
 
   async function ask(q) {
-    if (!q) return
+    if (!q || busy) return
+    setBusy(true)
     setMessages(prev => [...prev, { role: 'user', text: q }])
     setInput('')
-    // Add a thinking placeholder
     setMessages(prev => [...prev, { role: 'ai', text: '…', thinking: true }])
+
+    const finish = (patch) => {
+      setMessages(prev => {
+        const next = [...prev]
+        next[next.length - 1] = { role: 'ai', ...patch }
+        return next
+      })
+      setBusy(false)
+      // Refocus input so user can immediately ask the next question
+      setTimeout(() => inputRef.current?.focus(), 50)
+    }
 
     try {
       const r = await api.post('/api/insights', { question: q })
-      setMessages(prev => {
-        const next = [...prev]
-        next[next.length - 1] = {
-          role: 'ai',
-          text: r?.answer || "I couldn't produce an answer.",
-          total: r?.total,
-        }
-        return next
+      const looksUnhelpful = !r?.answer ||
+        /cannot be answered|cannot answer|no data|no results|don't know|i don't have/i.test(r.answer)
+      finish({
+        text: r?.answer || "I couldn't produce an answer.",
+        total: r?.total,
+        unhelpful: looksUnhelpful,
       })
     } catch (e) {
-      setMessages(prev => {
-        const next = [...prev]
-        next[next.length - 1] = {
-          role: 'ai',
-          text: `Sorry — ${e.message || 'that question failed'}. Try rephrasing?`,
-          error: true,
-        }
-        return next
+      finish({
+        text: `Sorry — ${e.message || 'that question failed'}. Try rephrasing?`,
+        error: true,
       })
     }
   }
@@ -123,18 +132,23 @@ export default function AIPanel({ open, onClose, context = 'home', subject = '' 
         className="fixed inset-0 bg-black/45 z-[900] opacity-100 transition-opacity duration-200"
         onClick={onClose}
       />
-      <div className="fixed bottom-0 left-0 right-0 z-[901] bg-white rounded-t-[22px] max-h-[88vh] flex flex-col shadow-[0_-10px_32px_rgba(0,0,0,.22)] animate-slide-up">
+      <div className="fixed bottom-0 left-0 right-0 z-[901] bg-white rounded-t-[22px] max-h-[88dvh] flex flex-col shadow-[0_-10px_32px_rgba(0,0,0,.22)] animate-slide-up">
         {/* Handle */}
         <div className="w-11 h-1 bg-gray-200 rounded-md mx-auto mt-2.5" />
 
         {/* Head (gradient) */}
-        <div className="px-4 pt-5 pb-3.5 flex items-center gap-2.5 rounded-t-[22px] -mt-3.5" style={{ background: 'linear-gradient(135deg,#002f60,#1e40af)' }}>
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base font-extrabold" style={{ background: 'rgba(251,190,130,.2)', color: '#fbbe82' }}>✦</div>
-          <div className="flex-1 text-white">
+        <div className="px-4 pt-5 pb-3.5 flex items-center gap-2.5 rounded-t-[22px] -mt-3.5 relative z-10" style={{ background: 'linear-gradient(135deg,#002f60,#1e40af)' }}>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base font-extrabold shrink-0" style={{ background: 'rgba(251,190,130,.2)', color: '#fbbe82' }}>✦</div>
+          <div className="flex-1 text-white min-w-0">
             <div className="text-sm font-extrabold">Ask ObservationPoint</div>
-            <div className="text-[11px] opacity-70 mt-0.5">{ctxText}</div>
+            <div className="text-[11px] opacity-70 mt-0.5 truncate">{ctxText}</div>
           </div>
-          <button onClick={onClose} className="w-7 h-7 rounded-lg bg-white/10 text-white flex items-center justify-center text-lg cursor-pointer border-0 p-0">×</button>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="w-10 h-10 rounded-lg bg-white/15 hover:bg-white/25 text-white flex items-center justify-center text-xl cursor-pointer border-0 p-0 shrink-0 touch-manipulation"
+          >×</button>
         </div>
 
         {/* Body */}
@@ -175,6 +189,13 @@ export default function AIPanel({ open, onClose, context = 'home', subject = '' 
                       {m.total} record{m.total === 1 ? '' : 's'} analyzed
                     </div>
                   )}
+                  {(m.error || m.unhelpful) && !m.thinking && (
+                    <div className="text-[11px] text-gray-500 mt-2 pt-2 border-t border-gray-200/70">
+                      Still stuck? Email{' '}
+                      <a href="mailto:talent@firstlineschools.org" className="text-fls-orange font-semibold no-underline hover:underline">talent@firstlineschools.org</a>
+                      {' '}for help.
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -182,17 +203,21 @@ export default function AIPanel({ open, onClose, context = 'home', subject = '' 
         </div>
 
         {/* Input */}
-        <div className="px-3.5 pt-2.5 pb-3.5 border-t border-gray-200 flex gap-1.5">
+        <div className="px-3.5 pt-2.5 pb-3.5 border-t border-gray-200 flex gap-1.5 relative z-10">
           <input
+            ref={inputRef}
             value={input}
             onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && ask(input.trim())}
-            placeholder="Ask anything…"
-            className="flex-1 border border-gray-200 outline-0 px-3.5 py-2.5 rounded-[20px] text-sm bg-gray-50 focus:bg-white focus:border-fls-navy font-[inherit]"
+            onKeyDown={e => e.key === 'Enter' && !busy && ask(input.trim())}
+            placeholder={busy ? 'Thinking…' : 'Ask anything…'}
+            disabled={busy}
+            className="flex-1 border border-gray-200 outline-0 px-3.5 py-2.5 rounded-[20px] text-sm bg-gray-50 focus:bg-white focus:border-fls-navy font-[inherit] disabled:opacity-60"
           />
           <button
-            onClick={() => ask(input.trim())}
-            className="px-4 py-2.5 bg-fls-navy text-white border-0 rounded-[20px] text-sm font-bold cursor-pointer font-[inherit]"
+            type="button"
+            onClick={() => !busy && ask(input.trim())}
+            disabled={busy}
+            className="px-4 py-2.5 bg-fls-navy text-white border-0 rounded-[20px] text-sm font-bold cursor-pointer font-[inherit] disabled:opacity-50"
           >↑</button>
         </div>
       </div>
