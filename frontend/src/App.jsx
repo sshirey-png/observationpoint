@@ -11,6 +11,7 @@ import Team from './pages/Team'
 import StaffProfile from './pages/StaffProfile'
 import Insights from './pages/Insights'
 import Network from './pages/Network'
+import TouchpointHub from './pages/TouchpointHub'
 
 /**
  * App — the root component. React Router handles navigation.
@@ -34,6 +35,7 @@ export default function App() {
         <Route path="/app/solicit" element={<SolicitFeedback />} />
         <Route path="/app/pmap" element={<PMAP />} />
         <Route path="/app/team" element={<Team />} />
+        <Route path="/app/touchpoint" element={<TouchpointHub />} />
         <Route path="/app/staff/:email" element={<StaffProfile />} />
         <Route path="/app/insights" element={<Insights />} />
         <Route path="/app/network" element={<Network />} />
