@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import BottomNav from '../components/BottomNav'
 import AIPanel from '../components/AIPanel'
+import ImpersonationBanner from '../components/ImpersonationBanner'
 
 /**
  * TouchpointHub — the logging hub at /app/touchpoint.
@@ -66,6 +67,7 @@ export default function TouchpointHub() {
 
   return (
     <div className="min-h-[100svh] bg-[#f5f7fa] pb-20">
+      <ImpersonationBanner />
       {/* Top nav — centered title, back arrow to home */}
       <nav className="sticky top-0 z-50 bg-fls-navy px-4 py-4 flex items-center gap-3">
         <Link to="/" className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center no-underline">

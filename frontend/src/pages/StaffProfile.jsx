@@ -4,6 +4,7 @@ import BottomNav from '../components/BottomNav'
 import AIPanel from '../components/AIPanel'
 import LogTouchpointModal from '../components/LogTouchpointModal'
 import TouchpointDetail from '../components/TouchpointDetail'
+import ImpersonationBanner from '../components/ImpersonationBanner'
 import { api } from '../lib/api'
 
 // Short, human-readable form_type labels for chips on record cards
@@ -271,6 +272,7 @@ export default function StaffProfile() {
 
   return (
     <div className="min-h-[100svh] bg-[#f5f7fa] pb-20">
+      <ImpersonationBanner />
       <nav className="sticky top-0 z-50 bg-fls-navy px-4 py-4 flex items-center gap-3">
         <Link to="/" className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center no-underline">
           <svg width="18" height="18" fill="none" stroke="white" strokeWidth="2">

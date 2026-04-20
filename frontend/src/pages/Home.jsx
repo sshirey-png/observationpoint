@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import AIPanel from '../components/AIPanel'
+import ImpersonationBanner from '../components/ImpersonationBanner'
+import ImpersonationPicker from '../components/ImpersonationPicker'
 
 /**
  * Home — minimal 4-button landing.
@@ -47,9 +49,11 @@ function BigButton({ to, onClick, icon, title, sub, gradient, iconBg, iconColor 
 
 export default function Home() {
   const [aiOpen, setAiOpen] = useState(false)
+  const [adminOpen, setAdminOpen] = useState(false)
 
   return (
     <div className="min-h-[100svh] bg-[#f5f7fa]">
+      <ImpersonationBanner />
       <nav className="bg-fls-navy px-4 py-4 text-center">
         <div className="text-lg font-extrabold text-white">
           Observation<span className="text-fls-orange">Point</span>
@@ -100,12 +104,18 @@ export default function Home() {
         <div className="text-center text-[11px] text-gray-400 font-semibold mt-5">
           ObservationPoint · designed with FirstLine Schools
         </div>
-        <div className="text-center text-[11px] mt-2">
+        <div className="text-center text-[11px] mt-2 flex gap-4 justify-center">
+          <button
+            onClick={() => setAdminOpen(true)}
+            className="text-gray-400 hover:text-fls-orange bg-transparent border-0 cursor-pointer font-[inherit] p-0 text-[11px]"
+          >Admin · View as user</button>
+          <span className="text-gray-300">·</span>
           <a href="/logout" className="text-gray-400 hover:text-fls-orange no-underline">Sign out</a>
         </div>
       </div>
 
       <AIPanel open={aiOpen} onClose={() => setAiOpen(false)} context="home" />
+      <ImpersonationPicker open={adminOpen} onClose={() => setAdminOpen(false)} />
     </div>
   )
 }
