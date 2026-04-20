@@ -124,18 +124,19 @@ function ObservationsView({ touchpoints, onOpenDetail }) {
   if (obs.length === 0) return <Empty msg="No observations on record." />
 
   const latest = obs[0]?.scores || {}
+  const dimCodes = Object.keys(latest).sort()
 
   return (
     <div>
-      {Object.keys(latest).length > 0 && (
+      {dimCodes.length > 0 && (
         <>
           <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mt-4 mb-2">
             Most recent · {formatDate(obs[0].date)}
           </div>
-          <div className="grid grid-cols-5 gap-2 mb-4">
-            {TEACHER_DIMS.map(code => latest[code] != null && (
+          <div className={`grid gap-2 mb-4 ${dimCodes.length > 5 ? 'grid-cols-3 sm:grid-cols-5' : 'grid-cols-5'}`}>
+            {dimCodes.map(code => (
               <div key={code} className="bg-white rounded-[10px] p-2 text-center shadow-sm">
-                <div className="text-[9px] font-bold text-gray-400 uppercase">{DIM_SHORT[code]}</div>
+                <div className="text-[9px] font-bold text-gray-400 uppercase">{DIM_SHORT[code] || code}</div>
                 <div className={`inline-block text-lg font-extrabold mt-1 px-2 rounded ${scoreClass(latest[code])}`}>
                   {latest[code]}
                 </div>
@@ -159,9 +160,27 @@ function PMAPView({ touchpoints, pmap_by_year, school_years, onOpenDetail }) {
   const pmaps = touchpoints.filter(t => t.form_type.startsWith('pmap_'))
   const years = (school_years || []).slice().sort()
 
+  // Derive dimension codes from the actual PMAP data. Leader PMAPs use
+  // L1-L5, teacher PMAPs T1-T5, PreK PK1-PK10. Data tells us which.
+  const dimCodes = (() => {
+    const seen = new Set()
+    for (const yr of Object.keys(pmap_by_year || {})) {
+      for (const code of Object.keys(pmap_by_year[yr] || {})) {
+        seen.add(code)
+      }
+    }
+    // Sort so T/L/PK ordering is predictable (T1..T5, L1..L5, PK1..PK10)
+    return [...seen].sort((a, b) => {
+      const pa = a.replace(/\d+/, '')
+      const pb = b.replace(/\d+/, '')
+      if (pa !== pb) return pa.localeCompare(pb)
+      return parseInt(a.replace(/\D+/, '')) - parseInt(b.replace(/\D+/, ''))
+    })
+  })()
+
   return (
     <div>
-      {years.length > 0 && (
+      {years.length > 0 && dimCodes.length > 0 && (
         <>
           <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mt-4 mb-2">
             Year over year
@@ -177,9 +196,9 @@ function PMAPView({ touchpoints, pmap_by_year, school_years, onOpenDetail }) {
                 </tr>
               </thead>
               <tbody>
-                {TEACHER_DIMS.map(code => (
+                {dimCodes.map(code => (
                   <tr key={code}>
-                    <td className="py-1.5 pr-2 text-[12px] font-bold text-gray-700 border-t border-gray-100">{DIM_SHORT[code]}</td>
+                    <td className="py-1.5 pr-2 text-[12px] font-bold text-gray-700 border-t border-gray-100">{DIM_SHORT[code] || code}</td>
                     {years.map(yr => {
                       const v = pmap_by_year?.[yr]?.[code]
                       return (
