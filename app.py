@@ -257,29 +257,61 @@ def api_enrich_narrative():
     token = auth.json()['access_token']
 
     # Determine form_type same way the original importer did (from rubric + type name)
+    # Grow API sometimes returns observationType as a dict with .name, sometimes as
+    # just an ID string — so we check BOTH rubric_name and type_name for 'pmap' etc.
     def derive_form_type(rubric_name, type_name):
         rn = (rubric_name or '').lower()
         tn = (type_name or '').lower()
+        combined = rn + ' ' + tn
         ft = 'observation_teacher'
-        if 'prek' in rn or 'pre-k' in rn:
+        if 'prek' in combined or 'pre-k' in combined:
             ft = 'observation_prek'
-        if 'fundamental' in rn:
+        if 'fundamental' in combined:
             ft = 'observation_fundamentals'
-        if 'pmap' in tn:
+        if 'pmap' in combined:
             ft = 'pmap_teacher'
-            if 'prek' in rn: ft = 'pmap_prek'
-            elif 'leader' in rn: ft = 'pmap_leader'
-            elif 'non-instructional' in rn or 'support' in rn: ft = 'pmap_support'
-            elif 'network' in rn: ft = 'pmap_network'
-        if 'self-reflection' in tn or 'self reflection' in tn:
+            if 'prek' in combined: ft = 'pmap_prek'
+            elif 'leader' in combined: ft = 'pmap_leader'
+            elif 'non-instructional' in combined or 'support' in combined: ft = 'pmap_support'
+            elif 'network' in combined: ft = 'pmap_network'
+        if 'self-reflection' in combined or 'self reflection' in combined:
             ft = 'self_reflection_teacher'
-            if 'prek' in rn: ft = 'self_reflection_prek'
-            elif 'leader' in rn: ft = 'self_reflection_leader'
-            elif 'network' in rn: ft = 'self_reflection_network'
-            elif 'non-instructional' in rn or 'support' in rn: ft = 'self_reflection_support'
+            if 'prek' in combined: ft = 'self_reflection_prek'
+            elif 'leader' in combined: ft = 'self_reflection_leader'
+            elif 'network' in combined: ft = 'self_reflection_network'
+            elif 'non-instructional' in combined or 'support' in combined: ft = 'self_reflection_support'
         return ft
 
     strip_tags = re.compile(r'<[^>]+>')
+    # Structural block tags that should become paragraph breaks
+    block_break_re = re.compile(r'</?(?:p|div|br|h[1-6])\s*/?>', re.IGNORECASE)
+    # List items become "- " lines
+    li_open_re = re.compile(r'<li\s*[^>]*>', re.IGNORECASE)
+    li_close_re = re.compile(r'</li\s*>', re.IGNORECASE)
+    list_close_re = re.compile(r'</(?:ul|ol)\s*>', re.IGNORECASE)
+
+    def html_to_text(val):
+        """Convert HTML fragment to plain text preserving structure.
+        <br>/<p>/<h1-6>/<div> → paragraph breaks
+        <li>X</li> → '- X' on its own line
+        </ul>/</ol> → trailing newline
+        Then strip remaining tags and unescape entities.
+        """
+        if not val:
+            return ''
+        # Lists first — so bullet markers survive the block-break pass
+        t = li_open_re.sub('\n- ', val)
+        t = li_close_re.sub('', t)
+        t = list_close_re.sub('\n', t)
+        # Block-level tags → double newlines
+        t = block_break_re.sub('\n\n', t)
+        # Strip remaining tags
+        t = strip_tags.sub('', t)
+        # Decode entities
+        t = html.unescape(t)
+        # Collapse 3+ consecutive newlines to 2
+        t = re.sub(r'\n{3,}', '\n\n', t)
+        return t.strip()
 
     def extract_narrative(obs):
         narrative = []
@@ -290,7 +322,7 @@ def api_enrich_narrative():
             for tb in s.get('textBoxes', []) or []:
                 val = tb.get('value')
                 if val:
-                    txt = html.unescape(strip_tags.sub('', val)).strip()
+                    txt = html_to_text(val)
                     if txt:
                         narrative.append({'measurement': mid, 'text': txt})
             # valueText — yes/no answers
@@ -367,13 +399,15 @@ def api_enrich_narrative():
             plain_text = '\n\n'.join(n['text'] for n in payload['narrative'])
 
             if not dry:
-                # Write feedback_json + feedback to each matching tp
+                # Write feedback_json + feedback + grow_id to each matching tp.
+                # grow_id is the stable Grow observation identifier — lets us
+                # dedup duplicates downstream and makes future enrichment idempotent.
                 for row in rows:
                     cur.execute("""
                         UPDATE touchpoints
-                        SET feedback_json = %s, feedback = %s
+                        SET feedback_json = %s, feedback = %s, grow_id = %s
                         WHERE id = %s
-                    """, (json.dumps(payload), plain_text or None, row['id']))
+                    """, (json.dumps(payload), plain_text or None, payload['grow_id'], row['id']))
                     updated += 1
                 conn.commit()
             elif len(updates_preview) < 5:
@@ -778,6 +812,81 @@ def api_data_audit():
         conn.close()
 
 
+@app.route('/api/admin/staff-records')
+@require_auth
+@require_admin
+def api_staff_records():
+    """Per-teacher record breakdown. Diagnostic for enrichment verification.
+    Query: ?email=someone@firstlineschools.org
+    Returns counts by form_type with narrative/score/feedback presence flags,
+    plus first+last observed dates and a short narrative sample where present.
+    """
+    email = (request.args.get('email') or '').strip().lower()
+    if not email:
+        return jsonify({'error': 'email query param required'}), 400
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            SELECT
+              form_type,
+              COUNT(*) AS n,
+              COUNT(CASE WHEN feedback_json IS NOT NULL THEN 1 END) AS has_feedback_json,
+              COUNT(CASE WHEN feedback IS NOT NULL AND feedback <> '' THEN 1 END) AS has_feedback_text,
+              COUNT(CASE WHEN grow_id IS NOT NULL THEN 1 END) AS has_grow_id,
+              MIN(observed_at) AS first_observed,
+              MAX(observed_at) AS last_observed
+            FROM touchpoints
+            WHERE LOWER(teacher_email) = %s
+            GROUP BY form_type
+            ORDER BY n DESC
+        """, (email,))
+        by_type = []
+        for r in cur.fetchall():
+            ft = r['form_type']
+            # Sample narrative from one enriched record of this type
+            cur.execute("""
+                SELECT LEFT(feedback, 300) AS preview, grow_id, observed_at
+                FROM touchpoints
+                WHERE LOWER(teacher_email) = %s AND form_type = %s
+                  AND feedback IS NOT NULL AND feedback <> ''
+                ORDER BY observed_at DESC
+                LIMIT 1
+            """, (email, ft))
+            sample = cur.fetchone()
+            by_type.append({
+                'form_type': ft,
+                'count': r['n'],
+                'has_feedback_json': r['has_feedback_json'],
+                'has_feedback_text': r['has_feedback_text'],
+                'has_grow_id': r['has_grow_id'],
+                'first_observed': r['first_observed'].isoformat() if r['first_observed'] else None,
+                'last_observed': r['last_observed'].isoformat() if r['last_observed'] else None,
+                'sample': {
+                    'preview': sample['preview'] if sample else None,
+                    'grow_id': sample['grow_id'] if sample else None,
+                    'observed_at': sample['observed_at'].isoformat() if sample and sample['observed_at'] else None,
+                } if sample else None,
+            })
+
+        cur.execute("""
+            SELECT COUNT(*) AS total,
+                   COUNT(DISTINCT DATE(observed_at) || '|' || form_type || '|' || COALESCE(observer_email,'')) AS unique_events
+            FROM touchpoints
+            WHERE LOWER(teacher_email) = %s
+        """, (email,))
+        totals = cur.fetchone()
+        return jsonify({
+            'email': email,
+            'total_records': totals['total'],
+            'estimated_unique_events': totals['unique_events'],
+            'implied_duplicates': totals['total'] - totals['unique_events'],
+            'by_form_type': by_type,
+        })
+    finally:
+        conn.close()
+
+
 @app.route('/api/admin/impersonation-log')
 @require_auth
 @require_admin
@@ -981,16 +1090,16 @@ def api_insights():
         return jsonify({'error': 'No question provided'}), 400
 
     try:
-        import anthropic
-        client = anthropic.Anthropic()
+        # Gemini via Vertex AI — uses ADC from Cloud Run service account.
+        # Project/location come from env with talent-demo-482004 / us-central1 fallback.
+        from google import genai
+        from google.genai import types as genai_types
 
-        # Ask Claude to generate SQL
-        msg = client.messages.create(
-            model='claude-sonnet-4-6',
-            max_tokens=1000,
-            messages=[{
-                'role': 'user',
-                'content': f"""You are a SQL expert for a K-12 teacher observation database (PostgreSQL).
+        gcp_project = os.environ.get('GCP_PROJECT', 'talent-demo-482004')
+        gcp_location = os.environ.get('GCP_LOCATION', 'us-central1')
+        gen_client = genai.Client(vertexai=True, project=gcp_project, location=gcp_location)
+
+        sql_prompt = f"""You are a SQL expert for a K-12 teacher observation database (PostgreSQL).
 
 {INSIGHTS_SCHEMA}
 
@@ -1004,10 +1113,16 @@ Generate ONLY a SELECT query to answer this question. Rules:
 - If the question can't be answered from this schema, return: SELECT 'Question cannot be answered from available data' as error
 
 Return ONLY the SQL. No explanation, no markdown fences, no comments."""
-            }],
-        )
 
-        sql = msg.content[0].text.strip()
+        sql_resp = gen_client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=sql_prompt,
+            config=genai_types.GenerateContentConfig(
+                max_output_tokens=1000,
+                temperature=0,
+            ),
+        )
+        sql = (sql_resp.text or '').strip()
 
         # Strip markdown fences if present
         if sql.startswith('```'):
@@ -1048,23 +1163,24 @@ Return ONLY the SQL. No explanation, no markdown fences, no comments."""
                     record[col] = val
                 results.append(record)
 
-            # Ask Claude to summarize the results
-            summary_msg = client.messages.create(
-                model='claude-sonnet-4-6',
-                max_tokens=500,
-                messages=[{
-                    'role': 'user',
-                    'content': f"""The user asked: "{question}"
+            # Summarize results
+            summary_prompt = f"""The user asked: "{question}"
 
 The query returned {len(results)} rows with columns: {columns}
 
 First 10 rows: {json.dumps(results[:10])}
 
 Write a brief, clear 1-3 sentence answer to the user's question based on these results. Be specific with numbers. Do not mention SQL or databases."""
-                }],
-            )
 
-            answer = summary_msg.content[0].text.strip()
+            sum_resp = gen_client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=summary_prompt,
+                config=genai_types.GenerateContentConfig(
+                    max_output_tokens=500,
+                    temperature=0.2,
+                ),
+            )
+            answer = (sum_resp.text or '').strip()
 
             return jsonify({
                 'question': question,

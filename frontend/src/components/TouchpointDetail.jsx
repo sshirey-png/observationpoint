@@ -138,8 +138,9 @@ export default function TouchpointDetail({ touchpoint, onClose }) {
             </Section>
           )}
 
-          {/* Plain notes */}
-          {tp.notes && (
+          {/* Plain notes — skip when the value is just the form name
+              (legacy importer bug stuffed the form label into this column). */}
+          {tp.notes && tp.notes.trim() !== label && tp.notes.trim() !== tp.form_type && (
             <Section label="Notes">
               <div className="text-sm text-gray-700 leading-relaxed bg-gray-50 rounded-lg p-3 whitespace-pre-wrap">
                 {tp.notes}
