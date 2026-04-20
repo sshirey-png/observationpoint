@@ -1172,35 +1172,62 @@ def api_save_touchpoint():
 # ------------------------------------------------------------------
 
 INSIGHTS_SCHEMA = """
-Tables in the ObservationPoint PostgreSQL database:
+PostgreSQL schema. Use ONLY these tables and these EXACT column names —
+no shortened variants (e.g. teacher_email, NOT teacher; observer_email, NOT observer).
 
-TABLE staff:
-  email TEXT (primary key), first_name TEXT, last_name TEXT, job_title TEXT,
-  school TEXT, job_function TEXT (Teacher/Leadership/Network/Support/Operations),
-  supervisor_email TEXT, hire_date DATE, is_active BOOLEAN
+TABLE staff (aliased as s):
+  - email TEXT  (primary key, the join target for touchpoints.teacher_email)
+  - first_name TEXT
+  - last_name TEXT
+  - job_title TEXT
+  - school TEXT
+  - job_function TEXT  (values: Teacher, Leadership, Network, Support, Operations)
+  - supervisor_email TEXT
+  - hire_date DATE
+  - is_active BOOLEAN
 
-TABLE touchpoints:
-  id UUID (primary key), form_type TEXT, teacher_email TEXT (FK staff.email),
-  observer_email TEXT, school TEXT, school_year TEXT (e.g. '2025-2026'),
-  observed_at TIMESTAMPTZ, status TEXT, notes TEXT, feedback TEXT
+TABLE touchpoints (aliased as t):
+  - id UUID  (primary key)
+  - form_type TEXT
+  - teacher_email TEXT  (FK → staff.email; join: t.teacher_email = s.email)
+  - observer_email TEXT  (who did the observation/meeting; also an FK to staff.email)
+  - school TEXT
+  - school_year TEXT  (format '2025-2026'; current year is '2025-2026')
+  - observed_at TIMESTAMPTZ
+  - status TEXT  (values: 'published', 'draft')
+  - notes TEXT
+  - feedback TEXT  (plaintext coaching narrative from Grow enrichment)
+  - grow_id TEXT  (stable Grow observation ID, non-null if imported from Grow)
 
-  form_type values: observation_teacher, observation_fundamentals, observation_prek,
+  form_type values (use LIKE patterns where helpful):
+    observation_teacher, observation_fundamentals, observation_prek,
     pmap_teacher, pmap_leader, pmap_prek, pmap_support, pmap_network,
     self_reflection_teacher, self_reflection_leader, self_reflection_prek,
     self_reflection_support, self_reflection_network,
-    quick_feedback, meeting_quick_meeting, meeting_data_meeting_(relay),
-    write_up, iap, celebrate, solicited_feedback
+    quick_feedback, celebrate, write_up, iap, solicited_feedback,
+    meeting_quick_meeting, "meeting_data_meeting_(relay)"
+  HINT: for "meetings" use form_type LIKE 'meeting_%%'
+  HINT: for "observations" use form_type LIKE 'observation_%%'
+  HINT: for "pmaps" use form_type LIKE 'pmap_%%'
 
-TABLE scores:
-  id SERIAL, touchpoint_id UUID (FK touchpoints.id), dimension_code TEXT,
-  dimension_name TEXT, score NUMERIC, cycle INTEGER
+TABLE scores (aliased as sc):
+  - id SERIAL  (primary key)
+  - touchpoint_id UUID  (FK → touchpoints.id; join: sc.touchpoint_id = t.id)
+  - dimension_code TEXT
+  - dimension_name TEXT
+  - score NUMERIC
+  - cycle INTEGER
 
-  dimension_code values: T1 (On Task), T2 (Community of Learners),
-    T3 (Essential Content), T4 (Cognitive Engagement), T5 (Demonstration of Learning),
+  dimension_code values: T1=On Task, T2=Community of Learners,
+    T3=Essential Content, T4=Cognitive Engagement, T5=Demonstration of Learning,
     L1-L5 (Leadership), PK1-PK10 (PreK CLASS), M1-M5 (Fundamentals minutes)
 
-School names: Arthur Ashe Charter School, Langston Hughes Academy,
+Schools: Arthur Ashe Charter School, Langston Hughes Academy,
   Phillis Wheatley Community School, Samuel J Green Charter School, FirstLine Network
+
+NAMING: When a user asks about a person by first name only ("Charlotte", "Ida"),
+match on staff.first_name ILIKE 'Charlotte%%'. If a first name could be ambiguous,
+include last_name in the SELECT so the answer can disambiguate.
 """
 
 @app.route('/api/insights', methods=['POST'])
@@ -1213,7 +1240,6 @@ def api_insights():
 
     try:
         # Gemini via Vertex AI — uses ADC from Cloud Run service account.
-        # Project/location come from env with talent-demo-482004 / us-central1 fallback.
         from google import genai
         from google.genai import types as genai_types
 
@@ -1221,7 +1247,31 @@ def api_insights():
         gcp_location = os.environ.get('GCP_LOCATION', 'us-central1')
         gen_client = genai.Client(vertexai=True, project=gcp_project, location=gcp_location)
 
-        sql_prompt = f"""You are a SQL expert for a K-12 teacher observation database (PostgreSQL).
+        def strip_fences(s):
+            s = (s or '').strip()
+            if s.startswith('```'):
+                s = s.split('\n', 1)[1] if '\n' in s else s[3:]
+            if s.endswith('```'):
+                s = s[:-3]
+            return s.strip()
+
+        def validate_sql(sql):
+            """Return (ok, error_message). SELECT-only guardrail."""
+            u = sql.upper().strip()
+            if not u.startswith('SELECT') and not u.startswith('WITH'):
+                return False, 'must start with SELECT or WITH'
+            forbidden = ['INSERT ', 'UPDATE ', 'DELETE ', 'DROP ', 'ALTER ',
+                         'CREATE ', 'TRUNCATE ', 'GRANT ', 'REVOKE ', 'MERGE ']
+            padded = ' ' + u + ' '
+            for kw in forbidden:
+                if f' {kw}' in padded:
+                    return False, f'forbidden keyword: {kw.strip()}'
+            return True, None
+
+        def gen_sql(question, prior_attempt=None, prior_error=None):
+            """Ask Gemini for SQL. If prior_attempt/prior_error are set,
+            include them so it corrects the mistake."""
+            base = f"""You are a SQL expert for a K-12 teacher observation database (PostgreSQL).
 
 {INSIGHTS_SCHEMA}
 
@@ -1229,44 +1279,54 @@ User question: "{question}"
 
 Generate ONLY a SELECT query to answer this question. Rules:
 - Only SELECT statements. No INSERT, UPDATE, DELETE, DROP, ALTER, or CREATE.
-- Use proper JOINs between tables.
+- Use proper JOINs between tables with the exact column names above.
 - Limit results to 50 rows max.
 - Return useful columns with clear aliases.
 - If the question can't be answered from this schema, return: SELECT 'Question cannot be answered from available data' as error
 
 Return ONLY the SQL. No explanation, no markdown fences, no comments."""
+            if prior_attempt and prior_error:
+                base += f"""
 
-        sql_resp = gen_client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=sql_prompt,
-            config=genai_types.GenerateContentConfig(
-                max_output_tokens=1000,
-                temperature=0,
-            ),
-        )
-        sql = (sql_resp.text or '').strip()
+Your previous attempt failed with a PostgreSQL error:
+  Attempt: {prior_attempt}
+  Error:   {prior_error}
 
-        # Strip markdown fences if present
-        if sql.startswith('```'):
-            sql = sql.split('\n', 1)[1] if '\n' in sql else sql[3:]
-        if sql.endswith('```'):
-            sql = sql[:-3]
-        sql = sql.strip()
+Fix it. Use ONLY the exact column names listed in the schema above. Do NOT invent columns."""
+            resp = gen_client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=base,
+                config=genai_types.GenerateContentConfig(
+                    max_output_tokens=1000,
+                    temperature=0,
+                ),
+            )
+            return strip_fences(resp.text or '')
 
-        # Validate: only SELECT allowed
-        sql_upper = sql.upper().strip()
-        if not sql_upper.startswith('SELECT'):
-            return jsonify({'error': 'Invalid query generated', 'sql': sql}), 400
-        forbidden = ['INSERT', 'UPDATE', 'DELETE', 'DROP', 'ALTER', 'CREATE', 'TRUNCATE', 'GRANT', 'REVOKE']
-        for word in forbidden:
-            if word in sql_upper.split('SELECT', 1)[0] or f' {word} ' in f' {sql_upper} ':
-                return jsonify({'error': f'Forbidden SQL operation: {word}', 'sql': sql}), 400
+        # First attempt
+        sql = gen_sql(question)
+        ok, verr = validate_sql(sql)
+        if not ok:
+            return jsonify({'error': f'Invalid SQL: {verr}', 'sql': sql}), 400
 
-        # Execute
+        # Execute — on DB error, feed error back to Gemini for ONE retry.
+        attempts = [sql]
         conn = db.get_conn()
         try:
             cur = conn.cursor()
-            cur.execute(sql)
+            try:
+                cur.execute(sql)
+            except psycopg2.Error as pg_err:
+                conn.rollback()
+                err_text = str(pg_err).split('\n', 1)[0][:300]
+                retry_sql = gen_sql(question, prior_attempt=sql, prior_error=err_text)
+                ok, verr = validate_sql(retry_sql)
+                if not ok:
+                    return jsonify({'error': f'Retry produced invalid SQL: {verr}',
+                                    'sql': retry_sql, 'first_attempt': sql}), 400
+                attempts.append(retry_sql)
+                sql = retry_sql
+                cur.execute(sql)
             columns = [desc[0] for desc in cur.description] if cur.description else []
             rows = cur.fetchall()
 
@@ -1311,6 +1371,7 @@ Write a brief, clear 1-3 sentence answer to the user's question based on these r
                 'columns': columns,
                 'rows': results[:50],
                 'total': len(results),
+                'attempts': len(attempts),  # 1 = first try worked; 2 = retry succeeded
             })
         finally:
             conn.close()
