@@ -211,6 +211,55 @@ def api_stop_impersonating():
     return jsonify({'ok': True})
 
 
+@app.route('/api/admin/grow-raw-probe')
+@require_auth
+@require_admin
+def api_grow_raw_probe():
+    """Probe the Grow API: fetch one raw observation and return every
+    field it has. Tells us whether qualitative content (feedback, notes,
+    comments, action steps) is exposed via API and just wasn't imported,
+    OR whether Grow doesn't expose it at all."""
+    import base64
+    import requests
+
+    client_id = os.environ.get('LDG_CLIENT_ID', '6fe43bd0-e8d1-4ce0-a9a9-2267c9a3df9b')
+    client_secret = os.environ.get('LDG_CLIENT_SECRET', '18eaec46-c6c9-4bcb-abf7-b36030485966')
+    base = 'https://grow-api.leveldata.com'
+
+    try:
+        creds = base64.b64encode(f'{client_id}:{client_secret}'.encode()).decode()
+        r = requests.post(f'{base}/auth/client/token',
+            headers={'Authorization': f'Basic {creds}', 'Content-Type': 'application/x-www-form-urlencoded'},
+            timeout=30)
+        if r.status_code != 200:
+            return jsonify({'error': f'Auth failed: {r.status_code}', 'body': r.text[:500]}), 500
+        token = r.json()['access_token']
+
+        # Fetch just 1 recent observation
+        r = requests.get(f'{base}/external/observations',
+            headers={'Authorization': f'Bearer {token}'},
+            params={'limit': 1, 'skip': 0},
+            timeout=60)
+        if r.status_code != 200:
+            return jsonify({'error': f'Fetch failed: {r.status_code}', 'body': r.text[:500]}), 500
+
+        data = r.json()
+        records = data.get('data', [])
+        if not records:
+            return jsonify({'error': 'No observations returned'})
+        raw = records[0]
+
+        # Return the full raw JSON + a list of all top-level keys so we
+        # can see what we're NOT importing.
+        return jsonify({
+            'endpoint_used': f'{base}/external/observations?limit=1',
+            'top_level_keys': sorted(raw.keys()),
+            'raw_observation': raw,
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/api/admin/data-audit-deep')
 @require_auth
 @require_admin
