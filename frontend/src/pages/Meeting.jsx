@@ -152,9 +152,40 @@ export default function Meeting() {
 
       {/* Bottom */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2.5 pb-[max(10px,env(safe-area-inset-bottom))] flex gap-2 z-50">
-        <button onClick={() => alert('Draft saved')} className="flex-1 py-3.5 rounded-xl text-sm font-semibold border border-gray-200">Save Draft</button>
-        <button onClick={submit} disabled={!teacher || saving} className="flex-1 py-3.5 rounded-xl text-sm font-semibold bg-fls-orange text-white disabled:opacity-50">
-          {saving ? 'Saving...' : 'Complete'}
+        <button
+          onClick={async () => {
+            if (!teacher) return
+            setSaving(true)
+            try {
+              await api.post('/api/touchpoints', {
+                form_type: 'meeting_data_meeting_(relay)',
+                teacher_email: teacher.email,
+                school: teacher.school || '',
+                status: 'draft',
+                is_published: false,
+                notes,
+                feedback: JSON.stringify({
+                  standard, initial_mastery: initialMastery, know_show_summary: knowShow,
+                  see_it_success: seeItSuccess, see_it_growth: seeItGrowth,
+                  reteach_plan: reteachPlan, reteach_prep: reteachPrep,
+                  reteach_date: reteachDate, reteach_mastery: reteachMastery,
+                  reteach_reflection: reteachReflection,
+                }),
+              })
+              alert('Draft saved')
+            } catch (e) { alert('Draft save failed: ' + e.message) }
+            setSaving(false)
+          }}
+          disabled={!teacher || saving}
+          className="flex-1 py-3.5 rounded-xl text-sm font-semibold border border-gray-200 disabled:opacity-50"
+        >Save Draft</button>
+        <button
+          onClick={submit}
+          disabled={!teacher || saving || (!standard.trim() && !knowShow.trim() && !seeItSuccess.trim() && !notes.trim())}
+          title={!teacher ? 'Pick a teacher first' : 'Add at least the standard, know/show, or success notes'}
+          className="flex-1 py-3.5 rounded-xl text-sm font-semibold bg-fls-orange text-white disabled:opacity-50 disabled:bg-gray-300"
+        >
+          {saving ? 'Saving…' : 'Complete'}
         </button>
       </div>
     </div>

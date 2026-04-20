@@ -284,15 +284,41 @@ export default function Fundamentals() {
 
       {/* Bottom */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2.5 pb-[max(10px,env(safe-area-inset-bottom))] flex gap-2 z-50">
-        <button onClick={() => alert('Draft saved')} className="flex-1 py-3.5 rounded-xl text-sm font-semibold border border-gray-200">
+        <button
+          onClick={async () => {
+            if (!teacher) return
+            setSaving(true)
+            const draftScores = {}
+            counts.forEach((c, i) => {
+              const pct = percents[i]
+              if (pct !== null) draftScores[`M${i + 1}`] = pct
+            })
+            try {
+              await api.post('/api/touchpoints', {
+                form_type: 'observation_fundamentals',
+                teacher_email: teacher.email,
+                school: teacher.school || '',
+                status: 'draft',
+                is_published: false,
+                scores: draftScores,
+                notes: skillsNotes,
+                feedback: JSON.stringify({ class_size: total }),
+              })
+              alert('Draft saved')
+            } catch (e) { alert('Draft save failed: ' + e.message) }
+            setSaving(false)
+          }}
+          disabled={!teacher || saving}
+          className="flex-1 py-3.5 rounded-xl text-sm font-semibold border border-gray-200 disabled:opacity-50">
           Save Draft
         </button>
         <button
           onClick={publish}
-          disabled={!teacher || saving}
-          className="flex-1 py-3.5 rounded-xl text-sm font-semibold bg-fls-orange text-white disabled:opacity-50"
+          disabled={!teacher || saving || validPercents.length === 0 || !total}
+          title={!teacher ? 'Pick a teacher' : !total ? 'Enter class size' : validPercents.length === 0 ? 'Record at least one minute of counts' : ''}
+          className="flex-1 py-3.5 rounded-xl text-sm font-semibold bg-fls-orange text-white disabled:opacity-50 disabled:bg-gray-300"
         >
-          {saving ? 'Saving...' : 'Publish'}
+          {saving ? 'Saving…' : 'Publish'}
         </button>
       </div>
     </div>

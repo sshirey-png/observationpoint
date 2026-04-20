@@ -1273,7 +1273,7 @@ PostgreSQL schema. Use ONLY these tables and these EXACT column names —
 no shortened variants (e.g. teacher_email, NOT teacher; observer_email, NOT observer).
 
 TABLE staff (aliased as s):
-  - email TEXT  (primary key, the join target for touchpoints.teacher_email)
+  - email TEXT  (primary key, join target for touchpoints.teacher_email and touchpoints.observer_email)
   - first_name TEXT
   - last_name TEXT
   - job_title TEXT
@@ -1286,26 +1286,28 @@ TABLE staff (aliased as s):
 TABLE touchpoints (aliased as t):
   - id UUID  (primary key)
   - form_type TEXT
-  - teacher_email TEXT  (FK → staff.email; join: t.teacher_email = s.email)
-  - observer_email TEXT  (who did the observation/meeting; also an FK to staff.email)
+  - teacher_email TEXT  (who the touchpoint is ABOUT — join: t.teacher_email = s.email)
+  - observer_email TEXT  (who CREATED it — also FK to staff.email)
   - school TEXT
   - school_year TEXT  (format '2025-2026'; current year is '2025-2026')
   - observed_at TIMESTAMPTZ
-  - status TEXT  (values: 'published', 'draft')
+  - status TEXT  (values: 'published', 'draft' — almost always filter to published)
   - notes TEXT
-  - feedback TEXT  (plaintext coaching narrative from Grow enrichment)
-  - grow_id TEXT  (stable Grow observation ID, non-null if imported from Grow)
+  - feedback TEXT  (PLAINTEXT coaching narrative pulled from Grow. Non-null for ~8,600 imported records. Search with ILIKE '%%keyword%%'.)
+  - feedback_json JSONB  (STRUCTURED coaching narrative. Shape: {grow_id, narrative: [{measurement, text}], checkboxes_selected: [{measurement, selected}], comments: []}. To search narrative: WHERE feedback_json::text ILIKE '%%keyword%%', OR iterate with jsonb_array_elements. Prefer the plaintext 'feedback' column for keyword searches — simpler.)
+  - grow_id TEXT  (stable Grow observation ID)
 
-  form_type values (use LIKE patterns where helpful):
+  form_type values (use LIKE patterns for groups):
     observation_teacher, observation_fundamentals, observation_prek,
     pmap_teacher, pmap_leader, pmap_prek, pmap_support, pmap_network,
     self_reflection_teacher, self_reflection_leader, self_reflection_prek,
     self_reflection_support, self_reflection_network,
     quick_feedback, celebrate, write_up, iap, solicited_feedback,
     meeting_quick_meeting, "meeting_data_meeting_(relay)"
-  HINT: for "meetings" use form_type LIKE 'meeting_%%'
-  HINT: for "observations" use form_type LIKE 'observation_%%'
-  HINT: for "pmaps" use form_type LIKE 'pmap_%%'
+  HINT: "meetings" → form_type LIKE 'meeting_%%'
+  HINT: "observations" → form_type LIKE 'observation_%%'
+  HINT: "pmaps" → form_type LIKE 'pmap_%%'
+  HINT: "self-reflections" → form_type LIKE 'self_reflection_%%'
 
 TABLE scores (aliased as sc):
   - id SERIAL  (primary key)
@@ -1317,14 +1319,96 @@ TABLE scores (aliased as sc):
 
   dimension_code values: T1=On Task, T2=Community of Learners,
     T3=Essential Content, T4=Cognitive Engagement, T5=Demonstration of Learning,
-    L1-L5 (Leadership), PK1-PK10 (PreK CLASS), M1-M5 (Fundamentals minutes)
+    L1-L5 (Leadership), PK1-PK10 (PreK CLASS), M1-M5 (Fundamentals on-task % by minute)
 
 Schools: Arthur Ashe Charter School, Langston Hughes Academy,
   Phillis Wheatley Community School, Samuel J Green Charter School, FirstLine Network
 
-NAMING: When a user asks about a person by first name only ("Charlotte", "Ida"),
-match on staff.first_name ILIKE 'Charlotte%%'. If a first name could be ambiguous,
-include last_name in the SELECT so the answer can disambiguate.
+=== NAMING / MATCHING RULES ===
+
+1. When a user names a person (first name, last name, or both), match LIBERALLY:
+   - "Charlotte" → s.first_name ILIKE 'Charlotte%%' OR s.last_name ILIKE 'Charlotte%%'
+   - "Ida Smith" → s.first_name ILIKE 'Ida%%' AND s.last_name ILIKE 'Smith%%'
+   - ALWAYS include first_name, last_name, email in the SELECT so duplicates/ambiguity is visible in results
+
+2. For "how many X has Y had/done", check BOTH roles:
+   - "observations has Charlotte completed" (Charlotte is OBSERVER): filter on observer_email matching Charlotte
+   - "observations has Charlotte received" (Charlotte is TEACHER): filter on teacher_email matching Charlotte
+   - If ambiguous, UNION or COUNT both and label clearly
+
+3. Default to current school year only when user says "this year" or doesn't specify a time.
+   If user says "ever" / "all time" / "historical", do NOT filter by school_year.
+
+4. Always filter status='published' unless user asks about drafts.
+
+=== EXAMPLES (exact patterns that work) ===
+
+Q: "How many observations has Charlotte Steele completed?"
+SELECT COUNT(*) AS total
+FROM touchpoints t
+JOIN staff s ON t.observer_email = s.email
+WHERE s.first_name ILIKE 'Charlotte%%' AND s.last_name ILIKE 'Steele%%'
+  AND t.form_type LIKE 'observation_%%'
+  AND t.school_year = '2025-2026'
+  AND t.status = 'published';
+
+Q: "How many meetings has Ida had this year?"
+SELECT COUNT(*) AS total, s.first_name, s.last_name, s.email
+FROM touchpoints t
+JOIN staff s ON t.teacher_email = s.email
+WHERE s.first_name ILIKE 'Ida%%'
+  AND t.form_type LIKE 'meeting_%%'
+  AND t.school_year = '2025-2026'
+  AND t.status = 'published'
+GROUP BY s.first_name, s.last_name, s.email;
+
+Q: "Which teachers got feedback about cold calling?"
+SELECT DISTINCT s.first_name, s.last_name, s.email, s.school, COUNT(t.id) AS mentions
+FROM touchpoints t
+JOIN staff s ON t.teacher_email = s.email
+WHERE t.feedback ILIKE '%%cold call%%'
+  AND t.school_year = '2025-2026'
+  AND t.status = 'published'
+GROUP BY s.first_name, s.last_name, s.email, s.school
+ORDER BY mentions DESC
+LIMIT 20;
+
+Q: "Top observers this year"
+SELECT s.first_name, s.last_name, s.email, COUNT(*) AS touchpoints
+FROM touchpoints t
+JOIN staff s ON t.observer_email = s.email
+WHERE t.school_year = '2025-2026' AND t.status = 'published'
+GROUP BY s.first_name, s.last_name, s.email
+ORDER BY touchpoints DESC LIMIT 20;
+
+Q: "Who hasn't been observed in 30+ days?"
+SELECT s.first_name, s.last_name, s.email, s.school,
+       MAX(t.observed_at) AS last_observed
+FROM staff s
+LEFT JOIN touchpoints t ON s.email = t.teacher_email
+  AND t.form_type LIKE 'observation_%%'
+  AND t.status = 'published'
+WHERE s.is_active AND s.job_function = 'Teacher'
+GROUP BY s.first_name, s.last_name, s.email, s.school
+HAVING MAX(t.observed_at) IS NULL OR MAX(t.observed_at) < NOW() - INTERVAL '30 days'
+ORDER BY last_observed ASC NULLS FIRST LIMIT 50;
+
+Q: "Average scores by school this year"
+SELECT t.school, sc.dimension_code, ROUND(AVG(sc.score)::numeric, 2) AS avg_score
+FROM touchpoints t
+JOIN scores sc ON sc.touchpoint_id = t.id
+WHERE t.school_year = '2025-2026' AND t.status = 'published'
+  AND sc.dimension_code IN ('T1','T2','T3','T4','T5')
+GROUP BY t.school, sc.dimension_code
+ORDER BY t.school, sc.dimension_code;
+
+Q: "Which school has the most energetic feedback?"
+-- For qualitative questions about feedback content, search with ILIKE and aggregate
+SELECT t.school, COUNT(*) AS mentions
+FROM touchpoints t
+WHERE (t.feedback ILIKE '%%energy%%' OR t.feedback ILIKE '%%engaging%%' OR t.feedback ILIKE '%%enthusias%%')
+  AND t.school_year = '2025-2026' AND t.status = 'published'
+GROUP BY t.school ORDER BY mentions DESC;
 """
 
 @app.route('/api/insights', methods=['POST'])
