@@ -315,11 +315,36 @@ def get_network_dashboard(school_year=None):
 # --- Save Touchpoint ---
 
 def save_touchpoint(data):
+    """Persist a user-submitted form.
+    Default is PUBLISHED (not draft) — StaffProfile filters out drafts,
+    so anything submitted needs to be visible immediately.
+    If a form wants to save as draft, it can pass status='draft', is_published=False.
+    """
     import uuid
+    import json as _json
     conn = get_conn()
     try:
         cur = conn.cursor()
         tp_id = data.get('id', str(uuid.uuid4()))
+
+        # action_step can come through as a separate top-level key (older form pattern).
+        # Fold it into the feedback JSON so nothing is silently dropped.
+        feedback_val = data.get('feedback', '')
+        action_step = data.get('action_step')
+        if action_step:
+            try:
+                # If feedback is already JSON string, merge. Otherwise wrap.
+                fb_obj = _json.loads(feedback_val) if feedback_val else {}
+                if not isinstance(fb_obj, dict):
+                    fb_obj = {'note': feedback_val}
+            except (ValueError, TypeError):
+                fb_obj = {'note': feedback_val} if feedback_val else {}
+            try:
+                fb_obj['action_step'] = _json.loads(action_step) if isinstance(action_step, str) else action_step
+            except (ValueError, TypeError):
+                fb_obj['action_step'] = action_step
+            feedback_val = _json.dumps(fb_obj)
+
         cur.execute("""
             INSERT INTO touchpoints (id, form_type, teacher_email, observer_email, school,
                 school_year, observed_at, status, is_published, notes, feedback)
@@ -328,8 +353,8 @@ def save_touchpoint(data):
         """, (tp_id, data['form_type'], data['teacher_email'], data['observer_email'],
               data.get('school', ''), data['school_year'],
               data.get('observed_at', datetime.now(timezone.utc)),
-              data.get('status', 'draft'), data.get('is_published', False),
-              data.get('notes', ''), data.get('feedback', '')))
+              data.get('status', 'published'), data.get('is_published', True),
+              data.get('notes', ''), feedback_val))
         tp_id = cur.fetchone()[0]
         if data.get('scores'):
             for code, score in data['scores'].items():

@@ -110,11 +110,11 @@ export default function TouchpointHub() {
 
         <Section label="Self-Reflections" count="auto · 5 variants">
           <div className="grid grid-cols-2 gap-2.5">
-            <Card to="/app/pmap" icon="💜" iconBg="#ede9fe" title="SR: Teacher" sub="Teacher self-score" />
-            <Card to="/app/pmap" icon="💜" iconBg="#ede9fe" title="SR: PreK" sub="CLASS self-score" />
-            <Card to="/app/pmap" icon="💜" iconBg="#ede9fe" title="SR: Leader" sub="L1-L5 self-score" />
-            <Card to="/app/pmap" icon="💜" iconBg="#ede9fe" title="SR: Network" sub="Leadership + Commitments" />
-            <Card to="/app/pmap" icon="💜" iconBg="#ede9fe" title="SR: Support" sub="Commitments + Career" />
+            <Card to="/app/self-reflection" icon="💜" iconBg="#ede9fe" title="SR: Teacher" sub="Teacher self-score" />
+            <Card to="/app/self-reflection" icon="💜" iconBg="#ede9fe" title="SR: PreK" sub="CLASS self-score" />
+            <Card to="/app/self-reflection" icon="💜" iconBg="#ede9fe" title="SR: Leader" sub="L1-L5 self-score" />
+            <Card to="/app/self-reflection" icon="💜" iconBg="#ede9fe" title="SR: Network" sub="Leadership + Commitments" />
+            <Card to="/app/self-reflection" icon="💜" iconBg="#ede9fe" title="SR: Support" sub="Commitments + Career" />
           </div>
         </Section>
 

@@ -220,17 +220,41 @@ export default function Observe() {
       {/* Bottom bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2.5 pb-[max(10px,env(safe-area-inset-bottom))] flex gap-2 z-50">
         <button
-          onClick={() => alert('Draft saved')}
-          className="flex-1 py-3.5 rounded-xl text-sm font-semibold border border-gray-200"
+          onClick={async () => {
+            if (!teacher) return
+            setSaving(true)
+            try {
+              await api.post('/api/touchpoints', {
+                form_type: 'observation_teacher',
+                teacher_email: teacher.email,
+                school: teacher.school || '',
+                status: 'draft',
+                is_published: false,
+                scores,
+                notes,
+                feedback: JSON.stringify({
+                  see_it_success: seeItSuccess,
+                  see_it_growth: seeItGrowth,
+                  do_it_practice: doItPractice,
+                }),
+                action_step: actionStep ? JSON.stringify(actionStep) : customStep || null,
+              })
+              alert('Draft saved')
+            } catch (e) { alert('Draft save failed: ' + e.message) }
+            setSaving(false)
+          }}
+          disabled={!teacher || saving}
+          className="flex-1 py-3.5 rounded-xl text-sm font-semibold border border-gray-200 disabled:opacity-50"
         >
           Save Draft
         </button>
         <button
           onClick={publish}
-          disabled={!teacher || saving}
-          className="flex-1 py-3.5 rounded-xl text-sm font-semibold bg-fls-orange text-white disabled:opacity-50"
+          disabled={!teacher || saving || (!notes.trim() && !seeItSuccess.trim() && !seeItGrowth.trim() && !doItPractice.trim() && Object.keys(scores).length === 0)}
+          title={!teacher ? 'Pick a teacher first' : 'Add at least a score, note, or narrative to publish'}
+          className="flex-1 py-3.5 rounded-xl text-sm font-semibold bg-fls-orange text-white disabled:opacity-50 disabled:bg-gray-300"
         >
-          {saving ? 'Saving...' : 'Publish'}
+          {saving ? 'Saving…' : 'Publish'}
         </button>
       </div>
     </div>

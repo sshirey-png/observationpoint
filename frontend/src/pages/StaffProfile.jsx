@@ -105,7 +105,7 @@ function dedupTouchpoints(touchpoints) {
   return [...seen.values()]
 }
 
-function RecordCard({ tp, staffEmail, onClick }) {
+function RecordCard({ tp, staffEmail, onClick, extra }) {
   const scores = tp.scores || {}
   const label = FORM_LABEL[tp.form_type] || tp.form_type
   const isSelf = staffEmail && tp.observer_email && tp.observer_email.toLowerCase() === staffEmail.toLowerCase()
@@ -147,13 +147,17 @@ function RecordCard({ tp, staffEmail, onClick }) {
         </div>
       </div>
       {Object.keys(scores).length > 0 && (
-        <div className="flex gap-1 mt-2 flex-wrap">
+        <div className="flex gap-1 mt-2 flex-wrap items-center">
           {Object.entries(scores).map(([code, s]) => (
             <span key={code} className={`text-[11px] font-bold px-1.5 py-0.5 rounded-md ${scoreClass(s)}`}>
               {DIM_SHORT[code] || code} {s}
             </span>
           ))}
+          {extra}
         </div>
+      )}
+      {Object.keys(scores).length === 0 && extra && (
+        <div className="flex mt-2">{extra}</div>
       )}
       {tp.notes && <div className="text-xs text-gray-600 mt-2 italic pl-2 border-l-2 border-gray-200 line-clamp-3">{tp.notes}</div>}
       {hasExtra && (
@@ -163,18 +167,97 @@ function RecordCard({ tp, staffEmail, onClick }) {
   )
 }
 
+/** Compute avg on-task % for a fundamentals record from its M1-M5 scores.
+ * New records store M1-M5 as 0-100 percents (from the timer form). Imported
+ * Grow records likely store 1-5 rubric scores. Skip those for trend purposes —
+ * rescaling 1-5 to 0-100 would misrepresent the numbers. */
+function fundOnTaskPct(tp) {
+  const s = tp.scores || {}
+  const mins = ['M1', 'M2', 'M3', 'M4', 'M5'].map(k => s[k]).filter(v => v != null)
+  if (mins.length === 0) return null
+  const max = Math.max(...mins)
+  if (max <= 5) return null  // rubric-scale legacy data — not a percent
+  return Math.round(mins.reduce((a, b) => a + b, 0) / mins.length)
+}
+
+/** SVG sparkline of fundamentals on-task % over time (chronological). */
+function FundamentalsTrend({ fund }) {
+  // Oldest → newest for left-to-right trend
+  const sorted = [...fund].sort((a, b) => new Date(a.date) - new Date(b.date))
+  const pts = sorted
+    .map(tp => ({ date: tp.date, pct: fundOnTaskPct(tp) }))
+    .filter(p => p.pct != null)
+
+  if (pts.length < 2) return null  // need at least 2 points to draw a line
+
+  const W = 600, H = 160, P = 16
+  const xs = pts.map((_, i) => P + (i * (W - P * 2)) / (pts.length - 1))
+  const ys = pts.map(p => P + ((100 - p.pct) * (H - P * 2)) / 100)
+  const poly = xs.map((x, i) => `${x},${ys[i]}`).join(' ')
+
+  const latest = pts[pts.length - 1]
+  const first = pts[0]
+  const delta = latest.pct - first.pct
+  const avg = Math.round(pts.reduce((a, p) => a + p.pct, 0) / pts.length)
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm p-4 mt-3 mb-4">
+      <div className="flex items-end justify-between mb-2">
+        <div>
+          <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Fundamentals · On-Task Trend</div>
+          <div className="flex items-baseline gap-2 mt-0.5">
+            <span className="text-3xl font-extrabold text-fls-navy">{latest.pct}%</span>
+            <span className="text-xs font-semibold text-gray-500">latest</span>
+          </div>
+        </div>
+        <div className="text-right">
+          <div className={`text-sm font-bold ${delta >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+            {delta >= 0 ? '+' : ''}{delta} pts
+          </div>
+          <div className="text-[10px] text-gray-400 mt-0.5">vs first · avg {avg}%</div>
+        </div>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-[110px]" preserveAspectRatio="none">
+        {/* horizontal gridlines at 25/50/75 */}
+        {[25, 50, 75].map(v => {
+          const y = P + ((100 - v) * (H - P * 2)) / 100
+          return <line key={v} x1={P} x2={W - P} y1={y} y2={y} stroke="#f3f4f6" strokeWidth="1" />
+        })}
+        {/* trend line */}
+        <polyline points={poly} fill="none" stroke="#e47727" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+        {/* dots */}
+        {xs.map((x, i) => (
+          <circle key={i} cx={x} cy={ys[i]} r="3.5" fill="#e47727" />
+        ))}
+      </svg>
+      <div className="flex justify-between text-[10px] text-gray-400 mt-1">
+        <span>{formatDate(first.date)}</span>
+        <span>{formatDate(latest.date)}</span>
+      </div>
+    </div>
+  )
+}
+
 function FundamentalsView({ touchpoints, onOpenDetail, staffEmail }) {
   const fund = touchpoints.filter(t => t.form_type === 'observation_fundamentals')
   if (fund.length === 0) return <Empty msg="No Fundamentals observations yet." />
 
   return (
     <div>
+      <FundamentalsTrend fund={fund} />
       <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mt-4 mb-2">
         Fundamentals Visits · {fund.length}
       </div>
-      {fund.map(tp => (
-        <RecordCard key={tp.id} tp={tp} staffEmail={staffEmail} onClick={() => onOpenDetail(tp)} />
-      ))}
+      {fund.map(tp => {
+        const pct = fundOnTaskPct(tp)
+        return (
+          <RecordCard
+            key={tp.id} tp={tp} staffEmail={staffEmail}
+            onClick={() => onOpenDetail(tp)}
+            extra={pct != null ? <span className="px-2 py-0.5 rounded-md bg-orange-50 text-orange-700 text-[10px] font-bold">{pct}% on-task</span> : null}
+          />
+        )
+      })}
     </div>
   )
 }

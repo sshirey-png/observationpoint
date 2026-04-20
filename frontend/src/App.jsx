@@ -7,6 +7,7 @@ import Fundamentals from './pages/Fundamentals'
 import SolicitFeedback from './pages/SolicitFeedback'
 import Meeting from './pages/Meeting'
 import PMAP from './pages/PMAP'
+import SelfReflection from './pages/SelfReflection'
 import Team from './pages/Team'
 import StaffProfile from './pages/StaffProfile'
 import Insights from './pages/Insights'
@@ -34,6 +35,7 @@ export default function App() {
         <Route path="/app/meeting" element={<Meeting />} />
         <Route path="/app/solicit" element={<SolicitFeedback />} />
         <Route path="/app/pmap" element={<PMAP />} />
+        <Route path="/app/self-reflection" element={<SelfReflection />} />
         <Route path="/app/team" element={<Team />} />
         <Route path="/app/touchpoint" element={<TouchpointHub />} />
         <Route path="/app/staff/:email" element={<StaffProfile />} />

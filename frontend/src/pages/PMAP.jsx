@@ -8,11 +8,29 @@ import { TEACHER_RUBRIC } from '../lib/rubric-descriptors'
 import FormShell from '../components/FormShell'
 
 /**
- * PMAP — Performance Map for Teachers.
- * Port of prototypes/pmap-teacher.html.
- * The most complex form: 9 sections including shared sections
- * (meeting checklist, goals, whirlwind, rubric, commitments, career, concerns).
+ * PMAP — Performance Map. Role-aware: we pick the right form_type
+ * (pmap_teacher / pmap_leader / pmap_network / pmap_support / pmap_prek)
+ * based on the teacher's job_function + job_title. The teacher rubric
+ * (T1-T5) is only shown and saved for teacher/prek roles — leader/network/
+ * support PMAPs go through the narrative sections only until we wire their
+ * rubrics up.
  */
+
+// Derive the correct PMAP form_type for this person. Mirrors the backend
+// derive_form_type mapping in app.py /api/admin/enrich-narrative.
+function pmapFormTypeFor(teacher) {
+  const role = (teacher?.job_function || '').toLowerCase()
+  const title = (teacher?.job_title || '').toLowerCase()
+  if (title.includes('prek') || title.includes('pre-k') || title.includes('pre k')) return 'pmap_prek'
+  if (role === 'leadership' || title.includes('principal') || title.includes('director')) return 'pmap_leader'
+  if (role === 'network') return 'pmap_network'
+  if (role === 'support' || role === 'operations') return 'pmap_support'
+  return 'pmap_teacher'
+}
+
+// Which PMAP variants use the teacher (T1-T5) rubric that this form renders.
+// Others: rubric section hidden until their dims are defined.
+const ROLES_WITH_TEACHER_RUBRIC = new Set(['pmap_teacher'])
 
 function TrackButton({ label, value, onChange }) {
   return (
@@ -90,12 +108,14 @@ export default function PMAP() {
   async function publish() {
     if (!teacher) return
     setSaving(true)
+    const formType = pmapFormTypeFor(teacher)
     try {
       await api.post('/api/touchpoints', {
-        form_type: 'pmap_teacher',
+        form_type: formType,
         teacher_email: teacher.email,
         school: teacher.school || '',
-        scores,
+        // Only send teacher-rubric scores for variants that use them
+        scores: ROLES_WITH_TEACHER_RUBRIC.has(formType) ? scores : {},
         notes: rubricComments,
         feedback: JSON.stringify({
           job_desc_reviewed: jobDescReviewed,
@@ -140,10 +160,38 @@ export default function PMAP() {
 
   const inputClass = "w-full px-3 py-3 border border-gray-200 rounded-[10px] text-sm outline-none focus:border-fls-orange placeholder:text-gray-400"
 
+  const currentFormType = pmapFormTypeFor(teacher)
+  const showTeacherRubric = ROLES_WITH_TEACHER_RUBRIC.has(currentFormType)
+  const roleLabel = ({
+    pmap_teacher: 'Teacher',
+    pmap_prek: 'PreK',
+    pmap_leader: 'Leader',
+    pmap_network: 'Network',
+    pmap_support: 'Support',
+  })[currentFormType] || 'Teacher'
+
+  // Validation: every required * field must be non-empty.
+  // Rubric cards are required only for the teacher variant.
+  const rubricFilled = !showTeacherRubric ||
+    TEACHER_RUBRIC.every(d => scores[d.code] != null)
+  const narrativeFilled = (
+    jobDescReviewed &&
+    goalsNotes.trim() &&
+    wigTrack &&
+    strengthAreas.trim() &&
+    growthAreas.trim() &&
+    commitStrength.trim() &&
+    commitGrowth.trim() &&
+    careerGoals.trim() &&
+    licenses.trim()
+  )
+  const concernsFilled = concerns.length === 0 || concernComments.trim()
+  const canPublish = !!teacher && !saving && rubricFilled && narrativeFilled && concernsFilled
+
   return (
     <FormShell>
     <div className="pb-24">
-      <Nav title="PMAP — Teacher" />
+      <Nav title={`PMAP — ${roleLabel}`} />
       <StaffPicker selected={teacher} onSelect={setTeacher} initialEmail={teacherParam} />
       {teacher && (
         <div className="flex items-center gap-2 px-4 py-2 bg-white border-b border-gray-200">
@@ -152,7 +200,7 @@ export default function PMAP() {
             <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 16 16"><path d="M3 8h10m-4-4 4 4-4 4" /></svg>
             History
           </Link>
-          <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-green-100 text-green-600">PMAP</span>
+          <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-green-100 text-green-600">PMAP · {roleLabel}</span>
         </div>
       )}
 
@@ -213,34 +261,43 @@ export default function PMAP() {
 
         <div className="h-px bg-gray-200 my-5" />
 
-        {/* 4. FLS Teacher Rubric */}
-        <div className="text-base font-bold mb-1">FLS Teacher Rubric</div>
-        <div className="text-xs text-gray-400 mb-3">Score each area.</div>
+        {/* 4. FLS Teacher Rubric — only for teacher PMAP variants.
+            Leader / Network / Support rubrics aren't wired yet; narrative sections below cover them. */}
+        {showTeacherRubric ? (
+          <>
+            <div className="text-base font-bold mb-1">FLS Teacher Rubric</div>
+            <div className="text-xs text-gray-400 mb-3">Score each area.</div>
 
-        {TEACHER_RUBRIC.map(dim => (
-          <RubricCard
-            key={dim.code}
-            code={dim.code}
-            name={dim.name}
-            question={dim.question}
-            descriptors={dim.descriptors}
-            required={true}
-            value={scores[dim.code] || null}
-            onChange={v => setScore(dim.code, v)}
-          />
-        ))}
+            {TEACHER_RUBRIC.map(dim => (
+              <RubricCard
+                key={dim.code}
+                code={dim.code}
+                name={dim.name}
+                question={dim.question}
+                descriptors={dim.descriptors}
+                required={true}
+                value={scores[dim.code] || null}
+                onChange={v => setScore(dim.code, v)}
+              />
+            ))}
 
-        <div className="bg-white rounded-xl shadow-sm p-4 mt-2">
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">Additional Comments</div>
-          <textarea value={rubricComments} onChange={e => setRubricComments(e.target.value)}
-            placeholder="Any additional notes or context here." rows={2} className={inputClass + ' resize-y'} />
-        </div>
+            <div className="bg-white rounded-xl shadow-sm p-4 mt-2">
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">Additional Comments</div>
+              <textarea value={rubricComments} onChange={e => setRubricComments(e.target.value)}
+                placeholder="Any additional notes or context here." rows={2} className={inputClass + ' resize-y'} />
+            </div>
+          </>
+        ) : (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-900">
+            <b>{roleLabel} rubric not yet wired.</b> Teacher dimensions (T1–T5) don't apply here — use the strength / growth / commitment narrative sections below to document performance. Dimension scores won't be saved on this form.
+          </div>
+        )}
 
         <div className="h-px bg-gray-200 my-5" />
 
         {/* 5. Rubric Review */}
-        <div className="text-base font-bold mb-1">FLS Teacher Rubric Review</div>
-        <div className="text-xs text-gray-400 mb-2">Provide input on strength and growth areas based on the rubric.</div>
+        <div className="text-base font-bold mb-1">Rubric Review</div>
+        <div className="text-xs text-gray-400 mb-2">Provide input on strength and growth areas.</div>
         <div className="bg-white rounded-xl shadow-sm p-4">
           <div className="mb-3">
             <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">
@@ -329,12 +386,41 @@ export default function PMAP() {
 
       {/* Bottom */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2.5 pb-[max(10px,env(safe-area-inset-bottom))] flex gap-2 z-50">
-        <button onClick={() => alert('Draft saved')} className="flex-1 py-3.5 rounded-xl text-sm font-semibold border border-gray-200">
+        <button
+          onClick={async () => {
+            if (!teacher) return
+            // Save as draft — bypass validation
+            setSaving(true)
+            try {
+              await api.post('/api/touchpoints', {
+                form_type: currentFormType,
+                teacher_email: teacher.email,
+                school: teacher.school || '',
+                status: 'draft',
+                is_published: false,
+                scores: ROLES_WITH_TEACHER_RUBRIC.has(currentFormType) ? scores : {},
+                notes: rubricComments,
+                feedback: JSON.stringify({
+                  job_desc_reviewed: jobDescReviewed, goals_notes: goalsNotes,
+                  wig_track: wigTrack, ag1_track: ag1Track, ag2_track: ag2Track, ag3_track: ag3Track,
+                  progress_notes: progressNotes, whirlwind,
+                  strength_areas: strengthAreas, growth_areas: growthAreas,
+                  commit_strength: commitStrength, commit_growth: commitGrowth,
+                  career_goals: careerGoals, licenses, concerns, concern_comments: concernComments,
+                }),
+              })
+              alert('Draft saved')
+            } catch (e) { alert('Draft save failed: ' + e.message) }
+            setSaving(false)
+          }}
+          disabled={!teacher || saving}
+          className="flex-1 py-3.5 rounded-xl text-sm font-semibold border border-gray-200 disabled:opacity-50">
           Save Draft
         </button>
-        <button onClick={publish} disabled={!teacher || saving}
-          className="flex-1 py-3.5 rounded-xl text-sm font-semibold bg-fls-orange text-white disabled:opacity-50">
-          {saving ? 'Saving...' : 'Publish'}
+        <button onClick={publish} disabled={!canPublish}
+          title={!canPublish && teacher ? 'Fill in all required fields (*) to publish' : ''}
+          className={`flex-1 py-3.5 rounded-xl text-sm font-semibold text-white transition ${canPublish ? 'bg-fls-orange active:scale-95' : 'bg-gray-300 cursor-not-allowed'}`}>
+          {saving ? 'Saving…' : 'Publish'}
         </button>
       </div>
     </div>
