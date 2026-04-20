@@ -4,7 +4,7 @@ import Nav from '../components/Nav'
 import StaffPicker from '../components/StaffPicker'
 import RubricCard from '../components/RubricCard'
 import { api } from '../lib/api'
-import { TEACHER_RUBRIC } from '../lib/rubric-descriptors'
+import { TEACHER_RUBRIC, LEADER_RUBRIC } from '../lib/rubric-descriptors'
 import FormShell from '../components/FormShell'
 
 /**
@@ -28,9 +28,13 @@ function pmapFormTypeFor(teacher) {
   return 'pmap_teacher'
 }
 
-// Which PMAP variants use the teacher (T1-T5) rubric that this form renders.
-// Others: rubric section hidden until their dims are defined.
-const ROLES_WITH_TEACHER_RUBRIC = new Set(['pmap_teacher'])
+// Per-role rubric wiring. Teacher + PreK-fallback use T1-T5; Leader uses L1-L5.
+// Network/Support don't have a defined rubric yet — narrative-only.
+const RUBRIC_FOR_ROLE = {
+  pmap_teacher: TEACHER_RUBRIC,
+  pmap_prek: TEACHER_RUBRIC,  // fallback until PK rubric is wired (different scale, cycles)
+  pmap_leader: LEADER_RUBRIC,
+}
 
 function TrackButton({ label, value, onChange }) {
   return (
@@ -114,8 +118,8 @@ export default function PMAP() {
         form_type: formType,
         teacher_email: teacher.email,
         school: teacher.school || '',
-        // Only send teacher-rubric scores for variants that use them
-        scores: ROLES_WITH_TEACHER_RUBRIC.has(formType) ? scores : {},
+        // Only send scores for variants that use a wired rubric
+        scores: RUBRIC_FOR_ROLE[formType] ? scores : {},
         notes: rubricComments,
         feedback: JSON.stringify({
           job_desc_reviewed: jobDescReviewed,
@@ -161,7 +165,8 @@ export default function PMAP() {
   const inputClass = "w-full px-3 py-3 border border-gray-200 rounded-[10px] text-sm outline-none focus:border-fls-orange placeholder:text-gray-400"
 
   const currentFormType = pmapFormTypeFor(teacher)
-  const showTeacherRubric = ROLES_WITH_TEACHER_RUBRIC.has(currentFormType)
+  const activeRubric = RUBRIC_FOR_ROLE[currentFormType] || null
+  const showRubric = !!activeRubric
   const roleLabel = ({
     pmap_teacher: 'Teacher',
     pmap_prek: 'PreK',
@@ -171,9 +176,9 @@ export default function PMAP() {
   })[currentFormType] || 'Teacher'
 
   // Validation: every required * field must be non-empty.
-  // Rubric cards are required only for the teacher variant.
-  const rubricFilled = !showTeacherRubric ||
-    TEACHER_RUBRIC.every(d => scores[d.code] != null)
+  // Rubric cards are required only when a rubric is wired for this role.
+  const rubricFilled = !showRubric ||
+    activeRubric.every(d => scores[d.code] != null)
   const narrativeFilled = (
     jobDescReviewed &&
     goalsNotes.trim() &&
@@ -261,14 +266,16 @@ export default function PMAP() {
 
         <div className="h-px bg-gray-200 my-5" />
 
-        {/* 4. FLS Teacher Rubric — only for teacher PMAP variants.
-            Leader / Network / Support rubrics aren't wired yet; narrative sections below cover them. */}
-        {showTeacherRubric ? (
+        {/* 4. Rubric — teacher/prek get T1-T5, leader gets L1-L5,
+            network/support haven't defined theirs yet. */}
+        {showRubric ? (
           <>
-            <div className="text-base font-bold mb-1">FLS Teacher Rubric</div>
+            <div className="text-base font-bold mb-1">
+              {currentFormType === 'pmap_leader' ? 'FLS Leadership Competencies' : 'FLS Teacher Rubric'}
+            </div>
             <div className="text-xs text-gray-400 mb-3">Score each area.</div>
 
-            {TEACHER_RUBRIC.map(dim => (
+            {activeRubric.map(dim => (
               <RubricCard
                 key={dim.code}
                 code={dim.code}
@@ -289,7 +296,7 @@ export default function PMAP() {
           </>
         ) : (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-900">
-            <b>{roleLabel} rubric not yet wired.</b> Teacher dimensions (T1–T5) don't apply here — use the strength / growth / commitment narrative sections below to document performance. Dimension scores won't be saved on this form.
+            <b>{roleLabel} rubric not yet wired.</b> Use the strength / growth / commitment narrative sections below to document performance. Dimension scores aren't saved on this form.
           </div>
         )}
 

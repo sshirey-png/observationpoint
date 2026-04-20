@@ -76,3 +76,39 @@ export const TEACHER_RUBRIC = [
 5 — Exemplary: All descriptors for Level 4 are met, and at least one of the following: Students self-assess whether they have achieved the lesson objective and provide feedback to the teacher. Students monitor their own progress, identify their own errors and seek additional opportunities for practice.`,
   },
 ]
+
+/** FLS Leadership Competencies — source: forms/rubric_leader.json.
+ * Level descriptors aren't yet defined per dimension, so the card renders
+ * name + question + 1-5 score without expandable descriptors. */
+export const LEADER_RUBRIC = [
+  {
+    code: 'L1',
+    name: 'Instructional Leadership',
+    question: 'Does the leader ensure that all classes within their scope meet or exceed the FLS Vision of Excellence and lead to increased academic achievement?',
+    required: true,
+  },
+  {
+    code: 'L2',
+    name: 'Cultural Leadership and Builder',
+    question: 'Does the leader build a motivational school culture that holds high behavioral and academic expectations for all by bringing together the students, staff and families in alignment with the school mission, vision and commitments?',
+    required: true,
+  },
+  {
+    code: 'L3',
+    name: 'Personal Leadership and Builder',
+    question: 'Does the leader inspire and motivate all staff, students and parents to consistently model the key mindsets and Commitments that are the core of the Firstline way?',
+    required: true,
+  },
+  {
+    code: 'L4',
+    name: 'Talent Management',
+    question: 'Does the leader ensure they plan for, cultivate, hire, develop and manage team members who value both results and relationships in a manner that includes the maintenance of a high performing team?',
+    required: true,
+  },
+  {
+    code: 'L5',
+    name: 'Strategic and Operations Leadership',
+    question: 'Does the leader ensure that resources (structures, time, money, partnerships) within their scope are allocated effectively to support student learning and staff development?',
+    required: true,
+  },
+]

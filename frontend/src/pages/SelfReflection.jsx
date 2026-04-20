@@ -4,7 +4,7 @@ import Nav from '../components/Nav'
 import RubricCard from '../components/RubricCard'
 import FormShell from '../components/FormShell'
 import { api } from '../lib/api'
-import { TEACHER_RUBRIC } from '../lib/rubric-descriptors'
+import { TEACHER_RUBRIC, LEADER_RUBRIC } from '../lib/rubric-descriptors'
 
 /**
  * SelfReflection — the teacher/leader/staff reflects on themselves.
@@ -25,7 +25,11 @@ function selfReflectionFormType(user) {
   return 'self_reflection_teacher'
 }
 
-const ROLES_WITH_TEACHER_RUBRIC = new Set(['self_reflection_teacher'])
+const RUBRIC_FOR_ROLE = {
+  self_reflection_teacher: TEACHER_RUBRIC,
+  self_reflection_prek: TEACHER_RUBRIC,  // fallback until PK CLASS rubric is wired
+  self_reflection_leader: LEADER_RUBRIC,
+}
 
 const ROLE_LABEL = {
   self_reflection_teacher: 'Teacher',
@@ -64,7 +68,8 @@ export default function SelfReflection() {
   }
 
   const formType = selfReflectionFormType(user)
-  const showTeacherRubric = ROLES_WITH_TEACHER_RUBRIC.has(formType)
+  const activeRubric = RUBRIC_FOR_ROLE[formType] || null
+  const showRubric = !!activeRubric
   const roleLabel = ROLE_LABEL[formType] || 'Teacher'
 
   // Required fields — all PMAP-reflection narrative fields
@@ -76,8 +81,8 @@ export default function SelfReflection() {
     careerGoals.trim() &&
     licenses.trim()
   )
-  const rubricFilled = !showTeacherRubric ||
-    TEACHER_RUBRIC.every(d => scores[d.code] != null)
+  const rubricFilled = !showRubric ||
+    activeRubric.every(d => scores[d.code] != null)
   const canPublish = requiredFilled && rubricFilled && !saving && user
 
   async function publish() {
@@ -89,7 +94,7 @@ export default function SelfReflection() {
         form_type: formType,
         teacher_email: user.email,  // self-reflection: user IS the subject
         school: user.school || '',
-        scores: showTeacherRubric ? scores : {},
+        scores: showRubric ? scores : {},
         notes: rubricComments,
         feedback: JSON.stringify({
           strength_areas: strengthAreas,
@@ -159,11 +164,13 @@ export default function SelfReflection() {
 
         <div className="px-4">
 
-          {showTeacherRubric ? (
+          {showRubric ? (
             <>
-              <div className="mt-4 text-base font-bold mb-1">FLS Teacher Rubric</div>
+              <div className="mt-4 text-base font-bold mb-1">
+                {formType === 'self_reflection_leader' ? 'FLS Leadership Competencies' : 'FLS Teacher Rubric'}
+              </div>
               <div className="text-xs text-gray-400 mb-3">Score yourself honestly on each dimension.</div>
-              {TEACHER_RUBRIC.map(dim => (
+              {activeRubric.map(dim => (
                 <RubricCard
                   key={dim.code}
                   code={dim.code}

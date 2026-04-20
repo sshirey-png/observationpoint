@@ -139,9 +139,12 @@ function RecordCard({ tp, staffEmail, onClick, extra }) {
             <span className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-purple-50 text-purple-700 shrink-0">
               Self
             </span>
-          ) : tp.observer_email ? (
-            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 shrink-0 truncate max-w-[180px]">
-              by {tp.observer_email.split('@')[0]}
+          ) : (tp.observer_name || tp.observer_email) ? (
+            <span
+              className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 shrink-0 truncate max-w-[180px]"
+              title={tp.observer_email}
+            >
+              by {tp.observer_name || tp.observer_email.split('@')[0]}
             </span>
           ) : null}
         </div>

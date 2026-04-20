@@ -134,13 +134,15 @@ def get_staff_profile(email):
             'is_active': staff_row['is_active'],
         }
 
-        # All touchpoints with optional scores (LEFT JOIN)
+        # All touchpoints with optional scores (LEFT JOIN) + observer name lookup
         cur.execute("""
             SELECT t.id, t.form_type, t.school, t.school_year, t.observed_at,
                    t.observer_email, t.status, t.notes, t.feedback,
                    t.feedback_json, t.meeting_json, t.scores_json,
+                   TRIM(CONCAT(obs.first_name, ' ', obs.last_name)) AS observer_name,
                    sc.dimension_code, sc.score
             FROM touchpoints t
+            LEFT JOIN staff obs ON LOWER(obs.email) = LOWER(t.observer_email)
             LEFT JOIN scores sc ON sc.touchpoint_id = t.id
             WHERE t.teacher_email = %s
             ORDER BY t.observed_at DESC, t.id
@@ -157,6 +159,7 @@ def get_staff_profile(email):
                     'school_year': r['school_year'],
                     'date': obs_at.strftime('%Y-%m-%d') if obs_at else None,
                     'observer_email': r['observer_email'] or '',
+                    'observer_name': r['observer_name'] or '',
                     'notes': r['notes'] or '',
                     'feedback_json': r['feedback_json'],
                     'meeting_json': r['meeting_json'],

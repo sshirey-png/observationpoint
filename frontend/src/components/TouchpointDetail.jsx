@@ -227,7 +227,14 @@ export default function TouchpointDetail({ touchpoint, onClose }) {
 
           {/* Observer + provenance */}
           <div className="text-xs text-gray-400 mt-4 space-y-0.5">
-            {tp.observer_email && <div>Observer: {tp.observer_email}</div>}
+            {(tp.observer_name || tp.observer_email) && (
+              <div>
+                Observer: {tp.observer_name || tp.observer_email}
+                {tp.observer_name && tp.observer_email && (
+                  <span className="text-gray-300"> · {tp.observer_email}</span>
+                )}
+              </div>
+            )}
             {growId && <div className="font-mono text-[10px]">Grow ID: {growId}</div>}
           </div>
         </div>

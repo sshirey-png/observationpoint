@@ -1511,7 +1511,7 @@ Your previous attempt failed with a PostgreSQL error:
 
 Fix it. Use ONLY the exact column names listed in the schema above. Do NOT invent columns."""
             resp = gen_client.models.generate_content(
-                model='gemini-2.5-flash',
+                model='gemini-2.5-pro',
                 contents=base,
                 config=genai_types.GenerateContentConfig(
                     max_output_tokens=1000,
@@ -1572,7 +1572,7 @@ First 10 rows: {json.dumps(results[:10])}
 Write a brief, clear 1-3 sentence answer to the user's question based on these results. Be specific with numbers. Do not mention SQL or databases."""
 
             sum_resp = gen_client.models.generate_content(
-                model='gemini-2.5-flash',
+                model='gemini-2.5-pro',
                 contents=summary_prompt,
                 config=genai_types.GenerateContentConfig(
                     max_output_tokens=500,
