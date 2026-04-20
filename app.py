@@ -1203,6 +1203,42 @@ def api_my_team():
 # API: Staff Profile
 # ------------------------------------------------------------------
 
+@app.route('/api/my-recent-touchpoints')
+@require_auth
+def api_my_recent_touchpoints():
+    """Last N touchpoints the current user created (as observer).
+    Powers the 'Recent' list on TouchpointHub."""
+    user = get_current_user()
+    if not user:
+        return jsonify([])
+    email = user.get('email', '').lower()
+    limit = min(int(request.args.get('limit', '5') or 5), 25)
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            SELECT t.id, t.form_type, t.observed_at, t.teacher_email, t.school,
+                   s.first_name, s.last_name
+            FROM touchpoints t
+            LEFT JOIN staff s ON t.teacher_email = s.email
+            WHERE LOWER(t.observer_email) = %s
+              AND t.status = 'published'
+            ORDER BY t.observed_at DESC
+            LIMIT %s
+        """, (email, limit))
+        rows = cur.fetchall()
+        return jsonify([{
+            'id': str(r['id']),
+            'form_type': r['form_type'],
+            'observed_at': r['observed_at'].isoformat() if r['observed_at'] else None,
+            'teacher_email': r['teacher_email'],
+            'teacher_name': f"{r['first_name'] or ''} {r['last_name'] or ''}".strip() or r['teacher_email'],
+            'school': r['school'],
+        } for r in rows])
+    finally:
+        conn.close()
+
+
 @app.route('/api/staff/<email>')
 @require_auth
 def api_staff_profile(email):

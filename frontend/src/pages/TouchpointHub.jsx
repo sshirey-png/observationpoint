@@ -1,8 +1,39 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import BottomNav from '../components/BottomNav'
 import AIPanel from '../components/AIPanel'
 import ImpersonationBanner from '../components/ImpersonationBanner'
+import { api } from '../lib/api'
+
+const FORM_LABELS = {
+  observation_teacher: { label: 'Observation', color: '#2563eb', bg: '#dbeafe', route: '/app/observe' },
+  observation_prek: { label: 'PreK Obs', color: '#db2777', bg: '#fce7f3', route: '/app/observe' },
+  observation_fundamentals: { label: 'Fundamentals', color: '#b45309', bg: '#fef3c7', route: '/app/fundamentals' },
+  quick_feedback: { label: 'Quick FB', color: '#b45309', bg: '#fef3c7', route: '/app/feedback' },
+  celebrate: { label: 'Celebrate', color: '#059669', bg: '#dcfce7', route: '/app/celebrate' },
+  'meeting_data_meeting_(relay)': { label: 'Data Mtg', color: '#16a34a', bg: '#f0fdf4', route: '/app/meeting' },
+  meeting_quick_meeting: { label: 'Meeting', color: '#16a34a', bg: '#f0fdf4', route: '/app/meeting' },
+  pmap_teacher: { label: 'PMAP', color: '#059669', bg: '#dcfce7', route: '/app/pmap' },
+  pmap_leader: { label: 'PMAP', color: '#059669', bg: '#dcfce7', route: '/app/pmap' },
+  pmap_prek: { label: 'PMAP', color: '#059669', bg: '#dcfce7', route: '/app/pmap' },
+  pmap_network: { label: 'PMAP', color: '#059669', bg: '#dcfce7', route: '/app/pmap' },
+  pmap_support: { label: 'PMAP', color: '#059669', bg: '#dcfce7', route: '/app/pmap' },
+  self_reflection_teacher: { label: 'Self-Refl', color: '#7c3aed', bg: '#ede9fe', route: '/app/self-reflection' },
+  self_reflection_leader: { label: 'Self-Refl', color: '#7c3aed', bg: '#ede9fe', route: '/app/self-reflection' },
+  solicited_feedback: { label: 'Solicited', color: '#2563eb', bg: '#dbeafe', route: '/app/solicit' },
+}
+
+function initials(name) {
+  if (!name) return '??'
+  const p = name.split(/\s+/).filter(Boolean)
+  return ((p[0]?.[0] || '') + (p[p.length - 1]?.[0] || '')).toUpperCase() || name.slice(0, 2).toUpperCase()
+}
+
+function shortDate(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
 
 /**
  * TouchpointHub — the logging hub at /app/touchpoint.
@@ -64,6 +95,13 @@ function RecentItem({ to, initials, name, meta, badge, badgeBg, badgeColor }) {
 
 export default function TouchpointHub() {
   const [aiOpen, setAiOpen] = useState(false)
+  const [recent, setRecent] = useState([])
+
+  useEffect(() => {
+    api.get('/api/my-recent-touchpoints?limit=5')
+      .then(r => setRecent(Array.isArray(r) ? r : []))
+      .catch(() => setRecent([]))
+  }, [])
 
   return (
     <div className="min-h-[100svh] bg-[#f5f7fa] pb-20">
@@ -125,10 +163,38 @@ export default function TouchpointHub() {
           </div>
         </Section>
 
-        {/* Recent TouchPoints list intentionally blank — will surface real
-            activity once the backing endpoint is wired. Previously hardcoded
-            demo names (Keisha Brown, David Chen, Amara Johnson) — removed for
-            CEO demo. */}
+        {/* Recent TouchPoints — real data from /api/my-recent-touchpoints */}
+        {recent.length > 0 && (
+          <>
+            <div className="text-[11px] font-bold uppercase tracking-[.06em] text-gray-400 mt-6 mb-2.5">Recent TouchPoints</div>
+            {recent.map(r => {
+              const cfg = FORM_LABELS[r.form_type] || { label: r.form_type, color: '#6b7280', bg: '#f3f4f6', route: '/app/touchpoint' }
+              return (
+                <Link
+                  key={r.id}
+                  to={`/app/staff/${encodeURIComponent(r.teacher_email)}`}
+                  className="bg-white rounded-xl shadow-sm px-3.5 py-3 flex items-center gap-3 no-underline text-inherit mb-2 active:scale-[.99] transition-transform"
+                >
+                  <div className="w-9 h-9 rounded-full bg-fls-navy text-white flex items-center justify-center text-[11px] font-bold shrink-0">
+                    {initials(r.teacher_name)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[13px] font-semibold truncate">{r.teacher_name}</div>
+                    <div className="text-[11px] text-gray-500 truncate">
+                      {r.school || ''}{r.school ? ' · ' : ''}{shortDate(r.observed_at)}
+                    </div>
+                  </div>
+                  <span
+                    className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-md shrink-0"
+                    style={{ background: cfg.bg, color: cfg.color }}
+                  >
+                    {cfg.label}
+                  </span>
+                </Link>
+              )
+            })}
+          </>
+        )}
       </div>
 
       <BottomNav active="touchpoint" onAskClick={() => setAiOpen(true)} aiOpen={aiOpen} />
