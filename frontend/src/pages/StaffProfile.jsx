@@ -71,11 +71,38 @@ function Empty({ msg }) {
   return <div className="bg-white rounded-xl p-6 text-center text-gray-400 text-sm shadow-sm">{msg}</div>
 }
 
-// Draft heuristic: records before ObservationPoint launch are from Grow import.
+// Draft heuristic: records before ObservationPoint launch are imported from Grow.
 // Real build replaces this with a `source` column on the touchpoints table.
 const LAUNCH_DATE = '2026-04-01'
 function isLegacyRecord(tp) {
   return !!(tp.date && tp.date < LAUNCH_DATE)
+}
+
+/**
+ * Dedup touchpoints that are effectively the same event. Two records with
+ * the same date, form_type, observer_email, AND identical scores are a
+ * duplicate (often from a reimported Grow export). Different observers
+ * on the same date stay separate — that's the manager+managee pattern.
+ */
+function dedupTouchpoints(touchpoints) {
+  const seen = new Map()
+  for (const tp of touchpoints) {
+    const scoreKey = Object.entries(tp.scores || {})
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([k, v]) => `${k}:${v}`)
+      .join(',')
+    const key = `${tp.date || ''}|${tp.form_type || ''}|${(tp.observer_email || '').toLowerCase()}|${scoreKey}`
+    if (!seen.has(key)) {
+      seen.set(key, tp)
+    } else {
+      // Keep the one with richer content (more notes/json)
+      const existing = seen.get(key)
+      const existingRichness = (existing.notes?.length || 0) + (existing.feedback_json ? 1000 : 0) + (existing.meeting_json ? 1000 : 0)
+      const newRichness = (tp.notes?.length || 0) + (tp.feedback_json ? 1000 : 0) + (tp.meeting_json ? 1000 : 0)
+      if (newRichness > existingRichness) seen.set(key, tp)
+    }
+  }
+  return [...seen.values()]
 }
 
 function RecordCard({ tp, staffEmail, onClick }) {
@@ -83,14 +110,16 @@ function RecordCard({ tp, staffEmail, onClick }) {
   const label = FORM_LABEL[tp.form_type] || tp.form_type
   const isSelf = staffEmail && tp.observer_email && tp.observer_email.toLowerCase() === staffEmail.toLowerCase()
   const legacy = isLegacyRecord(tp)
-  // Show "tap to see full" only if the modal will actually reveal MORE than the card
+  // Does the record have anything beyond what the card shows?
   const hasExtra = !!(tp.feedback_json || tp.meeting_json || (tp.notes && tp.notes.length > 140))
+  // Only tappable if tapping reveals more
+  const Tag = hasExtra ? 'button' : 'div'
   return (
-    <button
-      onClick={onClick}
-      className={`block w-full text-left rounded-xl p-3.5 shadow-sm mb-2.5 border-0 cursor-pointer font-[inherit] active:scale-[.99] transition-transform ${
-        legacy ? 'bg-gray-50' : 'bg-white'
-      }`}
+    <Tag
+      onClick={hasExtra ? onClick : undefined}
+      className={`block w-full text-left rounded-xl p-3.5 shadow-sm mb-2.5 border-0 font-[inherit] ${
+        hasExtra ? 'cursor-pointer active:scale-[.99] transition-transform' : 'cursor-default'
+      } ${legacy ? 'bg-gray-50' : 'bg-white'}`}
     >
       <div className="flex items-center justify-between gap-2.5 mb-1">
         <div className="flex items-center gap-2 min-w-0 flex-wrap">
@@ -103,7 +132,7 @@ function RecordCard({ tp, staffEmail, onClick }) {
               className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-gray-200 text-gray-500 shrink-0"
               title="Imported from Grow — structure may be thinner than new records"
             >
-              Legacy
+              Imported
             </span>
           )}
           {isSelf ? (
@@ -130,7 +159,7 @@ function RecordCard({ tp, staffEmail, onClick }) {
       {hasExtra && (
         <div className="text-[10px] text-gray-400 mt-1.5 font-semibold">Tap for full record →</div>
       )}
-    </button>
+    </Tag>
   )
 }
 
@@ -317,8 +346,11 @@ export default function StaffProfile() {
   }, [email])
 
   const staff = data?.staff || {}
-  // Filter out drafts — if the user hasn't published it, it shouldn't show on anyone's profile
-  const touchpoints = (data?.touchpoints || []).filter(t => t.status !== 'draft')
+  // Filter out drafts + dedup effectively-identical records (a pattern we see
+  // with reimported Grow data — same date, same observer, same scores, new ID).
+  const touchpoints = dedupTouchpoints(
+    (data?.touchpoints || []).filter(t => t.status !== 'draft')
+  )
 
   return (
     <div className="min-h-[100svh] bg-[#f5f7fa] pb-20">
