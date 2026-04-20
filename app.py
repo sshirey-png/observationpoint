@@ -236,7 +236,7 @@ def api_enrich_narrative():
       {skip, limit, grow_observations_pulled, matches_found, records_updated,
        no_postgres_match, next_skip, done, sample_updates?}
     """
-    import base64, re, requests
+    import base64, re, requests, html
     from datetime import datetime
 
     dry = request.args.get('dry_run', 'true').lower() != 'false'
@@ -290,7 +290,7 @@ def api_enrich_narrative():
             for tb in s.get('textBoxes', []) or []:
                 val = tb.get('value')
                 if val:
-                    txt = strip_tags.sub('', val).strip()
+                    txt = html.unescape(strip_tags.sub('', val)).strip()
                     if txt:
                         narrative.append({'measurement': mid, 'text': txt})
             # valueText — yes/no answers
