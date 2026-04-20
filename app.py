@@ -548,6 +548,103 @@ function stop(){ stopReq = true }
 </body></html>"""
 
 
+@app.route('/admin/cleanup')
+@require_auth
+@require_admin
+def admin_cleanup_page():
+    """One-page admin cleanup tool: dedup duplicates + create unique index
+    + spot-check a staff member. Buttons beat fiddly POST URLs on mobile."""
+    return """<!doctype html>
+<html><head><meta charset="utf-8"><title>Cleanup — Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{font-family:Inter,system-ui,sans-serif;background:#f5f7fa;max-width:720px;margin:0 auto;padding:20px;color:#111827}
+h1{color:#002f60;margin-bottom:4px;font-size:22px}.sub{color:#6b7280;font-size:13px;margin-bottom:20px}
+.card{background:#fff;border-radius:12px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:12px}
+.card h2{font-size:15px;color:#002f60;margin-bottom:4px}.card p{color:#6b7280;font-size:13px;margin-bottom:12px;line-height:1.5}
+button{padding:12px 18px;border:0;border-radius:10px;color:#fff;font-weight:700;font-family:inherit;cursor:pointer;font-size:14px;margin-right:8px;margin-bottom:6px}
+.b-nav{background:#002f60}.b-orange{background:#e47727}.b-red{background:#dc2626}.b-gray{background:#6b7280}
+button:disabled{opacity:.5;cursor:not-allowed}
+pre{background:#f5f7fa;padding:12px;border-radius:8px;font-size:11px;overflow-x:auto;max-height:240px;white-space:pre-wrap;word-break:break-all}
+input{padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;font-family:inherit;font-size:14px;width:100%;box-sizing:border-box;margin-bottom:8px}
+.stat{display:inline-block;margin-right:18px;padding:6px 0}.stat-val{font-size:20px;font-weight:800;color:#002f60;display:block}.stat-label{font-size:10px;text-transform:uppercase;color:#9ca3af;letter-spacing:.05em}
+</style></head><body>
+<h1>Admin · Cleanup</h1>
+<div class="sub">Run after enrichment Write. Sequence: dedup dry → dedup write → create index → spot check.</div>
+
+<div class="card">
+  <h2>1 · Dedup by grow_id</h2>
+  <p>Find touchpoints sharing a grow_id (duplicates). Dry run shows what WOULD be removed. Write actually removes them (and their score rows).</p>
+  <button class="b-gray" onclick="run('dedup-dry')">Dry run</button>
+  <button class="b-red" onclick="if(confirm('Delete duplicate rows permanently?')) run('dedup-write')">Write (delete duplicates)</button>
+  <div id="dedup-out"></div>
+</div>
+
+<div class="card">
+  <h2>2 · Create unique index on grow_id</h2>
+  <p>Prevents future duplicates at the DB level. Must run AFTER step 1 succeeds.</p>
+  <button class="b-nav" onclick="run('create-index')">Create index</button>
+  <div id="create-index-out"></div>
+</div>
+
+<div class="card">
+  <h2>3 · Spot check a staff member</h2>
+  <p>Per-teacher breakdown: counts by form_type, narrative presence, grow_id coverage, estimated duplicates.</p>
+  <input id="email" placeholder="someone@firstlineschools.org" />
+  <button class="b-orange" onclick="runStaff()">Look up</button>
+  <div id="staff-out"></div>
+</div>
+
+<script>
+const urls = {
+  'dedup-dry': '/api/admin/dedup-by-grow-id?dry_run=true',
+  'dedup-write': '/api/admin/dedup-by-grow-id?dry_run=false',
+  'create-index': '/api/admin/create-grow-id-index',
+}
+function outboxFor(kind){
+  if (kind.startsWith('dedup')) return document.getElementById('dedup-out')
+  return document.getElementById(kind+'-out')
+}
+async function run(kind){
+  const box = outboxFor(kind)
+  box.innerHTML = '<pre>Running…</pre>'
+  try {
+    const r = await fetch(urls[kind], {method:'POST'})
+    const d = await r.json()
+    let summary = ''
+    if (kind.startsWith('dedup')) {
+      summary = `<div class="stat"><span class="stat-val">${(d.duplicate_groups||0).toLocaleString()}</span><span class="stat-label">Duplicate groups</span></div>`
+              + `<div class="stat"><span class="stat-val">${(d.rows_to_delete||0).toLocaleString()}</span><span class="stat-label">${d.dry_run?'Would delete':'Deleted'}</span></div>`
+              + `<div class="stat"><span class="stat-val">${(d.scores_deleted||0).toLocaleString()}</span><span class="stat-label">Score rows removed</span></div>`
+    }
+    box.innerHTML = summary + '<pre>'+JSON.stringify(d, null, 2).slice(0,2000)+'</pre>'
+  } catch(e) { box.innerHTML = '<pre>Error: '+e.message+'</pre>' }
+}
+async function runStaff(){
+  const email = document.getElementById('email').value.trim()
+  if (!email) return
+  const box = document.getElementById('staff-out')
+  box.innerHTML = '<pre>Looking up…</pre>'
+  try {
+    const r = await fetch('/api/admin/staff-records?email='+encodeURIComponent(email))
+    const d = await r.json()
+    let summary = ''
+    if (d.by_form_type) {
+      summary = `<div class="stat"><span class="stat-val">${(d.total_records||0).toLocaleString()}</span><span class="stat-label">Total records</span></div>`
+              + `<div class="stat"><span class="stat-val">${(d.implied_duplicates||0).toLocaleString()}</span><span class="stat-label">Implied duplicates</span></div>`
+      summary += '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:10px"><tr style="background:#f5f7fa"><th style="text-align:left;padding:6px;border-bottom:1px solid #e5e7eb">Type</th><th style="text-align:right;padding:6px;border-bottom:1px solid #e5e7eb">Count</th><th style="text-align:right;padding:6px;border-bottom:1px solid #e5e7eb">Has feedback</th><th style="text-align:right;padding:6px;border-bottom:1px solid #e5e7eb">Has grow_id</th></tr>'
+      for (const f of d.by_form_type) {
+        summary += `<tr><td style="padding:6px;border-bottom:1px solid #f3f4f6"><code>${f.form_type}</code></td><td style="text-align:right;padding:6px;border-bottom:1px solid #f3f4f6">${f.count}</td><td style="text-align:right;padding:6px;border-bottom:1px solid #f3f4f6">${f.has_feedback_text}</td><td style="text-align:right;padding:6px;border-bottom:1px solid #f3f4f6">${f.has_grow_id}</td></tr>`
+      }
+      summary += '</table>'
+    }
+    box.innerHTML = summary + '<pre style="margin-top:10px">'+JSON.stringify(d, null, 2).slice(0,3000)+'</pre>'
+  } catch(e) { box.innerHTML = '<pre>Error: '+e.message+'</pre>' }
+}
+</script>
+</body></html>"""
+
+
 @app.route('/api/admin/grow-raw-probe')
 @require_auth
 @require_admin
