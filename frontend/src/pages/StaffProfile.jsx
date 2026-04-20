@@ -3,7 +3,35 @@ import { Link, useParams } from 'react-router-dom'
 import BottomNav from '../components/BottomNav'
 import AIPanel from '../components/AIPanel'
 import LogTouchpointModal from '../components/LogTouchpointModal'
+import TouchpointDetail from '../components/TouchpointDetail'
 import { api } from '../lib/api'
+
+// Short, human-readable form_type labels for chips on record cards
+const FORM_LABEL = {
+  observation_teacher: 'Observation',
+  observation_prek: 'PreK Observation',
+  observation_fundamentals: 'Fundamentals',
+  pmap_teacher: 'PMAP',
+  pmap_prek: 'PMAP: PreK',
+  pmap_leader: 'PMAP: Leader',
+  pmap_support: 'PMAP: Support',
+  pmap_network: 'PMAP: Network',
+  self_reflection_teacher: 'Self-Reflection',
+  self_reflection_prek: 'SR: PreK',
+  self_reflection_leader: 'SR: Leader',
+  self_reflection_support: 'SR: Support',
+  self_reflection_network: 'SR: Network',
+  quick_feedback: 'Quick Feedback',
+  celebrate: 'Celebrate',
+  celebration: 'Celebrate',
+  meeting: 'Meeting',
+  meeting_data: 'Data Meeting',
+  meeting_quick_meeting: 'Meeting',
+  'meeting_data_meeting_(relay)': 'Data Meeting',
+  solicited_feedback: 'Solicited Feedback',
+  write_up: 'Write-Up',
+  iap: 'IAP',
+}
 
 /**
  * StaffProfile — Trends lens with multi-category toggle.
@@ -42,14 +70,24 @@ function Empty({ msg }) {
   return <div className="bg-white rounded-xl p-6 text-center text-gray-400 text-sm shadow-sm">{msg}</div>
 }
 
-function RecordCard({ date, meta, scores, notes }) {
+function RecordCard({ tp, onClick }) {
+  const scores = tp.scores || {}
+  const label = FORM_LABEL[tp.form_type] || tp.form_type
   return (
-    <div className="bg-white rounded-xl p-3.5 shadow-sm mb-2.5">
+    <button
+      onClick={onClick}
+      className="block w-full text-left bg-white rounded-xl p-3.5 shadow-sm mb-2.5 border-0 cursor-pointer font-[inherit] active:scale-[.99] transition-transform"
+    >
       <div className="flex items-center justify-between gap-2.5 mb-1">
-        <div className="text-[13px] font-bold">{formatDate(date)}</div>
-        {meta && <div className="text-[11px] text-gray-400">{meta}</div>}
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="text-[13px] font-bold">{formatDate(tp.date)}</div>
+          <span className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-gray-100 text-gray-600 shrink-0">
+            {label}
+          </span>
+        </div>
+        {tp.observer_email && <div className="text-[11px] text-gray-400 truncate ml-2">{tp.observer_email}</div>}
       </div>
-      {scores && Object.keys(scores).length > 0 && (
+      {Object.keys(scores).length > 0 && (
         <div className="flex gap-1 mt-2 flex-wrap">
           {Object.entries(scores).map(([code, s]) => (
             <span key={code} className={`text-[11px] font-bold px-1.5 py-0.5 rounded-md ${scoreClass(s)}`}>
@@ -58,12 +96,13 @@ function RecordCard({ date, meta, scores, notes }) {
           ))}
         </div>
       )}
-      {notes && <div className="text-xs text-gray-600 mt-2 italic pl-2 border-l-2 border-gray-200">{notes}</div>}
-    </div>
+      {tp.notes && <div className="text-xs text-gray-600 mt-2 italic pl-2 border-l-2 border-gray-200 line-clamp-3">{tp.notes}</div>}
+      <div className="text-[10px] text-gray-400 mt-1.5 font-semibold">Tap to see full record →</div>
+    </button>
   )
 }
 
-function FundamentalsView({ touchpoints }) {
+function FundamentalsView({ touchpoints, onOpenDetail }) {
   const fund = touchpoints.filter(t => t.form_type === 'observation_fundamentals')
   if (fund.length === 0) return <Empty msg="No Fundamentals observations yet." />
 
@@ -73,19 +112,13 @@ function FundamentalsView({ touchpoints }) {
         Fundamentals Visits · {fund.length}
       </div>
       {fund.map(tp => (
-        <RecordCard
-          key={tp.id}
-          date={tp.date}
-          meta={tp.observer_email}
-          scores={tp.scores}
-          notes={tp.notes}
-        />
+        <RecordCard key={tp.id} tp={tp} onClick={() => onOpenDetail(tp)} />
       ))}
     </div>
   )
 }
 
-function ObservationsView({ touchpoints }) {
+function ObservationsView({ touchpoints, onOpenDetail }) {
   const obs = touchpoints.filter(t => t.form_type === 'observation_teacher' || t.form_type === 'observation_prek')
   if (obs.length === 0) return <Empty msg="No observations on record." />
 
@@ -115,19 +148,13 @@ function ObservationsView({ touchpoints }) {
         All Observations · {obs.length}
       </div>
       {obs.map(tp => (
-        <RecordCard
-          key={tp.id}
-          date={tp.date}
-          meta={tp.observer_email}
-          scores={tp.scores}
-          notes={tp.notes}
-        />
+        <RecordCard key={tp.id} tp={tp} onClick={() => onOpenDetail(tp)} />
       ))}
     </div>
   )
 }
 
-function PMAPView({ touchpoints, pmap_by_year, school_years }) {
+function PMAPView({ touchpoints, pmap_by_year, school_years, onOpenDetail }) {
   const pmaps = touchpoints.filter(t => t.form_type.startsWith('pmap_'))
   const years = (school_years || []).slice().sort()
 
@@ -179,14 +206,14 @@ function PMAPView({ touchpoints, pmap_by_year, school_years }) {
         <Empty msg="No PMAPs on record." />
       ) : (
         pmaps.map(tp => (
-          <RecordCard key={tp.id} date={tp.date} meta={tp.observer_email} scores={tp.scores} notes={tp.notes} />
+          <RecordCard key={tp.id} tp={tp} onClick={() => onOpenDetail(tp)} />
         ))
       )}
     </div>
   )
 }
 
-function SimpleListView({ touchpoints, matcher, emptyMsg }) {
+function SimpleListView({ touchpoints, matcher, emptyMsg, onOpenDetail }) {
   const filtered = touchpoints.filter(matcher)
   if (filtered.length === 0) return <Empty msg={emptyMsg} />
   return (
@@ -195,7 +222,7 @@ function SimpleListView({ touchpoints, matcher, emptyMsg }) {
         {filtered.length} on record
       </div>
       {filtered.map(tp => (
-        <RecordCard key={tp.id} date={tp.date} meta={tp.observer_email} scores={tp.scores} notes={tp.notes} />
+        <RecordCard key={tp.id} tp={tp} onClick={() => onOpenDetail(tp)} />
       ))}
     </div>
   )
@@ -219,6 +246,7 @@ export default function StaffProfile() {
   const [category, setCategory] = useState('fundamentals')
   const [aiOpen, setAiOpen] = useState(false)
   const [logOpen, setLogOpen] = useState(false)
+  const [detail, setDetail] = useState(null)
 
   useEffect(() => {
     let cancelled = false
@@ -238,7 +266,8 @@ export default function StaffProfile() {
   }, [email])
 
   const staff = data?.staff || {}
-  const touchpoints = data?.touchpoints || []
+  // Filter out drafts — if the user hasn't published it, it shouldn't show on anyone's profile
+  const touchpoints = (data?.touchpoints || []).filter(t => t.status !== 'draft')
 
   return (
     <div className="min-h-[100svh] bg-[#f5f7fa] pb-20">
@@ -295,13 +324,13 @@ export default function StaffProfile() {
         {!loading && !data && <Empty msg="Could not load this staff profile. Check access or try again." />}
         {!loading && data && (
           <>
-            {category === 'fundamentals' && <FundamentalsView touchpoints={touchpoints} />}
-            {category === 'observations' && <ObservationsView touchpoints={touchpoints} />}
-            {category === 'pmap'         && <PMAPView touchpoints={touchpoints} pmap_by_year={data.pmap_by_year} school_years={data.school_years} />}
-            {category === 'reflection'   && <SimpleListView touchpoints={touchpoints} matcher={t => t.form_type.startsWith('self_reflection_')} emptyMsg="No self-reflections on record." />}
-            {category === 'feedback'     && <SimpleListView touchpoints={touchpoints} matcher={t => t.form_type === 'quick_feedback'} emptyMsg="No quick feedback on record." />}
-            {category === 'celebrate'    && <SimpleListView touchpoints={touchpoints} matcher={t => t.form_type === 'celebrate' || t.form_type === 'celebration'} emptyMsg="No celebrations on record." />}
-            {category === 'meetings'     && <SimpleListView touchpoints={touchpoints} matcher={t => t.form_type === 'meeting' || t.form_type === 'meeting_data'} emptyMsg="No meetings on record." />}
+            {category === 'fundamentals' && <FundamentalsView touchpoints={touchpoints} onOpenDetail={setDetail} />}
+            {category === 'observations' && <ObservationsView touchpoints={touchpoints} onOpenDetail={setDetail} />}
+            {category === 'pmap'         && <PMAPView touchpoints={touchpoints} pmap_by_year={data.pmap_by_year} school_years={data.school_years} onOpenDetail={setDetail} />}
+            {category === 'reflection'   && <SimpleListView touchpoints={touchpoints} matcher={t => t.form_type.startsWith('self_reflection_')} emptyMsg="No self-reflections on record." onOpenDetail={setDetail} />}
+            {category === 'feedback'     && <SimpleListView touchpoints={touchpoints} matcher={t => t.form_type === 'quick_feedback'} emptyMsg="No quick feedback on record." onOpenDetail={setDetail} />}
+            {category === 'celebrate'    && <SimpleListView touchpoints={touchpoints} matcher={t => t.form_type === 'celebrate' || t.form_type === 'celebration'} emptyMsg="No celebrations on record." onOpenDetail={setDetail} />}
+            {category === 'meetings'     && <SimpleListView touchpoints={touchpoints} matcher={t => t.form_type === 'meeting' || t.form_type === 'meeting_data' || t.form_type.startsWith('meeting')} emptyMsg="No meetings on record." onOpenDetail={setDetail} />}
           </>
         )}
       </div>
@@ -314,6 +343,7 @@ export default function StaffProfile() {
         teacher={email}
         teacherName={staff.name}
       />
+      {detail && <TouchpointDetail touchpoint={detail} onClose={() => setDetail(null)} />}
     </div>
   )
 }
