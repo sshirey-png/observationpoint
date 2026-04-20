@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import AIPanel from '../components/AIPanel'
 import ImpersonationBanner from '../components/ImpersonationBanner'
 import ImpersonationPicker from '../components/ImpersonationPicker'
 import { useImpersonation } from '../lib/useImpersonation'
+import { api } from '../lib/api'
 
 /**
  * Home — minimal 4-button landing.
@@ -48,10 +49,31 @@ function BigButton({ to, onClick, icon, title, sub, gradient, iconBg, iconColor 
   )
 }
 
+function greeting() {
+  const h = new Date().getHours()
+  if (h < 12) return 'Good morning'
+  if (h < 17) return 'Good afternoon'
+  return 'Good evening'
+}
+
 export default function Home() {
   const [aiOpen, setAiOpen] = useState(false)
   const [adminOpen, setAdminOpen] = useState(false)
+  const [firstName, setFirstName] = useState('')
+  const [teamCount, setTeamCount] = useState(null)
   const { isAdmin } = useImpersonation()
+
+  useEffect(() => {
+    api.get('/api/auth/status').then(r => {
+      const u = r?.user
+      if (u?.name) setFirstName(u.name.split(' ')[0])
+      else if (u?.email) setFirstName(u.email.split('@')[0].split('.')[0].replace(/^\w/, c => c.toUpperCase()))
+    }).catch(() => {})
+    api.get('/api/my-team?view=direct').then(r => {
+      const count = Array.isArray(r) ? r.length : (r?.staff?.length || 0)
+      setTeamCount(count)
+    }).catch(() => {})
+  }, [])
 
   return (
     <div className="min-h-[100svh] bg-[#f5f7fa]">
@@ -64,7 +86,9 @@ export default function Home() {
       </nav>
 
       <div className="px-4 pt-6 pb-8 max-w-[540px] mx-auto flex flex-col" style={{ minHeight: 'calc(100svh - 70px)' }}>
-        <div className="text-[26px] font-extrabold tracking-tight mb-1">Good morning, Scott</div>
+        <div className="text-[26px] font-extrabold tracking-tight mb-1">
+          {greeting()}{firstName ? `, ${firstName}` : ''}
+        </div>
         <div className="text-sm text-gray-500 mb-7">What would you like to do?</div>
 
         <div className="grid grid-cols-2 gap-3 flex-1 content-stretch">
@@ -72,7 +96,7 @@ export default function Home() {
             to="/app/team"
             icon="👥"
             title="My Team"
-            sub="12 teachers"
+            sub={teamCount == null ? 'Your direct reports' : `${teamCount} ${teamCount === 1 ? 'person' : 'people'} you supervise`}
             gradient="linear-gradient(135deg,#002f60 0%,#1e40af 100%)"
             iconBg="rgba(255,255,255,.15)"
           />
@@ -88,7 +112,7 @@ export default function Home() {
             to="/app/network"
             icon="📊"
             title="Network"
-            sub="4 schools · 187 teachers"
+            sub="Across FirstLine"
             gradient="linear-gradient(135deg,#059669 0%,#10b981 100%)"
             iconBg="rgba(255,255,255,.15)"
           />

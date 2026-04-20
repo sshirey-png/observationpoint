@@ -125,11 +125,10 @@ export default function TouchpointHub() {
           </div>
         </Section>
 
-        {/* Recent TouchPoints */}
-        <div className="text-[11px] font-bold uppercase tracking-[.06em] text-gray-400 mt-6 mb-2.5">Recent TouchPoints</div>
-        <RecentItem to="/app/observe" initials="KB" name="Keisha Brown" meta="Langston Hughes · Apr 7" badge="Observation" badgeBg="#dbeafe" badgeColor="#2563eb" />
-        <RecentItem to="/app/celebrate" initials="DC" name="David Chen" meta="Arthur Ashe · Apr 5" badge="Celebrate" badgeBg="#dcfce7" badgeColor="#059669" />
-        <RecentItem to="/app/meeting" initials="AJ" name="Amara Johnson" meta="Live Oak · Apr 3" badge="Meeting" badgeBg="#f0fdf4" badgeColor="#16a34a" />
+        {/* Recent TouchPoints list intentionally blank — will surface real
+            activity once the backing endpoint is wired. Previously hardcoded
+            demo names (Keisha Brown, David Chen, Amara Johnson) — removed for
+            CEO demo. */}
       </div>
 
       <BottomNav active="touchpoint" onAskClick={() => setAiOpen(true)} aiOpen={aiOpen} />

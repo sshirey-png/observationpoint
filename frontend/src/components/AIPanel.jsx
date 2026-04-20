@@ -38,7 +38,7 @@ const CONTEXTS = {
     ],
   },
   network: {
-    ctx: 'Scoped to the network · 4 schools · 187 teachers',
+    ctx: 'Scoped to the network',
     intro: 'Ask about the network — or anything else.',
     suggestions: [
       'Which school gained the most on Demo of Learning?',
