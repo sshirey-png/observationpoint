@@ -71,22 +71,33 @@ function Empty({ msg }) {
   return <div className="bg-white rounded-xl p-6 text-center text-gray-400 text-sm shadow-sm">{msg}</div>
 }
 
-function RecordCard({ tp, onClick }) {
+function RecordCard({ tp, staffEmail, onClick }) {
   const scores = tp.scores || {}
   const label = FORM_LABEL[tp.form_type] || tp.form_type
+  const isSelf = staffEmail && tp.observer_email && tp.observer_email.toLowerCase() === staffEmail.toLowerCase()
+  // Show "tap to see full" only if the modal will actually reveal MORE than the card
+  const hasExtra = !!(tp.feedback_json || tp.meeting_json || (tp.notes && tp.notes.length > 140))
   return (
     <button
       onClick={onClick}
       className="block w-full text-left bg-white rounded-xl p-3.5 shadow-sm mb-2.5 border-0 cursor-pointer font-[inherit] active:scale-[.99] transition-transform"
     >
       <div className="flex items-center justify-between gap-2.5 mb-1">
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-2 min-w-0 flex-wrap">
           <div className="text-[13px] font-bold">{formatDate(tp.date)}</div>
           <span className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-gray-100 text-gray-600 shrink-0">
             {label}
           </span>
+          {isSelf ? (
+            <span className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-purple-50 text-purple-700 shrink-0">
+              Self
+            </span>
+          ) : tp.observer_email ? (
+            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 shrink-0 truncate max-w-[180px]">
+              by {tp.observer_email.split('@')[0]}
+            </span>
+          ) : null}
         </div>
-        {tp.observer_email && <div className="text-[11px] text-gray-400 truncate ml-2">{tp.observer_email}</div>}
       </div>
       {Object.keys(scores).length > 0 && (
         <div className="flex gap-1 mt-2 flex-wrap">
@@ -98,12 +109,14 @@ function RecordCard({ tp, onClick }) {
         </div>
       )}
       {tp.notes && <div className="text-xs text-gray-600 mt-2 italic pl-2 border-l-2 border-gray-200 line-clamp-3">{tp.notes}</div>}
-      <div className="text-[10px] text-gray-400 mt-1.5 font-semibold">Tap to see full record →</div>
+      {hasExtra && (
+        <div className="text-[10px] text-gray-400 mt-1.5 font-semibold">Tap for full record →</div>
+      )}
     </button>
   )
 }
 
-function FundamentalsView({ touchpoints, onOpenDetail }) {
+function FundamentalsView({ touchpoints, onOpenDetail, staffEmail }) {
   const fund = touchpoints.filter(t => t.form_type === 'observation_fundamentals')
   if (fund.length === 0) return <Empty msg="No Fundamentals observations yet." />
 
@@ -113,13 +126,13 @@ function FundamentalsView({ touchpoints, onOpenDetail }) {
         Fundamentals Visits · {fund.length}
       </div>
       {fund.map(tp => (
-        <RecordCard key={tp.id} tp={tp} onClick={() => onOpenDetail(tp)} />
+        <RecordCard key={tp.id} tp={tp} staffEmail={staffEmail} onClick={() => onOpenDetail(tp)} />
       ))}
     </div>
   )
 }
 
-function ObservationsView({ touchpoints, onOpenDetail }) {
+function ObservationsView({ touchpoints, onOpenDetail, staffEmail }) {
   const obs = touchpoints.filter(t => t.form_type === 'observation_teacher' || t.form_type === 'observation_prek')
   if (obs.length === 0) return <Empty msg="No observations on record." />
 
@@ -150,13 +163,13 @@ function ObservationsView({ touchpoints, onOpenDetail }) {
         All Observations · {obs.length}
       </div>
       {obs.map(tp => (
-        <RecordCard key={tp.id} tp={tp} onClick={() => onOpenDetail(tp)} />
+        <RecordCard key={tp.id} tp={tp} staffEmail={staffEmail} onClick={() => onOpenDetail(tp)} />
       ))}
     </div>
   )
 }
 
-function PMAPView({ touchpoints, pmap_by_year, school_years, onOpenDetail }) {
+function PMAPView({ touchpoints, pmap_by_year, school_years, onOpenDetail, staffEmail }) {
   const pmaps = touchpoints.filter(t => t.form_type.startsWith('pmap_'))
   const years = (school_years || []).slice().sort()
 
@@ -226,14 +239,14 @@ function PMAPView({ touchpoints, pmap_by_year, school_years, onOpenDetail }) {
         <Empty msg="No PMAPs on record." />
       ) : (
         pmaps.map(tp => (
-          <RecordCard key={tp.id} tp={tp} onClick={() => onOpenDetail(tp)} />
+          <RecordCard key={tp.id} tp={tp} staffEmail={staffEmail} onClick={() => onOpenDetail(tp)} />
         ))
       )}
     </div>
   )
 }
 
-function SimpleListView({ touchpoints, matcher, emptyMsg, onOpenDetail }) {
+function SimpleListView({ touchpoints, matcher, emptyMsg, onOpenDetail, staffEmail }) {
   const filtered = touchpoints.filter(matcher)
   if (filtered.length === 0) return <Empty msg={emptyMsg} />
   return (
@@ -242,7 +255,7 @@ function SimpleListView({ touchpoints, matcher, emptyMsg, onOpenDetail }) {
         {filtered.length} on record
       </div>
       {filtered.map(tp => (
-        <RecordCard key={tp.id} tp={tp} onClick={() => onOpenDetail(tp)} />
+        <RecordCard key={tp.id} tp={tp} staffEmail={staffEmail} onClick={() => onOpenDetail(tp)} />
       ))}
     </div>
   )
@@ -345,13 +358,13 @@ export default function StaffProfile() {
         {!loading && !data && <Empty msg="Could not load this staff profile. Check access or try again." />}
         {!loading && data && (
           <>
-            {category === 'fundamentals' && <FundamentalsView touchpoints={touchpoints} onOpenDetail={setDetail} />}
-            {category === 'observations' && <ObservationsView touchpoints={touchpoints} onOpenDetail={setDetail} />}
-            {category === 'pmap'         && <PMAPView touchpoints={touchpoints} pmap_by_year={data.pmap_by_year} school_years={data.school_years} onOpenDetail={setDetail} />}
-            {category === 'reflection'   && <SimpleListView touchpoints={touchpoints} matcher={t => t.form_type.startsWith('self_reflection_')} emptyMsg="No self-reflections on record." onOpenDetail={setDetail} />}
-            {category === 'feedback'     && <SimpleListView touchpoints={touchpoints} matcher={t => t.form_type === 'quick_feedback'} emptyMsg="No quick feedback on record." onOpenDetail={setDetail} />}
-            {category === 'celebrate'    && <SimpleListView touchpoints={touchpoints} matcher={t => t.form_type === 'celebrate' || t.form_type === 'celebration'} emptyMsg="No celebrations on record." onOpenDetail={setDetail} />}
-            {category === 'meetings'     && <SimpleListView touchpoints={touchpoints} matcher={t => t.form_type === 'meeting' || t.form_type === 'meeting_data' || t.form_type.startsWith('meeting')} emptyMsg="No meetings on record." onOpenDetail={setDetail} />}
+            {category === 'fundamentals' && <FundamentalsView touchpoints={touchpoints} onOpenDetail={setDetail} staffEmail={email} />}
+            {category === 'observations' && <ObservationsView touchpoints={touchpoints} onOpenDetail={setDetail} staffEmail={email} />}
+            {category === 'pmap'         && <PMAPView touchpoints={touchpoints} pmap_by_year={data.pmap_by_year} school_years={data.school_years} onOpenDetail={setDetail} staffEmail={email} />}
+            {category === 'reflection'   && <SimpleListView touchpoints={touchpoints} matcher={t => t.form_type.startsWith('self_reflection_')} emptyMsg="No self-reflections on record." onOpenDetail={setDetail} staffEmail={email} />}
+            {category === 'feedback'     && <SimpleListView touchpoints={touchpoints} matcher={t => t.form_type === 'quick_feedback'} emptyMsg="No quick feedback on record." onOpenDetail={setDetail} staffEmail={email} />}
+            {category === 'celebrate'    && <SimpleListView touchpoints={touchpoints} matcher={t => t.form_type === 'celebrate' || t.form_type === 'celebration'} emptyMsg="No celebrations on record." onOpenDetail={setDetail} staffEmail={email} />}
+            {category === 'meetings'     && <SimpleListView touchpoints={touchpoints} matcher={t => t.form_type === 'meeting' || t.form_type === 'meeting_data' || t.form_type.startsWith('meeting')} emptyMsg="No meetings on record." onOpenDetail={setDetail} staffEmail={email} />}
           </>
         )}
       </div>
