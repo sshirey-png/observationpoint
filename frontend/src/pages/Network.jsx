@@ -1,288 +1,324 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import Nav from '../components/Nav'
+import BottomNav from '../components/BottomNav'
+import AIPanel from '../components/AIPanel'
 import { api } from '../lib/api'
-import { dimName } from '../lib/dimensions'
 
 /**
- * Network Dashboard — clean school cards with progressive disclosure.
+ * Network — Trends dashboard with multi-category toggle.
+ * Real school-level aggregates from /api/network.
  *
- * Default view: 2 KPIs, 4 school cards. That's it.
- * One tap deeper: expand school card for detail, or open score comparison / trends.
+ * Categories: Fundamentals · Observations · PMAP · Self-Reflection ·
+ * Quick FB · Celebrate · Meetings. Same multi-category pattern as
+ * StaffProfile, scaled to school-level data.
  */
 
-const DIMS = ['T1', 'T2', 'T3', 'T4', 'T5']
-const SCORE_COLORS = { 1: '#ef4444', 2: '#f97316', 3: '#eab308', 4: '#22c55e', 5: '#0ea5e9' }
-
-function scoreColor(v) {
-  return SCORE_COLORS[Math.max(1, Math.min(5, Math.round(v)))] || '#9ca3af'
+const DIM_SHORT = {
+  T1: 'On Task', T2: 'CoL', T3: 'Content', T4: 'Cog Eng', T5: 'Demo',
 }
+const DIM_FULL = {
+  T1: 'On Task', T2: 'Community of Learners', T3: 'Essential Content',
+  T4: 'Cognitive Engagement', T5: 'Demonstration of Learning',
+}
+const TEACHER_DIMS = ['T1', 'T2', 'T3', 'T4', 'T5']
 
 function shortSchool(name) {
   return (name || '').replace(' Charter School', '').replace(' Community School', '').replace(' Academy', '')
 }
 
-// Human-readable touchpoint type names
-const TYPE_LABELS = {
-  observation_teacher: 'Observations',
-  observation_fundamentals: 'Fundamentals',
-  observation_prek: 'PreK Obs',
-  pmap_teacher: 'PMAPs (Teacher)',
-  pmap_leader: 'PMAPs (Leader)',
-  pmap_prek: 'PMAPs (PreK)',
-  pmap_support: 'PMAPs (Support)',
-  pmap_network: 'PMAPs (Network)',
-  self_reflection_teacher: 'Self-Reflections',
-  self_reflection_leader: 'Self-Ref (Leader)',
-  self_reflection_prek: 'Self-Ref (PreK)',
-  self_reflection_support: 'Self-Ref (Support)',
-  self_reflection_network: 'Self-Ref (Network)',
-  quick_feedback: 'Quick Feedback',
-  celebrate: 'Celebrations',
-  meeting_quick_meeting: 'Meetings',
-  'meeting_data_meeting_(relay)': 'Data Meetings',
-  solicited_feedback: 'Solicited Feedback',
-  write_up: 'Write-Ups',
-  iap: 'IAPs',
+function scoreClass(s) {
+  if (s == null) return ''
+  const n = Math.round(s)
+  return `score-${Math.max(1, Math.min(5, n))}`
 }
 
-export default function Network() {
-  const [data, setData] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [expandedSchool, setExpandedSchool] = useState(null)
-  const [showComparison, setShowComparison] = useState(false)
-  const [showTrends, setShowTrends] = useState(false)
+function Empty({ msg }) {
+  return <div className="bg-white rounded-xl p-6 text-center text-gray-400 text-sm shadow-sm">{msg}</div>
+}
 
-  useEffect(() => {
-    async function load() {
-      const d = await api.get('/api/network')
-      if (d) setData(d)
-      setLoading(false)
-    }
-    load()
-  }, [])
+// --- Category views ---
 
-  if (loading) return <div><Nav title="Network Dashboard" /><div className="text-center text-gray-400 text-sm py-16">Loading...</div></div>
-  if (!data) return <div><Nav title="Network Dashboard" /><div className="text-center text-gray-400 text-sm py-16">Failed to load</div></div>
+function FundamentalsView({ data }) {
+  const schools = data?.schools || {}
+  const names = Object.keys(schools).sort((a, b) => {
+    const ca = schools[a].touchpoints_by_type?.observation_fundamentals?.count || 0
+    const cb = schools[b].touchpoints_by_type?.observation_fundamentals?.count || 0
+    return cb - ca
+  })
 
-  const { kpis, schools, network_avg, network_trends } = data
-  const schoolNames = Object.keys(schools).sort()
-  const totalTPs = schoolNames.reduce((sum, name) => sum + (schools[name].total_touchpoints || 0), 0)
-
-  function toggleSchool(name) {
-    setExpandedSchool(expandedSchool === name ? null : name)
-  }
+  const total = data?.kpis?.fundamentals || 0
+  const totalTeachers = data?.kpis?.fundamentals_teachers || 0
 
   return (
-    <div className="pb-10">
-      <Nav title="Network Dashboard" />
-
-      <div className="px-4 pt-4">
-        {/* KPIs */}
-        <div className="grid grid-cols-2 gap-2 mb-4">
-          <div className="bg-white rounded-[10px] p-3 text-center shadow-sm">
-            <div className="text-2xl font-extrabold text-fls-navy">{totalTPs.toLocaleString()}</div>
-            <div className="text-[9px] text-gray-400 uppercase tracking-wide mt-0.5">TouchPoints</div>
-          </div>
-          <div className="bg-white rounded-[10px] p-3 text-center shadow-sm">
-            <div className="text-2xl font-extrabold text-fls-navy">{kpis.total_teachers}</div>
-            <div className="text-[9px] text-gray-400 uppercase tracking-wide mt-0.5">Active Teachers</div>
-          </div>
+    <div>
+      <div className="grid grid-cols-3 gap-2 mt-4 mb-4">
+        <div className="bg-white rounded-xl p-3.5 text-center shadow-sm">
+          <div className="text-2xl font-extrabold text-fls-navy">{total}</div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">Visits YTD</div>
         </div>
+        <div className="bg-white rounded-xl p-3.5 text-center shadow-sm">
+          <div className="text-2xl font-extrabold text-fls-navy">{totalTeachers}</div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">Teachers visited</div>
+        </div>
+        <div className="bg-white rounded-xl p-3.5 text-center shadow-sm">
+          <div className="text-2xl font-extrabold text-fls-navy">{names.length}</div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">Schools</div>
+        </div>
+      </div>
 
-        {/* School Cards */}
-        <div className="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-2">Schools</div>
-        <div className="grid grid-cols-2 gap-2.5 mb-4">
-          {schoolNames.map(name => {
-            const s = schools[name]
-            const scores = s.avg_scores || {}
-            const avgVals = Object.values(scores)
-            const overallAvg = avgVals.length ? (avgVals.reduce((a, b) => a + b, 0) / avgVals.length).toFixed(1) : null
-            const isExpanded = expandedSchool === name
-            const types = s.touchpoints_by_type || {}
-
-            return (
-              <div key={name} className={`bg-white rounded-xl shadow-sm overflow-hidden ${isExpanded ? 'col-span-2' : ''}`}>
-                <div className="p-4 cursor-pointer active:bg-gray-50" onClick={() => toggleSchool(name)}>
-                  <div className="text-sm font-bold text-fls-navy">{shortSchool(name)}</div>
-                  <div className="text-[11px] text-gray-400 mt-0.5">{s.staff_count || 0} staff</div>
-                  <div className="flex items-baseline gap-2 mt-2">
-                    <div className="text-xl font-extrabold text-fls-navy">{s.total_touchpoints || 0}</div>
-                    <div className="text-[10px] text-gray-400">touchpoints</div>
-                    {overallAvg && (
-                      <>
-                        <div className="text-[10px] text-gray-300 mx-1">·</div>
-                        <div className="text-sm font-bold" style={{ color: scoreColor(parseFloat(overallAvg)) }}>
-                          {overallAvg} avg
-                        </div>
-                      </>
-                    )}
-                  </div>
+      <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mt-4 mb-2">
+        Fundamentals visits by school
+      </div>
+      {names.length === 0 ? (
+        <Empty msg="No fundamentals visits logged this year." />
+      ) : (
+        names.map(name => {
+          const n = schools[name]
+          const fund = n.touchpoints_by_type?.observation_fundamentals
+          const count = fund?.count || 0
+          const teachers = fund?.teachers || 0
+          return (
+            <div key={name} className="bg-white rounded-xl p-3.5 shadow-sm mb-2.5">
+              <div className="flex items-center justify-between gap-2.5">
+                <div className="min-w-0">
+                  <div className="text-[13px] font-bold truncate">{shortSchool(name)}</div>
+                  <div className="text-[11px] text-gray-400">{teachers} teachers · {n.staff_count || '—'} staff</div>
                 </div>
-
-                {/* Expanded detail */}
-                {isExpanded && (
-                  <div className="px-4 pb-4 border-t border-gray-100 pt-3">
-                    {/* Dimension scores */}
-                    {Object.keys(scores).length > 0 && (
-                      <div className="mb-3">
-                        <div className="text-[10px] font-bold uppercase text-gray-400 mb-1.5">PMAP Scores</div>
-                        <div className="flex gap-1">
-                          {DIMS.map(d => {
-                            const v = scores[d]
-                            const color = v != null ? scoreColor(v) : '#d1d5db'
-                            return (
-                              <div key={d} className="flex-1 text-center py-1.5 rounded-md" style={{ background: v ? color + '10' : '#f5f7fa' }}>
-                                <div className="text-[9px] font-semibold text-gray-400">{dimName(d)}</div>
-                                <div className="text-sm font-extrabold" style={{ color: v ? color : '#d1d5db' }}>
-                                  {v != null ? v.toFixed(1) : '—'}
-                                </div>
-                              </div>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Touchpoint types */}
-                    <div className="text-[10px] font-bold uppercase text-gray-400 mb-1.5">Activity</div>
-                    <div className="flex flex-wrap gap-1">
-                      {Object.entries(types)
-                        .sort(([, a], [, b]) => b.count - a.count)
-                        .slice(0, 8)
-                        .map(([ft, info]) => (
-                          <span key={ft} className="text-[10px] font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-600">
-                            {TYPE_LABELS[ft] || ft}: {info.count}
-                          </span>
-                        ))}
-                    </div>
-                  </div>
-                )}
+                <div className="text-right">
+                  <div className="text-lg font-extrabold text-fls-navy">{count}</div>
+                  <div className="text-[9px] text-gray-400 uppercase">visits</div>
+                </div>
               </div>
-            )
-          })}
-        </div>
-
-        {/* Link cards for deeper views */}
-        <div className="space-y-2">
-          <button
-            onClick={() => setShowComparison(!showComparison)}
-            className="w-full bg-white rounded-xl shadow-sm p-4 flex items-center justify-between text-left"
-          >
-            <div>
-              <div className="text-sm font-semibold">Score Comparison</div>
-              <div className="text-[11px] text-gray-400">Side-by-side dimension scores</div>
             </div>
-            <span className="text-gray-400 text-lg">{showComparison ? '▼' : '→'}</span>
-          </button>
+          )
+        })
+      )}
+    </div>
+  )
+}
 
-          {showComparison && (
-            <div className="bg-white rounded-xl shadow-sm p-3.5 overflow-x-auto">
-              <table className="w-full border-collapse text-[13px]">
-                <thead>
-                  <tr>
-                    <th className="text-left text-[10px] font-bold text-gray-400 uppercase px-2 py-1.5 border-b border-gray-200">School</th>
-                    {DIMS.map(d => (
-                      <th key={d} className="text-center text-[10px] font-bold text-gray-400 uppercase px-1 py-1.5 border-b border-gray-200">{dimName(d)}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {schoolNames.map(name => {
-                    const scores = schools[name].avg_scores || {}
-                    return (
-                      <tr key={name}>
-                        <td className="text-xs font-semibold text-gray-700 px-2 py-2 border-b border-gray-50">{shortSchool(name)}</td>
-                        {DIMS.map(d => {
-                          const v = scores[d]
-                          const color = v != null ? scoreColor(v) : '#d1d5db'
-                          return (
-                            <td key={d} className="text-center px-1 py-2 border-b border-gray-50">
-                              {v != null ? (
-                                <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-[13px] font-bold" style={{ background: color + '20', color }}>
-                                  {v.toFixed(1)}
-                                </span>
-                              ) : <span className="text-gray-300">—</span>}
-                            </td>
-                          )
-                        })}
-                      </tr>
-                    )
-                  })}
-                  <tr className="border-t-2 border-gray-200">
-                    <td className="text-xs font-extrabold text-fls-navy px-2 py-2">Network</td>
-                    {DIMS.map(d => {
-                      const v = network_avg?.[d]
-                      const color = v != null ? scoreColor(v) : '#d1d5db'
+function ObservationsView({ data }) {
+  const networkAvg = data?.network_avg || {}
+  const trends = data?.network_trends || {}
+  const years = Object.keys(trends).sort()
+  const schools = data?.schools || {}
+
+  return (
+    <div>
+      {Object.keys(networkAvg).length > 0 && (
+        <>
+          <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mt-4 mb-2">
+            Network avg · {data.school_year}
+          </div>
+          <div className="grid grid-cols-5 gap-2 mb-4">
+            {TEACHER_DIMS.map(code => networkAvg[code] != null && (
+              <div key={code} className="bg-white rounded-[10px] p-2 text-center shadow-sm">
+                <div className="text-[9px] font-bold text-gray-400 uppercase">{DIM_SHORT[code]}</div>
+                <div className={`inline-block text-base font-extrabold mt-1 px-2 rounded ${scoreClass(networkAvg[code])}`}>
+                  {networkAvg[code]}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {years.length > 1 && (
+        <>
+          <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mt-4 mb-2">
+            Year over year trend
+          </div>
+          <div className="bg-white rounded-xl p-3.5 shadow-sm mb-4 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr>
+                  <th className="text-left text-[10px] font-bold uppercase tracking-wide text-gray-400 pb-2 pr-2">Dimension</th>
+                  {years.map(yr => (
+                    <th key={yr} className="text-center text-[10px] font-bold uppercase tracking-wide text-gray-400 pb-2 px-1">{yr.slice(2)}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {TEACHER_DIMS.map(code => (
+                  <tr key={code}>
+                    <td className="py-1.5 pr-2 text-[12px] font-bold text-gray-700 border-t border-gray-100">{DIM_SHORT[code]}</td>
+                    {years.map(yr => {
+                      const v = trends[yr]?.[code]
                       return (
-                        <td key={d} className="text-center px-1 py-2">
+                        <td key={yr} className="py-1.5 px-1 text-center border-t border-gray-100">
                           {v != null ? (
-                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-[13px] font-bold" style={{ background: color + '20', color }}>
-                              {v.toFixed(1)}
-                            </span>
-                          ) : <span className="text-gray-300">—</span>}
+                            <span className={`inline-flex items-center justify-center w-10 h-8 rounded-md text-xs font-bold ${scoreClass(v)}`}>{v}</span>
+                          ) : (
+                            <span className="text-gray-300 text-[11px]">—</span>
+                          )}
                         </td>
                       )
                     })}
                   </tr>
-                </tbody>
-              </table>
-            </div>
-          )}
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
 
-          <button
-            onClick={() => setShowTrends(!showTrends)}
-            className="w-full bg-white rounded-xl shadow-sm p-4 flex items-center justify-between text-left"
-          >
-            <div>
-              <div className="text-sm font-semibold">Year-over-Year Trends</div>
-              <div className="text-[11px] text-gray-400">Network PMAP averages across years</div>
-            </div>
-            <span className="text-gray-400 text-lg">{showTrends ? '▼' : '→'}</span>
-          </button>
-
-          {showTrends && network_trends && (
-            <div className="bg-white rounded-xl shadow-sm p-4">
-              <div className="space-y-2">
-                {DIMS.map(d => {
-                  const years = Object.keys(network_trends).sort()
-                  return (
-                    <div key={d} className="flex items-center gap-2">
-                      <div className="w-16 text-xs font-bold text-gray-700">{dimName(d)}</div>
-                      <div className="flex-1 flex items-center gap-1">
-                        {years.map(yr => {
-                          const v = network_trends[yr]?.[d]
-                          const color = v != null ? scoreColor(v) : '#d1d5db'
-                          return (
-                            <div key={yr} className="flex-1 text-center">
-                              <div className="text-[9px] text-gray-400">{yr.slice(2, 4)}–{yr.slice(7, 9)}</div>
-                              <div className="text-xs font-bold mt-0.5" style={{ color: v ? color : '#d1d5db' }}>
-                                {v != null ? v.toFixed(1) : '—'}
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Link to Insights */}
-          <Link
-            to="/app/insights"
-            className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-center justify-between no-underline"
-          >
-            <div>
-              <div className="text-sm font-semibold text-gray-900">Ask ObservationPoint</div>
-              <div className="text-[11px] text-gray-400">"Which school improved most on Content?"</div>
-            </div>
-            <span className="text-gray-400 text-lg">→</span>
-          </Link>
-        </div>
+      <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mt-4 mb-2">
+        PMAP averages by school
       </div>
+      {Object.keys(schools).length === 0 ? (
+        <Empty msg="No school data yet." />
+      ) : (
+        Object.keys(schools).sort().map(name => {
+          const avg = schools[name].avg_scores || {}
+          const hasScores = Object.keys(avg).length > 0
+          return (
+            <div key={name} className="bg-white rounded-xl p-3.5 shadow-sm mb-2.5">
+              <div className="text-[13px] font-bold mb-2">{shortSchool(name)}</div>
+              {hasScores ? (
+                <div className="flex gap-1 flex-wrap">
+                  {TEACHER_DIMS.map(code => avg[code] != null && (
+                    <span key={code} className={`text-[11px] font-bold px-1.5 py-0.5 rounded-md ${scoreClass(avg[code])}`}>
+                      {DIM_SHORT[code]} {avg[code]}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-xs text-gray-400">No PMAP scores this year</div>
+              )}
+            </div>
+          )
+        })
+      )}
+    </div>
+  )
+}
+
+function PMAPView({ data }) {
+  // Same data as observations, different framing — emphasis on year-over-year shifts
+  return <ObservationsView data={data} />
+}
+
+function SchoolCountsView({ data, typeMatcher, label, emptyMsg }) {
+  const schools = data?.schools || {}
+  const rows = Object.keys(schools).map(name => {
+    const types = schools[name].touchpoints_by_type || {}
+    const count = Object.keys(types)
+      .filter(typeMatcher)
+      .reduce((sum, t) => sum + (types[t]?.count || 0), 0)
+    return { name, count }
+  })
+  rows.sort((a, b) => b.count - a.count)
+  const total = rows.reduce((s, r) => s + r.count, 0)
+
+  return (
+    <div>
+      <div className="bg-white rounded-xl p-3.5 text-center shadow-sm mt-4 mb-4">
+        <div className="text-3xl font-extrabold text-fls-navy">{total}</div>
+        <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">{label} this year · network</div>
+      </div>
+
+      <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mt-4 mb-2">By school</div>
+      {rows.length === 0 || total === 0 ? (
+        <Empty msg={emptyMsg} />
+      ) : (
+        rows.map(r => (
+          <div key={r.name} className="bg-white rounded-xl p-3.5 shadow-sm mb-2.5 flex items-center justify-between">
+            <div className="text-[13px] font-bold">{shortSchool(r.name)}</div>
+            <div className="text-right">
+              <div className="text-lg font-extrabold text-fls-navy">{r.count}</div>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  )
+}
+
+const CATEGORIES = [
+  { key: 'fundamentals', label: 'Fundamentals' },
+  { key: 'observations', label: 'Observations' },
+  { key: 'pmap',         label: 'PMAP' },
+  { key: 'reflection',   label: 'Self-Reflection' },
+  { key: 'feedback',     label: 'Quick FB' },
+  { key: 'celebrate',    label: 'Celebrate' },
+  { key: 'meetings',     label: 'Meetings' },
+]
+
+export default function Network() {
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [category, setCategory] = useState('fundamentals')
+  const [aiOpen, setAiOpen] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    async function go() {
+      setLoading(true)
+      try {
+        const d = await api.get('/api/network')
+        if (!cancelled) setData(d)
+      } catch (e) {
+        console.error('network load failed', e)
+        if (!cancelled) setData(null)
+      }
+      if (!cancelled) setLoading(false)
+    }
+    go()
+    return () => { cancelled = true }
+  }, [])
+
+  return (
+    <div className="min-h-[100svh] bg-[#f5f7fa] pb-20">
+      <nav className="sticky top-0 z-50 bg-fls-navy px-4 py-4 flex items-center gap-3">
+        <Link to="/" className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center no-underline">
+          <svg width="18" height="18" fill="none" stroke="white" strokeWidth="2">
+            <path d="M15 9H3m0 0l5-5M3 9l5 5" />
+          </svg>
+        </Link>
+        <div className="flex-1 text-center text-[16px] font-bold text-white">
+          Network Dashboard
+        </div>
+        <div className="w-8" />
+      </nav>
+
+      <div className="bg-white px-4 py-3 border-b border-gray-200 text-[13px] text-gray-500">
+        FirstLine Schools · {data?.school_year || '—'}
+      </div>
+
+      <div className="sticky top-[50px] z-40 bg-white border-b border-gray-200 px-3 py-2.5 flex gap-1.5 overflow-x-auto">
+        {CATEGORIES.map(cat => (
+          <button
+            key={cat.key}
+            onClick={() => setCategory(cat.key)}
+            className={`px-3.5 py-1.5 rounded-[18px] text-xs font-bold whitespace-nowrap border-[1.5px] transition-colors ${
+              category === cat.key
+                ? 'bg-fls-navy text-white border-fls-navy'
+                : 'bg-gray-50 text-gray-500 border-transparent'
+            }`}
+          >
+            {cat.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="px-4 pt-2 pb-6 max-w-[900px] mx-auto">
+        {loading && <div className="text-center text-gray-400 text-sm py-10">Loading network…</div>}
+        {!loading && !data && <Empty msg="Could not load network dashboard. Check access." />}
+        {!loading && data && (
+          <>
+            {category === 'fundamentals' && <FundamentalsView data={data} />}
+            {category === 'observations' && <ObservationsView data={data} />}
+            {category === 'pmap'         && <PMAPView data={data} />}
+            {category === 'reflection'   && <SchoolCountsView data={data} typeMatcher={t => t.startsWith('self_reflection_')} label="Self-reflections" emptyMsg="No self-reflections submitted this year." />}
+            {category === 'feedback'     && <SchoolCountsView data={data} typeMatcher={t => t === 'quick_feedback'} label="Quick feedback notes" emptyMsg="No quick feedback logged this year." />}
+            {category === 'celebrate'    && <SchoolCountsView data={data} typeMatcher={t => t === 'celebrate' || t === 'celebration'} label="Celebrations" emptyMsg="No celebrations logged this year." />}
+            {category === 'meetings'     && <SchoolCountsView data={data} typeMatcher={t => t.startsWith('meeting')} label="Meetings" emptyMsg="No meetings logged this year." />}
+          </>
+        )}
+      </div>
+
+      <BottomNav active="network" onAskClick={() => setAiOpen(true)} aiOpen={aiOpen} />
+      <AIPanel open={aiOpen} onClose={() => setAiOpen(false)} context="network" />
     </div>
   )
 }
