@@ -211,41 +211,87 @@ body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-fon
 <div class="cat-view" data-view="observations">
     <div class="hero">
         <div class="hero-cap">Observations · 5 dimensions</div>
-        <div class="hero-head">Network avg · 3.3 across dimensions</div>
-        <div class="hero-sub">Demo of Learning rose +0.3 · Cognitive Engagement dropped -0.1 · everything else held or moved up</div>
-        <div class="spark-wrap">
-            <svg viewBox="0 0 600 160" preserveAspectRatio="none" width="100%" height="100%">
-                <g class="spark-grid"><line x1="0" y1="20" x2="600" y2="20"/><line x1="0" y1="70" x2="600" y2="70"/><line x1="0" y1="120" x2="600" y2="120"/></g>
-                <text class="spark-axis" x="2" y="24">4.0</text><text class="spark-axis" x="2" y="74">3.0</text><text class="spark-axis" x="2" y="124">2.0</text>
+        <div class="hero-head">Network average per dimension · 3-year view</div>
+        <div class="hero-sub">One card per dimension so the story's readable. Demo of Learning rose most (+0.11). Cognitive Engagement is the only dim that's still below its 3-year-ago starting point.</div>
 
-                <!-- On Task: 3.4 → 3.3 → 3.4 -->
-                <path class="spark-line" stroke="#2563eb" stroke-width="2.5" opacity=".85" d="M 60 50 L 300 55 L 540 50"/>
-                <!-- CoL: 3.17 → 3.07 → 3.17 -->
-                <path class="spark-line" stroke="#e47727" stroke-width="2.5" opacity=".85" d="M 60 62 L 300 67 L 540 62"/>
-                <!-- Content: 3.36 → 3.21 → 3.31 -->
-                <path class="spark-line" stroke="#7c3aed" stroke-width="2.5" opacity=".85" d="M 60 52 L 300 60 L 540 55"/>
-                <!-- Cog Eng: 2.97 → 2.87 → 2.93 -->
-                <path class="spark-line" stroke="#ca8a04" stroke-width="2.5" opacity=".85" d="M 60 72 L 300 77 L 540 74"/>
-                <!-- Demo: 2.93 → 2.94 → 3.04 -->
-                <path class="spark-line" stroke="#059669" stroke-width="2.5" opacity=".85" d="M 60 74 L 300 73 L 540 68"/>
+        <!-- Small multiples: one card per dimension -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:16px">
 
-                <text class="spark-label" x="60" y="145" text-anchor="middle">23-24</text>
-                <text class="spark-label" x="300" y="145" text-anchor="middle">24-25</text>
-                <text class="spark-label" x="540" y="145" text-anchor="middle">25-26</text>
-            </svg>
-        </div>
-        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:10px;font-weight:700">
-            <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:3px;background:#2563eb"></div>On Task</div>
-            <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:3px;background:#e47727"></div>CoL</div>
-            <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:3px;background:#7c3aed"></div>Content</div>
-            <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:3px;background:#ca8a04"></div>Cog Eng</div>
-            <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:3px;background:#059669"></div>Demo</div>
+            <!-- On Task -->
+            <div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:12px">
+                <div style="font-size:11px;font-weight:800;color:#2563eb;letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px">On Task</div>
+                <div style="font-size:22px;font-weight:800;letter-spacing:-.02em">3.4</div>
+                <div style="font-size:10px;font-weight:700;color:#9ca3af;margin-top:2px">— flat 3 yr</div>
+                <svg viewBox="0 0 120 36" width="100%" height="36" style="margin-top:8px">
+                    <path fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" d="M 10 10 L 60 13 L 110 10"/>
+                    <circle cx="10" cy="10" r="2.5" fill="#2563eb"/>
+                    <circle cx="60" cy="13" r="2.5" fill="#2563eb"/>
+                    <circle cx="110" cy="10" r="3" fill="#2563eb"/>
+                </svg>
+                <div style="display:flex;justify-content:space-between;font-size:9px;color:#9ca3af;font-weight:700;margin-top:2px"><span>23·24</span><span>24·25</span><span>25·26</span></div>
+            </div>
+
+            <!-- CoL -->
+            <div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:12px">
+                <div style="font-size:11px;font-weight:800;color:#e47727;letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px">CoL</div>
+                <div style="font-size:22px;font-weight:800;letter-spacing:-.02em">3.17</div>
+                <div style="font-size:10px;font-weight:700;color:#9ca3af;margin-top:2px">— flat 3 yr</div>
+                <svg viewBox="0 0 120 36" width="100%" height="36" style="margin-top:8px">
+                    <path fill="none" stroke="#e47727" stroke-width="2.5" stroke-linecap="round" d="M 10 15 L 60 20 L 110 15"/>
+                    <circle cx="10" cy="15" r="2.5" fill="#e47727"/>
+                    <circle cx="60" cy="20" r="2.5" fill="#e47727"/>
+                    <circle cx="110" cy="15" r="3" fill="#e47727"/>
+                </svg>
+                <div style="display:flex;justify-content:space-between;font-size:9px;color:#9ca3af;font-weight:700;margin-top:2px"><span>23·24</span><span>24·25</span><span>25·26</span></div>
+            </div>
+
+            <!-- Content -->
+            <div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:12px">
+                <div style="font-size:11px;font-weight:800;color:#7c3aed;letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px">Content</div>
+                <div style="font-size:22px;font-weight:800;letter-spacing:-.02em">3.31</div>
+                <div style="font-size:10px;font-weight:700;color:#dc2626;margin-top:2px">▼ -0.05</div>
+                <svg viewBox="0 0 120 36" width="100%" height="36" style="margin-top:8px">
+                    <path fill="none" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" d="M 10 10 L 60 20 L 110 13"/>
+                    <circle cx="10" cy="10" r="2.5" fill="#7c3aed"/>
+                    <circle cx="60" cy="20" r="2.5" fill="#7c3aed"/>
+                    <circle cx="110" cy="13" r="3" fill="#7c3aed"/>
+                </svg>
+                <div style="display:flex;justify-content:space-between;font-size:9px;color:#9ca3af;font-weight:700;margin-top:2px"><span>23·24</span><span>24·25</span><span>25·26</span></div>
+            </div>
+
+            <!-- Cog Eng -->
+            <div style="background:#f8fafc;border:1px solid #fed7aa;border-radius:10px;padding:12px">
+                <div style="font-size:11px;font-weight:800;color:#ca8a04;letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px">Cog Eng</div>
+                <div style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#c2410c">2.93</div>
+                <div style="font-size:10px;font-weight:700;color:#dc2626;margin-top:2px">▼ -0.04 · watch</div>
+                <svg viewBox="0 0 120 36" width="100%" height="36" style="margin-top:8px">
+                    <path fill="none" stroke="#ca8a04" stroke-width="2.5" stroke-linecap="round" d="M 10 18 L 60 26 L 110 22"/>
+                    <circle cx="10" cy="18" r="2.5" fill="#ca8a04"/>
+                    <circle cx="60" cy="26" r="2.5" fill="#ca8a04"/>
+                    <circle cx="110" cy="22" r="3" fill="#ca8a04"/>
+                </svg>
+                <div style="display:flex;justify-content:space-between;font-size:9px;color:#9ca3af;font-weight:700;margin-top:2px"><span>23·24</span><span>24·25</span><span>25·26</span></div>
+            </div>
+
+            <!-- Demo -->
+            <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px">
+                <div style="font-size:11px;font-weight:800;color:#059669;letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px">Demo of Learning</div>
+                <div style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:#059669">3.04</div>
+                <div style="font-size:10px;font-weight:700;color:#059669;margin-top:2px">▲ +0.11 · highest gain</div>
+                <svg viewBox="0 0 120 36" width="100%" height="36" style="margin-top:8px">
+                    <path fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" d="M 10 22 L 60 22 L 110 12"/>
+                    <circle cx="10" cy="22" r="2.5" fill="#059669"/>
+                    <circle cx="60" cy="22" r="2.5" fill="#059669"/>
+                    <circle cx="110" cy="12" r="3" fill="#059669"/>
+                </svg>
+                <div style="display:flex;justify-content:space-between;font-size:9px;color:#9ca3af;font-weight:700;margin-top:2px"><span>23·24</span><span>24·25</span><span>25·26</span></div>
+            </div>
         </div>
     </div>
 
     <div class="stat-row">
         <div class="stat"><div class="stat-val">947</div><div class="stat-lbl">Observations YTD</div></div>
-        <div class="stat"><div class="stat-val up">3.4</div><div class="stat-lbl">Highest (On)</div></div>
+        <div class="stat"><div class="stat-val up">3.4</div><div class="stat-lbl">Highest (On Task)</div></div>
         <div class="stat"><div class="stat-val orange">2.93</div><div class="stat-lbl">Lowest (Cog Eng)</div></div>
     </div>
 
