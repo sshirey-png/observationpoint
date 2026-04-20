@@ -64,7 +64,7 @@ export default function Home() {
         <div className="grid grid-cols-2 gap-3 flex-1 content-stretch">
           <BigButton
             to="/app/team"
-            icon="\u{1F465}"
+            icon="👥"
             title="My Team"
             sub="12 teachers"
             gradient="linear-gradient(135deg,#002f60 0%,#1e40af 100%)"
@@ -80,7 +80,7 @@ export default function Home() {
           />
           <BigButton
             to="/app/network"
-            icon="\u{1F4CA}"
+            icon="📊"
             title="Network"
             sub="4 schools · 187 teachers"
             gradient="linear-gradient(135deg,#059669 0%,#10b981 100%)"

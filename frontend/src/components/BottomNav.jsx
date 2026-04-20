@@ -13,9 +13,9 @@ import { Link } from 'react-router-dom'
  */
 export default function BottomNav({ active, onAskClick, aiOpen = false }) {
   const items = [
-    { key: 'team',       to: '/app/team',       icon: '\u{1F465}', label: 'Team' },
-    { key: 'touchpoint', to: '/app/touchpoint', icon: '+',         label: 'Touchpoint' },
-    { key: 'network',    to: '/app/network',    icon: '\u{1F4CA}', label: 'Network' },
+    { key: 'team',       to: '/app/team',       icon: '👥', label: 'Team' },
+    { key: 'touchpoint', to: '/app/touchpoint', icon: '+',  label: 'Touchpoint' },
+    { key: 'network',    to: '/app/network',    icon: '📊', label: 'Network' },
   ]
 
   return (
