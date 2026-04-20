@@ -812,6 +812,128 @@ def api_data_audit():
         conn.close()
 
 
+@app.route('/api/admin/dedup-by-grow-id', methods=['GET', 'POST'])
+@require_auth
+@require_admin
+def api_dedup_by_grow_id():
+    """Dedup touchpoints that share a grow_id (same Grow observation imported
+    more than once). Keeps the row with the most scores and non-empty narrative;
+    deletes the rest (along with their score rows).
+
+    Query:
+      ?dry_run=true  (default) — report what would be deleted, change nothing
+      ?dry_run=false           — actually delete
+    """
+    dry = request.args.get('dry_run', 'true').lower() != 'false'
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        # For each grow_id with >1 row, rank candidates:
+        # 1. Most scores attached
+        # 2. Has non-empty feedback
+        # 3. Earliest observed_at (deterministic tiebreaker)
+        cur.execute("""
+            WITH groups AS (
+                SELECT grow_id, COUNT(*) AS n
+                FROM touchpoints
+                WHERE grow_id IS NOT NULL
+                GROUP BY grow_id
+                HAVING COUNT(*) > 1
+            ),
+            ranked AS (
+                SELECT t.id, t.grow_id, t.observed_at, t.teacher_email, t.form_type,
+                       (t.feedback IS NOT NULL AND t.feedback <> '') AS has_fb,
+                       (SELECT COUNT(*) FROM scores s WHERE s.touchpoint_id = t.id) AS score_count,
+                       ROW_NUMBER() OVER (
+                           PARTITION BY t.grow_id
+                           ORDER BY
+                               (SELECT COUNT(*) FROM scores s WHERE s.touchpoint_id = t.id) DESC,
+                               (t.feedback IS NOT NULL AND t.feedback <> '') DESC,
+                               t.observed_at ASC,
+                               t.id ASC
+                       ) AS rnk
+                FROM touchpoints t
+                JOIN groups g ON g.grow_id = t.grow_id
+            )
+            SELECT * FROM ranked ORDER BY grow_id, rnk
+        """)
+        rows = cur.fetchall()
+
+        keep_ids = [r['id'] for r in rows if r['rnk'] == 1]
+        delete_ids = [r['id'] for r in rows if r['rnk'] > 1]
+        group_count = len(set(r['grow_id'] for r in rows))
+
+        samples = []
+        seen_grow = set()
+        for r in rows[:20]:
+            if r['grow_id'] in seen_grow:
+                continue
+            seen_grow.add(r['grow_id'])
+            # Pull the full ranked group for this grow_id
+            group = [x for x in rows if x['grow_id'] == r['grow_id']]
+            samples.append({
+                'grow_id': r['grow_id'],
+                'teacher_email': r['teacher_email'],
+                'form_type': r['form_type'],
+                'rows': [{
+                    'id': str(g['id']),
+                    'observed_at': g['observed_at'].isoformat() if g['observed_at'] else None,
+                    'score_count': g['score_count'],
+                    'has_feedback': g['has_fb'],
+                    'action': 'KEEP' if g['rnk'] == 1 else 'DELETE',
+                } for g in group],
+            })
+            if len(samples) >= 10:
+                break
+
+        result = {
+            'dry_run': dry,
+            'duplicate_groups': group_count,
+            'rows_to_keep': len(keep_ids),
+            'rows_to_delete': len(delete_ids),
+            'sample_groups': samples,
+        }
+
+        if not dry and delete_ids:
+            # Delete scores first (FK), then the touchpoint rows themselves.
+            cur.execute("DELETE FROM scores WHERE touchpoint_id = ANY(%s)", ([str(x) for x in delete_ids],))
+            scores_deleted = cur.rowcount
+            cur.execute("DELETE FROM touchpoints WHERE id = ANY(%s)", ([str(x) for x in delete_ids],))
+            tp_deleted = cur.rowcount
+            conn.commit()
+            result['scores_deleted'] = scores_deleted
+            result['touchpoints_deleted'] = tp_deleted
+
+        return jsonify(result)
+    finally:
+        conn.close()
+
+
+@app.route('/api/admin/create-grow-id-index', methods=['POST'])
+@require_auth
+@require_admin
+def api_create_grow_id_index():
+    """Create partial unique index on touchpoints.grow_id (where not null).
+    Safe to call multiple times — uses IF NOT EXISTS. Call AFTER dedup-by-grow-id
+    since the index creation will fail if duplicates still exist."""
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_tp_grow_id_unique
+            ON touchpoints(grow_id)
+            WHERE grow_id IS NOT NULL
+        """)
+        conn.commit()
+        return jsonify({'ok': True, 'index': 'idx_tp_grow_id_unique'})
+    except psycopg2.errors.UniqueViolation as e:
+        conn.rollback()
+        return jsonify({'ok': False, 'error': 'duplicates still exist — run /api/admin/dedup-by-grow-id first', 'detail': str(e)}), 409
+    finally:
+        conn.close()
+
+
 @app.route('/api/admin/staff-records')
 @require_auth
 @require_admin
