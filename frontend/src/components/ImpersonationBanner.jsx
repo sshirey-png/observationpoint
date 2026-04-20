@@ -1,11 +1,9 @@
 import { useImpersonation } from '../lib/useImpersonation'
 
 /**
- * ImpersonationBanner — fixed orange strip at the top of every page when
- * the admin is "viewing as" another user. Tap Exit to return to self.
- *
- * Pages include this component near the top of their JSX. Banner is
- * position:sticky so it stays visible above the nav.
+ * ImpersonationBanner — orange strip at the top of every page when an
+ * admin is "viewing as" another user. Tap Exit to return to self.
+ * Session-backed; Exit calls /api/admin/stop-impersonating and reloads.
  */
 export default function ImpersonationBanner() {
   const { impersonating, stop } = useImpersonation()
@@ -15,7 +13,7 @@ export default function ImpersonationBanner() {
       <div className="text-base">👁</div>
       <div className="flex-1 truncate">
         Viewing as <b className="font-extrabold">{impersonating.name}</b>
-        <span className="opacity-70 ml-1.5">(demo — backend not yet wired)</span>
+        <span className="opacity-80 ml-1.5 font-normal">· read-only</span>
       </div>
       <button
         onClick={stop}

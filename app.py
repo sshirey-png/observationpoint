@@ -4,6 +4,8 @@ ObservationPoint — Flask Application
 import os
 import json
 import logging
+import psycopg2
+import psycopg2.extras
 from flask import Flask, session, redirect, request, jsonify, send_from_directory
 from flask_cors import CORS
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -13,10 +15,17 @@ from config import (
     BUILD_VERSION, CURRENT_SCHOOL_YEAR,
 )
 from auth import (
-    init_oauth, oauth, get_current_user, require_auth,
+    init_oauth, oauth, get_current_user, get_real_user, is_impersonating,
+    require_auth, require_admin, require_no_impersonation,
     get_accessible_emails, is_admin_title, check_access, is_supervisor,
 )
 import db
+
+# Ensure the impersonation audit table exists on startup
+try:
+    db.init_impersonation_table()
+except Exception as _e:
+    logging.warning(f"Could not init impersonation_log table: {_e}")
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -114,6 +123,7 @@ def auth_status():
             }
         })
     user = get_current_user()
+    real = get_real_user()
     if user:
         return jsonify({
             'authenticated': True,
@@ -126,9 +136,104 @@ def auth_status():
                 'is_admin': user.get('is_admin', False),
                 'is_supervisor': is_supervisor(user),
                 'accessible_count': len(user.get('accessible_emails', [])),
-            }
+            },
+            # Admin-only info: the real signed-in user and whether they're
+            # currently impersonating someone.
+            'real_user': ({
+                'email': real.get('email'),
+                'name': real.get('name'),
+                'is_admin': real.get('is_admin', False),
+            } if real and real.get('is_admin') else None),
+            'impersonating': (session.get('impersonating_as') if real and real.get('is_admin') else None),
         })
     return jsonify({'authenticated': False})
+
+
+# ------------------------------------------------------------------
+# API: Admin Impersonation
+# ------------------------------------------------------------------
+
+@app.route('/api/admin/impersonate', methods=['POST'])
+@require_auth
+@require_admin
+def api_impersonate():
+    """Admin-only. Start viewing the app as another staff member.
+    Session-backed; survives page navigation. Audit-logged."""
+    real = get_real_user()
+    data = request.get_json() or {}
+    email = (data.get('email') or '').strip().lower()
+    if not email:
+        return jsonify({'error': 'email required'}), 400
+
+    # Look up target staff member
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("SELECT * FROM staff WHERE email = %s AND is_active", (email,))
+        target = cur.fetchone()
+        if not target:
+            return jsonify({'error': 'Staff member not found or inactive'}), 404
+
+        # Compute accessible_emails for the impersonated user (may differ from admin's view)
+        accessible = get_accessible_emails(conn, email, target.get('job_title', ''))
+
+        imp = {
+            'email': email,
+            'name': f"{target.get('first_name') or ''} {target.get('last_name') or ''}".strip() or email,
+            'job_title': target.get('job_title') or '',
+            'school': target.get('school') or '',
+            'job_function': target.get('job_function') or '',
+            'accessible_emails': accessible,
+        }
+        session['impersonating_as'] = imp
+        db.log_impersonation(
+            real.get('email'), email, 'start',
+            user_agent=request.headers.get('User-Agent', ''),
+            ip=request.remote_addr or '',
+        )
+        return jsonify({'ok': True, 'impersonating': imp})
+    finally:
+        conn.close()
+
+
+@app.route('/api/admin/stop-impersonating', methods=['POST'])
+@require_auth
+@require_admin
+def api_stop_impersonating():
+    real = get_real_user()
+    imp = session.pop('impersonating_as', None)
+    if imp:
+        db.log_impersonation(
+            real.get('email'), imp.get('email'), 'stop',
+            user_agent=request.headers.get('User-Agent', ''),
+            ip=request.remote_addr or '',
+        )
+    return jsonify({'ok': True})
+
+
+@app.route('/api/admin/impersonation-log')
+@require_auth
+@require_admin
+def api_impersonation_log():
+    """Recent impersonation events. Admin-only."""
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            SELECT id, admin_email, impersonated_email, action, created_at
+            FROM impersonation_log
+            ORDER BY created_at DESC LIMIT 200
+        """)
+        rows = cur.fetchall()
+        return jsonify([{
+            'id': r['id'],
+            'admin_email': r['admin_email'],
+            'impersonated_email': r['impersonated_email'],
+            'action': r['action'],
+            'created_at': r['created_at'].isoformat() if r['created_at'] else None,
+        } for r in rows])
+    finally:
+        conn.close()
 
 
 # ------------------------------------------------------------------
@@ -251,6 +356,7 @@ def api_staff_search():
 
 @app.route('/api/touchpoints', methods=['POST'])
 @require_auth
+@require_no_impersonation
 def api_save_touchpoint():
     user = get_current_user()
     data = request.get_json()

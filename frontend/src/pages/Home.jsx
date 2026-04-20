@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import AIPanel from '../components/AIPanel'
 import ImpersonationBanner from '../components/ImpersonationBanner'
 import ImpersonationPicker from '../components/ImpersonationPicker'
+import { useImpersonation } from '../lib/useImpersonation'
 
 /**
  * Home — minimal 4-button landing.
@@ -50,6 +51,7 @@ function BigButton({ to, onClick, icon, title, sub, gradient, iconBg, iconColor 
 export default function Home() {
   const [aiOpen, setAiOpen] = useState(false)
   const [adminOpen, setAdminOpen] = useState(false)
+  const { isAdmin } = useImpersonation()
 
   return (
     <div className="min-h-[100svh] bg-[#f5f7fa]">
@@ -105,11 +107,15 @@ export default function Home() {
           ObservationPoint · designed with FirstLine Schools
         </div>
         <div className="text-center text-[11px] mt-2 flex gap-4 justify-center">
-          <button
-            onClick={() => setAdminOpen(true)}
-            className="text-gray-400 hover:text-fls-orange bg-transparent border-0 cursor-pointer font-[inherit] p-0 text-[11px]"
-          >Admin · View as user</button>
-          <span className="text-gray-300">·</span>
+          {isAdmin && (
+            <>
+              <button
+                onClick={() => setAdminOpen(true)}
+                className="text-gray-400 hover:text-fls-orange bg-transparent border-0 cursor-pointer font-[inherit] p-0 text-[11px]"
+              >Admin · View as user</button>
+              <span className="text-gray-300">·</span>
+            </>
+          )}
           <a href="/logout" className="text-gray-400 hover:text-fls-orange no-underline">Sign out</a>
         </div>
       </div>

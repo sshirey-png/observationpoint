@@ -33,7 +33,38 @@ def init_oauth(app):
 
 
 def get_current_user():
+    """
+    The EFFECTIVE current user. If an admin is impersonating another staff
+    member, this returns that impersonated user (with is_admin forced False
+    so they don't accidentally wield admin powers). Otherwise returns the
+    real signed-in user.
+    """
+    real_user = session.get('user')
+    if not real_user:
+        return None
+    imp = session.get('impersonating_as')
+    if imp and real_user.get('is_admin'):
+        return {
+            'email': imp['email'],
+            'name': imp.get('name', ''),
+            'job_title': imp.get('job_title', ''),
+            'school': imp.get('school', ''),
+            'job_function': imp.get('job_function', ''),
+            'is_admin': False,           # impersonated users never have admin powers
+            'accessible_emails': imp.get('accessible_emails', []),
+            '_impersonating': True,
+            '_real_user_email': real_user.get('email'),
+        }
+    return real_user
+
+
+def get_real_user():
+    """The real signed-in user, regardless of impersonation. Use for audit."""
     return session.get('user')
+
+
+def is_impersonating():
+    return bool(session.get('impersonating_as'))
 
 
 def require_auth(f):
@@ -46,6 +77,33 @@ def require_auth(f):
             if request.path.startswith('/api/'):
                 return jsonify({'error': 'Not authenticated'}), 401
             return redirect('/login')
+        return f(*args, **kwargs)
+    return decorated
+
+
+def require_admin(f):
+    """Only the real signed-in user's is_admin flag counts — impersonated
+    users are never admins."""
+    @functools.wraps(f)
+    def decorated(*args, **kwargs):
+        real = get_real_user()
+        if not real or not real.get('is_admin'):
+            return jsonify({'error': 'Admin required'}), 403
+        return f(*args, **kwargs)
+    return decorated
+
+
+def require_no_impersonation(f):
+    """Block the endpoint while impersonating. Use on write endpoints —
+    admins in view-as mode shouldn't be able to create/modify data as the
+    impersonated user."""
+    @functools.wraps(f)
+    def decorated(*args, **kwargs):
+        if is_impersonating():
+            return jsonify({
+                'error': 'Cannot modify data while viewing as another user. Exit view-as mode first.',
+                'code': 'impersonating',
+            }), 403
         return f(*args, **kwargs)
     return decorated
 

@@ -8,10 +8,11 @@ import { useImpersonation } from '../lib/useImpersonation'
  * localStorage via useImpersonation, no backend wired.
  */
 export default function ImpersonationPicker({ open, onClose }) {
-  const { set } = useImpersonation()
+  const { start } = useImpersonation()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
+  const [busy, setBusy] = useState(false)
   const timer = useRef(null)
 
   useEffect(() => {
@@ -35,16 +36,15 @@ export default function ImpersonationPicker({ open, onClose }) {
     }, 300)
   }
 
-  function pick(s) {
-    set({
-      email: s.email,
-      name: `${s.first_name || ''} ${s.last_name || ''}`.trim() || s.email,
-      school: s.school,
-      job_title: s.job_title,
-    })
-    setQuery('')
-    setResults([])
-    onClose()
+  async function pick(s) {
+    setBusy(true)
+    try {
+      await start({ email: s.email })
+      // page reloads on success
+    } catch (e) {
+      setBusy(false)
+      alert('Could not start view-as: ' + (e.message || 'unknown error'))
+    }
   }
 
   if (!open) return null
@@ -62,7 +62,7 @@ export default function ImpersonationPicker({ open, onClose }) {
             <button onClick={onClose} className="w-[30px] h-[30px] rounded-lg bg-gray-50 text-gray-500 flex items-center justify-center text-lg border-0 cursor-pointer">×</button>
           </div>
           <div className="text-xs text-gray-500 mt-1.5">
-            Demo mode — you'll see a banner at the top of every page. Backend not yet wired, so actual data won't change.
+            You'll see the app through their eyes — their team, their profile, their scope. Read-only: you can't create or modify data while viewing as another user. Every session is audit-logged.
           </div>
         </div>
         <div className="p-4 flex-1 overflow-y-auto">
@@ -84,7 +84,8 @@ export default function ImpersonationPicker({ open, onClose }) {
                 <button
                   key={s.email}
                   onClick={() => pick(s)}
-                  className="w-full text-left px-3 py-2.5 hover:bg-gray-50 rounded-lg border border-gray-100 bg-white cursor-pointer font-[inherit]"
+                  disabled={busy}
+                  className="w-full text-left px-3 py-2.5 hover:bg-gray-50 rounded-lg border border-gray-100 bg-white cursor-pointer font-[inherit] disabled:opacity-50 disabled:cursor-wait"
                 >
                   <div className="text-sm font-semibold">{s.first_name} {s.last_name}</div>
                   <div className="text-xs text-gray-400">{[s.school, s.job_title].filter(Boolean).join(' · ') || s.email}</div>
@@ -92,6 +93,7 @@ export default function ImpersonationPicker({ open, onClose }) {
               ))}
             </div>
           )}
+          {busy && <div className="text-xs text-fls-orange mt-3 text-center font-semibold">Starting session…</div>}
         </div>
       </div>
     </>

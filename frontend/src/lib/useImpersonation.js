@@ -1,46 +1,54 @@
 import { useState, useEffect } from 'react'
+import { api } from './api'
 
 /**
- * useImpersonation — demo hook. Tracks who the admin is "viewing as" and
- * persists the choice in localStorage so it survives page navigation.
+ * useImpersonation — source of truth is the Flask session cookie.
+ * Reads /api/auth/status on mount to hydrate. Start/stop call real
+ * admin endpoints and reload the page so every component refetches
+ * with the new effective user.
  *
- * NOTE: this is UI-only right now. The backend doesn't yet respect
- * impersonation — it's here so Scott can react to the flow before we
- * touch every authz check. The real build adds a Flask session field,
- * an /api/admin/impersonate endpoint, and an audit-log table.
+ * Non-admins: isAdmin=false, impersonating=null. Admin UI is gated on
+ * isAdmin, so non-admins never see the picker.
  */
 
-const KEY = 'op:impersonating'
+// Module-level cache so multiple components sharing the hook don't
+// trigger N parallel auth/status calls on the same page load.
+let _cache = null
+let _inFlight = null
 
-function read() {
-  try {
-    const raw = localStorage.getItem(KEY)
-    return raw ? JSON.parse(raw) : null
-  } catch {
-    return null
-  }
+async function fetchStatus() {
+  if (_cache) return _cache
+  if (_inFlight) return _inFlight
+  _inFlight = api.get('/api/auth/status')
+    .then(r => { _cache = r || {}; _inFlight = null; return _cache })
+    .catch(() => { _inFlight = null; return {} })
+  return _inFlight
 }
 
 export function useImpersonation() {
-  const [impersonating, setState] = useState(read)
+  const [status, setStatus] = useState(_cache)
 
-  // Sync across tabs
   useEffect(() => {
-    function onStorage(e) {
-      if (e.key === KEY) setState(read())
-    }
-    window.addEventListener('storage', onStorage)
-    return () => window.removeEventListener('storage', onStorage)
+    if (_cache) return
+    let cancelled = false
+    fetchStatus().then(r => { if (!cancelled) setStatus(r) })
+    return () => { cancelled = true }
   }, [])
 
-  function set(user) {
-    if (user) {
-      localStorage.setItem(KEY, JSON.stringify(user))
-    } else {
-      localStorage.removeItem(KEY)
-    }
-    setState(user)
+  const impersonating = status?.impersonating || null
+  const isAdmin = !!(status?.real_user?.is_admin || status?.user?.is_admin)
+
+  async function start(user) {
+    await api.post('/api/admin/impersonate', { email: user.email })
+    _cache = null
+    window.location.reload()
   }
 
-  return { impersonating, set, stop: () => set(null) }
+  async function stop() {
+    await api.post('/api/admin/stop-impersonating', {})
+    _cache = null
+    window.location.reload()
+  }
+
+  return { loading: status === null, isAdmin, impersonating, start, stop }
 }

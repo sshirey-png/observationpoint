@@ -342,3 +342,45 @@ def save_touchpoint(data):
         return tp_id
     finally:
         conn.close()
+
+
+# --- Impersonation audit log ---
+
+def init_impersonation_table():
+    """Create the impersonation audit log table if it doesn't exist."""
+    conn = get_conn()
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS impersonation_log (
+                id SERIAL PRIMARY KEY,
+                admin_email TEXT NOT NULL,
+                impersonated_email TEXT NOT NULL,
+                action TEXT NOT NULL,
+                user_agent TEXT,
+                ip TEXT,
+                created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+            )
+        """)
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_imp_admin ON impersonation_log(admin_email, created_at DESC)")
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_imp_created ON impersonation_log(created_at DESC)")
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def log_impersonation(admin_email, impersonated_email, action, user_agent=None, ip=None):
+    """Append an impersonation event to the audit log."""
+    conn = get_conn()
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO impersonation_log (admin_email, impersonated_email, action, user_agent, ip)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (admin_email, impersonated_email, action, user_agent, ip))
+        conn.commit()
+    except Exception as e:
+        log.error(f"Failed to log impersonation event: {e}")
+    finally:
+        conn.close()
+
