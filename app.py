@@ -211,6 +211,123 @@ def api_stop_impersonating():
     return jsonify({'ok': True})
 
 
+@app.route('/api/admin/data-audit')
+@require_auth
+@require_admin
+def api_data_audit():
+    """What do we actually have in the imported touchpoints? Ground truth
+    audit for deciding whether the tool is viable on this data substrate.
+
+    Returns, per form_type:
+      - count
+      - % with notes, % with scores, % with feedback_json, % with
+        meeting_json, % with observer_email
+      - date range (earliest → latest observed_at)
+      - one sample record showing what fields are populated
+    """
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        cur.execute("SELECT COUNT(*) AS n FROM touchpoints")
+        total = cur.fetchone()['n']
+
+        cur.execute("""
+            SELECT
+              form_type,
+              COUNT(*) AS n,
+              COUNT(CASE WHEN notes IS NOT NULL AND notes <> '' THEN 1 END) AS has_notes,
+              COUNT(CASE WHEN feedback_json IS NOT NULL THEN 1 END) AS has_feedback_json,
+              COUNT(CASE WHEN meeting_json IS NOT NULL THEN 1 END) AS has_meeting_json,
+              COUNT(CASE WHEN observer_email IS NOT NULL AND observer_email <> '' THEN 1 END) AS has_observer,
+              COUNT(CASE WHEN status = 'draft' THEN 1 END) AS drafts,
+              MIN(observed_at) AS date_min,
+              MAX(observed_at) AS date_max
+            FROM touchpoints
+            GROUP BY form_type
+            ORDER BY n DESC
+        """)
+        by_type = []
+        for r in cur.fetchall():
+            ft = r['form_type']
+            # % with structured scores (join to scores)
+            cur.execute("""
+                SELECT COUNT(DISTINCT t.id)
+                FROM touchpoints t
+                JOIN scores sc ON sc.touchpoint_id = t.id
+                WHERE t.form_type = %s
+            """, (ft,))
+            has_scores = cur.fetchone()['count']
+
+            # Sample: pick one record, show which fields are populated
+            cur.execute("""
+                SELECT id, observed_at, school_year, observer_email, status,
+                       notes IS NOT NULL AND notes <> '' AS has_notes,
+                       feedback_json IS NOT NULL AS has_feedback_json,
+                       meeting_json IS NOT NULL AS has_meeting_json,
+                       LENGTH(notes) AS notes_len,
+                       LEFT(notes, 200) AS notes_preview
+                FROM touchpoints
+                WHERE form_type = %s
+                ORDER BY observed_at DESC
+                LIMIT 1
+            """, (ft,))
+            sample = cur.fetchone() or {}
+
+            n = r['n']
+            by_type.append({
+                'form_type': ft,
+                'count': n,
+                'pct_notes':         round(100 * r['has_notes'] / n, 1) if n else 0,
+                'pct_scores':        round(100 * has_scores / n, 1) if n else 0,
+                'pct_feedback_json': round(100 * r['has_feedback_json'] / n, 1) if n else 0,
+                'pct_meeting_json':  round(100 * r['has_meeting_json'] / n, 1) if n else 0,
+                'pct_observer':      round(100 * r['has_observer'] / n, 1) if n else 0,
+                'drafts': r['drafts'],
+                'date_min': r['date_min'].isoformat() if r['date_min'] else None,
+                'date_max': r['date_max'].isoformat() if r['date_max'] else None,
+                'sample': {
+                    'observed_at': sample.get('observed_at').isoformat() if sample.get('observed_at') else None,
+                    'school_year': sample.get('school_year'),
+                    'observer_email': sample.get('observer_email'),
+                    'status': sample.get('status'),
+                    'has_notes': sample.get('has_notes'),
+                    'has_feedback_json': sample.get('has_feedback_json'),
+                    'has_meeting_json': sample.get('has_meeting_json'),
+                    'notes_len': sample.get('notes_len'),
+                    'notes_preview': sample.get('notes_preview'),
+                },
+            })
+
+        # Score coverage: what dimension codes appear, and per code, how many records
+        cur.execute("""
+            SELECT dimension_code, COUNT(*) AS n
+            FROM scores
+            GROUP BY dimension_code
+            ORDER BY n DESC
+        """)
+        score_dims = [dict(r) for r in cur.fetchall()]
+
+        # Observer coverage across the whole set
+        cur.execute("""
+            SELECT COUNT(*) AS n,
+                   COUNT(CASE WHEN observer_email IS NOT NULL AND observer_email <> '' THEN 1 END) AS has_obs,
+                   COUNT(DISTINCT observer_email) AS unique_observers
+            FROM touchpoints
+        """)
+        obs_row = cur.fetchone()
+
+        return jsonify({
+            'total_touchpoints': total,
+            'overall_observer_coverage_pct': round(100 * obs_row['has_obs'] / total, 1) if total else 0,
+            'unique_observers': obs_row['unique_observers'],
+            'by_form_type': by_type,
+            'score_dimensions': score_dims,
+        })
+    finally:
+        conn.close()
+
+
 @app.route('/api/admin/impersonation-log')
 @require_auth
 @require_admin
