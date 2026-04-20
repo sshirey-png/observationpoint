@@ -9,41 +9,43 @@ import { api } from '../lib/api'
  *   <AIPanel open={aiOpen} onClose={() => setAiOpen(false)} context="profile" subject="Marcus Williams" />
  */
 
+// Suggestions tuned to questions we know the current schema can answer.
+// Avoid any that rely on fields we don't have (due dates, explicit goals, etc.)
 const CONTEXTS = {
   home: {
     ctx: 'Scoped to you · full access to your data',
     intro: 'Ask anything. Suggestions are a starting point; input is open.',
     suggestions: [
-      'Worth a look this week?',
-      'Has anyone improved a lot this month?',
-      'Which PMAPs are due in the next 30 days?',
+      'Top observers this year',
+      "Who hasn't been observed in 30+ days?",
+      'Which teachers got feedback about cold calling?',
     ],
   },
   team: {
     ctx: subj => `Scoped to your team${subj ? ' · ' + subj : ''}`,
     intro: 'Ask about your team — or anything else.',
     suggestions: [
-      "Who hasn't been observed in 30+ days?",
-      "Who's improved the most this year?",
-      "What's the team's lowest-scoring dimension?",
+      "Who on my team hasn't been observed in 30+ days?",
+      "Average observation scores for my team this year",
+      "Count of touchpoints per teacher on my team",
     ],
   },
   profile: {
     ctx: subj => `Scoped to ${subj || 'this teacher'}`,
     intro: 'Ask about this teacher — or anything else.',
     suggestions: [
-      "What's improved most this year?",
-      'Are there open action items from meetings?',
-      'Compare to the grade-level average',
+      "Total observations this year",
+      "Average score by dimension",
+      "What feedback themes show up most?",
     ],
   },
   network: {
     ctx: 'Scoped to the network',
     intro: 'Ask about the network — or anything else.',
     suggestions: [
-      'Which school gained the most on Demo of Learning?',
-      'Recognition ratio by school',
-      'Teachers quiet for 30+ days by school',
+      'Average scores by school this year',
+      'Which school has the most observations?',
+      'How many PMAPs completed this year by school?',
     ],
   },
   touchpoint: {
@@ -51,8 +53,8 @@ const CONTEXTS = {
     intro: 'Ask about touchpoint activity — or anything else.',
     suggestions: [
       'How many touchpoints did I log this month?',
-      "Who haven't I touched in 30 days?",
-      "What's the mix across observation / feedback / celebrate?",
+      'Mix of observations / feedback / celebrate across the network',
+      'Top observers this year',
     ],
   },
 }
