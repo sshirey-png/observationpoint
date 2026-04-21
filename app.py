@@ -967,31 +967,31 @@ def api_dedup_by_grow_id():
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         # For each grow_id with >1 row, rank candidates:
-        # 1. Most scores attached
-        # 2. Has non-empty feedback
-        # 3. Earliest observed_at (deterministic tiebreaker)
+        # 1. Most scores attached  2. Has non-empty feedback  3. Earliest observed_at
+        # Pre-aggregating scores into a CTE avoids a correlated subquery
+        # for every ranked row (was timing out on 5K+ row groups).
         cur.execute("""
-            WITH groups AS (
-                SELECT grow_id, COUNT(*) AS n
-                FROM touchpoints
+            WITH score_counts AS (
+                SELECT touchpoint_id, COUNT(*) AS n FROM scores GROUP BY touchpoint_id
+            ),
+            dup_growids AS (
+                SELECT grow_id FROM touchpoints
                 WHERE grow_id IS NOT NULL
-                GROUP BY grow_id
-                HAVING COUNT(*) > 1
+                GROUP BY grow_id HAVING COUNT(*) > 1
             ),
             ranked AS (
                 SELECT t.id, t.grow_id, t.observed_at, t.teacher_email, t.form_type,
                        (t.feedback IS NOT NULL AND t.feedback <> '') AS has_fb,
-                       (SELECT COUNT(*) FROM scores s WHERE s.touchpoint_id = t.id) AS score_count,
+                       COALESCE(sc.n, 0) AS score_count,
                        ROW_NUMBER() OVER (
                            PARTITION BY t.grow_id
-                           ORDER BY
-                               (SELECT COUNT(*) FROM scores s WHERE s.touchpoint_id = t.id) DESC,
-                               (t.feedback IS NOT NULL AND t.feedback <> '') DESC,
-                               t.observed_at ASC,
-                               t.id ASC
+                           ORDER BY COALESCE(sc.n, 0) DESC,
+                                    (t.feedback IS NOT NULL AND t.feedback <> '') DESC,
+                                    t.observed_at ASC, t.id ASC
                        ) AS rnk
                 FROM touchpoints t
-                JOIN groups g ON g.grow_id = t.grow_id
+                JOIN dup_growids g ON g.grow_id = t.grow_id
+                LEFT JOIN score_counts sc ON sc.touchpoint_id = t.id
             )
             SELECT * FROM ranked ORDER BY grow_id, rnk
         """)
@@ -1114,20 +1114,23 @@ def api_dedup_broad():
                 GROUP BY LOWER(teacher_email), DATE(observed_at), form_type
                 HAVING COUNT(*) > 1
             ),
+            score_counts AS (
+                SELECT touchpoint_id, COUNT(*) AS n FROM scores GROUP BY touchpoint_id
+            ),
             ranked AS (
                 SELECT t.id,
                        ROW_NUMBER() OVER (
                            PARTITION BY LOWER(t.teacher_email), DATE(t.observed_at), t.form_type
-                           ORDER BY
-                               (SELECT COUNT(*) FROM scores s WHERE s.touchpoint_id = t.id) DESC,
-                               (t.feedback IS NOT NULL AND t.feedback <> '') DESC,
-                               t.observed_at ASC, t.id ASC
+                           ORDER BY COALESCE(sc.n, 0) DESC,
+                                    (t.feedback IS NOT NULL AND t.feedback <> '') DESC,
+                                    t.observed_at ASC, t.id ASC
                        ) AS rnk
                 FROM touchpoints t
                 JOIN groups g
                   ON g.t_email = LOWER(t.teacher_email)
                  AND g.d = DATE(t.observed_at)
                  AND g.form_type = t.form_type
+                LEFT JOIN score_counts sc ON sc.touchpoint_id = t.id
             )
             SELECT id, rnk FROM ranked ORDER BY rnk
         """)
