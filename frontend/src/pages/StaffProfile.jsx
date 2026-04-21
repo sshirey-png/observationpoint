@@ -428,11 +428,96 @@ const CATEGORIES = [
   { key: 'fundamentals', label: 'Fundamentals' },
   { key: 'observations', label: 'Observations' },
   { key: 'pmap',         label: 'PMAP' },
+  { key: 'goals',        label: 'Goals & Action Steps' },
   { key: 'reflection',   label: 'Self-Reflection' },
   { key: 'feedback',     label: 'Quick FB' },
   { key: 'celebrate',    label: 'Celebrate' },
   { key: 'meetings',     label: 'Meetings' },
 ]
+
+function GoalsView({ email }) {
+  const [items, setItems] = useState(null)
+  useEffect(() => {
+    let cancelled = false
+    api.get(`/api/staff/${encodeURIComponent(email)}/assignments`)
+      .then(r => { if (!cancelled) setItems(Array.isArray(r) ? r : []) })
+      .catch(() => { if (!cancelled) setItems([]) })
+    return () => { cancelled = true }
+  }, [email])
+
+  if (items == null) return <div className="text-center text-gray-400 text-sm py-10">Loading…</div>
+  if (items.length === 0) return <Empty msg="No goals or action steps assigned." />
+
+  // Bucket by type
+  const goals = items.filter(x => x.type === 'goal')
+  const steps = items.filter(x => x.type === 'actionStep')
+  const todos = items.filter(x => x.type === 'toDo')
+
+  // Completion stats
+  const totalDone = items.filter(x => x.progress_pct === 100).length
+  const totalInProg = items.filter(x => x.progress_pct > 0 && x.progress_pct < 100).length
+
+  function Card({ a }) {
+    const color = a.progress_pct === 100 ? '#059669' : a.progress_pct > 0 ? '#e47727' : '#9ca3af'
+    return (
+      <div className="bg-white rounded-xl p-3.5 shadow-sm mb-2.5 border-l-4" style={{ borderLeftColor: color }}>
+        <div className="flex items-center justify-between gap-2 mb-1.5">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+            {a.type === 'goal' ? 'GOAL' : a.type === 'actionStep' ? 'ACTION STEP' : 'TO DO'}
+            {a.school_year && <span className="text-gray-300"> · {a.school_year}</span>}
+          </div>
+          <div className="text-[11px] font-bold" style={{ color }}>
+            {a.progress_pct === 100 ? '✓ Complete' : a.progress_pct > 0 ? `${a.progress_pct}% in progress` : 'Not started'}
+          </div>
+        </div>
+        <div className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">{a.body}</div>
+        {a.creator_email && (
+          <div className="text-[10px] text-gray-400 mt-2 pt-2 border-t border-gray-100">
+            Assigned by {a.creator_email.split('@')[0]} · {formatDate(a.created_at)}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <div className="grid grid-cols-3 gap-2 mt-4 mb-4">
+        <div className="bg-white rounded-xl p-3.5 text-center shadow-sm">
+          <div className="text-2xl font-extrabold text-fls-navy">{items.length}</div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">Total</div>
+        </div>
+        <div className="bg-white rounded-xl p-3.5 text-center shadow-sm">
+          <div className="text-2xl font-extrabold text-green-600">{totalDone}</div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">Complete</div>
+        </div>
+        <div className="bg-white rounded-xl p-3.5 text-center shadow-sm">
+          <div className="text-2xl font-extrabold text-orange-600">{totalInProg}</div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">In Progress</div>
+        </div>
+      </div>
+
+      {goals.length > 0 && (
+        <>
+          <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mt-4 mb-2">Goals · {goals.length}</div>
+          {goals.map(a => <Card key={a.id} a={a} />)}
+        </>
+      )}
+      {steps.length > 0 && (
+        <>
+          <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mt-4 mb-2">Action Steps · {steps.length}</div>
+          {steps.map(a => <Card key={a.id} a={a} />)}
+        </>
+      )}
+      {todos.length > 0 && (
+        <>
+          <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mt-4 mb-2">To-Do · {todos.length}</div>
+          {todos.map(a => <Card key={a.id} a={a} />)}
+        </>
+      )}
+    </div>
+  )
+}
 
 export default function StaffProfile() {
   const { email: rawEmail } = useParams()
@@ -527,6 +612,7 @@ export default function StaffProfile() {
             {category === 'fundamentals' && <FundamentalsView touchpoints={touchpoints} onOpenDetail={setDetail} staffEmail={email} />}
             {category === 'observations' && <ObservationsView touchpoints={touchpoints} onOpenDetail={setDetail} staffEmail={email} />}
             {category === 'pmap'         && <PMAPView touchpoints={touchpoints} pmap_by_year={data.pmap_by_year} school_years={data.school_years} onOpenDetail={setDetail} staffEmail={email} />}
+            {category === 'goals'        && <GoalsView email={email} />}
             {category === 'reflection'   && <SimpleListView touchpoints={touchpoints} matcher={t => t.form_type.startsWith('self_reflection_')} emptyMsg="No self-reflections on record." onOpenDetail={setDetail} staffEmail={email} />}
             {category === 'feedback'     && <SimpleListView touchpoints={touchpoints} matcher={t => t.form_type === 'quick_feedback'} emptyMsg="No quick feedback on record." onOpenDetail={setDetail} staffEmail={email} />}
             {category === 'celebrate'    && <SimpleListView touchpoints={touchpoints} matcher={t => t.form_type === 'celebrate' || t.form_type === 'celebration'} emptyMsg="No celebrations on record." onOpenDetail={setDetail} staffEmail={email} />}

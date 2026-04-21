@@ -1403,6 +1403,87 @@ def api_my_recent_touchpoints():
         conn.close()
 
 
+@app.route('/api/staff/<email>/assignments')
+@require_auth
+def api_staff_assignments(email):
+    """Action steps + goals + to-dos for a specific teacher.
+    Pulled from the imported assignments table (Grow JSON dump)."""
+    user = get_current_user()
+    if not DEV_MODE and not check_access(user, email):
+        return jsonify({'error': 'Access denied'}), 403
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            SELECT id, type, body_text, progress_pct, progress_date, progress_justification,
+                   creator_email, observation_grow_id, created_at, school_year
+            FROM assignments
+            WHERE LOWER(teacher_email) = %s
+            ORDER BY created_at DESC
+        """, (email.lower(),))
+        rows = cur.fetchall()
+        return jsonify([{
+            'id': r['id'], 'type': r['type'], 'body': r['body_text'],
+            'progress_pct': r['progress_pct'],
+            'progress_date': r['progress_date'].isoformat() if r['progress_date'] else None,
+            'progress_justification': r['progress_justification'],
+            'creator_email': r['creator_email'],
+            'observation_grow_id': r['observation_grow_id'],
+            'created_at': r['created_at'].isoformat() if r['created_at'] else None,
+            'school_year': r['school_year'],
+        } for r in rows])
+    finally:
+        conn.close()
+
+
+@app.route('/api/network/assignments-summary')
+@require_auth
+def api_network_assignments_summary():
+    """Network-wide summary of action steps + goals for the dashboard."""
+    user = get_current_user()
+    if not DEV_MODE and not is_supervisor(user):
+        return jsonify({'error': 'Access denied'}), 403
+    sy = request.args.get('school_year', CURRENT_SCHOOL_YEAR)
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        # Top-level counts
+        cur.execute("""
+            SELECT type,
+                   COUNT(*) AS total,
+                   COUNT(*) FILTER (WHERE progress_pct = 100) AS completed,
+                   COUNT(*) FILTER (WHERE progress_pct > 0 AND progress_pct < 100) AS in_progress,
+                   COUNT(*) FILTER (WHERE progress_pct = 0) AS not_started,
+                   COUNT(DISTINCT teacher_email) AS unique_teachers
+            FROM assignments
+            WHERE school_year = %s
+            GROUP BY type ORDER BY total DESC
+        """, (sy,))
+        by_type = [dict(r) for r in cur.fetchall()]
+
+        # By-school: how is each school doing on action step / goal completion?
+        cur.execute("""
+            SELECT s.school,
+                   COUNT(*) AS total,
+                   COUNT(*) FILTER (WHERE a.progress_pct = 100) AS completed,
+                   COUNT(DISTINCT a.teacher_email) AS teachers_with_assignment
+            FROM assignments a
+            JOIN staff s ON LOWER(s.email) = LOWER(a.teacher_email)
+            WHERE a.school_year = %s
+              AND s.school != '' AND s.school != 'FirstLine Network'
+            GROUP BY s.school ORDER BY total DESC
+        """, (sy,))
+        by_school = [dict(r) for r in cur.fetchall()]
+
+        return jsonify({
+            'school_year': sy,
+            'by_type': by_type,
+            'by_school': by_school,
+        })
+    finally:
+        conn.close()
+
+
 @app.route('/api/staff/<email>')
 @require_auth
 def api_staff_profile(email):
