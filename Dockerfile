@@ -16,4 +16,4 @@ COPY . .
 COPY --from=frontend /app/frontend/dist ./frontend/dist
 
 ENV PORT=8080
-CMD exec gunicorn --bind :$PORT --workers 2 --threads 4 --timeout 120 app:app
+CMD exec gunicorn --bind :$PORT --workers 2 --threads 4 --timeout 540 app:app

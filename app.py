@@ -1033,12 +1033,18 @@ def api_dedup_by_grow_id():
         }
 
         if not dry and delete_ids:
-            # Delete scores first (FK), then the touchpoint rows themselves.
-            cur.execute("DELETE FROM scores WHERE touchpoint_id = ANY(%s)", ([str(x) for x in delete_ids],))
-            scores_deleted = cur.rowcount
-            cur.execute("DELETE FROM touchpoints WHERE id = ANY(%s)", ([str(x) for x in delete_ids],))
-            tp_deleted = cur.rowcount
-            conn.commit()
+            # Batch deletes so one request doesn't hold a long-running
+            # transaction. 500 ids per chunk keeps each statement quick
+            # and lets us recover gracefully if the request is interrupted.
+            scores_deleted = 0
+            tp_deleted = 0
+            for i in range(0, len(delete_ids), 500):
+                chunk = [str(x) for x in delete_ids[i:i+500]]
+                cur.execute("DELETE FROM scores WHERE touchpoint_id = ANY(%s)", (chunk,))
+                scores_deleted += cur.rowcount
+                cur.execute("DELETE FROM touchpoints WHERE id = ANY(%s)", (chunk,))
+                tp_deleted += cur.rowcount
+                conn.commit()
             result['scores_deleted'] = scores_deleted
             result['touchpoints_deleted'] = tp_deleted
 
@@ -1134,11 +1140,17 @@ def api_dedup_broad():
             'rows_to_delete': len(delete_ids),
         }
         if not dry and delete_ids:
-            cur.execute("DELETE FROM scores WHERE touchpoint_id = ANY(%s)", ([str(x) for x in delete_ids],))
-            result['scores_deleted'] = cur.rowcount
-            cur.execute("DELETE FROM touchpoints WHERE id = ANY(%s)", ([str(x) for x in delete_ids],))
-            result['touchpoints_deleted'] = cur.rowcount
-            conn.commit()
+            scores_deleted = 0
+            tp_deleted = 0
+            for i in range(0, len(delete_ids), 500):
+                chunk = [str(x) for x in delete_ids[i:i+500]]
+                cur.execute("DELETE FROM scores WHERE touchpoint_id = ANY(%s)", (chunk,))
+                scores_deleted += cur.rowcount
+                cur.execute("DELETE FROM touchpoints WHERE id = ANY(%s)", (chunk,))
+                tp_deleted += cur.rowcount
+                conn.commit()
+            result['scores_deleted'] = scores_deleted
+            result['touchpoints_deleted'] = tp_deleted
         return jsonify(result)
     finally:
         conn.close()
