@@ -375,6 +375,105 @@ const CATEGORIES = [
   { key: 'meetings',     label: 'Meetings' },
 ]
 
+function SelfReflectionNetworkView({ schoolYear }) {
+  const [d, setD] = useState(null)
+  useEffect(() => {
+    let cancelled = false
+    api.get(`/api/network/sr-summary?school_year=${encodeURIComponent(schoolYear)}`)
+      .then(r => { if (!cancelled) setD(r) }).catch(() => { if (!cancelled) setD(null) })
+    return () => { cancelled = true }
+  }, [schoolYear])
+
+  if (!d) return <div className="text-center text-gray-400 text-sm py-10">Loading…</div>
+  const totalSubs = (d.by_role || []).reduce((a, r) => a + r.submissions, 0)
+  const totalUnique = (d.by_role || []).reduce((a, r) => a + r.unique_teachers, 0)
+  if (totalSubs === 0) return <Empty msg="No self-reflections submitted this year yet." />
+
+  const yearly = d.yearly_trend || []
+  const yMax = Math.max(...yearly.map(y => y.n), 1)
+
+  return (
+    <div>
+      {/* KPI strip */}
+      <div className="grid grid-cols-3 gap-2 mt-4 mb-4">
+        <div className="bg-white rounded-xl p-3.5 text-center shadow-sm">
+          <div className="text-2xl font-extrabold text-fls-navy">{totalSubs.toLocaleString()}</div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">Submissions</div>
+        </div>
+        <div className="bg-white rounded-xl p-3.5 text-center shadow-sm">
+          <div className="text-2xl font-extrabold text-fls-navy">{totalUnique.toLocaleString()}</div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">Unique staff</div>
+        </div>
+        <div className="bg-white rounded-xl p-3.5 text-center shadow-sm">
+          <div className="text-2xl font-extrabold text-fls-navy">{(d.by_role || []).length}</div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">Roles</div>
+        </div>
+      </div>
+
+      {/* Yearly trend bars */}
+      {yearly.length > 1 && (
+        <div className="bg-white rounded-xl p-4 shadow-sm mb-3">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-3">Submissions across years</div>
+          <div className="flex items-end justify-around gap-3 h-[100px]">
+            {yearly.map(y => {
+              const h = Math.round((y.n / yMax) * 80)
+              return (
+                <div key={y.school_year} className="flex-1 flex flex-col items-center justify-end">
+                  <div className="text-[11px] font-bold text-fls-navy mb-1">{y.n.toLocaleString()}</div>
+                  <div className="w-full rounded-t-md bg-fls-navy transition-all" style={{ height: `${Math.max(8, h)}px` }} />
+                  <div className="text-[10px] text-gray-500 mt-1.5">{y.school_year.slice(2)}</div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* By role */}
+      <div className="bg-white rounded-xl p-4 shadow-sm mb-3">
+        <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-3">By role</div>
+        {d.by_role.map(r => {
+          const pct = r.denominator ? Math.min(100, Math.round((r.unique_teachers / r.denominator) * 100)) : null
+          return (
+            <div key={r.form_type} className="mb-3 last:mb-0">
+              <div className="flex items-baseline justify-between mb-1">
+                <div className="text-[12px] font-bold text-gray-700">{r.label}</div>
+                <div className="text-[11px] text-gray-500">
+                  <span className="font-extrabold text-fls-navy">{r.unique_teachers}</span>
+                  {r.denominator ? <span className="text-gray-400"> of {r.denominator} active · {pct}% participation</span>
+                                  : <span className="text-gray-400"> staff submitted</span>}
+                  <span className="text-gray-400"> · {r.submissions} submissions</span>
+                </div>
+              </div>
+              {pct != null && (
+                <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full bg-fls-navy" style={{ width: `${Math.max(2, pct)}%` }} />
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* By school */}
+      {(d.by_school || []).length > 0 && (
+        <div className="bg-white rounded-xl p-4 shadow-sm">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-3">By school</div>
+          {d.by_school.map(s => (
+            <div key={s.school} className="flex items-baseline justify-between py-1.5 border-t border-gray-100 first:border-t-0">
+              <div className="text-[12px] font-bold text-gray-700">{shortSchool(s.school)}</div>
+              <div className="text-[11px] text-gray-500">
+                <span className="font-extrabold text-fls-navy">{s.submissions}</span>
+                <span className="text-gray-400"> submissions · {s.unique} staff</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function GoalsNetworkView({ schoolYear }) {
   const [data, setData] = useState(null)
   useEffect(() => {
@@ -642,7 +741,7 @@ export default function Network() {
             {category === 'observations' && <ObservationsView data={data} />}
             {category === 'pmap'         && <PMAPView data={data} />}
             {category === 'goals'        && <GoalsNetworkView schoolYear={schoolYear} />}
-            {category === 'reflection'   && <SchoolCountsView data={data} typeMatcher={t => t.startsWith('self_reflection_')} label="Self-reflections" emptyMsg="No self-reflections submitted this year." />}
+            {category === 'reflection'   && <SelfReflectionNetworkView schoolYear={schoolYear} />}
             {category === 'feedback'     && <SchoolCountsView data={data} typeMatcher={t => t === 'quick_feedback'} label="Quick feedback notes" emptyMsg="No quick feedback logged this year." />}
             {category === 'celebrate'    && <SchoolCountsView data={data} typeMatcher={t => t === 'celebrate' || t === 'celebration'} label="Celebrations" emptyMsg="No celebrations logged this year." />}
             {category === 'meetings'     && <SchoolCountsView data={data} typeMatcher={t => t.startsWith('meeting')} label="Meetings" emptyMsg="No meetings logged this year." />}

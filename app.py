@@ -1436,6 +1436,84 @@ def api_staff_assignments(email):
         conn.close()
 
 
+@app.route('/api/network/sr-summary')
+@require_auth
+def api_network_sr_summary():
+    """Self-reflection participation: by role + by year + by school.
+    Real participation data, multi-year trend."""
+    user = get_current_user()
+    if not DEV_MODE and not is_supervisor(user):
+        return jsonify({'error': 'Access denied'}), 403
+    sy = request.args.get('school_year', CURRENT_SCHOOL_YEAR)
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        # Active staff denominators by function
+        cur.execute("""
+            SELECT job_function, COUNT(*) AS n FROM staff
+            WHERE is_active AND job_function IS NOT NULL AND job_function <> ''
+            GROUP BY job_function
+        """)
+        denominators = {r['job_function']: r['n'] for r in cur.fetchall()}
+
+        # SR by role, this year
+        cur.execute("""
+            SELECT form_type,
+                   COUNT(*) AS submissions,
+                   COUNT(DISTINCT teacher_email) AS unique_teachers
+            FROM touchpoints
+            WHERE form_type LIKE 'self_reflection_%%' AND status = 'published'
+              AND school_year = %s
+            GROUP BY form_type ORDER BY form_type
+        """, (sy,))
+        by_role = []
+        ROLE_MAP = {
+            'self_reflection_teacher': ('Teacher', 'Teacher'),
+            'self_reflection_leader': ('Leader', 'Leadership'),
+            'self_reflection_prek': ('PreK', 'Teacher'),  # PreK lives in Teacher count
+            'self_reflection_support': ('Support', 'Support'),
+            'self_reflection_network': ('Network', 'Network'),
+        }
+        for r in cur.fetchall():
+            label, denom_key = ROLE_MAP.get(r['form_type'], (r['form_type'], None))
+            denom = denominators.get(denom_key) if denom_key else None
+            by_role.append({
+                'form_type': r['form_type'],
+                'label': label,
+                'submissions': r['submissions'],
+                'unique_teachers': r['unique_teachers'],
+                'denominator': denom,
+            })
+
+        # SR by school, this year
+        cur.execute("""
+            SELECT school, COUNT(*) AS submissions, COUNT(DISTINCT teacher_email) AS unique
+            FROM touchpoints
+            WHERE form_type LIKE 'self_reflection_%%' AND status = 'published'
+              AND school_year = %s AND school != '' AND school != 'FirstLine Network'
+            GROUP BY school ORDER BY submissions DESC
+        """, (sy,))
+        by_school = [dict(r) for r in cur.fetchall()]
+
+        # YoY trend: total SR submissions per year
+        cur.execute("""
+            SELECT school_year, COUNT(*) AS n
+            FROM touchpoints WHERE form_type LIKE 'self_reflection_%%' AND status = 'published'
+            GROUP BY school_year ORDER BY school_year
+        """)
+        yearly = [dict(r) for r in cur.fetchall()]
+
+        return jsonify({
+            'school_year': sy,
+            'by_role': by_role,
+            'by_school': by_school,
+            'yearly_trend': yearly,
+        })
+    finally:
+        conn.close()
+
+
 @app.route('/api/network/assignments-summary')
 @require_auth
 def api_network_assignments_summary():
