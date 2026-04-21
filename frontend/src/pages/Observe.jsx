@@ -8,11 +8,16 @@ import ActionSteps from '../components/ActionSteps'
 import { api } from '../lib/api'
 import { TEACHER_RUBRIC } from '../lib/rubric-descriptors'
 import FormShell from '../components/FormShell'
+import ObservePreKForm from '../components/ObservePreKForm'
 
 function observationFormTypeFor(teacher) {
   const title = (teacher?.job_title || '').toLowerCase()
   if (title.includes('prek') || title.includes('pre-k') || title.includes('pre k')) return 'observation_prek'
   return 'observation_teacher'
+}
+
+function isPreKTeacher(teacher) {
+  return observationFormTypeFor(teacher) === 'observation_prek'
 }
 
 /**
@@ -105,14 +110,19 @@ export default function Observe() {
     )
   }
 
+  // If the selected teacher is PreK, render the CLASS PreK flow instead
+  // of the standard teacher observation. Keeps one entry point (the
+  // Observation tile on TouchpointHub) but adapts to the teacher's rubric.
+  const prek = isPreKTeacher(teacher)
+
   return (
     <FormShell>
     <div className="pb-24">
-      <Nav title="Teacher Observation" />
+      <Nav title={prek ? 'PreK Observation' : 'Teacher Observation'} />
 
       {/* Teacher picker + History link */}
       <StaffPicker selected={teacher} onSelect={setTeacher} initialEmail={teacherParam} />
-      {teacher && (
+      {teacher && !prek && (
         <div className="flex items-center gap-2 px-4 py-2 bg-white border-b border-gray-200">
           <Link
             to={`/app/staff/${teacher.email}`}
@@ -130,6 +140,12 @@ export default function Observe() {
         </div>
       )}
 
+      {/* PreK branch — full CLASS PreK flow with cycles + PK1-PK10.
+          Returns early so the teacher-form markup below doesn't render. */}
+      {teacher && prek && <ObservePreKForm teacher={teacher} />}
+
+      {/* Teacher form (only when teacher isn't PreK, or no teacher yet) */}
+      {!prek && <>
       <div className="px-4">
         {/* Recording bar */}
         <div className="mt-4">
@@ -263,6 +279,7 @@ export default function Observe() {
           {saving ? 'Saving…' : 'Publish'}
         </button>
       </div>
+      </>}
     </div>
     </FormShell>
   )
