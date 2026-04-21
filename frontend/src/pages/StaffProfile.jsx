@@ -696,9 +696,9 @@ function RecentView({ touchpoints, onOpenDetail, staffEmail }) {
                 <div className="text-[13px] font-semibold">{formatDate(tp.date)}</div>
                 <div className="text-[11px] text-gray-500 truncate">
                   {isReflection && isSelf ? 'Self-submitted' :
-                   // Hide observer attribution when import defaulted observer
-                   // to teacher (stale data, not actually self-observed).
-                   isSelf ? 'Observer not recorded' :
+                   // If observer == teacher on a non-reflection record, hide
+                   // the attribution entirely (consistent: name or nothing).
+                   isSelf ? '' :
                    tp.observer_name ? `by ${tp.observer_name}` :
                    tp.observer_email ? `by ${tp.observer_email.split('@')[0]}` :
                    ''}
