@@ -294,11 +294,7 @@ export default function PMAP() {
                 placeholder="Any additional notes or context here." rows={2} className={inputClass + ' resize-y'} />
             </div>
           </>
-        ) : (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-900">
-            <b>{roleLabel} rubric not yet wired.</b> Use the strength / growth / commitment narrative sections below to document performance. Dimension scores aren't saved on this form.
-          </div>
-        )}
+        ) : null}
 
         <div className="h-px bg-gray-200 my-5" />
 

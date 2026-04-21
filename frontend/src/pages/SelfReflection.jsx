@@ -188,11 +188,7 @@ export default function SelfReflection() {
                   placeholder="Any additional notes or context." rows={2} className={inputClass + ' resize-y'} />
               </div>
             </>
-          ) : (
-            <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-900">
-              <b>{roleLabel} rubric not yet wired.</b> Focus on the narrative sections below — strength / growth / commitments / career.
-            </div>
-          )}
+          ) : null}
 
           <div className="h-px bg-gray-200 my-5" />
 
