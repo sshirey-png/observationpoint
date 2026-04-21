@@ -274,6 +274,45 @@ def get_network_dashboard(school_year=None):
             'prior_meeting_total': prior_counts[4] or 0,
         }
 
+        # Fundamentals on-task % — per school + network average.
+        # Only counts records where the M-score is on the 0-100 scale
+        # (max of that record's M-scores > 5), so rubric-scale legacy
+        # imports don't skew the average.
+        cur.execute("""
+            WITH record_avg AS (
+                SELECT t.id, t.school,
+                       AVG(sc.score) AS avg_pct,
+                       MAX(sc.score) AS max_pct
+                FROM scores sc JOIN touchpoints t ON sc.touchpoint_id = t.id
+                WHERE t.school_year = %s AND t.form_type = 'observation_fundamentals'
+                  AND sc.dimension_code IN ('M1','M2','M3','M4','M5')
+                GROUP BY t.id, t.school
+            ),
+            scaled AS (
+                SELECT school, avg_pct FROM record_avg WHERE max_pct > 5
+            )
+            SELECT school, ROUND(AVG(avg_pct)::numeric, 1)::float AS avg_pct, COUNT(*) AS n
+            FROM scaled WHERE school != '' AND school != 'FirstLine Network'
+            GROUP BY school ORDER BY school
+        """, (sy,))
+        fund_by_school = {}
+        for school, pct, n in cur.fetchall():
+            fund_by_school[school] = {'avg_pct': pct, 'visits': n}
+        cur.execute("""
+            WITH record_avg AS (
+                SELECT t.id, AVG(sc.score) AS avg_pct, MAX(sc.score) AS max_pct
+                FROM scores sc JOIN touchpoints t ON sc.touchpoint_id = t.id
+                WHERE t.school_year = %s AND t.form_type = 'observation_fundamentals'
+                  AND sc.dimension_code IN ('M1','M2','M3','M4','M5')
+                GROUP BY t.id
+            )
+            SELECT ROUND(AVG(avg_pct)::numeric, 1)::float
+            FROM record_avg WHERE max_pct > 5
+        """, (sy,))
+        row = cur.fetchone()
+        out['fundamentals_network_avg_pct'] = row[0] if row and row[0] is not None else None
+        out['fundamentals_by_school'] = fund_by_school
+
         # Top observers this year — for leaderboard chart
         cur.execute("""
             SELECT

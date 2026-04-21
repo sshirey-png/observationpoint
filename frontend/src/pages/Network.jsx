@@ -42,7 +42,12 @@ function Empty({ msg }) {
 
 function FundamentalsView({ data }) {
   const schools = data?.schools || {}
+  const fundBySchool = data?.fundamentals_by_school || {}
+  const netAvgPct = data?.fundamentals_network_avg_pct
   const names = Object.keys(schools).sort((a, b) => {
+    const pa = fundBySchool[a]?.avg_pct ?? -1
+    const pb = fundBySchool[b]?.avg_pct ?? -1
+    if (pb !== pa) return pb - pa
     const ca = schools[a].touchpoints_by_type?.observation_fundamentals?.count || 0
     const cb = schools[b].touchpoints_by_type?.observation_fundamentals?.count || 0
     return cb - ca
@@ -50,6 +55,12 @@ function FundamentalsView({ data }) {
 
   const total = data?.kpis?.fundamentals || 0
   const totalTeachers = data?.kpis?.fundamentals_teachers || 0
+  // Gauge dial stroke-dasharray is circumference * (pct/100)
+  const R = 56
+  const CIRC = 2 * Math.PI * R
+  const dashPct = netAvgPct != null ? Math.max(0, Math.min(100, netAvgPct)) : 0
+  const dashOn = (dashPct / 100) * CIRC
+  const gaugeColor = dashPct >= 80 ? '#059669' : dashPct >= 60 ? '#e47727' : '#dc2626'
 
   return (
     <div>
@@ -68,32 +79,79 @@ function FundamentalsView({ data }) {
         </div>
       </div>
 
-      <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mt-4 mb-2">
-        Fundamentals visits by school
-      </div>
-      {names.length === 0 ? (
-        <Empty msg="No fundamentals visits logged this year." />
-      ) : (
-        names.map(name => {
-          const n = schools[name]
-          const fund = n.touchpoints_by_type?.observation_fundamentals
-          const count = fund?.count || 0
-          const teachers = fund?.teachers || 0
-          return (
-            <div key={name} className="bg-white rounded-xl p-3.5 shadow-sm mb-2.5">
-              <div className="flex items-center justify-between gap-2.5">
-                <div className="min-w-0">
-                  <div className="text-[13px] font-bold truncate">{shortSchool(name)}</div>
-                  <div className="text-[11px] text-gray-400">{teachers} teachers · {n.staff_count || '—'} staff</div>
+      {/* Network on-task gauge */}
+      {netAvgPct != null && (
+        <div className="bg-white rounded-xl p-4 shadow-sm mb-4 flex items-center gap-4">
+          <svg width="140" height="140" viewBox="0 0 140 140">
+            <circle cx="70" cy="70" r={R} stroke="#f3f4f6" strokeWidth="14" fill="none" />
+            <circle
+              cx="70" cy="70" r={R}
+              stroke={gaugeColor} strokeWidth="14" fill="none"
+              strokeLinecap="round"
+              strokeDasharray={`${dashOn} ${CIRC}`}
+              transform="rotate(-90 70 70)"
+            />
+            <text x="70" y="74" textAnchor="middle" className="text-3xl font-extrabold" fill="#002f60" style={{ fontSize: 28, fontWeight: 800 }}>
+              {Math.round(netAvgPct)}%
+            </text>
+          </svg>
+          <div className="flex-1 min-w-0">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Network On-Task</div>
+            <div className="text-sm text-gray-700 mt-1">Average on-task percentage across all fundamentals visits this year.</div>
+          </div>
+        </div>
+      )}
+
+      {/* Per-school bars with network avg reference line */}
+      {names.length > 0 && (
+        <div className="bg-white rounded-xl p-4 shadow-sm">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-3">
+            Fundamentals by school
+          </div>
+          {names.map(name => {
+            const n = schools[name]
+            const fund = n.touchpoints_by_type?.observation_fundamentals
+            const visits = fund?.count || fundBySchool[name]?.visits || 0
+            const avgPct = fundBySchool[name]?.avg_pct
+            const width = avgPct != null ? Math.max(4, Math.min(100, avgPct)) : 0
+            const barColor = avgPct == null ? '#d1d5db'
+              : avgPct >= 80 ? '#059669' : avgPct >= 60 ? '#e47727' : '#dc2626'
+            return (
+              <div key={name} className="mb-3 last:mb-0">
+                <div className="flex items-baseline justify-between mb-1">
+                  <div className="text-[12px] font-bold text-gray-700 truncate">{shortSchool(name)}</div>
+                  <div className="text-[11px] text-gray-500 shrink-0">
+                    {avgPct != null ? <span className="font-extrabold text-fls-navy">{avgPct}%</span> : <span className="text-gray-400">—</span>}
+                    <span className="text-gray-400"> · {visits} visits</span>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-lg font-extrabold text-fls-navy">{count}</div>
-                  <div className="text-[9px] text-gray-400 uppercase">visits</div>
+                <div className="relative h-3 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{ width: `${width}%`, background: barColor }}
+                  />
+                  {netAvgPct != null && (
+                    <div
+                      className="absolute top-0 bottom-0 w-[2px] bg-fls-navy"
+                      style={{ left: `${netAvgPct}%` }}
+                      title={`Network avg ${netAvgPct}%`}
+                    />
+                  )}
                 </div>
               </div>
+            )
+          })}
+          {netAvgPct != null && (
+            <div className="text-[10px] text-gray-400 mt-3 flex items-center gap-1.5">
+              <span className="inline-block w-[2px] h-3 bg-fls-navy" />
+              Network average ({netAvgPct}%)
             </div>
-          )
-        })
+          )}
+        </div>
+      )}
+
+      {names.length === 0 && (
+        <Empty msg="No fundamentals visits logged this year." />
       )}
     </div>
   )
@@ -165,32 +223,96 @@ function ObservationsView({ data }) {
       )}
 
       <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mt-4 mb-2">
-        PMAP averages by school
+        PMAP scores — schools × dimensions
       </div>
       {Object.keys(schools).length === 0 ? (
         <Empty msg="No school data yet." />
       ) : (
-        Object.keys(schools).sort().map(name => {
-          const avg = schools[name].avg_scores || {}
-          const hasScores = Object.keys(avg).length > 0
-          return (
-            <div key={name} className="bg-white rounded-xl p-3.5 shadow-sm mb-2.5">
-              <div className="text-[13px] font-bold mb-2">{shortSchool(name)}</div>
-              {hasScores ? (
-                <div className="flex gap-1 flex-wrap">
-                  {TEACHER_DIMS.map(code => avg[code] != null && (
-                    <span key={code} className={`text-[11px] font-bold px-1.5 py-0.5 rounded-md ${scoreClass(avg[code])}`}>
-                      {DIM_SHORT[code]} {avg[code]}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-xs text-gray-400">No PMAP scores this year</div>
-              )}
-            </div>
-          )
-        })
+        <HeatmapGrid schools={schools} networkAvg={networkAvg} />
       )}
+    </div>
+  )
+}
+
+// Heatmap: rows = schools, columns = T1-T5, color-coded cells.
+// Network average row at the bottom as the benchmark reference.
+function HeatmapGrid({ schools, networkAvg }) {
+  const names = Object.keys(schools).sort()
+  const cellColor = (v) => {
+    if (v == null) return { bg: '#f9fafb', text: '#d1d5db' }
+    const n = Math.round(v)
+    const palette = {
+      1: { bg: '#fee2e2', text: '#b91c1c' },
+      2: { bg: '#fed7aa', text: '#c2410c' },
+      3: { bg: '#fef3c7', text: '#a16207' },
+      4: { bg: '#d1fae5', text: '#047857' },
+      5: { bg: '#bbf7d0', text: '#065f46' },
+    }
+    return palette[Math.max(1, Math.min(5, n))]
+  }
+  return (
+    <div className="bg-white rounded-xl p-3 shadow-sm overflow-x-auto">
+      <table className="w-full border-separate" style={{ borderSpacing: '3px' }}>
+        <thead>
+          <tr>
+            <th className="text-left text-[10px] font-bold uppercase tracking-wide text-gray-400 pb-2 pr-2"></th>
+            {TEACHER_DIMS.map(code => (
+              <th key={code} className="text-center text-[10px] font-bold uppercase tracking-wide text-gray-500 pb-2" title={DIM_FULL[code]}>
+                {DIM_SHORT[code]}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {names.map(name => {
+            const avg = schools[name].avg_scores || {}
+            return (
+              <tr key={name}>
+                <td className="pr-2 text-[12px] font-semibold text-gray-700 whitespace-nowrap">
+                  {shortSchool(name)}
+                </td>
+                {TEACHER_DIMS.map(code => {
+                  const v = avg[code]
+                  const c = cellColor(v)
+                  return (
+                    <td key={code}
+                        className="text-center text-[12px] font-bold rounded-md py-2"
+                        style={{ background: c.bg, color: c.text, minWidth: '44px' }}>
+                      {v != null ? v.toFixed(1) : '—'}
+                    </td>
+                  )
+                })}
+              </tr>
+            )
+          })}
+          {Object.keys(networkAvg).length > 0 && (
+            <tr>
+              <td className="pr-2 pt-2 text-[11px] font-extrabold uppercase tracking-wider text-fls-navy whitespace-nowrap">
+                Network Avg
+              </td>
+              {TEACHER_DIMS.map(code => {
+                const v = networkAvg[code]
+                const c = cellColor(v)
+                return (
+                  <td key={code}
+                      className="text-center text-[12px] font-extrabold rounded-md py-2 border-2"
+                      style={{ background: c.bg, color: c.text, borderColor: '#002f60', minWidth: '44px' }}>
+                    {v != null ? v.toFixed(1) : '—'}
+                  </td>
+                )
+              })}
+            </tr>
+          )}
+        </tbody>
+      </table>
+      <div className="text-[10px] text-gray-400 mt-2.5 flex items-center gap-2 flex-wrap">
+        <span>Legend:</span>
+        <span className="px-1.5 py-0.5 rounded-md" style={{ background: '#fee2e2', color: '#b91c1c' }}>1 NI</span>
+        <span className="px-1.5 py-0.5 rounded-md" style={{ background: '#fed7aa', color: '#c2410c' }}>2 Em</span>
+        <span className="px-1.5 py-0.5 rounded-md" style={{ background: '#fef3c7', color: '#a16207' }}>3 Dev</span>
+        <span className="px-1.5 py-0.5 rounded-md" style={{ background: '#d1fae5', color: '#047857' }}>4 Prof</span>
+        <span className="px-1.5 py-0.5 rounded-md" style={{ background: '#bbf7d0', color: '#065f46' }}>5 Exm</span>
+      </div>
     </div>
   )
 }
