@@ -96,8 +96,8 @@ function FundamentalsView({ data }) {
             </text>
           </svg>
           <div className="flex-1 min-w-0">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Network RB Pass Rate</div>
-            <div className="text-sm text-gray-700 mt-1">Relationship Building check pass rate across all Fundamentals visits this year.</div>
+            <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Network On-Task Pass Rate</div>
+            <div className="text-sm text-gray-700 mt-1">Visits where the teacher hit the on-task bar (scored 100), as a % of all visits this year.</div>
             {yoyDelta != null && (
               <div className={`text-xs font-semibold mt-1 ${yoyDelta > 0 ? 'text-green-600' : yoyDelta < 0 ? 'text-red-500' : 'text-gray-400'}`}>
                 {yoyDelta > 0 ? '↑' : yoyDelta < 0 ? '↓' : '·'} {Math.abs(yoyDelta)} pts vs prior year ({priorRb}%)
@@ -111,7 +111,7 @@ function FundamentalsView({ data }) {
       {names.length > 0 && (
         <div className="bg-white rounded-xl p-4 shadow-sm">
           <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-3">
-            RB Pass Rate by School · {data?.school_year}
+            On-Task Pass Rate by School · {data?.school_year}
           </div>
           {names.map(name => {
             const s = fundBySchool[name]
@@ -149,12 +149,11 @@ function FundamentalsView({ data }) {
         </div>
       )}
 
-      {/* Honest disclosure about minute-by-minute on-task */}
-      <div className="bg-blue-50 border border-blue-100 rounded-xl p-3.5 mt-3 text-xs text-blue-900">
-        <b>Minute-by-minute on-task tracking</b> begins when teachers use the new Fundamentals timer form. {newFormCount > 0
-          ? <>So far <b>{newFormCount}</b> visit{newFormCount === 1 ? '' : 's'} captured with M1–M5 minute scoring this year.</>
-          : <>No visits with minute scoring yet — the gauge above will fill as teachers submit via the new form.</>}
-      </div>
+      {newFormCount > 0 && (
+        <div className="bg-blue-50 border border-blue-100 rounded-xl p-3.5 mt-3 text-xs text-blue-900">
+          <b>{newFormCount}</b> visit{newFormCount === 1 ? '' : 's'} this year captured with the new minute-by-minute on-task timer (more granular than pass/fail).
+        </div>
+      )}
 
       {names.length === 0 && netRb == null && (
         <Empty msg="No fundamentals visits logged this year." />
