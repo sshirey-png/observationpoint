@@ -1329,8 +1329,8 @@ TABLE touchpoints (aliased as t):
   - observed_at TIMESTAMPTZ
   - status TEXT  (values: 'published', 'draft' — almost always filter to published)
   - notes TEXT
-  - feedback TEXT  (PLAINTEXT coaching narrative pulled from Grow. Non-null for ~8,600 imported records. Search with ILIKE '%%keyword%%'.)
-  - feedback_json JSONB  (STRUCTURED coaching narrative. Shape: {grow_id, narrative: [{measurement, text}], checkboxes_selected: [{measurement, selected}], comments: []}. To search narrative: WHERE feedback_json::text ILIKE '%%keyword%%', OR iterate with jsonb_array_elements. Prefer the plaintext 'feedback' column for keyword searches — simpler.)
+  - feedback TEXT  (PLAINTEXT coaching narrative pulled from Grow. Non-null for ~8,600 imported records. Search with ILIKE '%keyword%'.)
+  - feedback_json JSONB  (STRUCTURED coaching narrative. Shape: {grow_id, narrative: [{measurement, text}], checkboxes_selected: [{measurement, selected}], comments: []}. To search narrative: WHERE feedback_json::text ILIKE '%keyword%', OR iterate with jsonb_array_elements. Prefer the plaintext 'feedback' column for keyword searches — simpler.)
   - grow_id TEXT  (stable Grow observation ID)
 
   form_type values (use LIKE patterns for groups):
@@ -1340,10 +1340,10 @@ TABLE touchpoints (aliased as t):
     self_reflection_support, self_reflection_network,
     quick_feedback, celebrate, write_up, iap, solicited_feedback,
     meeting_quick_meeting, "meeting_data_meeting_(relay)"
-  HINT: "meetings" → form_type LIKE 'meeting_%%'
-  HINT: "observations" → form_type LIKE 'observation_%%'
-  HINT: "pmaps" → form_type LIKE 'pmap_%%'
-  HINT: "self-reflections" → form_type LIKE 'self_reflection_%%'
+  HINT: "meetings" → form_type LIKE 'meeting_%'
+  HINT: "observations" → form_type LIKE 'observation_%'
+  HINT: "pmaps" → form_type LIKE 'pmap_%'
+  HINT: "self-reflections" → form_type LIKE 'self_reflection_%'
 
 TABLE scores (aliased as sc):
   - id SERIAL  (primary key)
@@ -1363,8 +1363,8 @@ Schools: Arthur Ashe Charter School, Langston Hughes Academy,
 === NAMING / MATCHING RULES ===
 
 1. When a user names a person (first name, last name, or both), match LIBERALLY:
-   - "Charlotte" → s.first_name ILIKE 'Charlotte%%' OR s.last_name ILIKE 'Charlotte%%'
-   - "Ida Smith" → s.first_name ILIKE 'Ida%%' AND s.last_name ILIKE 'Smith%%'
+   - "Charlotte" → s.first_name ILIKE 'Charlotte%' OR s.last_name ILIKE 'Charlotte%'
+   - "Ida Smith" → s.first_name ILIKE 'Ida%' AND s.last_name ILIKE 'Smith%'
    - ALWAYS include first_name, last_name, email in the SELECT so duplicates/ambiguity is visible in results
 
 2. For "how many X has Y had/done", check BOTH roles:
@@ -1383,8 +1383,8 @@ Q: "How many observations has Charlotte Steele completed?"
 SELECT COUNT(*) AS total
 FROM touchpoints t
 JOIN staff s ON t.observer_email = s.email
-WHERE s.first_name ILIKE 'Charlotte%%' AND s.last_name ILIKE 'Steele%%'
-  AND t.form_type LIKE 'observation_%%'
+WHERE s.first_name ILIKE 'Charlotte%' AND s.last_name ILIKE 'Steele%'
+  AND t.form_type LIKE 'observation_%'
   AND t.school_year = '2025-2026'
   AND t.status = 'published';
 
@@ -1392,8 +1392,8 @@ Q: "How many meetings has Ida had this year?"
 SELECT COUNT(*) AS total, s.first_name, s.last_name, s.email
 FROM touchpoints t
 JOIN staff s ON t.teacher_email = s.email
-WHERE s.first_name ILIKE 'Ida%%'
-  AND t.form_type LIKE 'meeting_%%'
+WHERE s.first_name ILIKE 'Ida%'
+  AND t.form_type LIKE 'meeting_%'
   AND t.school_year = '2025-2026'
   AND t.status = 'published'
 GROUP BY s.first_name, s.last_name, s.email;
@@ -1402,7 +1402,7 @@ Q: "Which teachers got feedback about cold calling?"
 SELECT DISTINCT s.first_name, s.last_name, s.email, s.school, COUNT(t.id) AS mentions
 FROM touchpoints t
 JOIN staff s ON t.teacher_email = s.email
-WHERE t.feedback ILIKE '%%cold call%%'
+WHERE t.feedback ILIKE '%cold call%'
   AND t.school_year = '2025-2026'
   AND t.status = 'published'
 GROUP BY s.first_name, s.last_name, s.email, s.school
@@ -1422,7 +1422,7 @@ SELECT s.first_name, s.last_name, s.email, s.school,
        MAX(t.observed_at) AS last_observed
 FROM staff s
 LEFT JOIN touchpoints t ON s.email = t.teacher_email
-  AND t.form_type LIKE 'observation_%%'
+  AND t.form_type LIKE 'observation_%'
   AND t.status = 'published'
 WHERE s.is_active AND s.job_function = 'Teacher'
 GROUP BY s.first_name, s.last_name, s.email, s.school
@@ -1442,7 +1442,7 @@ Q: "Which school has the most energetic feedback?"
 -- For qualitative questions about feedback content, search with ILIKE and aggregate
 SELECT t.school, COUNT(*) AS mentions
 FROM touchpoints t
-WHERE (t.feedback ILIKE '%%energy%%' OR t.feedback ILIKE '%%engaging%%' OR t.feedback ILIKE '%%enthusias%%')
+WHERE (t.feedback ILIKE '%energy%' OR t.feedback ILIKE '%engaging%' OR t.feedback ILIKE '%enthusias%')
   AND t.school_year = '2025-2026' AND t.status = 'published'
 GROUP BY t.school ORDER BY mentions DESC;
 """
@@ -1470,6 +1470,10 @@ def api_insights():
                 s = s.split('\n', 1)[1] if '\n' in s else s[3:]
             if s.endswith('```'):
                 s = s[:-3]
+            # Defensive: Gemini sometimes emits doubled percent signs in LIKE
+            # patterns (historical artifact of f-string escaping in the schema
+            # prompt). Collapse to single % so Postgres LIKE actually matches.
+            s = s.replace('%%', '%')
             return s.strip()
 
         def validate_sql(sql):
@@ -1514,7 +1518,7 @@ Fix it. Use ONLY the exact column names listed in the schema above. Do NOT inven
                 model='gemini-2.5-pro',
                 contents=base,
                 config=genai_types.GenerateContentConfig(
-                    max_output_tokens=1000,
+                    max_output_tokens=2000,
                     temperature=0,
                 ),
             )
