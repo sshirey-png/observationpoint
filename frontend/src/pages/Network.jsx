@@ -368,11 +368,107 @@ const CATEGORIES = [
   { key: 'fundamentals', label: 'Fundamentals' },
   { key: 'observations', label: 'Observations' },
   { key: 'pmap',         label: 'PMAP' },
+  { key: 'goals',        label: 'Goals' },
   { key: 'reflection',   label: 'Self-Reflection' },
   { key: 'feedback',     label: 'Quick FB' },
   { key: 'celebrate',    label: 'Celebrate' },
   { key: 'meetings',     label: 'Meetings' },
 ]
+
+function GoalsNetworkView({ schoolYear }) {
+  const [data, setData] = useState(null)
+  useEffect(() => {
+    let cancelled = false
+    api.get(`/api/network/assignments-summary?school_year=${encodeURIComponent(schoolYear)}`)
+      .then(r => { if (!cancelled) setData(r) })
+      .catch(() => { if (!cancelled) setData(null) })
+    return () => { cancelled = true }
+  }, [schoolYear])
+
+  if (!data) return <div className="text-center text-gray-400 text-sm py-10">Loading…</div>
+  const byType = data.by_type || []
+  const bySchool = data.by_school || []
+  if (byType.length === 0) return <Empty msg="No goals or action steps for this year yet." />
+
+  // Sum across types
+  const totals = byType.reduce((acc, t) => ({
+    total: acc.total + (t.total || 0),
+    completed: acc.completed + (t.completed || 0),
+    in_progress: acc.in_progress + (t.in_progress || 0),
+    not_started: acc.not_started + (t.not_started || 0),
+  }), { total: 0, completed: 0, in_progress: 0, not_started: 0 })
+  const completionPct = totals.total > 0 ? Math.round((totals.completed / totals.total) * 100) : 0
+
+  const TYPE_LABEL = { actionStep: 'Action Steps', goal: 'Goals', toDo: 'To-Do' }
+
+  return (
+    <div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4 mb-4">
+        <div className="bg-white rounded-xl p-3.5 text-center shadow-sm">
+          <div className="text-2xl font-extrabold text-fls-navy">{totals.total.toLocaleString()}</div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">Total</div>
+        </div>
+        <div className="bg-white rounded-xl p-3.5 text-center shadow-sm">
+          <div className="text-2xl font-extrabold text-green-600">{totals.completed.toLocaleString()}</div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">Complete</div>
+        </div>
+        <div className="bg-white rounded-xl p-3.5 text-center shadow-sm">
+          <div className="text-2xl font-extrabold text-orange-600">{totals.in_progress.toLocaleString()}</div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">In Progress</div>
+        </div>
+        <div className="bg-white rounded-xl p-3.5 text-center shadow-sm">
+          <div className="text-2xl font-extrabold text-fls-navy">{completionPct}%</div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">Completion</div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl p-4 shadow-sm mb-3">
+        <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-3">By type</div>
+        {byType.map(t => {
+          const pct = t.total > 0 ? Math.round((t.completed / t.total) * 100) : 0
+          return (
+            <div key={t.type} className="mb-3 last:mb-0">
+              <div className="flex items-baseline justify-between mb-1">
+                <div className="text-[12px] font-bold text-gray-700">{TYPE_LABEL[t.type] || t.type}</div>
+                <div className="text-[11px] text-gray-500">
+                  <span className="font-extrabold text-fls-navy">{t.completed.toLocaleString()}</span>
+                  <span className="text-gray-400"> of {t.total.toLocaleString()} complete · {t.unique_teachers} teachers</span>
+                </div>
+              </div>
+              <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full rounded-full bg-fls-navy" style={{ width: `${Math.max(2, pct)}%` }} />
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {bySchool.length > 0 && (
+        <div className="bg-white rounded-xl p-4 shadow-sm">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-3">By school</div>
+          {bySchool.map(s => {
+            const pct = s.total > 0 ? Math.round((s.completed / s.total) * 100) : 0
+            const color = pct >= 50 ? '#059669' : pct >= 25 ? '#e47727' : '#dc2626'
+            return (
+              <div key={s.school} className="mb-3 last:mb-0">
+                <div className="flex items-baseline justify-between mb-1">
+                  <div className="text-[12px] font-bold text-gray-700 truncate">{shortSchool(s.school)}</div>
+                  <div className="text-[11px] text-gray-500 shrink-0">
+                    <span className="font-extrabold" style={{ color }}>{pct}%</span>
+                    <span className="text-gray-400"> · {s.completed} of {s.total} done · {s.teachers_with_assignment} teachers</span>
+                  </div>
+                </div>
+                <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: `${Math.max(2, pct)}%`, background: color }} />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
 
 const SCHOOL_YEARS = ['2025-2026', '2024-2025', '2023-2024']
 
@@ -545,6 +641,7 @@ export default function Network() {
             {category === 'fundamentals' && <FundamentalsView data={data} />}
             {category === 'observations' && <ObservationsView data={data} />}
             {category === 'pmap'         && <PMAPView data={data} />}
+            {category === 'goals'        && <GoalsNetworkView schoolYear={schoolYear} />}
             {category === 'reflection'   && <SchoolCountsView data={data} typeMatcher={t => t.startsWith('self_reflection_')} label="Self-reflections" emptyMsg="No self-reflections submitted this year." />}
             {category === 'feedback'     && <SchoolCountsView data={data} typeMatcher={t => t === 'quick_feedback'} label="Quick feedback notes" emptyMsg="No quick feedback logged this year." />}
             {category === 'celebrate'    && <SchoolCountsView data={data} typeMatcher={t => t === 'celebrate' || t === 'celebration'} label="Celebrations" emptyMsg="No celebrations logged this year." />}
