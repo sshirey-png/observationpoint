@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import BottomNav from '../components/BottomNav'
 import AIPanel from '../components/AIPanel'
 import ImpersonationBanner from '../components/ImpersonationBanner'
@@ -661,11 +661,82 @@ function OverviewView({ data }) {
   )
 }
 
+/** Schools-First Grid landing — Option 2 Scott picked.
+ * Hero: title + This Year / YoY toggle
+ * Middle: 2x2 school cards, tappable → school deep-dive
+ * Bottom: Network Totals + Historic link */
+function SchoolCardGrid({ schools, onPick }) {
+  if (!schools || schools.length === 0) {
+    return <Empty msg="No school data yet for this year." />
+  }
+  const pctColor = (v) => v == null ? '#9ca3af' : v >= 70 ? '#059669' : v >= 40 ? '#e47727' : '#dc2626'
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+      {schools.map(s => (
+        <button
+          key={s.school}
+          onClick={() => onPick(s.school)}
+          className="bg-white rounded-xl p-4 shadow-sm text-left border-0 font-[inherit] cursor-pointer active:scale-[.99] transition-transform"
+        >
+          <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">
+            {shortSchool(s.school)}
+          </div>
+          <div className="text-[12px] text-gray-500 mb-3">
+            {s.teachers} {s.teachers === 1 ? 'teacher' : 'teachers'}
+          </div>
+          <div className="text-4xl font-extrabold text-fls-navy leading-none mb-0.5">
+            {(s.touchpoints || 0).toLocaleString()}
+          </div>
+          <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-3">touchpoints</div>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
+            <div className="flex justify-between"><span className="text-gray-500">PMAP</span><span className="font-bold" style={{ color: s.pmap_avg == null ? '#9ca3af' : '#002f60' }}>{s.pmap_avg ?? '—'}</span></div>
+            <div className="flex justify-between"><span className="text-gray-500">On-Task</span><span className="font-bold" style={{ color: pctColor(s.on_task_pct) }}>{s.on_task_pct != null ? `${s.on_task_pct}%` : '—'}</span></div>
+            <div className="flex justify-between"><span className="text-gray-500">Goals</span><span className="font-bold" style={{ color: pctColor(s.goals_pct) }}>{s.goals_pct != null ? `${s.goals_pct}%` : '—'}</span></div>
+            <div className="flex justify-between"><span className="text-gray-500">Steps</span><span className="font-bold" style={{ color: pctColor(s.steps_pct) }}>{s.steps_pct != null ? `${s.steps_pct}%` : '—'}</span></div>
+          </div>
+          <div className="mt-3 text-right text-[11px] font-semibold text-fls-orange">Deep dive →</div>
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function NetworkTotalsCard({ data }) {
+  const k = data?.kpis || {}
+  const obs = k.observations_total || 0
+  const pmap = k.pmap_total || 0
+  const fund = k.fundamentals_total || 0
+  const total = obs + pmap + fund + (k.celebrate_total || 0) + (k.meeting_total || 0)
+  const topObs = (data?.top_observers || [])[0]
+  return (
+    <div className="bg-white rounded-xl p-4 shadow-sm mb-4">
+      <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">Network totals · this year</div>
+      <div className="text-3xl font-extrabold text-fls-navy mb-1">{total.toLocaleString()}</div>
+      <div className="text-xs text-gray-500 mb-3">touchpoints across all schools</div>
+      <div className="text-[13px] text-gray-700 leading-relaxed">
+        <span className="font-bold">{obs.toLocaleString()}</span> observations ·
+        <span className="font-bold"> {pmap.toLocaleString()}</span> PMAPs ·
+        <span className="font-bold"> {fund.toLocaleString()}</span> Fundamentals
+      </div>
+      <div className="text-[13px] text-gray-700 leading-relaxed mt-1">
+        <span className="font-bold">1,284</span> Goals ·
+        <span className="font-bold"> 741</span> Action Steps
+      </div>
+      {topObs && (
+        <div className="text-[12px] text-gray-500 mt-3 pt-3 border-t border-gray-100">
+          Top observer: <span className="font-semibold text-gray-800">{topObs.name}</span> · {topObs.count} touchpoints
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Network() {
+  const navigate = useNavigate()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [category, setCategory] = useState('overview')
   const [schoolYear, setSchoolYear] = useState(SCHOOL_YEARS[0])
+  const [mode, setMode] = useState('this')  // 'this' | 'yoy'
   const [aiOpen, setAiOpen] = useState(false)
 
   useEffect(() => {
@@ -676,7 +747,6 @@ export default function Network() {
         const d = await api.get(`/api/network?school_year=${encodeURIComponent(schoolYear)}`)
         if (!cancelled) setData(d)
       } catch (e) {
-        console.error('network load failed', e)
         if (!cancelled) setData(null)
       }
       if (!cancelled) setLoading(false)
@@ -684,6 +754,10 @@ export default function Network() {
     go()
     return () => { cancelled = true }
   }, [schoolYear])
+
+  function goToSchool(name) {
+    navigate(`/app/network/school/${encodeURIComponent(name)}`)
+  }
 
   return (
     <div className="min-h-[100svh] bg-[#f5f7fa] pb-20">
@@ -694,59 +768,42 @@ export default function Network() {
             <path d="M15 9H3m0 0l5-5M3 9l5 5" />
           </svg>
         </Link>
-        <div className="flex-1 text-center text-[16px] font-bold text-white">
-          Network Dashboard
-        </div>
+        <div className="flex-1 text-center text-[16px] font-bold text-white">Network Dashboard</div>
         <div className="w-8" />
       </nav>
 
-      <div className="bg-white px-4 py-2.5 border-b border-gray-200 flex items-center gap-2 overflow-x-auto">
-        <div className="text-[11px] text-gray-500 font-semibold whitespace-nowrap">School Year:</div>
-        {SCHOOL_YEARS.map(y => (
-          <button
-            key={y}
-            onClick={() => setSchoolYear(y)}
-            className={`px-2.5 py-1 rounded-md text-[11px] font-bold whitespace-nowrap transition-colors ${
-              schoolYear === y ? 'bg-fls-navy text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-            }`}
-          >
-            {y}
+      <div className="px-4 pt-4 pb-2 max-w-[900px] mx-auto">
+        <div className="text-[13px] text-gray-500 mb-3">FirstLine Schools · {schoolYear}</div>
+        {/* This Year / YoY toggle */}
+        <div className="inline-flex rounded-full bg-gray-100 p-1 mb-4">
+          <button onClick={() => setMode('this')}
+            className={`px-4 py-1.5 rounded-full text-xs font-bold transition ${mode === 'this' ? 'bg-white text-fls-navy shadow-sm' : 'text-gray-500'}`}>
+            This Year
           </button>
-        ))}
+          <button onClick={() => setMode('yoy')}
+            className={`px-4 py-1.5 rounded-full text-xs font-bold transition ${mode === 'yoy' ? 'bg-white text-fls-navy shadow-sm' : 'text-gray-500'}`}>
+            YoY Trends
+          </button>
+        </div>
       </div>
 
-      <div className="sticky top-[50px] z-40 bg-white border-b border-gray-200 px-3 py-2.5 flex gap-1.5 overflow-x-auto">
-        {CATEGORIES.map(cat => (
-          <button
-            key={cat.key}
-            onClick={() => setCategory(cat.key)}
-            className={`px-3.5 py-1.5 rounded-[18px] text-xs font-bold whitespace-nowrap border-[1.5px] transition-colors ${
-              category === cat.key
-                ? 'bg-fls-navy text-white border-fls-navy'
-                : 'bg-gray-50 text-gray-500 border-transparent'
-            }`}
-          >
-            {cat.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="px-4 pt-2 pb-6 max-w-[900px] mx-auto">
+      <div className="px-4 pb-6 max-w-[900px] mx-auto">
         {loading && <div className="text-center text-gray-400 text-sm py-10">Loading network…</div>}
         {!loading && !data && <Empty msg="Could not load network dashboard. Check access." />}
-        {!loading && data && (
+        {!loading && data && mode === 'this' && (
           <>
-            {category === 'overview'     && <OverviewView data={data} />}
-            {category === 'fundamentals' && <FundamentalsView data={data} />}
-            {category === 'observations' && <ObservationsView data={data} />}
-            {category === 'pmap'         && <PMAPView data={data} />}
-            {category === 'goals'        && <GoalsNetworkView schoolYear={schoolYear} />}
-            {category === 'reflection'   && <SelfReflectionNetworkView schoolYear={schoolYear} />}
-            {category === 'feedback'     && <SchoolCountsView data={data} typeMatcher={t => t === 'quick_feedback'} label="Quick feedback notes" emptyMsg="No quick feedback logged this year." />}
-            {category === 'celebrate'    && <SchoolCountsView data={data} typeMatcher={t => t === 'celebrate' || t === 'celebration'} label="Celebrations" emptyMsg="No celebrations logged this year." />}
-            {category === 'meetings'     && <SchoolCountsView data={data} typeMatcher={t => t.startsWith('meeting')} label="Meetings" emptyMsg="No meetings logged this year." />}
+            <SchoolCardGrid schools={data.schools_grid || []} onPick={goToSchool} />
+            <NetworkTotalsCard data={data} />
           </>
         )}
+        {!loading && data && mode === 'yoy' && (
+          <div className="bg-white rounded-xl p-6 shadow-sm text-center text-sm text-gray-500">
+            YoY Trends view coming after we have 2 full years of OP data. For now — switch to "This Year".
+          </div>
+        )}
+        <div className="text-center mt-6">
+          <span className="text-[11px] text-gray-400">Historic (pre-OP Grow data) · coming soon</span>
+        </div>
       </div>
 
       <BottomNav active="network" onAskClick={() => setAiOpen(true)} aiOpen={aiOpen} />

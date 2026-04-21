@@ -336,6 +336,52 @@ def get_network_dashboard(school_year=None):
             'by_school': fund_by_school,
             'new_form_m_count': m_count,  # records that have actual minute on-task data
         }
+
+        # Per-school roll-up for the Schools Grid on Network landing.
+        # For each school: teacher count, total touchpoints this year, PMAP avg
+        # (single number from T1-T5), on-task pass rate, goals completion pct,
+        # action steps completion pct.
+        cur.execute("""
+            SELECT
+              s.school,
+              COUNT(DISTINCT s.email) FILTER (WHERE s.is_active AND s.job_function = 'Teacher') AS teachers,
+              (SELECT COUNT(*) FROM touchpoints t
+                 WHERE t.school = s.school AND t.school_year = %s AND t.status = 'published') AS touchpoints,
+              (SELECT ROUND(AVG(sc.score)::numeric, 1)::float
+                 FROM scores sc JOIN touchpoints t ON sc.touchpoint_id = t.id
+                 WHERE t.school = s.school AND t.school_year = %s AND t.form_type = 'pmap_teacher'
+                   AND sc.dimension_code IN ('T1','T2','T3','T4','T5')) AS pmap_avg,
+              (SELECT ROUND(AVG(sc.score)::numeric, 1)::float
+                 FROM scores sc JOIN touchpoints t ON sc.touchpoint_id = t.id
+                 WHERE t.school = s.school AND t.school_year = %s AND t.form_type = 'observation_fundamentals'
+                   AND sc.dimension_code = 'RB' AND t.status = 'published') AS on_task_pct,
+              (SELECT
+                 CASE WHEN COUNT(*) > 0
+                   THEN ROUND(100.0 * COUNT(*) FILTER (WHERE progress_pct = 100) / COUNT(*))::int
+                   ELSE NULL END
+                 FROM assignments a
+                 JOIN staff ss ON LOWER(ss.email) = LOWER(a.teacher_email)
+                 WHERE ss.school = s.school AND a.school_year = %s AND a.type = 'goal') AS goals_pct,
+              (SELECT
+                 CASE WHEN COUNT(*) > 0
+                   THEN ROUND(100.0 * COUNT(*) FILTER (WHERE progress_pct = 100) / COUNT(*))::int
+                   ELSE NULL END
+                 FROM assignments a
+                 JOIN staff ss ON LOWER(ss.email) = LOWER(a.teacher_email)
+                 WHERE ss.school = s.school AND a.school_year = %s AND a.type = 'actionStep') AS steps_pct
+            FROM staff s
+            WHERE s.school IS NOT NULL AND s.school <> '' AND s.school <> 'FirstLine Network'
+            GROUP BY s.school
+            ORDER BY touchpoints DESC
+        """, (sy, sy, sy, sy, sy))
+        schools_grid = []
+        for r in cur.fetchall():
+            schools_grid.append({
+                'school': r[0], 'teachers': r[1], 'touchpoints': r[2] or 0,
+                'pmap_avg': r[3], 'on_task_pct': r[4],
+                'goals_pct': r[5], 'steps_pct': r[6],
+            })
+        out['schools_grid'] = schools_grid
         # Backward-compat fields the existing UI may still reference:
         out['fundamentals_network_avg_pct'] = network_rb_pct
         out['fundamentals_by_school'] = {
