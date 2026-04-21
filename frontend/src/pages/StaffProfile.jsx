@@ -440,6 +440,7 @@ function SimpleListView({ touchpoints, matcher, emptyMsg, onOpenDetail, staffEma
 }
 
 const CATEGORIES = [
+  { key: 'recent',       label: 'Recent' },
   { key: 'fundamentals', label: 'Fundamentals' },
   { key: 'observations', label: 'Observations' },
   { key: 'pmap',         label: 'PMAP' },
@@ -449,6 +450,115 @@ const CATEGORIES = [
   { key: 'celebrate',    label: 'Celebrate' },
   { key: 'meetings',     label: 'Meetings' },
 ]
+
+const TYPE_BADGE = {
+  observation_teacher:    { label: 'Observation', bg: '#dbeafe', color: '#1d4ed8' },
+  observation_prek:       { label: 'PreK Obs',    bg: '#fce7f3', color: '#be185d' },
+  observation_fundamentals:{ label: 'Fundamentals',bg: '#fef3c7', color: '#b45309' },
+  pmap_teacher:           { label: 'PMAP',        bg: '#dcfce7', color: '#15803d' },
+  pmap_prek:              { label: 'PMAP',        bg: '#dcfce7', color: '#15803d' },
+  pmap_leader:            { label: 'PMAP',        bg: '#dcfce7', color: '#15803d' },
+  pmap_network:           { label: 'PMAP',        bg: '#dcfce7', color: '#15803d' },
+  pmap_support:           { label: 'PMAP',        bg: '#dcfce7', color: '#15803d' },
+  self_reflection_teacher:{ label: 'Self-Refl',   bg: '#ede9fe', color: '#6d28d9' },
+  self_reflection_leader: { label: 'Self-Refl',   bg: '#ede9fe', color: '#6d28d9' },
+  self_reflection_prek:   { label: 'Self-Refl',   bg: '#ede9fe', color: '#6d28d9' },
+  self_reflection_network:{ label: 'Self-Refl',   bg: '#ede9fe', color: '#6d28d9' },
+  self_reflection_support:{ label: 'Self-Refl',   bg: '#ede9fe', color: '#6d28d9' },
+  quick_feedback:         { label: 'Quick FB',    bg: '#fef3c7', color: '#b45309' },
+  celebrate:              { label: 'Celebrate',   bg: '#d1fae5', color: '#059669' },
+  solicited_feedback:     { label: 'Solicited',   bg: '#dbeafe', color: '#2563eb' },
+  meeting_quick_meeting:  { label: 'Meeting',     bg: '#f0fdf4', color: '#16a34a' },
+  'meeting_data_meeting_(relay)': { label: 'Data Mtg', bg: '#f0fdf4', color: '#16a34a' },
+}
+
+function RecentView({ touchpoints, onOpenDetail, staffEmail }) {
+  // Most recent first, mixed types, all published records
+  const sorted = [...touchpoints].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
+  const first = sorted.slice(0, 25)
+
+  // At-a-glance stats
+  const total = touchpoints.length
+  const thisYear = touchpoints.filter(t => t.school_year === '2025-2026').length
+  const observersSet = new Set(touchpoints.map(t => t.observer_email).filter(Boolean))
+  const latest = sorted[0]
+
+  if (total === 0) return <Empty msg="No records yet." />
+
+  return (
+    <div>
+      {/* At-a-glance */}
+      <div className="grid grid-cols-3 gap-2 mt-4 mb-4">
+        <div className="bg-white rounded-xl p-3.5 text-center shadow-sm">
+          <div className="text-2xl font-extrabold text-fls-navy">{total}</div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">Total touchpoints</div>
+        </div>
+        <div className="bg-white rounded-xl p-3.5 text-center shadow-sm">
+          <div className="text-2xl font-extrabold text-fls-navy">{thisYear}</div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">This year</div>
+        </div>
+        <div className="bg-white rounded-xl p-3.5 text-center shadow-sm">
+          <div className="text-2xl font-extrabold text-fls-navy">{observersSet.size}</div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">Unique observers</div>
+        </div>
+      </div>
+
+      {latest && (
+        <div className="text-[11px] text-gray-500 mb-2">
+          Most recent · <span className="font-semibold text-gray-700">{formatDate(latest.date)}</span>
+          {latest.observer_name && <> · by {latest.observer_name}</>}
+        </div>
+      )}
+
+      <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mt-4 mb-2">
+        Recent activity · showing {first.length} of {total}
+      </div>
+
+      {first.map(tp => {
+        const badge = TYPE_BADGE[tp.form_type] || { label: tp.form_type, bg: '#f3f4f6', color: '#4b5563' }
+        const isSelf = staffEmail && tp.observer_email && tp.observer_email.toLowerCase() === staffEmail.toLowerCase()
+        const isReflection = tp.form_type.startsWith('self_reflection_')
+        const hasExtra = !!(tp.feedback_json || tp.meeting_json || (tp.notes && tp.notes.length > 0 && !isJunkNote(tp.notes, badge.label, tp.form_type)))
+        const Tag = hasExtra ? 'button' : 'div'
+        return (
+          <Tag
+            key={tp.id}
+            onClick={hasExtra ? () => onOpenDetail(tp) : undefined}
+            className={`block w-full text-left rounded-xl p-3.5 shadow-sm mb-2 bg-white border-0 font-[inherit] ${
+              hasExtra ? 'cursor-pointer active:scale-[.99] transition-transform' : 'cursor-default'
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              <span
+                className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-md shrink-0"
+                style={{ background: badge.bg, color: badge.color }}
+              >
+                {badge.label}
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="text-[13px] font-semibold">{formatDate(tp.date)}</div>
+                <div className="text-[11px] text-gray-500 truncate">
+                  {isSelf && isReflection ? 'Self-submitted' :
+                   tp.observer_name ? `by ${tp.observer_name}` :
+                   tp.observer_email ? `by ${tp.observer_email.split('@')[0]}` :
+                   ''}
+                </div>
+              </div>
+              {tp.scores && Object.keys(tp.scores).length > 0 && (
+                <div className="text-[11px] font-bold text-fls-navy shrink-0">
+                  {Math.round((Object.values(tp.scores).reduce((a, b) => a + b, 0) / Object.keys(tp.scores).length) * 10) / 10}
+                </div>
+              )}
+            </div>
+            {hasExtra && (
+              <div className="text-[10px] text-gray-400 mt-2 font-semibold">Tap for full record →</div>
+            )}
+          </Tag>
+        )
+      })}
+    </div>
+  )
+}
 
 function GoalsView({ email }) {
   const [items, setItems] = useState(null)
@@ -539,7 +649,7 @@ export default function StaffProfile() {
   const email = decodeURIComponent(rawEmail || '')
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [category, setCategory] = useState('fundamentals')
+  const [category, setCategory] = useState('recent')
   const [aiOpen, setAiOpen] = useState(false)
   const [logOpen, setLogOpen] = useState(false)
   const [detail, setDetail] = useState(null)
@@ -624,6 +734,7 @@ export default function StaffProfile() {
         {!loading && !data && <Empty msg="Could not load this staff profile. Check access or try again." />}
         {!loading && data && (
           <>
+            {category === 'recent'       && <RecentView touchpoints={touchpoints} onOpenDetail={setDetail} staffEmail={email} />}
             {category === 'fundamentals' && <FundamentalsView touchpoints={touchpoints} onOpenDetail={setDetail} staffEmail={email} />}
             {category === 'observations' && <ObservationsView touchpoints={touchpoints} onOpenDetail={setDetail} staffEmail={email} />}
             {category === 'pmap'         && <PMAPView touchpoints={touchpoints} pmap_by_year={data.pmap_by_year} school_years={data.school_years} onOpenDetail={setDetail} staffEmail={email} />}
