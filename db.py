@@ -222,14 +222,16 @@ def get_network_dashboard(school_year=None):
         cur.execute("SELECT COUNT(*) FROM staff WHERE is_active AND job_function = 'Teacher'")
         total_t = cur.fetchone()[0]
 
-        # Prior-year parallel counts for YoY delta
+        # Prior-year parallel counts for YoY delta.
+        # NOTE: %% in LIKE patterns is required when cur.execute() has
+        # parameter binding — psycopg2 reads bare % as a placeholder.
         cur.execute("""
             SELECT
               COUNT(*) FILTER (WHERE form_type = 'observation_teacher') AS obs,
               COUNT(*) FILTER (WHERE form_type = 'observation_fundamentals') AS fund,
-              COUNT(*) FILTER (WHERE form_type LIKE 'pmap_%') AS pmap,
+              COUNT(*) FILTER (WHERE form_type LIKE 'pmap_%%') AS pmap,
               COUNT(*) FILTER (WHERE form_type = 'celebrate') AS cel,
-              COUNT(*) FILTER (WHERE form_type LIKE 'meeting_%') AS mtg
+              COUNT(*) FILTER (WHERE form_type LIKE 'meeting_%%') AS mtg
             FROM touchpoints
             WHERE school_year = %s AND status = 'published'
         """, (sy,))
@@ -246,9 +248,9 @@ def get_network_dashboard(school_year=None):
                 SELECT
                   COUNT(*) FILTER (WHERE form_type = 'observation_teacher'),
                   COUNT(*) FILTER (WHERE form_type = 'observation_fundamentals'),
-                  COUNT(*) FILTER (WHERE form_type LIKE 'pmap_%'),
+                  COUNT(*) FILTER (WHERE form_type LIKE 'pmap_%%'),
                   COUNT(*) FILTER (WHERE form_type = 'celebrate'),
-                  COUNT(*) FILTER (WHERE form_type LIKE 'meeting_%')
+                  COUNT(*) FILTER (WHERE form_type LIKE 'meeting_%%')
                 FROM touchpoints
                 WHERE school_year = %s AND status = 'published'
             """, (prior_sy,))
