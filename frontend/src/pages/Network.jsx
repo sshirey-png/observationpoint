@@ -688,11 +688,10 @@ function SchoolCardGrid({ schools, onPick }) {
             {(s.touchpoints || 0).toLocaleString()}
           </div>
           <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-3">touchpoints</div>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px]">
-            <div className="flex justify-between"><span className="text-gray-500">PMAP</span><span className="font-bold" style={{ color: s.pmap_avg == null ? '#9ca3af' : '#002f60' }}>{s.pmap_avg ?? '—'}</span></div>
+          <div className="space-y-1.5 text-[12px]">
+            <div className="flex justify-between"><span className="text-gray-500">PMAP avg</span><span className="font-bold" style={{ color: s.pmap_avg == null ? '#9ca3af' : '#002f60' }}>{s.pmap_avg ?? '—'}</span></div>
             <div className="flex justify-between"><span className="text-gray-500">On-Task</span><span className="font-bold" style={{ color: pctColor(s.on_task_pct) }}>{s.on_task_pct != null ? `${s.on_task_pct}%` : '—'}</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">Goals</span><span className="font-bold" style={{ color: pctColor(s.goals_pct) }}>{s.goals_pct != null ? `${s.goals_pct}%` : '—'}</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">Steps</span><span className="font-bold" style={{ color: pctColor(s.steps_pct) }}>{s.steps_pct != null ? `${s.steps_pct}%` : '—'}</span></div>
+            <div className="flex justify-between"><span className="text-gray-500">Action Steps</span><span className="font-bold" style={{ color: pctColor(s.steps_pct) }}>{s.steps_pct != null ? `${s.steps_pct}%` : '—'}</span></div>
           </div>
           <div className="mt-3 text-right text-[11px] font-semibold text-fls-orange">Deep dive →</div>
         </button>
