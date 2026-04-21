@@ -127,8 +127,7 @@ export default function TouchpointHub() {
         {/* TouchPoints — 7 cards */}
         <div className="text-[11px] font-bold uppercase tracking-[.06em] text-gray-400 mt-5 mb-2.5">TouchPoints</div>
         <div className="grid grid-cols-2 gap-2.5">
-          <Card to="/app/observe" icon="👁" iconBg="#dbeafe" title="Observation" sub="Classroom visit" />
-          <Card to="/app/observe" icon="🏫" iconBg="#fce7f3" title="PreK Observation" sub="CLASS PK1-PK10" />
+          <Card to="/app/observe" icon="👁" iconBg="#dbeafe" title="Observation" sub="Classroom visit · auto PreK" />
           <Card to="/app/fundamentals" icon="⏱" iconBg="#fef3c7" title="Fundamentals" sub="5-min On Task %" />
           <Card to="/app/meeting" icon="💬" iconBg="#f0fdf4" title="Data Meeting" sub="Relay DDI" />
           <Card to="/app/feedback" icon="⚡" iconBg="#fef3c7" title="Quick Feedback" sub="Informal note" />

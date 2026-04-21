@@ -9,6 +9,12 @@ import { api } from '../lib/api'
 import { TEACHER_RUBRIC } from '../lib/rubric-descriptors'
 import FormShell from '../components/FormShell'
 
+function observationFormTypeFor(teacher) {
+  const title = (teacher?.job_title || '').toLowerCase()
+  if (title.includes('prek') || title.includes('pre-k') || title.includes('pre k')) return 'observation_prek'
+  return 'observation_teacher'
+}
+
 /**
  * Observe — the teacher observation form.
  * Faithful port of prototypes/teacher-observation.html.
@@ -43,7 +49,7 @@ export default function Observe() {
     setSaving(true)
     try {
       await api.post('/api/touchpoints', {
-        form_type: 'observation_teacher',
+        form_type: observationFormTypeFor(teacher),
         teacher_email: teacher.email,
         school: teacher.school || '',
         scores,
@@ -225,7 +231,7 @@ export default function Observe() {
             setSaving(true)
             try {
               await api.post('/api/touchpoints', {
-                form_type: 'observation_teacher',
+                form_type: observationFormTypeFor(teacher),
                 teacher_email: teacher.email,
                 school: teacher.school || '',
                 status: 'draft',
