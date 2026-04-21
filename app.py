@@ -962,8 +962,9 @@ def api_dedup_by_grow_id():
       ?dry_run=false           — actually delete
     """
     dry = request.args.get('dry_run', 'true').lower() != 'false'
-    conn = db.get_conn()
+    conn = None
     try:
+        conn = db.get_conn()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         # For each grow_id with >1 row, rank candidates:
@@ -1049,8 +1050,13 @@ def api_dedup_by_grow_id():
             result['touchpoints_deleted'] = tp_deleted
 
         return jsonify(result)
+    except Exception as e:
+        log.error(f"dedup-by-grow-id failed: {e}", exc_info=True)
+        return jsonify({'error': str(e), 'where': 'dedup-by-grow-id'}), 500
     finally:
-        conn.close()
+        if conn is not None:
+            try: conn.close()
+            except: pass
 
 
 @app.route('/api/admin/cleanup-notes', methods=['GET', 'POST'])
@@ -1103,8 +1109,9 @@ def api_dedup_broad():
     regardless of grow_id. Catches imported rows that never matched enrichment.
     Keeps row with most scores + has feedback + earliest observed_at; deletes the rest."""
     dry = request.args.get('dry_run', 'true').lower() != 'false'
-    conn = db.get_conn()
+    conn = None
     try:
+        conn = db.get_conn()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute("""
             WITH groups AS (
@@ -1155,8 +1162,13 @@ def api_dedup_broad():
             result['scores_deleted'] = scores_deleted
             result['touchpoints_deleted'] = tp_deleted
         return jsonify(result)
+    except Exception as e:
+        log.error(f"dedup-broad failed: {e}", exc_info=True)
+        return jsonify({'error': str(e), 'where': 'dedup-broad'}), 500
     finally:
-        conn.close()
+        if conn is not None:
+            try: conn.close()
+            except: pass
 
 
 @app.route('/api/admin/create-grow-id-index', methods=['POST'])
@@ -1670,7 +1682,7 @@ Fix it. Use ONLY the exact column names listed in the schema above. Do NOT inven
                 model='gemini-2.5-pro',
                 contents=base,
                 config=genai_types.GenerateContentConfig(
-                    max_output_tokens=2000,
+                    max_output_tokens=4000,
                     temperature=0,
                 ),
             )
