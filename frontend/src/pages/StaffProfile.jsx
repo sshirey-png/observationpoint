@@ -531,11 +531,18 @@ function SnapshotView({ touchpoints, onOpenDetail, staffEmail, currentSY, onShow
   const thisYear = touchpoints.filter(t => t.school_year === currentSY)
   const sorted = [...thisYear].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
 
-  // KPI values
+  // At-a-glance values
   const obsCount = thisYear.filter(t => t.form_type.startsWith('observation_')).length
-  const allObs = touchpoints.filter(t => t.form_type.startsWith('observation_'))
-  const scoreVals = allObs.flatMap(t => Object.values(t.scores || {})).filter(v => typeof v === 'number' && v <= 5)
-  const avgScore = scoreVals.length > 0 ? (scoreVals.reduce((a, b) => a + b, 0) / scoreVals.length).toFixed(1) : '—'
+  // Avg from the MOST RECENT observation's T1-T5 (not a rolling lifetime avg)
+  const allObsSorted = [...touchpoints.filter(t => t.form_type.startsWith('observation_'))]
+    .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
+  const latestObs = allObsSorted[0]
+  const latestObsDims = latestObs
+    ? Object.values(latestObs.scores || {}).filter(v => typeof v === 'number' && v <= 5)
+    : []
+  const avgScore = latestObsDims.length > 0
+    ? (latestObsDims.reduce((a, b) => a + b, 0) / latestObsDims.length).toFixed(1)
+    : '—'
   const latestAny = sorted[0] || touchpoints[0]
   const daysSinceLast = latestAny?.date ? Math.floor((new Date() - new Date(latestAny.date)) / (1000 * 60 * 60 * 24)) : null
 
@@ -549,7 +556,7 @@ function SnapshotView({ touchpoints, onOpenDetail, staffEmail, currentSY, onShow
         </div>
         <div className="bg-white rounded-xl p-3.5 text-center shadow-sm">
           <div className="text-2xl font-extrabold text-fls-navy">{avgScore}</div>
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">Avg score</div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">Latest obs avg</div>
         </div>
         <div className="bg-white rounded-xl p-3.5 text-center shadow-sm">
           <div className="text-2xl font-extrabold text-fls-navy">
@@ -561,7 +568,7 @@ function SnapshotView({ touchpoints, onOpenDetail, staffEmail, currentSY, onShow
           <div className="text-2xl font-extrabold text-fls-navy">
             {assignmentsSummary ? `${assignmentsSummary.done}/${assignmentsSummary.total}` : '—'}
           </div>
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">Steps done</div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">Action steps</div>
         </div>
       </div>
 
