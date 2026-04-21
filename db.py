@@ -222,11 +222,74 @@ def get_network_dashboard(school_year=None):
         cur.execute("SELECT COUNT(*) FROM staff WHERE is_active AND job_function = 'Teacher'")
         total_t = cur.fetchone()[0]
 
+        # Prior-year parallel counts for YoY delta
+        cur.execute("""
+            SELECT
+              COUNT(*) FILTER (WHERE form_type = 'observation_teacher') AS obs,
+              COUNT(*) FILTER (WHERE form_type = 'observation_fundamentals') AS fund,
+              COUNT(*) FILTER (WHERE form_type LIKE 'pmap_%') AS pmap,
+              COUNT(*) FILTER (WHERE form_type = 'celebrate') AS cel,
+              COUNT(*) FILTER (WHERE form_type LIKE 'meeting_%') AS mtg
+            FROM touchpoints
+            WHERE school_year = %s AND status = 'published'
+        """, (sy,))
+        cur_counts = cur.fetchone()
+        # Derive prior SY (handles "2025-2026" -> "2024-2025")
+        try:
+            a, b = sy.split('-')
+            prior_sy = f"{int(a)-1}-{int(b)-1}"
+        except Exception:
+            prior_sy = None
+        prior_counts = (0, 0, 0, 0, 0)
+        if prior_sy:
+            cur.execute("""
+                SELECT
+                  COUNT(*) FILTER (WHERE form_type = 'observation_teacher'),
+                  COUNT(*) FILTER (WHERE form_type = 'observation_fundamentals'),
+                  COUNT(*) FILTER (WHERE form_type LIKE 'pmap_%'),
+                  COUNT(*) FILTER (WHERE form_type = 'celebrate'),
+                  COUNT(*) FILTER (WHERE form_type LIKE 'meeting_%')
+                FROM touchpoints
+                WHERE school_year = %s AND status = 'published'
+            """, (prior_sy,))
+            row = cur.fetchone()
+            if row: prior_counts = row
+
         out['kpis'] = {
             'observations': obs, 'observations_teachers': obs_t,
             'fundamentals': fund, 'fundamentals_teachers': fund_t,
             'total_teachers': total_t,
+            # Current-year aggregate counts
+            'observations_total': cur_counts[0] or 0,
+            'fundamentals_total': cur_counts[1] or 0,
+            'pmap_total': cur_counts[2] or 0,
+            'celebrate_total': cur_counts[3] or 0,
+            'meeting_total': cur_counts[4] or 0,
+            # Prior year for YoY delta
+            'prior_year': prior_sy,
+            'prior_observations_total': prior_counts[0] or 0,
+            'prior_fundamentals_total': prior_counts[1] or 0,
+            'prior_pmap_total': prior_counts[2] or 0,
+            'prior_celebrate_total': prior_counts[3] or 0,
+            'prior_meeting_total': prior_counts[4] or 0,
         }
+
+        # Top observers this year — for leaderboard chart
+        cur.execute("""
+            SELECT
+              TRIM(CONCAT(s.first_name, ' ', s.last_name)) AS name,
+              s.email, s.school, COUNT(*) AS n
+            FROM touchpoints t
+            JOIN staff s ON LOWER(s.email) = LOWER(t.observer_email)
+            WHERE t.school_year = %s AND t.status = 'published'
+              AND t.observer_email IS NOT NULL AND t.observer_email <> ''
+            GROUP BY s.first_name, s.last_name, s.email, s.school
+            ORDER BY n DESC LIMIT 10
+        """, (sy,))
+        out['top_observers'] = [
+            {'name': r[0] or r[1], 'email': r[1], 'school': r[2] or '', 'count': r[3]}
+            for r in cur.fetchall()
+        ]
 
         # Touchpoint activity by school and type
         cur.execute("""

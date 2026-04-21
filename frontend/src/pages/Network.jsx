@@ -236,6 +236,7 @@ function SchoolCountsView({ data, typeMatcher, label, emptyMsg }) {
 }
 
 const CATEGORIES = [
+  { key: 'overview',     label: 'Overview' },
   { key: 'fundamentals', label: 'Fundamentals' },
   { key: 'observations', label: 'Observations' },
   { key: 'pmap',         label: 'PMAP' },
@@ -245,10 +246,103 @@ const CATEGORIES = [
   { key: 'meetings',     label: 'Meetings' },
 ]
 
+const SCHOOL_YEARS = ['2025-2026', '2024-2025', '2023-2024']
+
+// Horizontal bar row — HR Dashboard pattern. Pure HTML/CSS, no Chart.js.
+function HBar({ label, sub, value, max, color = '#002f60' }) {
+  const pct = max > 0 ? Math.max(2, Math.round((value / max) * 100)) : 0
+  return (
+    <div className="flex items-center gap-2 mb-1.5">
+      <div className="w-[120px] text-[11px] text-gray-600 truncate text-right shrink-0" title={label}>
+        {label}
+      </div>
+      <div className="flex-1 bg-gray-100 rounded-full h-6 overflow-hidden">
+        <div
+          className="h-full rounded-full flex items-center justify-end pr-2 transition-all"
+          style={{ width: `${pct}%`, background: color }}
+        >
+          <span className="text-[10px] font-bold text-white whitespace-nowrap">{value}</span>
+        </div>
+      </div>
+      {sub && <div className="w-[64px] text-[10px] text-gray-400 truncate shrink-0">{sub}</div>}
+    </div>
+  )
+}
+
+// Single KPI tile with YoY delta chip
+function KpiTile({ label, value, prior, suffix = '' }) {
+  const delta = (value || 0) - (prior || 0)
+  const hasDelta = prior != null && prior > 0
+  const pct = hasDelta ? Math.round((delta / prior) * 100) : 0
+  const up = delta > 0
+  return (
+    <div className="bg-white rounded-xl p-3.5 shadow-sm">
+      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">{label}</div>
+      <div className="flex items-baseline gap-1.5">
+        <div className="text-2xl font-extrabold text-fls-navy">{(value || 0).toLocaleString()}{suffix}</div>
+      </div>
+      {hasDelta && (
+        <div className={`text-[10px] font-semibold mt-1 ${up ? 'text-green-600' : delta < 0 ? 'text-red-500' : 'text-gray-400'}`}>
+          {up ? '↑' : delta < 0 ? '↓' : '·'} {Math.abs(pct)}% vs prior year
+        </div>
+      )}
+    </div>
+  )
+}
+
+function OverviewView({ data }) {
+  const k = data?.kpis || {}
+  const topObs = data?.top_observers || []
+  const topMax = topObs[0]?.count || 0
+  const schools = data?.schools || {}
+  const schoolRows = Object.entries(schools).map(([name, s]) => ({
+    name,
+    total: s.total_touchpoints || 0,
+    staff: s.staff_count || 0,
+  })).sort((a, b) => b.total - a.total)
+  const schoolMax = schoolRows[0]?.total || 0
+
+  return (
+    <div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
+        <KpiTile label="Observations" value={k.observations_total} prior={k.prior_observations_total} />
+        <KpiTile label="Fundamentals" value={k.fundamentals_total} prior={k.prior_fundamentals_total} />
+        <KpiTile label="PMAPs" value={k.pmap_total} prior={k.prior_pmap_total} />
+        <KpiTile label="Celebrations" value={k.celebrate_total} prior={k.prior_celebrate_total} />
+        <KpiTile label="Meetings" value={k.meeting_total} prior={k.prior_meeting_total} />
+        <KpiTile label="Active teachers" value={k.total_teachers} />
+      </div>
+
+      <div className="bg-white rounded-xl p-4 shadow-sm mt-4">
+        <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-3">Top Observers · This Year</div>
+        {topObs.length === 0 ? (
+          <Empty msg="No observer activity yet this year." />
+        ) : (
+          topObs.slice(0, 10).map(o => (
+            <HBar key={o.email} label={o.name} sub={shortSchool(o.school)} value={o.count} max={topMax} color="#002f60" />
+          ))
+        )}
+      </div>
+
+      <div className="bg-white rounded-xl p-4 shadow-sm mt-3">
+        <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-3">Touchpoints by School · This Year</div>
+        {schoolRows.length === 0 ? (
+          <Empty msg="No activity logged this year." />
+        ) : (
+          schoolRows.map(r => (
+            <HBar key={r.name} label={shortSchool(r.name)} sub={`${r.staff} staff`} value={r.total} max={schoolMax} color="#e47727" />
+          ))
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function Network() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [category, setCategory] = useState('fundamentals')
+  const [category, setCategory] = useState('overview')
+  const [schoolYear, setSchoolYear] = useState(SCHOOL_YEARS[0])
   const [aiOpen, setAiOpen] = useState(false)
 
   useEffect(() => {
@@ -256,7 +350,7 @@ export default function Network() {
     async function go() {
       setLoading(true)
       try {
-        const d = await api.get('/api/network')
+        const d = await api.get(`/api/network?school_year=${encodeURIComponent(schoolYear)}`)
         if (!cancelled) setData(d)
       } catch (e) {
         console.error('network load failed', e)
@@ -266,7 +360,7 @@ export default function Network() {
     }
     go()
     return () => { cancelled = true }
-  }, [])
+  }, [schoolYear])
 
   return (
     <div className="min-h-[100svh] bg-[#f5f7fa] pb-20">
@@ -283,8 +377,19 @@ export default function Network() {
         <div className="w-8" />
       </nav>
 
-      <div className="bg-white px-4 py-3 border-b border-gray-200 text-[13px] text-gray-500">
-        FirstLine Schools · {data?.school_year || '—'}
+      <div className="bg-white px-4 py-2.5 border-b border-gray-200 flex items-center gap-2 overflow-x-auto">
+        <div className="text-[11px] text-gray-500 font-semibold whitespace-nowrap">School Year:</div>
+        {SCHOOL_YEARS.map(y => (
+          <button
+            key={y}
+            onClick={() => setSchoolYear(y)}
+            className={`px-2.5 py-1 rounded-md text-[11px] font-bold whitespace-nowrap transition-colors ${
+              schoolYear === y ? 'bg-fls-navy text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+            }`}
+          >
+            {y}
+          </button>
+        ))}
       </div>
 
       <div className="sticky top-[50px] z-40 bg-white border-b border-gray-200 px-3 py-2.5 flex gap-1.5 overflow-x-auto">
@@ -308,6 +413,7 @@ export default function Network() {
         {!loading && !data && <Empty msg="Could not load network dashboard. Check access." />}
         {!loading && data && (
           <>
+            {category === 'overview'     && <OverviewView data={data} />}
             {category === 'fundamentals' && <FundamentalsView data={data} />}
             {category === 'observations' && <ObservationsView data={data} />}
             {category === 'pmap'         && <PMAPView data={data} />}
