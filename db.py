@@ -276,44 +276,72 @@ def get_network_dashboard(school_year=None):
             'prior_meeting_total': prior_counts[4] or 0,
         }
 
-        # Fundamentals on-task % — per school + network average.
-        # Only counts records where the M-score is on the 0-100 scale
-        # (max of that record's M-scores > 5), so rubric-scale legacy
-        # imports don't skew the average.
+        # Fundamentals — per-school RB pass rate this year + visits + teachers visited.
+        # Imported records have only RB scores (0/100). Avg = pass rate.
         cur.execute("""
-            WITH record_avg AS (
-                SELECT t.id, t.school,
-                       AVG(sc.score) AS avg_pct,
-                       MAX(sc.score) AS max_pct
-                FROM scores sc JOIN touchpoints t ON sc.touchpoint_id = t.id
-                WHERE t.school_year = %s AND t.form_type = 'observation_fundamentals'
-                  AND sc.dimension_code IN ('M1','M2','M3','M4','M5')
-                GROUP BY t.id, t.school
-            ),
-            scaled AS (
-                SELECT school, avg_pct FROM record_avg WHERE max_pct > 5
-            )
-            SELECT school, ROUND(AVG(avg_pct)::numeric, 1)::float AS avg_pct, COUNT(*) AS n
-            FROM scaled WHERE school != '' AND school != 'FirstLine Network'
-            GROUP BY school ORDER BY school
+            SELECT t.school,
+                   COUNT(DISTINCT t.id) AS visits,
+                   COUNT(DISTINCT t.teacher_email) AS teachers_visited,
+                   ROUND(AVG(sc.score)::numeric, 1)::float AS rb_pct
+            FROM touchpoints t
+            LEFT JOIN scores sc ON sc.touchpoint_id = t.id AND sc.dimension_code = 'RB'
+            WHERE t.school_year = %s AND t.form_type = 'observation_fundamentals'
+              AND t.school != '' AND t.school IS NOT NULL AND t.school != 'FirstLine Network'
+              AND t.status = 'published'
+            GROUP BY t.school
+            ORDER BY visits DESC
         """, (sy,))
         fund_by_school = {}
-        for school, pct, n in cur.fetchall():
-            fund_by_school[school] = {'avg_pct': pct, 'visits': n}
+        for r in cur.fetchall():
+            fund_by_school[r[0]] = {'visits': r[1], 'teachers_visited': r[2], 'rb_pct': r[3]}
+
+        # Network-wide RB pass rate this year
         cur.execute("""
-            WITH record_avg AS (
-                SELECT t.id, AVG(sc.score) AS avg_pct, MAX(sc.score) AS max_pct
-                FROM scores sc JOIN touchpoints t ON sc.touchpoint_id = t.id
-                WHERE t.school_year = %s AND t.form_type = 'observation_fundamentals'
-                  AND sc.dimension_code IN ('M1','M2','M3','M4','M5')
-                GROUP BY t.id
-            )
-            SELECT ROUND(AVG(avg_pct)::numeric, 1)::float
-            FROM record_avg WHERE max_pct > 5
+            SELECT ROUND(AVG(sc.score)::numeric, 1)::float
+            FROM touchpoints t
+            JOIN scores sc ON sc.touchpoint_id = t.id AND sc.dimension_code = 'RB'
+            WHERE t.school_year = %s AND t.form_type = 'observation_fundamentals'
+              AND t.status = 'published'
         """, (sy,))
         row = cur.fetchone()
-        out['fundamentals_network_avg_pct'] = row[0] if row and row[0] is not None else None
-        out['fundamentals_by_school'] = fund_by_school
+        network_rb_pct = row[0] if row and row[0] is not None else None
+
+        # Prior year RB for YoY context
+        prior_rb = None
+        if prior_sy:
+            cur.execute("""
+                SELECT ROUND(AVG(sc.score)::numeric, 1)::float
+                FROM touchpoints t
+                JOIN scores sc ON sc.touchpoint_id = t.id AND sc.dimension_code = 'RB'
+                WHERE t.school_year = %s AND t.form_type = 'observation_fundamentals'
+                  AND t.status = 'published'
+            """, (prior_sy,))
+            prior_rb_row = cur.fetchone()
+            prior_rb = prior_rb_row[0] if prior_rb_row and prior_rb_row[0] is not None else None
+
+        # Count of new-form M1-M5 records (so we can show 'tracking begins' message honestly)
+        cur.execute("""
+            SELECT COUNT(DISTINCT t.id)
+            FROM touchpoints t
+            JOIN scores sc ON sc.touchpoint_id = t.id
+            WHERE t.school_year = %s AND t.form_type = 'observation_fundamentals'
+              AND sc.dimension_code IN ('M1','M2','M3','M4','M5')
+              AND sc.score > 5
+        """, (sy,))
+        m_count = cur.fetchone()[0] or 0
+
+        out['fundamentals'] = {
+            'network_rb_pct': network_rb_pct,
+            'network_rb_pct_prior': prior_rb,
+            'by_school': fund_by_school,
+            'new_form_m_count': m_count,  # records that have actual minute on-task data
+        }
+        # Backward-compat fields the existing UI may still reference:
+        out['fundamentals_network_avg_pct'] = network_rb_pct
+        out['fundamentals_by_school'] = {
+            s: {'avg_pct': v.get('rb_pct'), 'visits': v.get('visits')}
+            for s, v in fund_by_school.items()
+        }
 
         # Top observers this year — for leaderboard chart
         cur.execute("""

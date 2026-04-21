@@ -41,26 +41,26 @@ function Empty({ msg }) {
 // --- Category views ---
 
 function FundamentalsView({ data }) {
+  // Honest data: imported Fundamentals records carry only RB (Relationship
+  // Building, 0/100). M1-M5 minute on-task tracking starts when teachers
+  // submit via the new Fundamentals timer form.
+  const fund = data?.fundamentals || {}
+  const fundBySchool = fund.by_school || {}
+  const netRb = fund.network_rb_pct
+  const priorRb = fund.network_rb_pct_prior
+  const newFormCount = fund.new_form_m_count || 0
   const schools = data?.schools || {}
-  const fundBySchool = data?.fundamentals_by_school || {}
-  const netAvgPct = data?.fundamentals_network_avg_pct
-  const names = Object.keys(schools).sort((a, b) => {
-    const pa = fundBySchool[a]?.avg_pct ?? -1
-    const pb = fundBySchool[b]?.avg_pct ?? -1
-    if (pb !== pa) return pb - pa
-    const ca = schools[a].touchpoints_by_type?.observation_fundamentals?.count || 0
-    const cb = schools[b].touchpoints_by_type?.observation_fundamentals?.count || 0
-    return cb - ca
-  })
+  const names = Object.keys(fundBySchool).sort((a, b) => (fundBySchool[b].rb_pct ?? -1) - (fundBySchool[a].rb_pct ?? -1))
 
   const total = data?.kpis?.fundamentals || 0
   const totalTeachers = data?.kpis?.fundamentals_teachers || 0
   // Gauge dial stroke-dasharray is circumference * (pct/100)
   const R = 56
   const CIRC = 2 * Math.PI * R
-  const dashPct = netAvgPct != null ? Math.max(0, Math.min(100, netAvgPct)) : 0
+  const dashPct = netRb != null ? Math.max(0, Math.min(100, netRb)) : 0
   const dashOn = (dashPct / 100) * CIRC
   const gaugeColor = dashPct >= 80 ? '#059669' : dashPct >= 60 ? '#e47727' : '#dc2626'
+  const yoyDelta = (netRb != null && priorRb != null) ? +(netRb - priorRb).toFixed(1) : null
 
   return (
     <div>
@@ -79,8 +79,8 @@ function FundamentalsView({ data }) {
         </div>
       </div>
 
-      {/* Network on-task gauge */}
-      {netAvgPct != null && (
+      {/* Network RB pass-rate gauge */}
+      {netRb != null && (
         <div className="bg-white rounded-xl p-4 shadow-sm mb-4 flex items-center gap-4">
           <svg width="140" height="140" viewBox="0 0 140 140">
             <circle cx="70" cy="70" r={R} stroke="#f3f4f6" strokeWidth="14" fill="none" />
@@ -91,66 +91,72 @@ function FundamentalsView({ data }) {
               strokeDasharray={`${dashOn} ${CIRC}`}
               transform="rotate(-90 70 70)"
             />
-            <text x="70" y="74" textAnchor="middle" className="text-3xl font-extrabold" fill="#002f60" style={{ fontSize: 28, fontWeight: 800 }}>
-              {Math.round(netAvgPct)}%
+            <text x="70" y="74" textAnchor="middle" fill="#002f60" style={{ fontSize: 28, fontWeight: 800 }}>
+              {Math.round(netRb)}%
             </text>
           </svg>
           <div className="flex-1 min-w-0">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Network On-Task</div>
-            <div className="text-sm text-gray-700 mt-1">Average on-task percentage across all fundamentals visits this year.</div>
+            <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Network RB Pass Rate</div>
+            <div className="text-sm text-gray-700 mt-1">Relationship Building check pass rate across all Fundamentals visits this year.</div>
+            {yoyDelta != null && (
+              <div className={`text-xs font-semibold mt-1 ${yoyDelta > 0 ? 'text-green-600' : yoyDelta < 0 ? 'text-red-500' : 'text-gray-400'}`}>
+                {yoyDelta > 0 ? '↑' : yoyDelta < 0 ? '↓' : '·'} {Math.abs(yoyDelta)} pts vs prior year ({priorRb}%)
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Per-school bars with network avg reference line */}
+      {/* Per-school RB bars */}
       {names.length > 0 && (
         <div className="bg-white rounded-xl p-4 shadow-sm">
           <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-3">
-            Fundamentals by school
+            RB Pass Rate by School · {data?.school_year}
           </div>
           {names.map(name => {
-            const n = schools[name]
-            const fund = n.touchpoints_by_type?.observation_fundamentals
-            const visits = fund?.count || fundBySchool[name]?.visits || 0
-            const avgPct = fundBySchool[name]?.avg_pct
-            const width = avgPct != null ? Math.max(4, Math.min(100, avgPct)) : 0
-            const barColor = avgPct == null ? '#d1d5db'
-              : avgPct >= 80 ? '#059669' : avgPct >= 60 ? '#e47727' : '#dc2626'
+            const s = fundBySchool[name]
+            const visits = s?.visits || 0
+            const teachers = s?.teachers_visited || 0
+            const pct = s?.rb_pct
+            const width = pct != null ? Math.max(4, Math.min(100, pct)) : 0
+            const barColor = pct == null ? '#d1d5db'
+              : pct >= 80 ? '#059669' : pct >= 60 ? '#e47727' : '#dc2626'
             return (
               <div key={name} className="mb-3 last:mb-0">
                 <div className="flex items-baseline justify-between mb-1">
                   <div className="text-[12px] font-bold text-gray-700 truncate">{shortSchool(name)}</div>
                   <div className="text-[11px] text-gray-500 shrink-0">
-                    {avgPct != null ? <span className="font-extrabold text-fls-navy">{avgPct}%</span> : <span className="text-gray-400">—</span>}
-                    <span className="text-gray-400"> · {visits} visits</span>
+                    {pct != null ? <span className="font-extrabold text-fls-navy">{pct}%</span> : <span className="text-gray-400">—</span>}
+                    <span className="text-gray-400"> · {visits} visits · {teachers} teachers</span>
                   </div>
                 </div>
                 <div className="relative h-3 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all"
-                    style={{ width: `${width}%`, background: barColor }}
-                  />
-                  {netAvgPct != null && (
-                    <div
-                      className="absolute top-0 bottom-0 w-[2px] bg-fls-navy"
-                      style={{ left: `${netAvgPct}%` }}
-                      title={`Network avg ${netAvgPct}%`}
-                    />
+                  <div className="h-full rounded-full transition-all" style={{ width: `${width}%`, background: barColor }} />
+                  {netRb != null && (
+                    <div className="absolute top-0 bottom-0 w-[2px] bg-fls-navy"
+                         style={{ left: `${netRb}%` }} title={`Network avg ${netRb}%`} />
                   )}
                 </div>
               </div>
             )
           })}
-          {netAvgPct != null && (
+          {netRb != null && (
             <div className="text-[10px] text-gray-400 mt-3 flex items-center gap-1.5">
               <span className="inline-block w-[2px] h-3 bg-fls-navy" />
-              Network average ({netAvgPct}%)
+              Network average ({netRb}%)
             </div>
           )}
         </div>
       )}
 
-      {names.length === 0 && (
+      {/* Honest disclosure about minute-by-minute on-task */}
+      <div className="bg-blue-50 border border-blue-100 rounded-xl p-3.5 mt-3 text-xs text-blue-900">
+        <b>Minute-by-minute on-task tracking</b> begins when teachers use the new Fundamentals timer form. {newFormCount > 0
+          ? <>So far <b>{newFormCount}</b> visit{newFormCount === 1 ? '' : 's'} captured with M1–M5 minute scoring this year.</>
+          : <>No visits with minute scoring yet — the gauge above will fill as teachers submit via the new form.</>}
+      </div>
+
+      {names.length === 0 && netRb == null && (
         <Empty msg="No fundamentals visits logged this year." />
       )}
     </div>
