@@ -108,19 +108,16 @@ export default function TouchpointHub() {
     <div className="min-h-[100svh] bg-[#f5f7fa] pb-20">
       <ImpersonationBanner />
       {/* Top nav — centered title, back arrow to home */}
-      <nav className="sticky top-0 z-50 bg-fls-navy px-4 py-3 flex flex-col gap-2.5">
-        <div className="flex items-center gap-3">
-          <Link to="/" className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center no-underline shrink-0">
-            <svg width="18" height="18" fill="none" stroke="white" strokeWidth="2">
-              <path d="M15 9H3m0 0l5-5M3 9l5 5" />
-            </svg>
-          </Link>
-          <div className="flex-1 text-center text-[16px] font-bold text-white">
-            Observation<span className="text-fls-orange">Point</span>
-          </div>
-          <div className="w-8 shrink-0" />
+      <nav className="sticky top-0 z-50 bg-fls-navy px-4 py-4 flex items-center gap-3">
+        <Link to="/" className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center no-underline">
+          <svg width="18" height="18" fill="none" stroke="white" strokeWidth="2">
+            <path d="M15 9H3m0 0l5-5M3 9l5 5" />
+          </svg>
+        </Link>
+        <div className="flex-1 text-center text-[16px] font-bold text-white">
+          Observation<span className="text-fls-orange">Point</span>
         </div>
-        <GlobalSearch />
+        <div className="w-8" />
       </nav>
 
       <div className="px-4 pb-4 max-w-[600px] mx-auto">

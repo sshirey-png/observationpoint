@@ -79,14 +79,11 @@ export default function Home() {
   return (
     <div className="min-h-[100svh] bg-[#f5f7fa]">
       <ImpersonationBanner />
-      <nav className="bg-fls-navy px-4 py-3 text-center">
+      <nav className="bg-fls-navy px-4 py-4 text-center">
         <div className="text-lg font-extrabold text-white">
           Observation<span className="text-fls-orange">Point</span>
         </div>
         <div className="text-xs text-white/60 mt-0.5">FirstLine Schools</div>
-        <div className="mt-2.5 max-w-[540px] mx-auto">
-          <GlobalSearch />
-        </div>
       </nav>
 
       <div className="px-4 pt-6 pb-8 max-w-[540px] mx-auto flex flex-col" style={{ minHeight: 'calc(100svh - 70px)' }}>
