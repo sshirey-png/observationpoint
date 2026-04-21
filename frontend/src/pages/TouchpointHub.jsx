@@ -164,38 +164,7 @@ export default function TouchpointHub() {
           </div>
         </Section>
 
-        {/* Recent TouchPoints — real data from /api/my-recent-touchpoints */}
-        {recent.length > 0 && (
-          <>
-            <div className="text-[11px] font-bold uppercase tracking-[.06em] text-gray-400 mt-6 mb-2.5">Recent TouchPoints</div>
-            {recent.map(r => {
-              const cfg = FORM_LABELS[r.form_type] || { label: r.form_type, color: '#6b7280', bg: '#f3f4f6', route: '/app/touchpoint' }
-              return (
-                <Link
-                  key={r.id}
-                  to={`/app/staff/${encodeURIComponent(r.teacher_email)}`}
-                  className="bg-white rounded-xl shadow-sm px-3.5 py-3 flex items-center gap-3 no-underline text-inherit mb-2 active:scale-[.99] transition-transform"
-                >
-                  <div className="w-9 h-9 rounded-full bg-fls-navy text-white flex items-center justify-center text-[11px] font-bold shrink-0">
-                    {initials(r.teacher_name)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-semibold truncate">{r.teacher_name}</div>
-                    <div className="text-[11px] text-gray-500 truncate">
-                      {r.school || ''}{r.school ? ' · ' : ''}{shortDate(r.observed_at)}
-                    </div>
-                  </div>
-                  <span
-                    className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-md shrink-0"
-                    style={{ background: cfg.bg, color: cfg.color }}
-                  >
-                    {cfg.label}
-                  </span>
-                </Link>
-              )
-            })}
-          </>
-        )}
+        {/* Recent TouchPoints removed per Scott — keep TouchpointHub focused on the form picker. */}
       </div>
 
       <BottomNav active="touchpoint" onAskClick={() => setAiOpen(true)} aiOpen={aiOpen} />
