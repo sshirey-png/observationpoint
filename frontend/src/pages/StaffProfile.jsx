@@ -472,6 +472,156 @@ const TYPE_BADGE = {
   'meeting_data_meeting_(relay)': { label: 'Data Mtg', bg: '#f0fdf4', color: '#16a34a' },
 }
 
+/** Latest PMAP card: dimension chips + strength/growth snippet if present. */
+function LatestPMAPCard({ touchpoints, onOpenDetail }) {
+  const pmaps = touchpoints.filter(t => t.form_type.startsWith('pmap_'))
+  const latest = pmaps[0]
+  if (!latest) {
+    return (
+      <div className="bg-white rounded-xl p-4 shadow-sm mb-3 text-sm text-gray-400 text-center">
+        No PMAP on record yet.
+      </div>
+    )
+  }
+  const scores = latest.scores || {}
+  const codes = Object.keys(scores).sort()
+  // Pull strength/growth from feedback JSON if structured
+  let snippet = ''
+  try {
+    const fb = typeof latest.feedback === 'string' ? JSON.parse(latest.feedback) : latest.feedback
+    if (fb && typeof fb === 'object') {
+      snippet = fb.strength_areas || fb.growth_areas || fb.commit_strength || ''
+    }
+  } catch {}
+  if (!snippet && typeof latest.feedback === 'string') snippet = latest.feedback.slice(0, 200)
+  return (
+    <button
+      onClick={() => onOpenDetail(latest)}
+      className="w-full text-left bg-white rounded-xl p-4 shadow-sm mb-3 border-l-4 border-green-500 cursor-pointer active:scale-[.99] transition-transform border-0 font-[inherit]"
+    >
+      <div className="flex items-center justify-between mb-2">
+        <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+          Latest PMAP · {formatDate(latest.date)}
+        </div>
+        <div className="text-[10px] text-fls-orange font-semibold">Tap →</div>
+      </div>
+      {codes.length > 0 && (
+        <div className="flex gap-1 flex-wrap mb-2">
+          {codes.map(code => (
+            <span key={code} className={`text-[11px] font-bold px-2 py-1 rounded-md ${scoreClass(scores[code])}`}>
+              {DIM_SHORT[code] || code} {scores[code]}
+            </span>
+          ))}
+        </div>
+      )}
+      {snippet && (
+        <div className="text-xs text-gray-600 italic leading-relaxed line-clamp-3 whitespace-pre-wrap">
+          {snippet}
+        </div>
+      )}
+    </button>
+  )
+}
+
+/** Snapshot view: hero KPIs + latest PMAP + recent current-year feed.
+ * Option B layout Scott picked. Default landing for the profile.
+ * Past-year deep dives live under the 'More views' category tabs and the Past years link. */
+function SnapshotView({ touchpoints, onOpenDetail, staffEmail, currentSY, onShowPast, assignmentsSummary }) {
+  // Current-year filter
+  const thisYear = touchpoints.filter(t => t.school_year === currentSY)
+  const sorted = [...thisYear].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
+
+  // KPI values
+  const obsCount = thisYear.filter(t => t.form_type.startsWith('observation_')).length
+  const allObs = touchpoints.filter(t => t.form_type.startsWith('observation_'))
+  const scoreVals = allObs.flatMap(t => Object.values(t.scores || {})).filter(v => typeof v === 'number' && v <= 5)
+  const avgScore = scoreVals.length > 0 ? (scoreVals.reduce((a, b) => a + b, 0) / scoreVals.length).toFixed(1) : '—'
+  const latestAny = sorted[0] || touchpoints[0]
+  const daysSinceLast = latestAny?.date ? Math.floor((new Date() - new Date(latestAny.date)) / (1000 * 60 * 60 * 24)) : null
+
+  return (
+    <div>
+      {/* 4 KPI tiles */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4 mb-4">
+        <div className="bg-white rounded-xl p-3.5 text-center shadow-sm">
+          <div className="text-2xl font-extrabold text-fls-navy">{obsCount}</div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">Obs this year</div>
+        </div>
+        <div className="bg-white rounded-xl p-3.5 text-center shadow-sm">
+          <div className="text-2xl font-extrabold text-fls-navy">{avgScore}</div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">Avg score</div>
+        </div>
+        <div className="bg-white rounded-xl p-3.5 text-center shadow-sm">
+          <div className="text-2xl font-extrabold text-fls-navy">
+            {daysSinceLast != null ? `${daysSinceLast}d` : '—'}
+          </div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">Since last</div>
+        </div>
+        <div className="bg-white rounded-xl p-3.5 text-center shadow-sm">
+          <div className="text-2xl font-extrabold text-fls-navy">
+            {assignmentsSummary ? `${assignmentsSummary.done}/${assignmentsSummary.total}` : '—'}
+          </div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">Steps done</div>
+        </div>
+      </div>
+
+      {/* Latest PMAP (any year — always useful context) */}
+      <LatestPMAPCard touchpoints={touchpoints} onOpenDetail={onOpenDetail} />
+
+      {/* Recent activity feed — current year only */}
+      <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mt-4 mb-2">
+        Recent activity · {currentSY} · {sorted.length} record{sorted.length === 1 ? '' : 's'}
+      </div>
+      {sorted.length === 0 ? (
+        <Empty msg="No activity this year yet." />
+      ) : (
+        sorted.slice(0, 10).map(tp => {
+          const badge = TYPE_BADGE[tp.form_type] || { label: tp.form_type, bg: '#f3f4f6', color: '#4b5563' }
+          const isSelf = staffEmail && tp.observer_email && tp.observer_email.toLowerCase() === staffEmail.toLowerCase()
+          const isReflection = tp.form_type.startsWith('self_reflection_')
+          const hasExtra = !!(tp.feedback_json || tp.meeting_json || (tp.notes && tp.notes.length > 0 && !isJunkNote(tp.notes, badge.label, tp.form_type)))
+          const Tag = hasExtra ? 'button' : 'div'
+          return (
+            <Tag
+              key={tp.id}
+              onClick={hasExtra ? () => onOpenDetail(tp) : undefined}
+              className={`block w-full text-left rounded-xl p-3.5 shadow-sm mb-2 bg-white border-0 font-[inherit] ${hasExtra ? 'cursor-pointer active:scale-[.99] transition-transform' : 'cursor-default'}`}
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-md shrink-0"
+                      style={{ background: badge.bg, color: badge.color }}>{badge.label}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[13px] font-semibold">{formatDate(tp.date)}</div>
+                  <div className="text-[11px] text-gray-500 truncate">
+                    {isReflection && isSelf ? 'Self-submitted' :
+                     isSelf ? 'Observer not recorded' :
+                     tp.observer_name ? `by ${tp.observer_name}` :
+                     tp.observer_email ? `by ${tp.observer_email.split('@')[0]}` : ''}
+                  </div>
+                </div>
+                {tp.scores && Object.keys(tp.scores).length > 0 && (
+                  <div className="text-[11px] font-bold text-fls-navy shrink-0">
+                    {Math.round((Object.values(tp.scores).reduce((a, b) => a + b, 0) / Object.keys(tp.scores).length) * 10) / 10}
+                  </div>
+                )}
+              </div>
+            </Tag>
+          )
+        })
+      )}
+
+      <div className="mt-6 pt-4 border-t border-gray-200 flex justify-center">
+        <button
+          onClick={onShowPast}
+          className="text-sm text-fls-orange font-semibold inline-flex items-center gap-1 bg-transparent border-0 cursor-pointer font-[inherit]"
+        >
+          View past years →
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function RecentView({ touchpoints, onOpenDetail, staffEmail }) {
   // Most recent first, mixed types, all published records
   const sorted = [...touchpoints].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
@@ -652,7 +802,20 @@ export default function StaffProfile() {
   const email = decodeURIComponent(rawEmail || '')
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [viewMode, setViewMode] = useState('snapshot')  // 'snapshot' | 'past'
   const [category, setCategory] = useState('recent')
+  const [assignSummary, setAssignSummary] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    api.get(`/api/staff/${encodeURIComponent(email)}/assignments`)
+      .then(rows => {
+        if (cancelled || !Array.isArray(rows)) return
+        const done = rows.filter(r => r.progress_pct === 100).length
+        setAssignSummary({ total: rows.length, done })
+      }).catch(() => {})
+    return () => { cancelled = true }
+  }, [email])
   const [aiOpen, setAiOpen] = useState(false)
   const [logOpen, setLogOpen] = useState(false)
   const [detail, setDetail] = useState(null)
@@ -716,26 +879,48 @@ export default function StaffProfile() {
         </button>
       </div>
 
-      <div className="sticky top-[50px] z-40 bg-white border-b border-gray-200 px-3 py-2.5 flex gap-1.5 overflow-x-auto">
-        {CATEGORIES.map(cat => (
+      {viewMode === 'past' && (
+        <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 flex items-center justify-between">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-yellow-800">Past years · all records</div>
           <button
-            key={cat.key}
-            onClick={() => setCategory(cat.key)}
-            className={`px-3.5 py-1.5 rounded-[18px] text-xs font-bold whitespace-nowrap border-[1.5px] transition-colors ${
-              category === cat.key
-                ? 'bg-fls-navy text-white border-fls-navy'
-                : 'bg-gray-50 text-gray-500 border-transparent'
-            }`}
-          >
-            {cat.label}
-          </button>
-        ))}
-      </div>
+            onClick={() => setViewMode('snapshot')}
+            className="text-xs text-yellow-800 font-semibold bg-transparent border-0 cursor-pointer font-[inherit]"
+          >← Back to snapshot</button>
+        </div>
+      )}
+
+      {viewMode === 'past' && (
+        <div className="sticky top-[50px] z-40 bg-white border-b border-gray-200 px-3 py-2.5 flex gap-1.5 overflow-x-auto">
+          {CATEGORIES.map(cat => (
+            <button
+              key={cat.key}
+              onClick={() => setCategory(cat.key)}
+              className={`px-3.5 py-1.5 rounded-[18px] text-xs font-bold whitespace-nowrap border-[1.5px] transition-colors ${
+                category === cat.key
+                  ? 'bg-fls-navy text-white border-fls-navy'
+                  : 'bg-gray-50 text-gray-500 border-transparent'
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="px-4 pt-2 pb-6 max-w-[760px] mx-auto">
         {loading && <div className="text-center text-gray-400 text-sm py-10">Loading profile…</div>}
         {!loading && !data && <Empty msg="Could not load this staff profile. Check access or try again." />}
-        {!loading && data && (
+        {!loading && data && viewMode === 'snapshot' && (
+          <SnapshotView
+            touchpoints={touchpoints}
+            onOpenDetail={setDetail}
+            staffEmail={email}
+            currentSY={data.current_school_year || '2025-2026'}
+            assignmentsSummary={assignSummary}
+            onShowPast={() => setViewMode('past')}
+          />
+        )}
+        {!loading && data && viewMode === 'past' && (
           <>
             {category === 'recent'       && <RecentView touchpoints={touchpoints} onOpenDetail={setDetail} staffEmail={email} />}
             {category === 'fundamentals' && <FundamentalsView touchpoints={touchpoints} onOpenDetail={setDetail} staffEmail={email} />}
