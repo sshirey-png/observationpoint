@@ -334,11 +334,17 @@ def api_enrich_narrative():
                     checkboxes_selected.append({'measurement': mid, 'selected': (cb.get('label') or '').strip()})
         # Observation-level comments
         comments = [c for c in (obs.get('comments') or []) if c]
+        # Observer info — pulled from Grow so imported records stop showing
+        # 'Self' when the observer was actually someone else.
+        observer = obs.get('observer') or {}
+        if isinstance(observer, str): observer = {}
         return {
             'grow_id': obs.get('_id'),
             'narrative': narrative,
             'checkboxes_selected': checkboxes_selected,
             'comments': comments,
+            'observer_email': (observer.get('email') or '').lower() or None,
+            'observer_name': observer.get('name') or None,
         }
 
     # Pull ONE batch from Grow starting at `skip`
@@ -399,15 +405,27 @@ def api_enrich_narrative():
             plain_text = '\n\n'.join(n['text'] for n in payload['narrative'])
 
             if not dry:
-                # Write feedback_json + feedback + grow_id to each matching tp.
-                # grow_id is the stable Grow observation identifier — lets us
-                # dedup duplicates downstream and makes future enrichment idempotent.
+                # Write feedback_json + feedback + grow_id + observer_email.
+                # observer_email from Grow remediates imported records that
+                # had wrong attribution (e.g., 'Self' showing on records the
+                # teacher didn't actually self-submit).
+                obs_email = payload.get('observer_email')
                 for row in rows:
-                    cur.execute("""
-                        UPDATE touchpoints
-                        SET feedback_json = %s, feedback = %s, grow_id = %s
-                        WHERE id = %s
-                    """, (json.dumps(payload), plain_text or None, payload['grow_id'], row['id']))
+                    if obs_email:
+                        cur.execute("""
+                            UPDATE touchpoints
+                            SET feedback_json = %s, feedback = %s, grow_id = %s,
+                                observer_email = %s
+                            WHERE id = %s
+                        """, (json.dumps(payload), plain_text or None,
+                              payload['grow_id'], obs_email, row['id']))
+                    else:
+                        cur.execute("""
+                            UPDATE touchpoints
+                            SET feedback_json = %s, feedback = %s, grow_id = %s
+                            WHERE id = %s
+                        """, (json.dumps(payload), plain_text or None,
+                              payload['grow_id'], row['id']))
                     updated += 1
                 conn.commit()
             elif len(updates_preview) < 5:
@@ -581,14 +599,30 @@ input{padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;font-family:i
 </div>
 
 <div class="card">
-  <h2>2 · Create unique index on grow_id</h2>
+  <h2>2 · Broader dedup (no grow_id needed)</h2>
+  <p>Catches duplicates by (teacher, date, form_type) for records that never matched enrichment (so grow_id is null). Run after step 1 to clean the long tail.</p>
+  <button class="b-gray" onclick="run('dedup-broad-dry')">Dry run</button>
+  <button class="b-red" onclick="if(confirm('Delete duplicate rows permanently?')) run('dedup-broad-write')">Write (delete duplicates)</button>
+  <div id="dedup-broad-out"></div>
+</div>
+
+<div class="card">
+  <h2>3 · Clear notes column garbage</h2>
+  <p>Removes notes that contain just the form label (e.g., "Observation: Teacher", "PMAP: Teacher") — leftover from the original importer.</p>
+  <button class="b-gray" onclick="run('cleanup-notes-dry')">Dry run</button>
+  <button class="b-red" onclick="if(confirm('Clear those note rows?')) run('cleanup-notes-write')">Clear notes</button>
+  <div id="cleanup-notes-out"></div>
+</div>
+
+<div class="card">
+  <h2>4 · Create unique index on grow_id</h2>
   <p>Prevents future duplicates at the DB level. Must run AFTER step 1 succeeds.</p>
   <button class="b-nav" onclick="run('create-index')">Create index</button>
   <div id="create-index-out"></div>
 </div>
 
 <div class="card">
-  <h2>3 · Spot check a staff member</h2>
+  <h2>5 · Spot check a staff member</h2>
   <p>Per-teacher breakdown: counts by form_type, narrative presence, grow_id coverage, estimated duplicates.</p>
   <input id="email" placeholder="someone@firstlineschools.org" />
   <button class="b-orange" onclick="runStaff()">Look up</button>
@@ -599,10 +633,16 @@ input{padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;font-family:i
 const urls = {
   'dedup-dry': '/api/admin/dedup-by-grow-id?dry_run=true',
   'dedup-write': '/api/admin/dedup-by-grow-id?dry_run=false',
+  'dedup-broad-dry': '/api/admin/dedup-broad?dry_run=true',
+  'dedup-broad-write': '/api/admin/dedup-broad?dry_run=false',
+  'cleanup-notes-dry': '/api/admin/cleanup-notes?dry_run=true',
+  'cleanup-notes-write': '/api/admin/cleanup-notes?dry_run=false',
   'create-index': '/api/admin/create-grow-id-index',
 }
 function outboxFor(kind){
-  if (kind.startsWith('dedup')) return document.getElementById('dedup-out')
+  if (kind === 'dedup-dry' || kind === 'dedup-write') return document.getElementById('dedup-out')
+  if (kind.startsWith('dedup-broad')) return document.getElementById('dedup-broad-out')
+  if (kind.startsWith('cleanup-notes')) return document.getElementById('cleanup-notes-out')
   return document.getElementById(kind+'-out')
 }
 async function run(kind){
@@ -1002,6 +1042,103 @@ def api_dedup_by_grow_id():
             result['scores_deleted'] = scores_deleted
             result['touchpoints_deleted'] = tp_deleted
 
+        return jsonify(result)
+    finally:
+        conn.close()
+
+
+@app.route('/api/admin/cleanup-notes', methods=['GET', 'POST'])
+@require_auth
+@require_admin
+def api_cleanup_notes():
+    """Clear the 'notes' column where it just contains the form label
+    (e.g., 'Observation: Teacher', 'PMAP: Teacher'). Legacy importer bug
+    stuffed the form name into the notes column.
+
+    Query:  ?dry_run=true (default) | false
+    """
+    dry = request.args.get('dry_run', 'true').lower() != 'false'
+    # Form-label variants we've seen land in the notes column:
+    junk = [
+        'Observation: Teacher', 'Observation: PreK', 'Observation: Leader',
+        'Fundamentals', 'PMAP: Teacher', 'PMAP: PreK', 'PMAP: Leader',
+        'PMAP: Support', 'PMAP: Network',
+        'Self-Reflection: Teacher', 'Self-Reflection: PreK', 'Self-Reflection: Leader',
+        'Self-Reflection: Support', 'Self-Reflection: Network',
+        'Quick Feedback', 'Celebrate', 'Solicited Feedback',
+        'Data Meeting (Relay)', 'Coaching Meeting',
+    ]
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            SELECT COUNT(*) AS n FROM touchpoints
+            WHERE TRIM(notes) = ANY(%s)
+        """, (junk,))
+        count = cur.fetchone()['n']
+        result = {'dry_run': dry, 'rows_matching_label_noise': count}
+        if not dry and count:
+            cur.execute("""
+                UPDATE touchpoints SET notes = NULL
+                WHERE TRIM(notes) = ANY(%s)
+            """, (junk,))
+            result['rows_cleared'] = cur.rowcount
+            conn.commit()
+        return jsonify(result)
+    finally:
+        conn.close()
+
+
+@app.route('/api/admin/dedup-broad', methods=['GET', 'POST'])
+@require_auth
+@require_admin
+def api_dedup_broad():
+    """Dedup touchpoints duplicating on (teacher_email, DATE(observed_at), form_type)
+    regardless of grow_id. Catches imported rows that never matched enrichment.
+    Keeps row with most scores + has feedback + earliest observed_at; deletes the rest."""
+    dry = request.args.get('dry_run', 'true').lower() != 'false'
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            WITH groups AS (
+                SELECT LOWER(teacher_email) AS t_email, DATE(observed_at) AS d, form_type
+                FROM touchpoints
+                WHERE teacher_email IS NOT NULL AND observed_at IS NOT NULL
+                GROUP BY LOWER(teacher_email), DATE(observed_at), form_type
+                HAVING COUNT(*) > 1
+            ),
+            ranked AS (
+                SELECT t.id,
+                       ROW_NUMBER() OVER (
+                           PARTITION BY LOWER(t.teacher_email), DATE(t.observed_at), t.form_type
+                           ORDER BY
+                               (SELECT COUNT(*) FROM scores s WHERE s.touchpoint_id = t.id) DESC,
+                               (t.feedback IS NOT NULL AND t.feedback <> '') DESC,
+                               t.observed_at ASC, t.id ASC
+                       ) AS rnk
+                FROM touchpoints t
+                JOIN groups g
+                  ON g.t_email = LOWER(t.teacher_email)
+                 AND g.d = DATE(t.observed_at)
+                 AND g.form_type = t.form_type
+            )
+            SELECT id, rnk FROM ranked ORDER BY rnk
+        """)
+        rows = cur.fetchall()
+        delete_ids = [r['id'] for r in rows if r['rnk'] > 1]
+        groups_count = sum(1 for r in rows if r['rnk'] == 1)
+        result = {
+            'dry_run': dry,
+            'duplicate_groups': groups_count,
+            'rows_to_delete': len(delete_ids),
+        }
+        if not dry and delete_ids:
+            cur.execute("DELETE FROM scores WHERE touchpoint_id = ANY(%s)", ([str(x) for x in delete_ids],))
+            result['scores_deleted'] = cur.rowcount
+            cur.execute("DELETE FROM touchpoints WHERE id = ANY(%s)", ([str(x) for x in delete_ids],))
+            result['touchpoints_deleted'] = cur.rowcount
+            conn.commit()
         return jsonify(result)
     finally:
         conn.close()
