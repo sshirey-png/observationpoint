@@ -303,6 +303,54 @@ function ObservationsView({ touchpoints, onOpenDetail, staffEmail }) {
   )
 }
 
+/** Small per-dimension trend card. Shows latest value as the hero number,
+ * delta vs prior year as ↑/↓, and a tiny SVG sparkline of all available years. */
+function PMAPDimSparkline({ code, name, points }) {
+  if (!points || points.length === 0) return null
+  const latest = points[points.length - 1]
+  const prior = points.length > 1 ? points[points.length - 2] : null
+  const delta = prior != null ? +(latest.value - prior.value).toFixed(1) : null
+
+  // SVG path
+  const W = 120, H = 36, P = 4
+  const xs = points.map((_, i) => points.length === 1 ? W / 2 : P + (i * (W - P * 2)) / (points.length - 1))
+  const ys = points.map(p => P + ((5 - p.value) * (H - P * 2)) / 4)  // 1-5 scale
+  const path = xs.map((x, i) => `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${ys[i].toFixed(1)}`).join(' ')
+
+  const valueColor = latest.value >= 4 ? '#059669' : latest.value >= 3 ? '#e47727' : '#dc2626'
+  const trendColor = delta == null ? '#9ca3af' : delta > 0 ? '#059669' : delta < 0 ? '#dc2626' : '#9ca3af'
+  const trendArrow = delta == null ? '·' : delta > 0 ? '↑' : delta < 0 ? '↓' : '·'
+
+  return (
+    <div className="bg-white rounded-xl p-3 shadow-sm">
+      <div className="flex items-baseline justify-between mb-1">
+        <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 truncate">{name}</div>
+        <div className="text-[10px] font-semibold whitespace-nowrap" style={{ color: trendColor }}>
+          {trendArrow}{delta != null ? ` ${Math.abs(delta).toFixed(1)}` : ''}
+        </div>
+      </div>
+      <div className="flex items-end justify-between gap-2">
+        <div className="text-2xl font-extrabold leading-none" style={{ color: valueColor }}>{latest.value.toFixed(1)}</div>
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-[120px] h-[36px]" preserveAspectRatio="none">
+          {/* baseline at 3.0 */}
+          <line x1={P} x2={W - P} y1={P + ((5 - 3) * (H - P * 2)) / 4} y2={P + ((5 - 3) * (H - P * 2)) / 4}
+                stroke="#f3f4f6" strokeWidth="1" />
+          {points.length > 1 && (
+            <path d={path} fill="none" stroke={valueColor} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+          )}
+          {points.map((_, i) => (
+            <circle key={i} cx={xs[i]} cy={ys[i]} r="2.5" fill={valueColor} />
+          ))}
+        </svg>
+      </div>
+      <div className="flex justify-between text-[9px] text-gray-400 mt-0.5">
+        <span>{points[0].year.slice(2)}</span>
+        <span>{latest.year.slice(2)}</span>
+      </div>
+    </div>
+  )
+}
+
 function PMAPView({ touchpoints, pmap_by_year, school_years, onOpenDetail, staffEmail }) {
   const pmaps = touchpoints.filter(t => t.form_type.startsWith('pmap_'))
   const years = (school_years || []).slice().sort()
@@ -316,7 +364,6 @@ function PMAPView({ touchpoints, pmap_by_year, school_years, onOpenDetail, staff
         seen.add(code)
       }
     }
-    // Sort so T/L/PK ordering is predictable (T1..T5, L1..L5, PK1..PK10)
     return [...seen].sort((a, b) => {
       const pa = a.replace(/\d+/, '')
       const pb = b.replace(/\d+/, '')
@@ -325,43 +372,25 @@ function PMAPView({ touchpoints, pmap_by_year, school_years, onOpenDetail, staff
     })
   })()
 
+  // Build per-dimension series across years (only years with data for that dim)
+  const dimSeries = dimCodes.map(code => {
+    const points = years
+      .map(yr => ({ year: yr, value: pmap_by_year?.[yr]?.[code] }))
+      .filter(p => p.value != null)
+    return { code, name: DIM_SHORT[code] || code, points }
+  }).filter(d => d.points.length > 0)
+
   return (
     <div>
-      {years.length > 0 && dimCodes.length > 0 && (
+      {dimSeries.length > 0 && (
         <>
           <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mt-4 mb-2">
-            Year over year
+            PMAP trend · per dimension
           </div>
-          <div className="bg-white rounded-xl p-3.5 shadow-sm mb-4 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr>
-                  <th className="text-left text-[10px] font-bold uppercase tracking-wide text-gray-400 pb-2 pr-2">Dimension</th>
-                  {years.map(yr => (
-                    <th key={yr} className="text-center text-[10px] font-bold uppercase tracking-wide text-gray-400 pb-2 px-1">{yr.slice(2)}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {dimCodes.map(code => (
-                  <tr key={code}>
-                    <td className="py-1.5 pr-2 text-[12px] font-bold text-gray-700 border-t border-gray-100">{DIM_SHORT[code] || code}</td>
-                    {years.map(yr => {
-                      const v = pmap_by_year?.[yr]?.[code]
-                      return (
-                        <td key={yr} className="py-1.5 px-1 text-center border-t border-gray-100">
-                          {v != null ? (
-                            <span className={`inline-flex items-center justify-center w-8 h-8 rounded-md text-xs font-bold ${scoreClass(v)}`}>{v}</span>
-                          ) : (
-                            <span className="text-gray-300 text-[11px]">—</span>
-                          )}
-                        </td>
-                      )
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className={`grid gap-2 mb-4 ${dimSeries.length > 5 ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2 sm:grid-cols-5'}`}>
+            {dimSeries.map(d => (
+              <PMAPDimSparkline key={d.code} code={d.code} name={d.name} points={d.points} />
+            ))}
           </div>
         </>
       )}
