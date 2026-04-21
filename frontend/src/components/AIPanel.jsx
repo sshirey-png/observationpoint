@@ -9,12 +9,12 @@ import { api } from '../lib/api'
  *   <AIPanel open={aiOpen} onClose={() => setAiOpen(false)} context="profile" subject="Marcus Williams" />
  */
 
-// Suggestions tuned to questions we know the current schema can answer.
-// Avoid any that rely on fields we don't have (due dates, explicit goals, etc.)
+// Suggestions tuned to questions the schema can answer. Context line is
+// informational only — the AI queries whatever the access control permits,
+// so no "scoped to X" language (which was confusing + inaccurate).
 const CONTEXTS = {
   home: {
-    ctx: 'Scoped to you · full access to your data',
-    intro: 'Ask anything. Suggestions are a starting point; input is open.',
+    ctx: 'Ask a question. Answers draw from observations, PMAPs, and coaching feedback.',
     suggestions: [
       'Top observers this year',
       "Who hasn't been observed in 30+ days?",
@@ -22,26 +22,27 @@ const CONTEXTS = {
     ],
   },
   team: {
-    ctx: subj => `Scoped to your team${subj ? ' · ' + subj : ''}`,
-    intro: 'Ask about your team — or anything else.',
+    ctx: subj => subj
+      ? `Your team, currently viewing ${subj}.`
+      : 'Your team. Try questions about coverage, scoring, or trends.',
     suggestions: [
       "Who on my team hasn't been observed in 30+ days?",
-      "Average observation scores for my team this year",
-      "Count of touchpoints per teacher on my team",
+      'Average observation scores for my team this year',
+      'Count of touchpoints per teacher on my team',
     ],
   },
   profile: {
-    ctx: subj => `Scoped to ${subj || 'this teacher'}`,
-    intro: 'Ask about this teacher — or anything else.',
+    ctx: subj => subj
+      ? `Viewing ${subj}. Questions can be about them or anything else.`
+      : 'Viewing a staff profile.',
     suggestions: [
-      "Total observations this year",
-      "Average score by dimension",
-      "What feedback themes show up most?",
+      'Total observations this year',
+      'Average score by dimension',
+      'What feedback themes show up most?',
     ],
   },
   network: {
-    ctx: 'Scoped to the network',
-    intro: 'Ask about the network — or anything else.',
+    ctx: 'Network-wide view. Compare schools, track trends, search feedback.',
     suggestions: [
       'Average scores by school this year',
       'Which school has the most observations?',
@@ -49,8 +50,7 @@ const CONTEXTS = {
     ],
   },
   touchpoint: {
-    ctx: 'Scoped to touchpoint activity',
-    intro: 'Ask about touchpoint activity — or anything else.',
+    ctx: 'Touchpoint activity across the network.',
     suggestions: [
       'How many touchpoints did I log this month?',
       'Mix of observations / feedback / celebrate across the network',
@@ -143,7 +143,6 @@ export default function AIPanel({ open, onClose, context = 'home', subject = '' 
           <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base font-extrabold shrink-0" style={{ background: 'rgba(251,190,130,.2)', color: '#fbbe82' }}>✦</div>
           <div className="flex-1 text-white min-w-0">
             <div className="text-sm font-extrabold">Ask ObservationPoint</div>
-            <div className="text-[11px] opacity-70 mt-0.5 truncate">{ctxText}</div>
           </div>
           <button
             type="button"
@@ -157,7 +156,7 @@ export default function AIPanel({ open, onClose, context = 'home', subject = '' 
         <div ref={bodyRef} className="flex-1 overflow-y-auto px-4 py-3.5 min-h-[140px]">
           {messages.length === 0 ? (
             <>
-              <div className="text-xs text-gray-500 leading-relaxed mb-3">{cfg.intro}</div>
+              <div className="text-xs text-gray-500 leading-relaxed mb-3">{ctxText}</div>
               {cfg.suggestions.map(s => (
                 <div
                   key={s}
