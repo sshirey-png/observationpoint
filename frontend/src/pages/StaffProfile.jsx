@@ -106,6 +106,19 @@ function dedupTouchpoints(touchpoints) {
   return [...seen.values()]
 }
 
+/** True if notes is just the form label / archived import garbage we want to hide. */
+function isJunkNote(notes, label, formType) {
+  if (!notes) return true
+  const n = notes.trim()
+  if (!n) return true
+  if (n === label || n === formType) return true
+  if (n.startsWith('[ARCHIVE]')) return true
+  // Common Grow form-name patterns with or without hyphen
+  if (/^(Observation|PMAP|Self[- ]Reflection)(\/Feedback Form)?:\s/.test(n) && n.length < 60) return true
+  if (/^Observation:\s*(Teacher|PreK|Fundamentals|Leader)$/i.test(n)) return true
+  return false
+}
+
 function RecordCard({ tp, staffEmail, onClick, extra }) {
   const scores = tp.scores || {}
   const label = FORM_LABEL[tp.form_type] || tp.form_type
@@ -163,7 +176,9 @@ function RecordCard({ tp, staffEmail, onClick, extra }) {
       {Object.keys(scores).length === 0 && extra && (
         <div className="flex mt-2">{extra}</div>
       )}
-      {tp.notes && <div className="text-xs text-gray-600 mt-2 italic pl-2 border-l-2 border-gray-200 line-clamp-3">{tp.notes}</div>}
+      {tp.notes && !isJunkNote(tp.notes, label, tp.form_type) && (
+        <div className="text-xs text-gray-600 mt-2 italic pl-2 border-l-2 border-gray-200 line-clamp-3">{tp.notes}</div>
+      )}
       {hasExtra && (
         <div className="text-[10px] text-gray-400 mt-1.5 font-semibold">Tap for full record →</div>
       )}
