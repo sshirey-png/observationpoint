@@ -1041,9 +1041,9 @@ def api_dedup_by_grow_id():
             tp_deleted = 0
             for i in range(0, len(delete_ids), 500):
                 chunk = [str(x) for x in delete_ids[i:i+500]]
-                cur.execute("DELETE FROM scores WHERE touchpoint_id = ANY(%s)", (chunk,))
+                cur.execute("DELETE FROM scores WHERE touchpoint_id = ANY(%s::uuid[])", (chunk,))
                 scores_deleted += cur.rowcount
-                cur.execute("DELETE FROM touchpoints WHERE id = ANY(%s)", (chunk,))
+                cur.execute("DELETE FROM touchpoints WHERE id = ANY(%s::uuid[])", (chunk,))
                 tp_deleted += cur.rowcount
                 conn.commit()
             result['scores_deleted'] = scores_deleted
@@ -1154,9 +1154,9 @@ def api_dedup_broad():
             tp_deleted = 0
             for i in range(0, len(delete_ids), 500):
                 chunk = [str(x) for x in delete_ids[i:i+500]]
-                cur.execute("DELETE FROM scores WHERE touchpoint_id = ANY(%s)", (chunk,))
+                cur.execute("DELETE FROM scores WHERE touchpoint_id = ANY(%s::uuid[])", (chunk,))
                 scores_deleted += cur.rowcount
-                cur.execute("DELETE FROM touchpoints WHERE id = ANY(%s)", (chunk,))
+                cur.execute("DELETE FROM touchpoints WHERE id = ANY(%s::uuid[])", (chunk,))
                 tp_deleted += cur.rowcount
                 conn.commit()
             result['scores_deleted'] = scores_deleted
