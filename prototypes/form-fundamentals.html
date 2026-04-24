@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Fundamentals Observation — New</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.mock-banner{background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;text-align:center;padding:6px 12px;letter-spacing:.05em}
+.ast{font-size:.55em;color:#e47727;opacity:.8;vertical-align:super;margin-left:1px;font-weight:700}
+
+.nav{background:#002f60;padding:14px 16px;text-align:center}
+.nav-title{font-size:17px;font-weight:800;color:#fff}
+.nav-title .o{color:#e47727}
+.nav-sub{font-size:12px;color:rgba(255,255,255,.6);margin-top:2px}
+.nav-sub a{color:rgba(255,255,255,.85);text-decoration:none}
+
+.legend{text-align:center;font-size:10px;color:#9ca3af;padding:6px 12px;background:#f5f7fa}
+.legend .a{color:#e47727;font-weight:700}
+
+.content{padding:16px;max-width:720px;margin:0 auto;padding-bottom:96px}
+
+.hero{background:linear-gradient(135deg,#002f60,#003b7a);color:#fff;border-radius:20px;padding:18px;margin-bottom:14px;box-shadow:0 4px 14px rgba(0,47,96,.25)}
+.hero-row{display:flex;align-items:center;gap:14px}
+.avatar{width:54px;height:54px;border-radius:50%;background:#e47727;color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:800;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.hero-name{font-size:18px;font-weight:800;color:#fff;line-height:1.2}
+.hero-meta{font-size:11px;color:rgba(255,255,255,.75);margin-top:3px}
+.hero-sub{font-size:11px;color:rgba(255,255,255,.6);margin-top:3px}
+
+.prog-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.15)}
+.prog-dot{aspect-ratio:1;max-width:44px;margin:0 auto;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:rgba(255,255,255,.5)}
+.prog-dot.done{background:#22c55e;color:#fff}
+.prog-dot.current{background:rgba(228,119,39,.3);color:#fff;border:2px solid #e47727}
+.prog-label{text-align:center;font-size:10px;color:rgba(255,255,255,.75);margin-top:10px}
+
+/* Timer card */
+.timer-card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:12px;text-align:center}
+.timer-state{font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;font-weight:700}
+.timer-clock{font-size:44px;font-weight:900;color:#002f60;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.timer-clock.running{color:#dc2626}
+.timer-min{font-size:12px;color:#e47727;font-weight:700;margin-top:4px}
+.timer-ctrl{display:flex;gap:8px;justify-content:center;margin-top:12px}
+.timer-btn{padding:10px 22px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.timer-btn.start{background:#dc2626;color:#fff}
+.timer-btn.pause{background:#6b7280;color:#fff}
+.timer-btn.reset{background:#f3f4f6;color:#6b7280;border:1px solid #e5e7eb}
+
+/* Class size */
+.class-card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:12px;display:flex;align-items:center;gap:12px}
+.class-label{flex:1}
+.class-label .t{font-size:13px;font-weight:700;color:#111827}
+.class-label .s{font-size:11px;color:#6b7280;margin-top:2px}
+.class-input{width:76px;padding:10px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:20px;font-weight:800;text-align:center;color:#002f60;font-family:inherit}
+.class-input:focus{outline:none;border-color:#e47727}
+
+/* Card */
+.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:12px}
+.card-title{font-size:12px;font-weight:800;color:#111827;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.card-sub{font-size:11px;color:#6b7280;margin-bottom:12px}
+
+/* Minute rows — count-based */
+.m-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f3f4f6}
+.m-row:last-child{border-bottom:none}
+.m-num{width:34px;height:34px;border-radius:8px;background:#f3f4f6;color:#9ca3af;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0}
+.m-num.done{background:#22c55e;color:#fff}
+.m-num.active{background:#e47727;color:#fff;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+.m-label{font-size:13px;font-weight:600;flex:1}
+.m-input{width:56px;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:15px;font-weight:800;text-align:center;color:#002f60;font-family:inherit}
+.m-input:focus{outline:none;border-color:#e47727}
+.m-slash{font-size:12px;color:#9ca3af;width:26px;text-align:center}
+.m-pct{font-size:13px;font-weight:800;width:46px;text-align:right;font-variant-numeric:tabular-nums;color:#d1d5db}
+.m-pct.green{color:#22c55e}
+.m-pct.yellow{color:#eab308}
+.m-pct.red{color:#dc2626}
+
+.avg-row{display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px 12px;background:#f9fafb;border-radius:10px}
+.avg-label{font-size:11px;color:#6b7280;flex:1;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.avg-v{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
+
+/* Verdict */
+.verdict{background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.verdict-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:12px}
+.verdict-row b{color:#002f60;font-weight:800}
+.verdict-line{margin-top:8px;padding-top:8px;border-top:1px solid #fed7aa;font-size:13px;font-weight:700;text-align:center}
+.verdict-line.yes{color:#16a34a}
+.verdict-line.no{color:#9a3412}
+
+/* Toggle */
+.toggle{display:flex;gap:8px;margin-top:4px}
+.tbtn{flex:1;padding:11px 12px;border:1.5px solid #e5e7eb;background:#fff;border-radius:10px;font-size:13px;font-weight:700;color:#6b7280;cursor:pointer}
+.tbtn.on.yes{background:#dcfce7;border-color:#22c55e;color:#166534}
+.tbtn.on.no{background:#fee2e2;border-color:#dc2626;color:#991b1b}
+
+.notes{width:100%;min-height:80px;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:inherit;resize:vertical;color:#111827}
+.notes:focus{outline:none;border-color:#002f60}
+
+/* Action step — bucketed by category */
+.as-bucket{border:1.5px solid #e5e7eb;border-radius:10px;margin-top:8px;overflow:hidden;background:#fff}
+.as-bucket-head{display:flex;align-items:center;padding:12px 14px;cursor:pointer;user-select:none}
+.as-bucket-head:hover{background:#fafbfc}
+.as-bucket.open .as-bucket-head{border-bottom:1px solid #f3f4f6}
+.as-bucket-cat{font-size:12px;font-weight:800;color:#e47727;text-transform:uppercase;letter-spacing:.08em;flex:1}
+.as-bucket-n{font-size:11px;color:#9ca3af;font-weight:600;margin-right:8px}
+.as-bucket-arrow{color:#9ca3af;font-size:12px;transition:transform .2s}
+.as-bucket.open .as-bucket-arrow{transform:rotate(180deg)}
+.as-bucket-body{display:none;padding:4px 0}
+.as-bucket.open .as-bucket-body{display:block}
+.as-card{padding:10px 14px;border-top:1px solid #f3f4f6;cursor:pointer;transition:all .15s}
+.as-card:first-child{border-top:none}
+.as-card:hover{background:#fafbfc}
+.as-card.on{background:#fff7ed;box-shadow:inset 3px 0 0 #e47727}
+.as-action{font-size:13px;font-weight:700;color:#111827;line-height:1.3}
+.as-when{font-size:11px;color:#9ca3af;margin-top:2px}
+.as-expand{display:none;margin-top:10px;padding-top:10px;border-top:1px dashed #fed7aa}
+.as-card.on .as-expand{display:block}
+.as-prompt{font-size:11px;font-style:italic;color:#1d4ed8;background:#eff6ff;border-radius:6px;padding:8px 10px;line-height:1.5}
+.as-rtc{font-size:10px;color:#9ca3af;margin-top:4px}
+.as-count{font-size:11px;color:#6b7280;margin-top:8px}
+.as-count b{color:#002f60;font-weight:800}
+.as-count .max{color:#9ca3af;font-weight:400}
+.as-custom-label{font-size:13px;font-weight:700;color:#111827;margin-top:14px;margin-bottom:6px}
+
+.lock-card{border-left:4px solid #e47727}
+.suggest{font-size:11px;color:#9a3412;background:#fff7ed;border-radius:6px;padding:6px 10px;margin-bottom:8px}
+
+.actions{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;padding:10px 14px;z-index:10}
+.actions-inner{max-width:720px;margin:0 auto;display:flex;gap:8px}
+.btn{flex:1;padding:13px;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn-draft{background:#f3f4f6;color:#4b5563}
+.btn-primary{background:#002f60;color:#fff}
+
+.testmode{display:inline-block;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;letter-spacing:.03em;margin-left:6px}
+</style></head><body>
+
+<div class="mock-banner">DESIGN MOCK · Fundamentals observation form</div>
+<nav class="nav">
+  <div class="nav-title">Observation<span class="o">Point</span></div>
+  <div class="nav-sub"><a href="staff-v3-coaching.html">← Marcus Williams</a> · new Fundamentals observation <span class="testmode">TEST MODE</span></div>
+</nav>
+
+<div class="legend"><span class="a">*</span> = mock data</div>
+
+<div class="content">
+
+<!-- Hero with teacher + mastery progress -->
+<div class="hero">
+  <div class="hero-row">
+    <div class="avatar">MW</div>
+    <div>
+      <div class="hero-name">Marcus Williams</div>
+      <div class="hero-meta">5th grade ELA · Langston Hughes</div>
+      <div class="hero-sub">Observing 2026-09-02 · by Tina Patel</div>
+    </div>
+  </div>
+  <div class="prog-strip">
+    <div class="prog-dot done">1</div>
+    <div class="prog-dot done">2</div>
+    <div class="prog-dot current">3</div>
+    <div class="prog-dot">4</div>
+    <div class="prog-dot">5</div>
+  </div>
+  <div class="prog-label">2<span class="ast">*</span> of 5 qualifying obs · 3 more to lock in</div>
+</div>
+
+<!-- Timer -->
+<div class="timer-card">
+  <div class="timer-state" id="timerState">Ready · 5-minute observation</div>
+  <div class="timer-clock" id="timerClock">0:00</div>
+  <div class="timer-min" id="timerMin"></div>
+  <div class="timer-ctrl">
+    <button class="timer-btn start" id="timerBtn" onclick="toggleTimer()">Start</button>
+    <button class="timer-btn reset" onclick="resetTimer()">Reset</button>
+  </div>
+</div>
+
+<!-- Class size -->
+<div class="class-card">
+  <div class="class-label">
+    <div class="t">Students in class</div>
+    <div class="s">Set once at start — enables auto-% calc</div>
+  </div>
+  <input type="number" class="class-input" id="classSize" min="1" max="99" placeholder="0" oninput="recalc()">
+</div>
+
+<!-- On Task by minute -->
+<div class="card">
+  <div class="card-title">On Task · by minute</div>
+  <div class="card-sub">Count students on-task at the end of each minute. % auto-calcs. Average ≥ 90% = this obs qualifies toward mastery.</div>
+  <div id="mRows"></div>
+  <div class="avg-row">
+    <div class="avg-label">Average On Task</div>
+    <div class="avg-v" id="avgVal">—</div>
+  </div>
+</div>
+
+<!-- Live verdict -->
+<div class="verdict">
+  <div class="verdict-row"><span>Average across 5 minutes</span><b id="avgScore">—</b></div>
+  <div class="verdict-line" id="verdict">Enter all 5 minutes to see whether this obs qualifies</div>
+</div>
+
+<!-- On Pace -->
+<div class="card">
+  <div class="card-title">On Pace?</div>
+  <div class="toggle">
+    <button class="tbtn" data-target="onPace" data-val="yes">Yes</button>
+    <button class="tbtn" data-target="onPace" data-val="no">No</button>
+  </div>
+</div>
+
+<!-- CoL Foundations -->
+<div class="card">
+  <div class="card-title">Relationship Building / CoL foundations in place?</div>
+  <div class="toggle">
+    <button class="tbtn" data-target="col" data-val="yes">Yes</button>
+    <button class="tbtn" data-target="col" data-val="no">No</button>
+  </div>
+</div>
+
+<!-- Fundamental Skills -->
+<div class="card">
+  <div class="card-title">Fundamental Skills · what you saw</div>
+  <div class="card-sub">Routines that landed, skills that need reinforcement. Specifics help.</div>
+  <textarea class="notes" placeholder="Cold-call rotated across rows · MVP directions announced before every transition · threshold routine crisp · ..."></textarea>
+</div>
+
+<!-- Action Step Assignment — Get Better Faster T1/On Task (matches Observe form pattern) -->
+<div class="card">
+  <div class="card-title">Assign Action Step</div>
+  <div class="card-sub">Tap a category to expand, tap a card to select. Selected cards expand with the coaching prompt + RTC cue. Up to 2 can be assigned.</div>
+  <div id="as-list"></div>
+  <div class="as-count"><b id="as-count-num">0</b> <span class="max">of 2</span> assigned</div>
+  <div class="as-custom-label">Custom Action Step (optional)</div>
+  <textarea class="notes" placeholder="Or write your own action step..." style="min-height:60px"></textarea>
+</div>
+
+<!-- Personal note of encouragement — optional -->
+<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:14px;margin-bottom:12px">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+    <div style="width:32px;height:32px;border-radius:8px;background:#22c55e;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0">✉</div>
+    <div>
+      <div style="font-size:13px;font-weight:700;color:#15803d">Note of encouragement (optional)</div>
+      <div style="font-size:10px;color:#6b7280">Sent with the observation email when you hit Publish &amp; Send.</div>
+    </div>
+  </div>
+  <textarea placeholder="Hey Marcus — one thing I loved about today was..." style="width:100%;min-height:70px;padding:10px;border:1.5px solid #bbf7d0;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;color:#111827"></textarea>
+</div>
+
+<!-- Locked In -->
+<div class="card lock-card">
+  <div class="card-title">Fundamentals Locked In?</div>
+  <div class="suggest">Currently <b>2<span class="ast">*</span> of 5</b> qualifying obs. Once at 5, lock in = Yes. System suggests, you confirm.</div>
+  <div class="toggle">
+    <button class="tbtn" data-target="locked" data-val="yes">Yes · lock in mastery</button>
+    <button class="tbtn on no" data-target="locked" data-val="no">No · keep coaching</button>
+  </div>
+</div>
+
+</div>
+
+<div class="actions">
+  <div class="actions-inner">
+    <button class="btn btn-draft">Save draft</button>
+    <button class="btn btn-primary">Publish observation</button>
+  </div>
+</div>
+
+<script>
+// 15 T1 "Get Better Faster" action steps — matches Observe form data (lib/action-steps.js)
+const T1_STEPS = [
+  {cat:'Routines & Procedures', action:'Plan critical routines and procedures moment-by-moment', when:'routines aren\'t clear', prompt:'"What is each step the teacher takes in this routine? What is the teacher doing and what are the students doing?"', rtc:'N/A'},
+  {cat:'Routines & Procedures', action:'Plan the roll-out for introducing the routine', when:'routine is new for the students', prompt:'"What will be the most difficult parts for students to master? How will you model this effectively?"', rtc:'If model is ineffective: "Am I following your model effectively?"'},
+  {cat:'Routines & Procedures', action:'Do It Again & Cut It Short', when:'students aren\'t performing a routine correctly', prompt:'"What are the keys to running a Do It Again effectively?"', rtc:'Non-verbal: Make a circle with your finger to cue Do It Again'},
+  {cat:'Strong Voice', action:'Square up and stand still', when:'teacher\'s body language lacks leadership presence', prompt:'"What is the value in communicating leadership with our body language?"', rtc:'Non-verbal: shift body upward and arch shoulders'},
+  {cat:'Strong Voice', action:'Use formal register', when:'teacher\'s tone lacks leadership presence', prompt:'"Imagine saying \'It\'s time to leave\' to three audiences. What\'s the value of the middle one?"', rtc:'Non-verbal: square up gesture + point to mouth'},
+  {cat:'Clear Directions', action:'Use MVP Directions', when:'teacher\'s directions are unclear and use too many words', prompt:'"What happened when you asked students to ___? What caused the dip in behavior?"', rtc:'Non-verbal: sign MVP. Whisper: "When I say go, at a level zero..."'},
+  {cat:'Teacher Radar', action:'Perch and Be Seen Looking', when:'students don\'t feel teacher is monitoring', prompt:'"How do the students know you are monitoring their behavior?"', rtc:'Non-verbal: Make gesture of Be Seen Looking'},
+  {cat:'Teacher Radar', action:'Scan Hot Spots', when:'teacher is not noticing earliest non-compliance', prompt:'"At what moment do the first students begin to go off track? Which students are most often off task?"', rtc:'Hold hand out over a hot spot'},
+  {cat:'Teacher Radar', action:'Circulate the perimeter', when:'teacher is stationary', prompt:'"Where did the off-task behavior start? Where were you standing?"', rtc:'Non-verbal: point to a corner where they should stand'},
+  {cat:'Pacing', action:'Time Yourself', when:'lesson doesn\'t conform to time stamps', prompt:'"How much time did you want to spend on the I Do? What kept us from sticking?"', rtc:'Non-verbal: point at watch. Hand signal for minutes remaining'},
+  {cat:'Pacing', action:'Illusion of Speed', when:'students don\'t have urgency', prompt:'"How could you challenge students to work with greater purpose?"', rtc:'Non-verbal: 5-4-3-2-1 with fingers'},
+  {cat:'Narrate the Positive', action:'Use a warm/strict voice', when:'tone when addressing management is overly negative', prompt:'"How did the teacher get students to correct misbehaviors without being negative?"', rtc:'Non-verbal: index card with plus sign. Whisper: "Warm strict"'},
+  {cat:'Narrate the Positive', action:'Narrate the Positive X3', when:'off-task students don\'t respond to clear directions', prompt:'"What does this teacher do after giving clear directions? How does that affect attention?"', rtc:'Whisper: "Narrate X3"'},
+  {cat:'Individual Correction', action:'Least-Invasive Intervention', when:'corrections draw more attention than necessary', prompt:'"What is the advantage of starting with the least invasive intervention?"', rtc:'Non-verbal: point to off-task students. Whisper: "Use ___ intervention"'},
+  {cat:'Consequence', action:'Give a consequence', when:'consequences are not being implemented', prompt:'"You gave clear directions, narrated X3, did non-verbal cues but students still off task. What could you do?"', rtc:'Non-verbal or whisper to implement consequence'},
+]
+// Group steps by category
+const byCat = {}
+T1_STEPS.forEach(s => {
+  if(!byCat[s.cat]) byCat[s.cat] = []
+  byCat[s.cat].push(s)
+})
+
+const asList = document.getElementById('as-list')
+const MAX_SELECT = 2
+
+Object.entries(byCat).forEach(([cat, steps]) => {
+  const bucket = document.createElement('div')
+  bucket.className = 'as-bucket'
+  bucket.innerHTML = `
+    <div class="as-bucket-head">
+      <div class="as-bucket-cat">${cat}</div>
+      <div class="as-bucket-n">${steps.length}</div>
+      <div class="as-bucket-arrow">▼</div>
+    </div>
+    <div class="as-bucket-body"></div>
+  `
+  const body = bucket.querySelector('.as-bucket-body')
+  steps.forEach(s => {
+    const card = document.createElement('div')
+    card.className = 'as-card'
+    card.innerHTML = `
+      <div class="as-action">${s.action}</div>
+      <div class="as-when">When: ${s.when}</div>
+      <div class="as-expand">
+        <div class="as-prompt">${s.prompt}</div>
+        <div class="as-rtc">RTC Cue: ${s.rtc}</div>
+      </div>
+    `
+    card.addEventListener('click', (e) => {
+      e.stopPropagation()
+      const selected = document.querySelectorAll('.as-card.on')
+      if(card.classList.contains('on')){
+        card.classList.remove('on')
+      } else if(selected.length < MAX_SELECT){
+        card.classList.add('on')
+      } else {
+        // at max — flash briefly
+        card.style.transition = 'none'; card.style.background = '#fee2e2'
+        setTimeout(() => { card.style.transition = ''; card.style.background = '' }, 250)
+      }
+      document.getElementById('as-count-num').textContent = document.querySelectorAll('.as-card.on').length
+    })
+    body.appendChild(card)
+  })
+  bucket.querySelector('.as-bucket-head').addEventListener('click', () => bucket.classList.toggle('open'))
+  asList.appendChild(bucket)
+})
+
+// Build minute rows
+const rowsEl = document.getElementById('mRows')
+for(let i = 1; i <= 5; i++){
+  const row = document.createElement('div')
+  row.className = 'm-row'
+  row.innerHTML = `
+    <div class="m-num" id="mn${i}">${i}</div>
+    <div class="m-label">Minute ${i}</div>
+    <input type="number" class="m-input" id="c${i}" min="0" max="99" placeholder="#" oninput="recalc()">
+    <div class="m-slash">/ <span id="slash${i}">—</span></div>
+    <div class="m-pct" id="p${i}">—</div>
+  `
+  rowsEl.appendChild(row)
+}
+
+// Timer
+let seconds = 0, running = false, interval = null
+function toggleTimer(){
+  const btn = document.getElementById('timerBtn')
+  const clock = document.getElementById('timerClock')
+  const state = document.getElementById('timerState')
+  if(running){
+    clearInterval(interval); running = false
+    btn.textContent = seconds > 0 ? 'Resume' : 'Start'
+    btn.className = 'timer-btn start'
+    state.textContent = 'Paused'
+    clock.classList.remove('running')
+  } else {
+    running = true
+    btn.textContent = 'Pause'
+    btn.className = 'timer-btn pause'
+    state.textContent = 'Observing'
+    clock.classList.add('running')
+    interval = setInterval(tick, 1000)
+  }
+}
+function tick(){
+  seconds++
+  if(seconds >= 300){ clearInterval(interval); running = false
+    document.getElementById('timerState').textContent = 'Observation complete'
+    document.getElementById('timerClock').classList.remove('running')
+    document.getElementById('timerBtn').textContent = 'Done'
+    document.getElementById('timerBtn').className = 'timer-btn reset'
+  }
+  render()
+}
+function render(){
+  const m = Math.floor(seconds/60), s = String(seconds%60).padStart(2,'0')
+  document.getElementById('timerClock').textContent = `${m}:${s}`
+  const cur = Math.min(Math.floor(seconds/60)+1, 5)
+  document.getElementById('timerMin').textContent = seconds > 0 && seconds < 300 ? `Minute ${cur} of 5` : ''
+  for(let i = 1; i <= 5; i++){
+    const dot = document.getElementById('mn'+i)
+    dot.classList.remove('done','active')
+    if(seconds >= i*60) dot.classList.add('done')
+    else if(running && cur === i) dot.classList.add('active')
+  }
+}
+function resetTimer(){
+  clearInterval(interval); running = false; seconds = 0
+  document.getElementById('timerBtn').textContent = 'Start'
+  document.getElementById('timerBtn').className = 'timer-btn start'
+  document.getElementById('timerState').textContent = 'Ready · 5-minute observation'
+  document.getElementById('timerClock').classList.remove('running')
+  render()
+}
+render()
+
+// Live recalc on class size + counts
+function recalc(){
+  const total = parseInt(document.getElementById('classSize').value) || 0
+  for(let i = 1; i <= 5; i++){
+    document.getElementById('slash'+i).textContent = total || '—'
+  }
+  const pcts = []
+  for(let i = 1; i <= 5; i++){
+    const n = parseInt(document.getElementById('c'+i).value)
+    const pEl = document.getElementById('p'+i)
+    pEl.classList.remove('green','yellow','red')
+    if(isNaN(n) || total === 0){
+      pEl.textContent = '—'
+      continue
+    }
+    const pct = Math.round((Math.min(n, total) / total) * 100)
+    pEl.textContent = pct + '%'
+    if(pct >= 90) pEl.classList.add('green')
+    else if(pct >= 70) pEl.classList.add('yellow')
+    else pEl.classList.add('red')
+    pcts.push(pct)
+  }
+  // Average
+  const avgEl = document.getElementById('avgVal')
+  avgEl.classList.remove('green','yellow','red')
+  if(pcts.length){
+    const avg = Math.round(pcts.reduce((a,b)=>a+b,0) / pcts.length)
+    avgEl.textContent = avg + '%'
+    if(avg >= 90) avgEl.classList.add('green')
+    else if(avg >= 70) avgEl.classList.add('yellow')
+    else avgEl.classList.add('red')
+    avgEl.style.color = ''
+  } else {
+    avgEl.textContent = '—'
+  }
+  // Verdict — average ≥ 90% qualifies
+  const v = document.getElementById('verdict')
+  const as = document.getElementById('avgScore')
+  if(pcts.length === 5){
+    const avg = Math.round(pcts.reduce((a,b)=>a+b,0)/5)
+    as.textContent = avg + '%'
+    if(avg >= 90){ v.textContent = '✓ QUALIFIES · counts toward the 5 needed for mastery'; v.className = 'verdict-line yes' }
+    else{ v.textContent = 'Does not qualify · average needs to be 90% or above'; v.className = 'verdict-line no' }
+  } else {
+    as.textContent = '—'
+    v.textContent = 'Enter class size and counts for all 5 minutes'
+    v.className = 'verdict-line'
+  }
+}
+
+// Color for avg
+document.getElementById('avgVal').style.color = ''
+const origStyle = document.getElementById('avgVal').style
+Object.defineProperty(document.getElementById('avgVal'), 'class', {})
+
+document.querySelectorAll('.tbtn').forEach(b => b.addEventListener('click', e => {
+  const t = e.target.dataset.target, v = e.target.dataset.val
+  document.querySelectorAll(`.tbtn[data-target="${t}"]`).forEach(x => x.classList.remove('on','yes','no'))
+  e.target.classList.add('on', v === 'yes' ? 'yes' : 'no')
+}))
+</script>
+
+</body></html>

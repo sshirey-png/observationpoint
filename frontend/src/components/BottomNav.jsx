@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
 
 /**
- * BottomNav — persistent 4-button global navigation.
- * Same four buttons on every non-home page: Team · Touchpoint · Network · Ask.
+ * BottomNav — persistent 5-button global navigation.
+ * Home · Team · Touchpoint · Network · Ask.
  * Ask doesn't navigate — it triggers the inline AI panel via onAskClick.
  *
  * Usage:
@@ -13,6 +13,7 @@ import { Link } from 'react-router-dom'
  */
 export default function BottomNav({ active, onAskClick, aiOpen = false }) {
   const items = [
+    { key: 'home',       to: '/',               icon: '🏠', label: 'Home' },
     { key: 'team',       to: '/app/team',       icon: '👥', label: 'Team' },
     { key: 'touchpoint', to: '/app/touchpoint', icon: '+',  label: 'Touchpoint' },
     { key: 'network',    to: '/app/network',    icon: '📊', label: 'Network' },

@@ -35,4 +35,6 @@ export async function apiFetch(url, opts = {}) {
 export const api = {
   get: (url) => apiFetch(url),
   post: (url, data) => apiFetch(url, { method: 'POST', body: JSON.stringify(data) }),
+  put: (url, data) => apiFetch(url, { method: 'PUT', body: JSON.stringify(data) }),
+  del: (url) => apiFetch(url, { method: 'DELETE' }),
 }

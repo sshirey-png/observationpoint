@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Celebration Drill-Down</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.mock-banner{background:#d1fae5;color:#065f46;font-size:11px;font-weight:700;text-align:center;padding:6px 12px;letter-spacing:.05em}
+.nav{background:#002f60;padding:10px 12px;display:flex;align-items:center;gap:10px}
+.back{color:#fff;font-size:22px;font-weight:700;text-decoration:none;padding:4px 8px;cursor:pointer}
+.nav-t{flex:1}
+.nav-title{font-size:14px;font-weight:700;color:#fff}
+.nav-sub{font-size:11px;color:rgba(255,255,255,.65);margin-top:1px}
+
+.launch-banner{background:#fff7ed;border-bottom:1px solid #fed7aa;padding:10px 14px;text-align:center;font-size:11px;color:#9a3412;line-height:1.4}
+.launch-banner b{color:#e47727}
+
+.hero{background:linear-gradient(135deg,#002f60,#003b7a);padding:20px 16px;color:#fff}
+.hero-inner{max-width:720px;margin:0 auto;display:flex;align-items:center;gap:16px}
+.hero-ring{width:100px;height:100px;flex-shrink:0}
+.hero-big{font-size:40px;font-weight:900;line-height:1;color:#fff}
+.hero-big .pct{color:#e47727;font-size:22px}
+.hero-sub{font-size:12px;color:rgba(255,255,255,.75);margin-top:6px}
+.hero-schools{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.15);max-width:720px;margin-left:auto;margin-right:auto}
+.hero-s{text-align:center}
+.hero-s{min-width:0}
+.hero-s-v{font-size:16px;font-weight:800;color:#fff}
+.hero-s-l{font-size:9px;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.03em;margin-top:2px;line-height:1.25;word-break:break-word}
+@media (max-width:400px){.hero-s-l{font-size:8px;letter-spacing:.01em}.hero-s-v{font-size:14px}}
+
+.content{max-width:720px;margin:0 auto;padding:14px 12px 60px}
+.section{background:#fff;border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:12px}
+.section-title{font-size:11px;font-weight:800;color:#111827;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+
+.ratio-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.ratio-tile{background:#fff7ed;border-left:3px solid #e47727;border-radius:10px;padding:12px;text-align:center}
+.ratio-v{font-size:26px;font-weight:800;color:#002f60;line-height:1}
+.ratio-l{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-top:6px}
+.ratio-m{font-size:10px;color:#9ca3af;margin-top:2px}
+
+.filter{background:#fff;border-bottom:1px solid #e5e7eb;padding:10px 12px;position:sticky;top:0;z-index:10}
+.filter-inner{max-width:720px;margin:0 auto}
+.tabs{display:flex;gap:6px;margin-bottom:8px}
+.tab{flex:1;padding:10px 8px;border-radius:10px;border:1.5px solid #e5e7eb;background:#fff;font-size:12px;font-weight:700;color:#6b7280;cursor:pointer;text-align:center}
+.tab.on.red{background:#fee2e2;border-color:#fca5a5;color:#991b1b}
+.tab.on.green{background:#dcfce7;border-color:#86efac;color:#166534}
+.tab .num{display:block;font-size:18px;font-weight:800;line-height:1;margin-bottom:2px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{padding:6px 12px;border-radius:14px;border:1px solid #e5e7eb;background:#fff;font-size:11px;font-weight:700;color:#6b7280;cursor:pointer;white-space:nowrap}
+.chip.on{background:#002f60;color:#fff;border-color:#002f60}
+
+.list-head{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;padding:10px 4px 6px}
+.row{background:#fff;border-radius:12px;padding:12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+.row:hover{background:#fafbfc}
+.avatar{width:34px;height:34px;border-radius:50%;background:#6b7280;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.row-body{flex:1;min-width:0}
+.row-name{font-size:13px;font-weight:700;color:#111827}
+.row-meta{font-size:11px;color:#6b7280;margin-top:2px}
+.row-status{text-align:right;flex-shrink:0;font-size:11px;font-weight:700;color:#9ca3af}
+.row-chev{color:#9ca3af;font-size:16px;font-weight:700;margin-left:2px}
+
+.empty-state{text-align:center;padding:36px 20px;background:#fff;border-radius:12px;margin-top:8px}
+.empty-icon{font-size:38px;margin-bottom:8px}
+.empty-t{font-size:14px;font-weight:700;color:#002f60;margin-bottom:4px}
+.empty-s{font-size:12px;color:#6b7280;line-height:1.5;max-width:280px;margin:0 auto}
+</style></head><body>
+
+<div class="mock-banner">REAL DATA · 2025-26 Postgres · celebrations empty (pre-launch)</div>
+
+<nav class="nav">
+  <a class="back" href="network-landing-v3.html">←</a>
+  <div class="nav-t">
+    <div class="nav-title">Celebration Coverage</div>
+    <div class="nav-sub">2025-26</div>
+  </div>
+</nav>
+
+<div class="launch-banner">
+  <b>Celebration tracking starts 2026-27.</b> When coaches use the Celebrate tile, this page fills automatically.
+</div>
+
+<div class="hero">
+  <div class="hero-inner">
+    <svg class="hero-ring" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="10"/>
+    </svg>
+    <div>
+      <div class="hero-big">0<span class="pct">/187</span></div>
+      <div class="hero-sub">staff celebrated this year · 0%</div>
+    </div>
+  </div>
+  <div class="hero-schools">
+    <div class="hero-s"><div class="hero-s-v">0%</div><div class="hero-s-l">Langston Hughes 0/49</div></div>
+    <div class="hero-s"><div class="hero-s-v">0%</div><div class="hero-s-l">Wheatley 0/49</div></div>
+    <div class="hero-s"><div class="hero-s-v">0%</div><div class="hero-s-l">Ashe 0/49</div></div>
+    <div class="hero-s"><div class="hero-s-v">0%</div><div class="hero-s-l">Green 0/40</div></div>
+  </div>
+</div>
+
+<div class="content">
+
+<div class="section">
+  <div class="section-title">Coverage summary</div>
+  <div class="ratio-row">
+    <div class="ratio-tile">
+      <div class="ratio-v">0%</div>
+      <div class="ratio-l">Staff Celebrated</div>
+      <div class="ratio-m">0 of 187 YTD</div>
+    </div>
+    <div class="ratio-tile">
+      <div class="ratio-v">0 : —</div>
+      <div class="ratio-l">Cel : Touchpoint</div>
+      <div class="ratio-m">5,543 touchpoints, 0 cels</div>
+    </div>
+  </div>
+  <div style="padding-top:12px;border-top:1px solid #f3f4f6;margin-top:4px">
+    <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">% Staff Celebrated · month by month</div>
+    <svg viewBox="0 0 320 60" style="width:100%;height:60px">
+      <g stroke="#f3f4f6" stroke-width="1"><line x1="0" y1="50" x2="320" y2="50"/></g>
+      <g>
+        <rect x="8" y="48" width="24" height="2" fill="#d1d5db" rx="1"/>
+        <rect x="40" y="48" width="24" height="2" fill="#d1d5db" rx="1"/>
+        <rect x="72" y="48" width="24" height="2" fill="#d1d5db" rx="1"/>
+        <rect x="104" y="48" width="24" height="2" fill="#d1d5db" rx="1"/>
+        <rect x="136" y="48" width="24" height="2" fill="#d1d5db" rx="1"/>
+        <rect x="168" y="48" width="24" height="2" fill="#d1d5db" rx="1"/>
+        <rect x="200" y="48" width="24" height="2" fill="#d1d5db" rx="1"/>
+        <rect x="232" y="48" width="24" height="2" fill="#d1d5db" rx="1"/>
+        <rect x="264" y="48" width="24" height="2" fill="#d1d5db" rx="1"/>
+      </g>
+      <g font-size="8" fill="#9ca3af" text-anchor="middle" font-weight="600">
+        <text x="20" y="58">Aug</text><text x="52" y="58">Sep</text><text x="84" y="58">Oct</text>
+        <text x="116" y="58">Nov</text><text x="148" y="58">Dec</text><text x="180" y="58">Jan</text>
+        <text x="212" y="58">Feb</text><text x="244" y="58">Mar</text><text x="276" y="58">Apr</text>
+      </g>
+    </svg>
+    <div style="text-align:center;font-size:10px;color:#9ca3af;margin-top:6px;font-style:italic">Bars activate once celebrations are logged</div>
+  </div>
+</div>
+
+</div>
+
+<div class="filter">
+  <div class="filter-inner">
+    <div class="tabs">
+      <button class="tab on red"><span class="num">187</span>Not Yet Celebrated</button>
+      <button class="tab"><span class="num">0</span>Celebrated</button>
+    </div>
+    <div class="chips">
+      <button class="chip on">All schools</button>
+      <button class="chip">Langston Hughes</button>
+      <button class="chip">Wheatley</button>
+      <button class="chip">Ashe</button>
+      <button class="chip">Green</button>
+    </div>
+  </div>
+</div>
+
+<div class="content" style="padding-top:0">
+
+<div id="not-yet">
+  <div class="list-head">Not Yet Celebrated · 187 teachers · showing first 6</div>
+  <div class="row"><div class="avatar">JC</div>
+    <div class="row-body"><div class="row-name">Jean Curry</div><div class="row-meta">Ashe · Whole School Dance</div></div>
+    <div class="row-status">0 cels</div><div class="row-chev">›</div></div>
+  <div class="row"><div class="avatar">LF</div>
+    <div class="row-body"><div class="row-name">Lavette Floyd</div><div class="row-meta">Ashe · 6th ELA</div></div>
+    <div class="row-status">0 cels</div><div class="row-chev">›</div></div>
+  <div class="row"><div class="avatar">MT</div>
+    <div class="row-body"><div class="row-name">Mitchell Tranchina</div><div class="row-meta">Ashe · 3rd/4th ELA</div></div>
+    <div class="row-status">0 cels</div><div class="row-chev">›</div></div>
+  <div class="row"><div class="avatar">LC</div>
+    <div class="row-body"><div class="row-name">Lanceing Clemens</div><div class="row-meta">Langston Hughes · All Subjects</div></div>
+    <div class="row-status">0 cels</div><div class="row-chev">›</div></div>
+  <div class="row"><div class="avatar">CB</div>
+    <div class="row-body"><div class="row-name">Courtney Brumfield</div><div class="row-meta">Wheatley · All Subjects</div></div>
+    <div class="row-status">0 cels</div><div class="row-chev">›</div></div>
+  <div class="row"><div class="avatar">AB</div>
+    <div class="row-body"><div class="row-name">Ashley Barnett</div><div class="row-meta">Green · PreK</div></div>
+    <div class="row-status">0 cels</div><div class="row-chev">›</div></div>
+  <div style="text-align:center;padding:12px;font-size:11px;color:#9ca3af">181 more · scroll to see all</div>
+</div>
+
+<div id="celebrated" style="display:none">
+  <div class="empty-state">
+    <div class="empty-icon">🎉</div>
+    <div class="empty-t">No celebrations yet</div>
+    <div class="empty-s">Once coaches start using the Celebrate tile, the first recognized staff will appear here. Data begins flowing 2026-27.</div>
+  </div>
+</div>
+
+</div>
+
+<script>
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', e => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('on','red','green'))
+  e.currentTarget.classList.add('on')
+  const isNotYet = e.currentTarget.textContent.includes('Not Yet')
+  e.currentTarget.classList.add(isNotYet ? 'red' : 'green')
+  document.getElementById('not-yet').style.display = isNotYet ? '' : 'none'
+  document.getElementById('celebrated').style.display = isNotYet ? 'none' : ''
+}))
+document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', e => {
+  document.querySelectorAll('.chip').forEach(x => x.classList.remove('on'))
+  e.target.classList.add('on')
+}))
+</script>
+
+</body></html>

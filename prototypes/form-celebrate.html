@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Celebrate — V3 form</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.mock-banner{background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;text-align:center;padding:6px 12px;letter-spacing:.05em}
+
+.nav{background:#002f60;padding:14px 16px;text-align:center;position:relative}
+.back-arrow{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:700;cursor:pointer;border-radius:8px;background:rgba(255,255,255,.08)}
+.nav-title{font-size:17px;font-weight:800;color:#fff;cursor:pointer}
+.nav-title .o{color:#e47727}
+.nav-sub{font-size:12px;color:rgba(255,255,255,.6);margin-top:2px}
+.testmode{display:inline-block;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;margin-left:6px}
+
+.status-bar{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:#9ca3af;padding:6px 12px;background:#f5f7fa}
+.status-bar .saved{color:#16a34a;font-weight:700}
+
+.resume-banner{background:#fff7ed;border-bottom:1px solid #fed7aa;padding:10px 14px;font-size:11px;color:#9a3412;display:flex;align-items:center;gap:8px}
+.resume-banner a{color:#e47727;font-weight:700;cursor:pointer;text-decoration:underline}
+
+.content{padding:14px;max-width:720px;margin:0 auto;padding-bottom:96px}
+
+/* Teacher picker card */
+.picker-card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:10px}
+.picker-label{font-size:12px;font-weight:800;color:#111827;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.picker-input{width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:inherit}
+.picker-input:focus{outline:none;border-color:#002f60}
+
+/* Small teacher hero */
+.t-hero{background:linear-gradient(135deg,#002f60,#003b7a);border-radius:14px;padding:14px;margin-bottom:10px;color:#fff;display:flex;align-items:center;gap:12px;box-shadow:0 3px 10px rgba(0,47,96,.2)}
+.t-avatar{width:48px;height:48px;border-radius:50%;background:#e47727;color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;flex-shrink:0}
+.t-name{font-size:16px;font-weight:800;color:#fff;line-height:1.2}
+.t-meta{font-size:11px;color:rgba(255,255,255,.75);margin-top:3px}
+.t-sub{font-size:10px;color:rgba(255,255,255,.6);margin-top:2px}
+
+/* Card pattern */
+.card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:10px}
+.card-label{font-size:11px;font-weight:800;color:#111827;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.card-sub{font-size:11px;color:#6b7280;margin-bottom:10px}
+
+.notes-input{width:100%;min-height:88px;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:inherit;resize:vertical;color:#111827}
+.notes-input:focus{outline:none;border-color:#002f60}
+
+/* Commitment rows — cleaner than existing */
+.com-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:#374151}
+.com-row:hover{background:#fafbfc}
+.com-row .dot{width:14px;height:14px;border-radius:50%;border:2px solid #d1d5db;flex-shrink:0}
+.com-row.on{background:#fff7ed;color:#e47727;font-weight:700}
+.com-row.on .dot{background:#e47727;border-color:#e47727}
+
+/* Chip-style tags */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:7px 12px;border-radius:16px;font-size:12px;font-weight:700;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;cursor:pointer}
+.chip.on{background:#e47727;border-color:#e47727;color:#fff}
+
+/* Share-with toggle */
+.share-row{display:flex;gap:8px;margin-top:4px}
+.share-btn{flex:1;padding:11px 12px;border:1.5px solid #e5e7eb;background:#fff;border-radius:10px;font-size:13px;font-weight:700;color:#6b7280;cursor:pointer}
+.share-btn.on{background:#002f60;border-color:#002f60;color:#fff}
+
+/* Public recognition */
+.pr-row{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:13px;color:#374151}
+.pr-row input[type=checkbox]{width:16px;height:16px;accent-color:#002f60}
+.pr-context{margin-top:4px;margin-left:26px}
+.pr-context input{width:100%;padding:7px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:12px;font-family:inherit}
+
+/* Personal note — green accent */
+.pn-card{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer}
+.pn-head{display:flex;align-items:center;gap:10px}
+.pn-icon{width:32px;height:32px;border-radius:8px;background:#22c55e;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0}
+.pn-title{font-size:13px;font-weight:700;color:#15803d}
+.pn-sub{font-size:10px;color:#6b7280}
+.pn-note{width:100%;min-height:70px;padding:10px;border:1.5px solid #bbf7d0;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;margin-top:10px;color:#111827}
+
+/* Bottom action bar — 3 buttons */
+.actions{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;padding:10px 14px;z-index:10}
+.actions-inner{max-width:720px;margin:0 auto;display:flex;gap:6px}
+.btn{padding:12px 8px;border:none;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn-draft{flex:1;background:#f3f4f6;color:#4b5563}
+.btn-publish{flex:1;background:#fff;color:#002f60;border:1.5px solid #002f60}
+.btn-send{flex:1.3;background:#002f60;color:#fff}
+
+/* Bottom nav */
+.bnav{position:fixed;bottom:0;left:0;right:0;display:none}  /* turned off for mock since sticky buttons overlap; kept style for reference */
+</style></head><body>
+
+<div class="mock-banner">DESIGN MOCK · Celebrate form · V3 family + draft paradigm</div>
+
+<nav class="nav">
+  <div class="back-arrow">←</div>
+  <div class="nav-title">Observation<span class="o">Point</span></div>
+  <div class="nav-sub">new Celebration<span class="testmode">TEST MODE</span></div>
+</nav>
+
+<div class="status-bar">
+  <span>Auto-save enabled</span>
+  <span class="saved">✓ Saved 10:34 AM</span>
+</div>
+
+<!-- Resume banner (only appears if draft exists) -->
+<div class="resume-banner">
+  <span style="flex:1">Resumed your draft from earlier. Your work is preserved.</span>
+  <a>Abandon & start fresh</a>
+</div>
+
+<div class="content">
+
+  <!-- Teacher picker (always visible) -->
+  <div class="picker-card">
+    <div class="picker-label">Who are you celebrating?</div>
+    <input class="picker-input" value="Marcus Williams" placeholder="Search by name..." />
+  </div>
+
+  <!-- Small teacher hero (appears once picked) -->
+  <div class="t-hero">
+    <div class="t-avatar">MW</div>
+    <div>
+      <div class="t-name">Marcus Williams</div>
+      <div class="t-meta">5th grade ELA · Langston Hughes</div>
+      <div class="t-sub">last celebrated 3 weeks ago · 4 total this year</div>
+    </div>
+  </div>
+
+  <!-- What are you celebrating? -->
+  <div class="card">
+    <div class="card-label">What are you celebrating?</div>
+    <div class="card-sub">Be specific — this goes directly to the teacher.</div>
+    <textarea class="notes-input" placeholder="What did you see? What made it land?"></textarea>
+  </div>
+
+  <!-- FLS Commitments -->
+  <div class="card">
+    <div class="card-label">Linked FLS Commitment (optional)</div>
+    <div class="card-sub">Pick one or more that this celebration reflects.</div>
+    <div class="com-row on"><div class="dot"></div>We Keep Learning</div>
+    <div class="com-row on"><div class="dot"></div>We Work Together</div>
+    <div class="com-row"><div class="dot"></div>We are Helpful</div>
+    <div class="com-row"><div class="dot"></div>We are the Safekeepers</div>
+    <div class="com-row"><div class="dot"></div>We Share Joy</div>
+    <div class="com-row"><div class="dot"></div>We Show Results</div>
+  </div>
+
+  <!-- Public Recognition -->
+  <div class="card">
+    <div class="card-label">Public Recognition</div>
+    <div class="card-sub">Track where this shout-out was shared publicly</div>
+    <label class="pr-row"><input type="checkbox" checked> Newsletter</label>
+    <div class="pr-context"><input type="text" value="Week of 4/22 · highlighted writing lesson" /></div>
+    <label class="pr-row"><input type="checkbox"> This Week at FirstLine (TWAF)</label>
+    <label class="pr-row"><input type="checkbox"> Huddle Shout Out</label>
+    <label class="pr-row"><input type="checkbox"> Other</label>
+  </div>
+
+  <!-- Personal note (green accent) -->
+  <div class="pn-card">
+    <div class="pn-head">
+      <div class="pn-icon">✉</div>
+      <div>
+        <div class="pn-title">Send a personal note with this</div>
+        <div class="pn-sub">Private message that lands in Marcus's inbox</div>
+      </div>
+    </div>
+    <textarea class="pn-note" placeholder="Hey Marcus — just wanted you to know..."></textarea>
+  </div>
+
+</div>
+
+<!-- 3-button sticky bar · purpose clear -->
+<div class="actions">
+  <div class="actions-inner">
+    <button class="btn btn-draft">Save draft</button>
+    <button class="btn btn-publish" title="Record the celebration on profile/dashboards · teacher NOT emailed">Publish</button>
+    <button class="btn btn-send" title="Publish AND email the teacher your personal note">Publish &amp; Send</button>
+  </div>
+</div>
+<div style="position:fixed;bottom:56px;left:0;right:0;padding:4px 14px;font-size:9px;color:#9ca3af;text-align:center;background:#f5f7fa;pointer-events:none">
+  <b style="color:#6b7280">Publish</b> = record only · <b style="color:#002f60">Publish &amp; Send</b> = publish + email teacher
+</div>
+
+</body></html>

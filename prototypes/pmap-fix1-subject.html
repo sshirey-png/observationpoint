@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Fix 1 · Merged Subject Block · ObservationPoint</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased;padding-bottom:130px}
+.banner{background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;text-align:center;padding:6px 12px;letter-spacing:.05em}
+.fix-banner{background:#dcfce7;color:#166534;font-size:11px;font-weight:700;text-align:center;padding:6px 12px}
+.nav{background:#002f60;padding:14px 16px;text-align:center;position:relative}
+.nav-back{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:700;border-radius:8px;background:rgba(255,255,255,.08)}
+.nav-title{font-size:17px;font-weight:800;color:#fff}
+.nav-title span{color:#e47727}
+.nav-sub{font-size:12px;color:rgba(255,255,255,.6);margin-top:2px}
+.nav-badge{display:inline-block;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;margin-left:6px}
+.status-strip{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:#9ca3af;padding:6px 12px;background:#f5f7fa}
+.wrap{padding:14px;max-width:720px;margin:0 auto}
+.subject{background:linear-gradient(135deg,#002f60,#003b7a);border-radius:14px;padding:14px;margin-bottom:14px;color:#fff;display:flex;align-items:center;gap:12px;box-shadow:0 3px 10px rgba(0,47,96,.2);position:relative}
+.subject-av{width:48px;height:48px;border-radius:50%;background:#e47727;color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;flex-shrink:0}
+.subject-name{font-size:16px;font-weight:800;line-height:1.2}
+.subject-meta{font-size:11px;color:rgba(255,255,255,.75);margin-top:3px}
+.subject-meta .badge{display:inline-block;background:rgba(255,255,255,.15);padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;margin-left:6px}
+.subject-change{position:absolute;top:10px;right:12px;font-size:11px;color:rgba(255,255,255,.7);background:rgba(255,255,255,.08);padding:4px 10px;border-radius:20px;cursor:pointer;border:1px solid rgba(255,255,255,.15);font-weight:600}
+.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:12px}
+.card-head{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#111827;margin-bottom:8px}
+.card-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-bottom:8px}
+select{width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;color:#111827;font-family:inherit;background:#fff}
+textarea{width:100%;min-height:70px;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:inherit;color:#111827;resize:vertical}
+.submit-bar{position:fixed;bottom:64px;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;padding:10px 14px;z-index:50;display:flex;gap:6px;max-width:720px;margin:0 auto}
+.sbtn{flex:1;padding:13px 8px;border:none;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+.sbtn.draft{background:#f3f4f6;color:#4b5563}
+.sbtn.publish{background:#fff;color:#002f60;border:1.5px solid #002f60}
+.sbtn.send{background:#002f60;color:#fff;flex:1.3}
+.bottomnav{position:fixed;bottom:0;left:0;right:0;height:64px;background:#fff;border-top:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-around;z-index:40}
+.bn{flex:1;text-align:center;font-size:10px;color:#9ca3af;font-weight:600}
+.bn-icon{display:block;font-size:18px;margin-bottom:2px}
+.bn.touch{color:#002f60}
+.bn.touch .bn-icon{color:#e47727}
+</style>
+</head>
+<body>
+<div class="banner">DESIGN MOCK · PMAP form</div>
+<div class="fix-banner">FIX 1 · picker + hero merged into one subject block</div>
+<nav class="nav">
+  <div class="nav-back">&larr;</div>
+  <div class="nav-title">Observation<span>Point</span></div>
+  <div class="nav-sub">Triege Cotton · PMAP · PreK<span class="nav-badge">TEST MODE</span></div>
+</nav>
+<div class="status-strip"><span>Auto-save enabled</span><span style="color:#16a34a;font-weight:600">&#10003; Saved 7:37 PM</span></div>
+
+<div class="wrap">
+
+  <!-- SINGLE merged subject block -->
+  <div class="subject">
+    <div class="subject-av">TC</div>
+    <div>
+      <div class="subject-name">Triege Cotton</div>
+      <div class="subject-meta">Langston Hughes Academy &middot; Pre-K Lead<span class="badge">PMAP &middot; PreK</span></div>
+    </div>
+    <div class="subject-change">Change</div>
+  </div>
+
+  <!-- MEETING CHECKLIST -->
+  <div class="card">
+    <div class="card-head">Meeting Checklist</div>
+    <div class="card-label">Has the job description been reviewed? <span style="color:#dc2626">*</span></div>
+    <select><option>Choose one...</option><option>Yes</option><option>No</option></select>
+  </div>
+
+  <!-- WIG + Goals preview -->
+  <div class="card">
+    <div class="card-head">WIG + Annual Goals Review</div>
+    <div class="card-label">WIG + Annual Goals <span style="color:#dc2626">*</span></div>
+    <textarea placeholder='Refer to the goals. Note any updates or changes, or write "N/A" if unchanged.'></textarea>
+  </div>
+</div>
+
+<div class="submit-bar">
+  <button class="sbtn draft">Save draft</button>
+  <button class="sbtn publish">Publish</button>
+  <button class="sbtn send">Publish & Send</button>
+</div>
+<div class="bottomnav">
+  <div class="bn"><span class="bn-icon">&#9963;</span>Home</div>
+  <div class="bn"><span class="bn-icon">&#128101;</span>Team</div>
+  <div class="bn touch"><span class="bn-icon">&plus;</span>Touchpoint</div>
+  <div class="bn"><span class="bn-icon">&#128202;</span>Network</div>
+  <div class="bn"><span class="bn-icon">&#10024;</span>Ask</div>
+</div>
+</body>
+</html>

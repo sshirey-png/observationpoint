@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Acknowledgment · ObservationPoint</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased;padding-bottom:100px}
+.port-banner{background:#dcfce7;color:#166534;font-size:11px;font-weight:700;text-align:center;padding:6px 12px}
+.nav{background:#002f60;padding:14px 16px;text-align:center}
+.nav-title{font-size:17px;font-weight:800;color:#fff}
+.nav-title span{color:#e47727}
+.nav-sub{font-size:12px;color:rgba(255,255,255,.6);margin-top:2px}
+.wrap{padding:16px;max-width:720px;margin:0 auto}
+.hero{background:linear-gradient(135deg,#002f60,#003b7a);border-radius:14px;padding:20px;color:#fff;margin-bottom:14px;box-shadow:0 3px 10px rgba(0,47,96,.2)}
+.hero-tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#fed7aa}
+.hero-title{font-size:20px;font-weight:800;margin-top:4px}
+.hero-sub{font-size:13px;color:rgba(255,255,255,.8);margin-top:6px;line-height:1.5}
+.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:12px}
+.card-head{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#111827;margin-bottom:8px}
+.meta{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;font-size:13px}
+.meta-k{color:#6b7280;font-weight:600}
+.meta-v{color:#111827;font-weight:700}
+.doc-preview{max-height:220px;overflow-y:auto;font-size:12px;color:#374151;line-height:1.6;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:12px}
+.doc-preview b{color:#111827}
+.ack-card{background:#fffbeb;border:1px solid #fde68a;border-radius:14px;padding:16px;margin-bottom:12px}
+.ack-title{font-size:14px;font-weight:800;color:#92400e;margin-bottom:4px}
+.ack-sub{font-size:12px;color:#78350f;line-height:1.5;margin-bottom:12px}
+.ack-input{width:100%;padding:14px;border:1.5px solid #fde68a;border-radius:10px;font-size:16px;font-family:inherit;background:#fff}
+.audit{font-size:10px;color:#9ca3af;text-align:center;margin-top:18px;line-height:1.6}
+.submit-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;padding:12px 14px;padding-bottom:max(14px,env(safe-area-inset-bottom));z-index:50}
+.submit{width:100%;padding:14px;border:none;border-radius:12px;font-size:14px;font-weight:700;background:#002f60;color:#fff;cursor:pointer;font-family:inherit}
+.refuse{display:block;width:100%;text-align:center;margin-top:10px;font-size:12px;color:#dc2626;font-weight:600;text-decoration:underline;background:none;border:none;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="port-banner">MOCK · What the employee sees when they open the email link</div>
+<nav class="nav">
+  <div class="nav-title">Observation<span>Point</span></div>
+  <div class="nav-sub">Document acknowledgment</div>
+</nav>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="hero-tag">Performance Improvement Plan</div>
+    <div class="hero-title">Please review &amp; acknowledge</div>
+    <div class="hero-sub">This PIP was issued to you by your supervisor. Review the document below, then type your full name to acknowledge you've received it.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">Document</div>
+    <div class="meta">
+      <div class="meta-k">Employee</div><div class="meta-v">Marcus Williams</div>
+      <div class="meta-k">Issued by</div><div class="meta-v">Jordan Lombas &middot; Principal</div>
+      <div class="meta-k">Date issued</div><div class="meta-v">April 23, 2026</div>
+      <div class="meta-k">Review date</div><div class="meta-v">May 21, 2026</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">Summary</div>
+    <div class="doc-preview">
+      <b>Area(s) of Concern:</b> Performance<br><br>
+      <b>Description:</b> Student mastery on the past two unit assessments has been below 60%, with multiple students falling behind grade-level expectations. Classroom observations show inconsistent implementation of the do-now and checks for understanding...<br><br>
+      <b>Action Steps:</b> Submit weekly lesson plans for review; co-plan one math block per week with the coach; complete a lesson rehearsal before each new unit...<br><br>
+      <b>Indicators of Success:</b> 75%+ student mastery on next three unit assessments; do-now and CFUs present and executed in 4 of 5 observed lessons...
+    </div>
+  </div>
+
+  <div class="ack-card">
+    <div class="ack-title">Acknowledge receipt</div>
+    <div class="ack-sub">Type your full legal name to confirm you've received this PIP. Acknowledgment does not imply agreement with the content &mdash; it only confirms receipt.</div>
+    <input type="text" class="ack-input" placeholder="Your full name">
+  </div>
+
+  <div class="audit">
+    Timestamp, IP address, and browser will be recorded with your acknowledgment.<br>
+    A copy will be emailed to you and your supervisor.
+  </div>
+</div>
+
+<div class="submit-bar">
+  <button class="submit">Acknowledge Receipt</button>
+</div>
+</body>
+</html>

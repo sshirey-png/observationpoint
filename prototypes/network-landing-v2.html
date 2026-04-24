@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Network Landing V2 — Per-School Breakdown</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.mock-banner{background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;text-align:center;padding:6px 12px;letter-spacing:.05em}
+.nav{background:#002f60;padding:14px 16px;text-align:center}
+.nav-title{font-size:17px;font-weight:800;color:#fff}
+.nav-title .o{color:#e47727}
+.nav-sub{font-size:12px;color:rgba(255,255,255,.6);margin-top:2px}
+.cycle-bar{background:#fff;padding:12px 16px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:center;gap:8px}
+.cycle-btn{padding:8px 20px;border-radius:20px;font-size:12px;font-weight:700;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;cursor:pointer;flex:1;max-width:120px}
+.cycle-btn.on{background:#002f60;color:#fff;border-color:#002f60}
+.content{padding:16px;max-width:720px;margin:0 auto}
+.section{background:#fff;border-radius:16px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:14px}
+.section-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.section-title{font-size:13px;font-weight:800;color:#111827;text-transform:uppercase;letter-spacing:.05em}
+.section-net{font-size:11px;color:#6b7280}
+.section-net b{color:#002f60;font-weight:800;font-size:13px}
+.school-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f3f4f6}
+.school-row:last-child{border-bottom:none}
+.school-name{width:78px;font-size:12px;font-weight:700;color:#002f60}
+.school-bar{flex:1;height:22px;background:#f3f4f6;border-radius:4px;position:relative;overflow:hidden}
+.school-bar-fill{height:100%;border-radius:4px;position:absolute;left:0;top:0;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;color:#fff;font-size:11px;font-weight:700}
+.school-val{width:48px;text-align:right;font-size:13px;font-weight:800;color:#002f60}
+.score-grid{display:grid;grid-template-columns:80px repeat(4,1fr);gap:6px;font-size:11px;align-items:center}
+.score-grid .h{font-weight:700;color:#6b7280;text-transform:uppercase;font-size:10px;letter-spacing:.05em;text-align:center;padding-bottom:6px}
+.score-grid .h.l{text-align:left}
+.score-grid .dim{font-weight:700;color:#002f60;font-size:11px}
+.score-grid .cell{text-align:center;padding:6px 0;border-radius:6px;font-weight:700;font-size:12px}
+.c-g{background:#dcfce7;color:#166534}
+.c-y{background:#fef9c3;color:#854d0e}
+.c-r{background:#fee2e2;color:#991b1b}
+.comp-table{width:100%;border-collapse:collapse}
+.comp-table th{text-align:left;font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;padding:6px 0;border-bottom:1px solid #e5e7eb}
+.comp-table th.n{text-align:right}
+.comp-table td{font-size:12px;padding:10px 0;border-bottom:1px solid #f3f4f6}
+.comp-table td.n{text-align:right;font-weight:700;color:#002f60}
+.comp-table td.school-cell{font-weight:700;color:#002f60}
+.pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700}
+.pill-g{background:#dcfce7;color:#166534}
+.pill-y{background:#fef9c3;color:#854d0e}
+.cel-strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin:0 -16px;padding-left:16px;padding-right:16px}
+.cel-strip::-webkit-scrollbar{display:none}
+.cel-card{background:#fef7ed;border-left:3px solid #e47727;border-radius:8px;padding:10px 12px;min-width:230px;flex-shrink:0}
+.cel-teacher{font-size:12px;font-weight:700;color:#111827}
+.cel-meta{font-size:10px;color:#9ca3af;margin:2px 0 4px}
+.cel-text{font-size:11px;color:#4b5563;line-height:1.4}
+.fund-donut{width:90px;height:90px;flex-shrink:0}
+.fund-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f3f4f6}
+.fund-row:last-child{border-bottom:none}
+.fund-info{flex:1}
+.fund-school{font-size:13px;font-weight:700;color:#002f60}
+.fund-meta{font-size:11px;color:#6b7280;margin-top:2px}
+.fund-pct{font-size:22px;font-weight:800;color:#002f60}
+</style></head><body>
+
+<div class="mock-banner">DESIGN MOCK · placeholder numbers · V2 Per-School Breakdown</div>
+<nav class="nav">
+  <div class="nav-title">Observation<span class="o">Point</span></div>
+  <div class="nav-sub">Network · 2026-27</div>
+</nav>
+
+<div class="cycle-bar">
+  <button class="cycle-btn on">Cycle 1</button>
+  <button class="cycle-btn">Cycle 2</button>
+  <button class="cycle-btn">Cycle 3</button>
+</div>
+
+<div class="content">
+
+<!-- Fundamentals by school -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-title">% Mastering Fundamentals</div>
+    <div class="section-net">Network <b>72%</b></div>
+  </div>
+  <div class="fund-row">
+    <svg class="fund-donut" viewBox="0 0 90 90">
+      <circle cx="45" cy="45" r="38" fill="none" stroke="#f3f4f6" stroke-width="10"/>
+      <circle cx="45" cy="45" r="38" fill="none" stroke="#22c55e" stroke-width="10" stroke-linecap="round"
+              stroke-dasharray="194 239" transform="rotate(-90 45 45)"/>
+    </svg>
+    <div class="fund-info">
+      <div class="fund-school">Hughes</div>
+      <div class="fund-meta">41 of 50 teachers mastering</div>
+    </div>
+    <div class="fund-pct">82%</div>
+  </div>
+  <div class="fund-row">
+    <svg class="fund-donut" viewBox="0 0 90 90">
+      <circle cx="45" cy="45" r="38" fill="none" stroke="#f3f4f6" stroke-width="10"/>
+      <circle cx="45" cy="45" r="38" fill="none" stroke="#22c55e" stroke-width="10" stroke-linecap="round"
+              stroke-dasharray="182 239" transform="rotate(-90 45 45)"/>
+    </svg>
+    <div class="fund-info">
+      <div class="fund-school">Wheatley</div>
+      <div class="fund-meta">38 of 50 teachers mastering</div>
+    </div>
+    <div class="fund-pct">76%</div>
+  </div>
+  <div class="fund-row">
+    <svg class="fund-donut" viewBox="0 0 90 90">
+      <circle cx="45" cy="45" r="38" fill="none" stroke="#f3f4f6" stroke-width="10"/>
+      <circle cx="45" cy="45" r="38" fill="none" stroke="#eab308" stroke-width="10" stroke-linecap="round"
+              stroke-dasharray="161 239" transform="rotate(-90 45 45)"/>
+    </svg>
+    <div class="fund-info">
+      <div class="fund-school">Ashe</div>
+      <div class="fund-meta">34 of 50 teachers mastering</div>
+    </div>
+    <div class="fund-pct">67%</div>
+  </div>
+  <div class="fund-row">
+    <svg class="fund-donut" viewBox="0 0 90 90">
+      <circle cx="45" cy="45" r="38" fill="none" stroke="#f3f4f6" stroke-width="10"/>
+      <circle cx="45" cy="45" r="38" fill="none" stroke="#eab308" stroke-width="10" stroke-linecap="round"
+              stroke-dasharray="151 239" transform="rotate(-90 45 45)"/>
+    </svg>
+    <div class="fund-info">
+      <div class="fund-school">Langston</div>
+      <div class="fund-meta">31 of 50 teachers mastering</div>
+    </div>
+    <div class="fund-pct">63%</div>
+  </div>
+</div>
+
+<!-- Observation Score Averages by school and dimension -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-title">Observation Score Averages</div>
+    <div class="section-net">Network <b>3.6</b></div>
+  </div>
+  <div class="score-grid">
+    <div class="h l">School</div>
+    <div class="h">On Task</div>
+    <div class="h">CoL</div>
+    <div class="h">Content</div>
+    <div class="h">Cog Eng</div>
+
+    <div class="dim">Hughes</div>
+    <div class="cell c-g">4.0</div>
+    <div class="cell c-g">3.7</div>
+    <div class="cell c-g">3.8</div>
+    <div class="cell c-y">3.3</div>
+
+    <div class="dim">Wheatley</div>
+    <div class="cell c-g">3.8</div>
+    <div class="cell c-y">3.4</div>
+    <div class="cell c-g">3.6</div>
+    <div class="cell c-y">3.1</div>
+
+    <div class="dim">Ashe</div>
+    <div class="cell c-g">3.7</div>
+    <div class="cell c-y">3.2</div>
+    <div class="cell c-y">3.5</div>
+    <div class="cell c-r">2.9</div>
+
+    <div class="dim">Langston</div>
+    <div class="cell c-y">3.5</div>
+    <div class="cell c-y">3.1</div>
+    <div class="cell c-y">3.4</div>
+    <div class="cell c-r">2.8</div>
+  </div>
+  <div style="margin-top:10px;font-size:11px;color:#9ca3af">981 observations · ↑ 0.2 vs. last cycle</div>
+</div>
+
+<!-- PMAP + SR Completion table -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-title">PMAP + Self-Reflection Completion</div>
+    <div class="section-net">Network <b>80% / 71%</b></div>
+  </div>
+  <table class="comp-table">
+    <thead>
+      <tr><th>School</th><th class="n">PMAP</th><th class="n">Self-Refl</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="school-cell">Hughes</td><td class="n">88% <span class="pill pill-g">48/55</span></td><td class="n">78%</td></tr>
+      <tr><td class="school-cell">Wheatley</td><td class="n">82% <span class="pill pill-g">46/56</span></td><td class="n">73%</td></tr>
+      <tr><td class="school-cell">Ashe</td><td class="n">76% <span class="pill pill-y">38/50</span></td><td class="n">68%</td></tr>
+      <tr><td class="school-cell">Langston</td><td class="n">73% <span class="pill pill-y">36/49</span></td><td class="n">65%</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- PMAP Score Averages by school -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-title">PMAP Score Averages</div>
+    <div class="section-net">Network <b>3.5</b></div>
+  </div>
+  <div class="school-row">
+    <div class="school-name">Hughes</div>
+    <div class="school-bar"><div class="school-bar-fill" style="width:76%;background:#22c55e">3.8</div></div>
+    <div class="school-val">3.8</div>
+  </div>
+  <div class="school-row">
+    <div class="school-name">Wheatley</div>
+    <div class="school-bar"><div class="school-bar-fill" style="width:72%;background:#22c55e">3.6</div></div>
+    <div class="school-val">3.6</div>
+  </div>
+  <div class="school-row">
+    <div class="school-name">Ashe</div>
+    <div class="school-bar"><div class="school-bar-fill" style="width:68%;background:#eab308">3.4</div></div>
+    <div class="school-val">3.4</div>
+  </div>
+  <div class="school-row">
+    <div class="school-name">Langston</div>
+    <div class="school-bar"><div class="school-bar-fill" style="width:64%;background:#eab308">3.2</div></div>
+    <div class="school-val">3.2</div>
+  </div>
+</div>
+
+<!-- Celebration Coverage by School -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-title">Celebration Coverage</div>
+    <div class="section-net">Network <b>68%</b> · 1:6.9</div>
+  </div>
+  <table class="comp-table">
+    <thead>
+      <tr><th>School</th><th class="n">% Staff Celebrated</th><th class="n">Cel : TP</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="school-cell">Hughes</td><td class="n">78% <span class="pill pill-g">39/50</span></td><td class="n">1 : 5.8</td></tr>
+      <tr><td class="school-cell">Wheatley</td><td class="n">72% <span class="pill pill-g">36/50</span></td><td class="n">1 : 6.4</td></tr>
+      <tr><td class="school-cell">Ashe</td><td class="n">62% <span class="pill pill-y">31/50</span></td><td class="n">1 : 7.5</td></tr>
+      <tr><td class="school-cell">Langston</td><td class="n">60% <span class="pill pill-y">30/50</span></td><td class="n">1 : 8.1</td></tr>
+    </tbody>
+  </table>
+  <div style="margin-top:16px;padding-top:14px;border-top:1px solid #f3f4f6">
+    <div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">% Staff Celebrated · month by month</div>
+    <svg viewBox="0 0 320 80" style="width:100%;height:80px">
+      <g>
+        <rect x="8" y="48" width="24" height="26" fill="#e47727" rx="2"/>
+        <rect x="40" y="38" width="24" height="36" fill="#e47727" rx="2"/>
+        <rect x="72" y="30" width="24" height="44" fill="#e47727" rx="2"/>
+        <rect x="104" y="20" width="24" height="54" fill="#e47727" rx="2"/>
+        <rect x="136" y="34" width="24" height="40" fill="#e47727" rx="2"/>
+        <rect x="168" y="26" width="24" height="48" fill="#e47727" rx="2"/>
+        <rect x="200" y="18" width="24" height="56" fill="#e47727" rx="2"/>
+        <rect x="232" y="12" width="24" height="62" fill="#e47727" rx="2"/>
+        <rect x="264" y="8" width="24" height="66" fill="#002f60" rx="2"/>
+      </g>
+      <g font-size="8" fill="#9ca3af" text-anchor="middle" font-weight="600">
+        <text x="20" y="78">Aug</text><text x="52" y="78">Sep</text><text x="84" y="78">Oct</text>
+        <text x="116" y="78">Nov</text><text x="148" y="78">Dec</text><text x="180" y="78">Jan</text>
+        <text x="212" y="78">Feb</text><text x="244" y="78">Mar</text><text x="276" y="78">Apr</text>
+      </g>
+    </svg>
+  </div>
+</div>
+
+</div>
+
+<script>
+document.querySelectorAll('.cycle-btn').forEach(b => b.addEventListener('click', e => {
+  document.querySelectorAll('.cycle-btn').forEach(x => x.classList.remove('on'))
+  e.target.classList.add('on')
+}))
+</script>
+
+</body></html>

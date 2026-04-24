@@ -488,6 +488,144 @@ def get_network_dashboard(school_year=None):
             dist[dim][str(score)] = count
         out['distribution'] = dist
 
+        # ----- V3 additions -----
+        # Observation score averages from teacher observations (not PMAP)
+        cur.execute("""
+            SELECT sc.dimension_code, ROUND(AVG(sc.score)::numeric, 2)::float, COUNT(*)
+            FROM scores sc JOIN touchpoints t ON sc.touchpoint_id = t.id
+            WHERE t.school_year = %s AND t.form_type = 'observation_teacher'
+              AND t.status = 'published'
+              -- is_test records included; during pre-launch they're the point
+            GROUP BY sc.dimension_code
+            ORDER BY sc.dimension_code
+        """, (sy,))
+        obs_by_dim = {}
+        for dim, avg, n in cur.fetchall():
+            obs_by_dim[dim] = {'avg': avg, 'n': n}
+        # Compute overall obs avg as weighted avg of dim scores
+        total_n = sum(d['n'] for d in obs_by_dim.values())
+        overall_obs_avg = round(
+            sum(d['avg'] * d['n'] for d in obs_by_dim.values()) / total_n, 2
+        ) if total_n else None
+        out['obs_score'] = {
+            'network_avg': overall_obs_avg,
+            'total_dim_scores': total_n,
+            'by_dim': obs_by_dim,
+        }
+
+        # Count of distinct teachers active + PMAP/SR completion real
+        cur.execute("""
+            SELECT COUNT(*) FROM staff
+            WHERE is_active AND job_function = 'Teacher'
+              AND school NOT IN ('', 'FirstLine Network')
+        """)
+        teachers_total = cur.fetchone()[0] or 0
+
+        cur.execute("""
+            SELECT COUNT(DISTINCT t.teacher_email)
+            FROM touchpoints t
+            JOIN staff s ON LOWER(s.email) = LOWER(t.teacher_email)
+            WHERE t.school_year = %s AND t.form_type = 'pmap_teacher'
+              AND t.status = 'published'
+              -- is_test records included; during pre-launch they're the point
+              AND s.is_active AND s.job_function = 'Teacher'
+              AND s.school NOT IN ('', 'FirstLine Network')
+        """, (sy,))
+        pmap_done = cur.fetchone()[0] or 0
+
+        cur.execute("""
+            SELECT COUNT(DISTINCT t.teacher_email)
+            FROM touchpoints t
+            JOIN staff s ON LOWER(s.email) = LOWER(t.teacher_email)
+            WHERE t.school_year = %s AND t.form_type = 'self_reflection_teacher'
+              AND t.status = 'published'
+              -- is_test records included; during pre-launch they're the point
+              AND s.is_active AND s.job_function = 'Teacher'
+              AND s.school NOT IN ('', 'FirstLine Network')
+        """, (sy,))
+        sr_done = cur.fetchone()[0] or 0
+
+        out['teachers_total'] = teachers_total
+        out['pmap_completion'] = {
+            'done': pmap_done,
+            'total': teachers_total,
+            'pct': round(100 * pmap_done / teachers_total) if teachers_total else None,
+        }
+        out['sr_completion'] = {
+            'done': sr_done,
+            'total': teachers_total,
+            'pct': round(100 * sr_done / teachers_total) if teachers_total else None,
+        }
+
+        # Fundamentals mastery — teachers with locked_in=TRUE on their latest Fundamentals obs
+        cur.execute("""
+            WITH latest AS (
+                SELECT DISTINCT ON (LOWER(t.teacher_email)) t.teacher_email, t.locked_in, s.school
+                FROM touchpoints t
+                JOIN staff s ON LOWER(s.email) = LOWER(t.teacher_email)
+                WHERE t.school_year = %s AND t.form_type = 'observation_fundamentals'
+                  AND s.is_active AND s.job_function = 'Teacher'
+                  AND s.school NOT IN ('', 'FirstLine Network')
+                ORDER BY LOWER(t.teacher_email), t.observed_at DESC
+            )
+            SELECT school, COUNT(*) FILTER (WHERE locked_in IS TRUE), COUNT(*)
+            FROM latest GROUP BY school
+        """, (sy,))
+        mastery_by_school = {}
+        total_mastered = 0
+        total_with_fund = 0
+        for s, m, n in cur.fetchall():
+            mastery_by_school[s] = {'mastered': m, 'observed': n}
+            total_mastered += m
+            total_with_fund += n
+        # Fundamentals obs count (not distinct teachers — the raw obs count)
+        cur.execute("""SELECT COUNT(*) FROM touchpoints
+                       WHERE school_year = %s AND form_type = 'observation_fundamentals'""", (sy,))
+        fund_obs_total = cur.fetchone()[0] or 0
+        out['fundamentals_mastery'] = {
+            'mastered': total_mastered,
+            'total_teachers': teachers_total,
+            'pct': round(100 * total_mastered / teachers_total) if teachers_total else None,
+            'teachers_observed': total_with_fund,
+            'obs_count': fund_obs_total,
+            'by_school': mastery_by_school,
+        }
+
+        # Celebration coverage — all active staff (not just teachers)
+        cur.execute("""SELECT COUNT(*) FROM staff WHERE is_active
+                       AND school NOT IN ('', 'FirstLine Network') OR is_active AND school = 'FirstLine Network'""")
+        all_staff_total = cur.fetchone()[0] or 0
+        cur.execute("""SELECT COUNT(*) FROM staff WHERE is_active""")
+        all_staff_total = cur.fetchone()[0] or 0
+        cur.execute("""SELECT COUNT(DISTINCT teacher_email), COUNT(*)
+                       FROM touchpoints WHERE school_year = %s AND form_type = 'celebrate'
+                         AND status = 'published'""", (sy,))
+        cel_row = cur.fetchone()
+        cel_staff = cel_row[0] or 0
+        cel_total = cel_row[1] or 0
+        # Total touchpoints for the ratio
+        cur.execute("""SELECT COUNT(*) FROM touchpoints
+                       WHERE school_year = %s AND status = 'published'""", (sy,))
+        tp_total = cur.fetchone()[0] or 0
+        # Monthly distribution of distinct celebrated staff
+        cur.execute("""
+            SELECT EXTRACT(MONTH FROM observed_at)::int AS mo,
+                   COUNT(DISTINCT teacher_email)
+            FROM touchpoints
+            WHERE school_year = %s AND form_type = 'celebrate' AND status = 'published'
+            GROUP BY mo ORDER BY mo
+        """, (sy,))
+        monthly = {int(r[0]): int(r[1]) for r in cur.fetchall()}
+        out['celebration'] = {
+            'cel_count': cel_total,
+            'staff_celebrated': cel_staff,
+            'staff_total': all_staff_total,
+            'staff_celebrated_pct': round(100 * cel_staff / all_staff_total) if all_staff_total else 0,
+            'touchpoints_total': tp_total,
+            'ratio_label': f'1 : {round(tp_total / cel_total, 1)}' if cel_total else '—',
+            'by_month': monthly,  # {month_number: distinct_staff_celebrated}
+        }
+
         return out
     finally:
         conn.close()
@@ -495,11 +633,107 @@ def get_network_dashboard(school_year=None):
 
 # --- Save Touchpoint ---
 
+def find_active_draft(observer_email, teacher_email, form_type):
+    """Return (id, payload) for the coach's active draft for this (teacher, form_type), if any.
+    Paradigm rule: one coach + one teacher + one form type = one draft at a time."""
+    conn = get_conn()
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT id, form_type, teacher_email, observer_email, school, school_year,
+                   observed_at, status, is_published, notes, feedback, is_test, locked_in,
+                   notified_at, updated_at
+            FROM touchpoints
+            WHERE LOWER(observer_email) = LOWER(%s)
+              AND LOWER(teacher_email) = LOWER(%s)
+              AND form_type = %s
+              AND status = 'draft'
+              AND archived_at IS NULL
+            ORDER BY updated_at DESC
+            LIMIT 1
+        """, (observer_email, teacher_email, form_type))
+        row = cur.fetchone()
+        if not row:
+            return None
+        cols = ['id','form_type','teacher_email','observer_email','school','school_year',
+                'observed_at','status','is_published','notes','feedback','is_test','locked_in',
+                'notified_at','updated_at']
+        out = dict(zip(cols, row))
+        # Attach scores
+        cur.execute("SELECT dimension_code, score FROM scores WHERE touchpoint_id = %s", (out['id'],))
+        out['scores'] = {code: float(score) for code, score in cur.fetchall()}
+        return out
+    finally:
+        conn.close()
+
+
+def update_touchpoint(tp_id, observer_email, data):
+    """Update an existing touchpoint. Only the original observer can edit their own.
+    If status flips from draft→published, published_at is set. Returns id."""
+    import json as _json
+    conn = get_conn()
+    try:
+        cur = conn.cursor()
+        # Ownership check
+        cur.execute("SELECT observer_email, status FROM touchpoints WHERE id = %s", (tp_id,))
+        row = cur.fetchone()
+        if not row:
+            raise ValueError('touchpoint not found')
+        if row[0] and row[0].lower() != observer_email.lower():
+            raise PermissionError('not your touchpoint')
+        # Build partial update from supplied fields
+        updatable = {
+            'teacher_email', 'school', 'school_year', 'observed_at', 'status', 'is_published',
+            'notes', 'feedback', 'is_test', 'locked_in', 'notified_at', 'archived_at',
+        }
+        sets = []
+        vals = []
+        for k, v in data.items():
+            if k in updatable:
+                sets.append(f"{k} = %s")
+                vals.append(v)
+        if sets:
+            sets.append("updated_at = NOW()")
+            vals.append(tp_id)
+            cur.execute(f"UPDATE touchpoints SET {', '.join(sets)} WHERE id = %s", vals)
+        # Replace scores if provided
+        if 'scores' in data and data['scores'] is not None:
+            cur.execute("DELETE FROM scores WHERE touchpoint_id = %s", (tp_id,))
+            for code, score in data['scores'].items():
+                if score is not None:
+                    cur.execute("""INSERT INTO scores (touchpoint_id, dimension_code, score, cycle)
+                                    VALUES (%s, %s, %s, %s)""",
+                                (tp_id, code, score, data.get('cycle')))
+        conn.commit()
+        return tp_id
+    finally:
+        conn.close()
+
+
+def archive_touchpoint(tp_id, observer_email):
+    """Mark a touchpoint as archived. Only the original observer on a draft can archive their own."""
+    conn = get_conn()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT observer_email, status FROM touchpoints WHERE id = %s", (tp_id,))
+        row = cur.fetchone()
+        if not row:
+            raise ValueError('touchpoint not found')
+        if row[0] and row[0].lower() != observer_email.lower():
+            raise PermissionError('not your touchpoint')
+        if row[1] != 'draft':
+            raise ValueError('only drafts can be abandoned; use archive for published')
+        cur.execute("UPDATE touchpoints SET archived_at = NOW() WHERE id = %s", (tp_id,))
+        conn.commit()
+        return tp_id
+    finally:
+        conn.close()
+
+
 def save_touchpoint(data):
     """Persist a user-submitted form.
-    Default is PUBLISHED (not draft) — StaffProfile filters out drafts,
-    so anything submitted needs to be visible immediately.
-    If a form wants to save as draft, it can pass status='draft', is_published=False.
+    Draft paradigm: if caller doesn't supply an id AND an active draft exists for this
+    (observer, teacher, form_type), reuse that row — do NOT create a duplicate.
     """
     import uuid
     import json as _json
@@ -528,14 +762,17 @@ def save_touchpoint(data):
 
         cur.execute("""
             INSERT INTO touchpoints (id, form_type, teacher_email, observer_email, school,
-                school_year, observed_at, status, is_published, notes, feedback)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                school_year, observed_at, status, is_published, notes, feedback,
+                is_test, locked_in)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id
         """, (tp_id, data['form_type'], data['teacher_email'], data['observer_email'],
               data.get('school', ''), data['school_year'],
               data.get('observed_at', datetime.now(timezone.utc)),
               data.get('status', 'published'), data.get('is_published', True),
-              data.get('notes', ''), feedback_val))
+              data.get('notes', ''), feedback_val,
+              bool(data.get('is_test', False)),
+              data.get('locked_in') if data.get('locked_in') is not None else None))
         tp_id = cur.fetchone()[0]
         if data.get('scores'):
             for code, score in data['scores'].items():

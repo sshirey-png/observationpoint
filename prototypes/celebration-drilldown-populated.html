@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Celebration Drill-Down · populated</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.mock-banner{background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;text-align:center;padding:6px 12px;letter-spacing:.05em}
+.nav{background:#002f60;padding:10px 12px;display:flex;align-items:center;gap:10px}
+.back{color:#fff;font-size:22px;font-weight:700;text-decoration:none;padding:4px 8px;cursor:pointer}
+.nav-t{flex:1}
+.nav-title{font-size:14px;font-weight:700;color:#fff}
+.nav-sub{font-size:11px;color:rgba(255,255,255,.65);margin-top:1px}
+
+/* Hero — matches Fundamentals drill-down pattern */
+.hero{background:linear-gradient(135deg,#002f60,#003b7a);padding:16px 16px 20px;color:#fff}
+.hero-inner{max-width:720px;margin:0 auto;display:flex;align-items:center;gap:14px}
+.hero-donut{width:80px;height:80px;flex-shrink:0}
+.hero-big{font-size:36px;font-weight:900;line-height:1;color:#fff}
+.hero-big .pct{color:#e47727;font-size:22px}
+.hero-sub{font-size:12px;color:rgba(255,255,255,.8);margin-top:4px}
+.hero-schools{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.15);max-width:720px;margin-left:auto;margin-right:auto}
+.hero-s{text-align:center;min-width:0}
+.hero-s-v{font-size:16px;font-weight:800;color:#fff}
+.hero-s-l{font-size:9px;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.03em;margin-top:2px;line-height:1.25;word-break:break-word}
+@media (max-width:400px){.hero-s-l{font-size:8px;letter-spacing:.01em}.hero-s-v{font-size:14px}}
+
+/* Filter */
+.filter{background:#fff;border-bottom:1px solid #e5e7eb;padding:10px 12px;position:sticky;top:0;z-index:10}
+.filter-inner{max-width:720px;margin:0 auto}
+.tabs{display:flex;gap:6px;margin-bottom:8px}
+.tab{flex:1;padding:10px 8px;border-radius:10px;border:1.5px solid #e5e7eb;background:#fff;font-size:12px;font-weight:700;color:#6b7280;cursor:pointer;text-align:center}
+.tab.on.red{background:#fee2e2;border-color:#fca5a5;color:#991b1b}
+.tab.on.green{background:#dcfce7;border-color:#86efac;color:#166534}
+.tab .num{display:block;font-size:18px;font-weight:800;line-height:1;margin-bottom:2px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{padding:6px 12px;border-radius:14px;border:1px solid #e5e7eb;background:#fff;font-size:11px;font-weight:700;color:#6b7280;cursor:pointer;white-space:nowrap}
+.chip.on{background:#002f60;color:#fff;border-color:#002f60}
+
+.content{max-width:720px;margin:0 auto;padding:10px 12px 60px}
+.list-head{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;padding:10px 4px 6px}
+.row{background:#fff;border-radius:12px;padding:12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+.avatar{width:34px;height:34px;border-radius:50%;background:#6b7280;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.avatar.green{background:#22c55e}
+.row-body{flex:1;min-width:0}
+.row-name{font-size:13px;font-weight:700;color:#111827}
+.row-meta{font-size:11px;color:#6b7280;margin-top:2px}
+.row-status{text-align:right;flex-shrink:0;font-size:11px;font-weight:700}
+.row-status.gray{color:#9ca3af}
+.row-status.green{color:#16a34a}
+.row-chev{color:#9ca3af;font-size:16px;font-weight:700}
+</style></head><body>
+
+<div class="mock-banner">DESIGN MOCK · Celebration drill-down · populated preview</div>
+
+<nav class="nav">
+  <a class="back" href="network-landing-v3.html">←</a>
+  <div class="nav-t">
+    <div class="nav-title">Celebration Coverage</div>
+    <div class="nav-sub">2026-27</div>
+  </div>
+</nav>
+
+<!-- Hero — same pattern as Fundamentals drill-down -->
+<div class="hero">
+  <div class="hero-inner">
+    <svg class="hero-donut" viewBox="0 0 80 80">
+      <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="9"/>
+      <circle cx="40" cy="40" r="34" fill="none" stroke="#e47727" stroke-width="9" stroke-linecap="round"
+              stroke-dasharray="145 214" transform="rotate(-90 40 40)"/>
+      <text x="40" y="46" text-anchor="middle" font-size="17" font-weight="800" fill="#fff">68%</text>
+    </svg>
+    <div>
+      <div class="hero-big">136<span class="pct">/200</span></div>
+      <div class="hero-sub">staff celebrated · 64 not yet</div>
+    </div>
+  </div>
+  <div class="hero-schools">
+    <div class="hero-s"><div class="hero-s-v">78%</div><div class="hero-s-l">Langston Hughes</div></div>
+    <div class="hero-s"><div class="hero-s-v">72%</div><div class="hero-s-l">Wheatley</div></div>
+    <div class="hero-s"><div class="hero-s-v">62%</div><div class="hero-s-l">Ashe</div></div>
+    <div class="hero-s"><div class="hero-s-v">60%</div><div class="hero-s-l">Green</div></div>
+  </div>
+</div>
+
+<!-- Filter -->
+<div class="filter">
+  <div class="filter-inner">
+    <div class="tabs">
+      <button class="tab on red"><span class="num">64</span>Not Yet</button>
+      <button class="tab"><span class="num">136</span>Celebrated</button>
+    </div>
+    <div class="chips">
+      <button class="chip on">All schools</button>
+      <button class="chip">Langston Hughes</button>
+      <button class="chip">Wheatley</button>
+      <button class="chip">Ashe</button>
+      <button class="chip">Green</button>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+
+  <div class="list-head">Not yet celebrated · 64 staff · sorted by school</div>
+
+  <div class="row">
+    <div class="avatar">TR</div>
+    <div class="row-body"><div class="row-name">Tasha Robinson</div><div class="row-meta">Langston Hughes · 3rd grade</div></div>
+    <div class="row-status gray">0 cels</div>
+    <div class="row-chev">›</div>
+  </div>
+  <div class="row">
+    <div class="avatar">AM</div>
+    <div class="row-body"><div class="row-name">Andre Mitchell</div><div class="row-meta">Langston Hughes · 1st grade</div></div>
+    <div class="row-status gray">0 cels</div>
+    <div class="row-chev">›</div>
+  </div>
+  <div class="row">
+    <div class="avatar">DH</div>
+    <div class="row-body"><div class="row-name">Devon Harris</div><div class="row-meta">Ashe · 2nd grade</div></div>
+    <div class="row-status gray">0 cels</div>
+    <div class="row-chev">›</div>
+  </div>
+  <div class="row">
+    <div class="avatar">RN</div>
+    <div class="row-body"><div class="row-name">Rachel Nguyen</div><div class="row-meta">Wheatley · 4th grade</div></div>
+    <div class="row-status gray">0 cels</div>
+    <div class="row-chev">›</div>
+  </div>
+  <div class="row">
+    <div class="avatar">KA</div>
+    <div class="row-body"><div class="row-name">Kamila Adams</div><div class="row-meta">Green · PreK</div></div>
+    <div class="row-status gray">0 cels</div>
+    <div class="row-chev">›</div>
+  </div>
+  <div class="row">
+    <div class="avatar">JS</div>
+    <div class="row-body"><div class="row-name">Jamal Stevens</div><div class="row-meta">Langston Hughes · 6th grade</div></div>
+    <div class="row-status gray">0 cels</div>
+    <div class="row-chev">›</div>
+  </div>
+
+  <div style="text-align:center;padding:10px;font-size:11px;color:#9ca3af">58 more · scroll to see all</div>
+
+  <!-- Section: Recent celebrations feed -->
+  <div class="list-head" style="padding-top:20px;display:flex;justify-content:space-between;align-items:baseline">
+    <span>Recent celebrations</span>
+    <a href="#" style="color:#e47727;text-transform:none;letter-spacing:0;font-weight:700">See all →</a>
+  </div>
+  <div style="background:#fff;border-radius:12px;padding:10px 12px;box-shadow:0 1px 2px rgba(0,0,0,.03);margin-bottom:6px">
+    <div style="font-size:12px;font-weight:700;color:#111827">Marcus Williams</div>
+    <div style="font-size:10px;color:#9ca3af;margin:2px 0 4px">by Tina Patel · 2d ago · Langston Hughes</div>
+    <div style="font-size:11px;color:#4b5563;line-height:1.4;font-style:italic;padding-left:8px;border-left:3px solid #e47727">"Loved the cold-call energy in 5th period — chart paper was spot-on."</div>
+  </div>
+  <div style="background:#fff;border-radius:12px;padding:10px 12px;box-shadow:0 1px 2px rgba(0,0,0,.03);margin-bottom:6px">
+    <div style="font-size:12px;font-weight:700;color:#111827">Keisha Brown</div>
+    <div style="font-size:10px;color:#9ca3af;margin:2px 0 4px">by Brandon · 3d ago · Wheatley</div>
+    <div style="font-size:11px;color:#4b5563;line-height:1.4;font-style:italic;padding-left:8px;border-left:3px solid #e47727">"Crushed the data meeting today — led with clarity."</div>
+  </div>
+  <div style="background:#fff;border-radius:12px;padding:10px 12px;box-shadow:0 1px 2px rgba(0,0,0,.03);margin-bottom:6px">
+    <div style="font-size:12px;font-weight:700;color:#111827">Amara Johnson</div>
+    <div style="font-size:10px;color:#9ca3af;margin:2px 0 4px">by Tina Patel · 5d ago · Langston Hughes</div>
+    <div style="font-size:11px;color:#4b5563;line-height:1.4;font-style:italic;padding-left:8px;border-left:3px solid #e47727">"Teacher presence during transitions was exceptional."</div>
+  </div>
+
+  <!-- Section: Most celebrated -->
+  <div class="list-head" style="padding-top:20px;display:flex;justify-content:space-between;align-items:baseline">
+    <span>Most celebrated this year</span>
+    <a href="#" style="color:#e47727;text-transform:none;letter-spacing:0;font-weight:700">Leaderboard →</a>
+  </div>
+  <div class="row">
+    <div class="avatar green">MW</div>
+    <div class="row-body"><div class="row-name">Marcus Williams</div><div class="row-meta">Langston Hughes · 5th grade</div></div>
+    <div class="row-status green">4 cels</div>
+    <div class="row-chev">›</div>
+  </div>
+  <div class="row">
+    <div class="avatar green">AJ</div>
+    <div class="row-body"><div class="row-name">Amara Johnson</div><div class="row-meta">Langston Hughes · 4th grade</div></div>
+    <div class="row-status green">3 cels</div>
+    <div class="row-chev">›</div>
+  </div>
+  <div class="row">
+    <div class="avatar green">KB</div>
+    <div class="row-body"><div class="row-name">Keisha Brown</div><div class="row-meta">Wheatley · 2nd grade</div></div>
+    <div class="row-status green">3 cels</div>
+    <div class="row-chev">›</div>
+  </div>
+
+</div>
+
+</body></html>

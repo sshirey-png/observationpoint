@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Nav Compare — A / B / C</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#e5e7eb;color:#111827;-webkit-font-smoothing:antialiased;padding:20px 0}
+.wrap{max-width:1400px;margin:0 auto;padding:0 16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:24px}
+.frame{background:#f5f7fa;border-radius:20px;box-shadow:0 4px 20px rgba(0,0,0,.15);overflow:hidden;display:flex;flex-direction:column;min-height:700px}
+.opt-label{background:#002f60;color:#fff;padding:10px 16px;font-size:13px;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
+.opt-label .tag{font-size:10px;font-weight:600;opacity:.7;margin-left:6px;text-transform:none;letter-spacing:0}
+.intro{padding:14px 16px;font-size:12px;color:#4b5563;background:#fff;border-bottom:1px solid #e5e7eb;line-height:1.4}
+
+/* Shared form content (same in all three frames) */
+.nav{background:#002f60;padding:14px 16px;text-align:center;position:relative}
+.nav-title{font-size:17px;font-weight:800;color:#fff}
+.nav-title .o{color:#e47727}
+.nav-title.clickable{cursor:pointer}
+.nav-title.clickable:hover{opacity:.85}
+.nav-sub{font-size:12px;color:rgba(255,255,255,.6);margin-top:2px}
+.back-arrow{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:700;cursor:pointer;border-radius:8px;background:rgba(255,255,255,.08)}
+.home-arrow{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;cursor:pointer;border-radius:8px;background:rgba(228,119,39,.25)}
+
+.form-body{padding:14px 16px;flex:1;overflow-y:auto}
+.card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:10px}
+.card-title{font-size:11px;font-weight:800;color:#111827;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.card-body{font-size:12px;color:#6b7280;line-height:1.4}
+.space-meter{background:#dcfce7;color:#166534;font-size:10px;padding:6px 12px;text-align:center;font-weight:700}
+.space-meter.low{background:#fef3c7;color:#92400e}
+
+/* Bottom nav (Options B + C) */
+.bnav{background:#fff;border-top:1px solid #e5e7eb;display:flex;padding:6px 4px 8px;box-shadow:0 -2px 10px rgba(0,0,0,.05)}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;color:#9ca3af;text-decoration:none;font-size:9px;font-weight:700}
+.bnav-btn.active{color:#002f60}
+.bnav-btn.ask{color:#e47727}
+.bnav-ico{font-size:16px}
+
+.notes{font-size:11px;color:#6b7280;padding:10px 16px;background:#f9fafb;border-top:1px solid #e5e7eb;line-height:1.4}
+.notes b{color:#002f60}
+</style></head><body>
+
+<div class="wrap">
+
+  <!-- OPTION A: Top nav only (back + tap logo for home) -->
+  <div class="frame">
+    <div class="opt-label">Option A <span class="tag">top-nav only · max form space</span></div>
+    <div class="intro">Back arrow top-left, tappable ObservationPoint logo → home. <b>No bottom bar.</b></div>
+
+    <nav class="nav">
+      <div class="back-arrow">←</div>
+      <div class="nav-title clickable">Observation<span class="o">Point</span></div>
+      <div class="nav-sub">Marcus Williams · Fundamentals</div>
+    </nav>
+
+    <div class="space-meter">MORE FORM SPACE — no bottom chrome</div>
+
+    <div class="form-body">
+      <div class="card"><div class="card-title">Timer</div><div class="card-body">5:00 countdown, Start / Pause / Reset</div></div>
+      <div class="card"><div class="card-title">Class size</div><div class="card-body">25 students</div></div>
+      <div class="card"><div class="card-title">On Task · by minute</div><div class="card-body">5 rows of count inputs</div></div>
+      <div class="card"><div class="card-title">Verdict</div><div class="card-body">Average · QUALIFIES</div></div>
+      <div class="card"><div class="card-title">On Pace · CoL foundations</div><div class="card-body">Yes/No toggles</div></div>
+      <div class="card"><div class="card-title">Action Steps</div><div class="card-body">Bucketed cards, max 2</div></div>
+    </div>
+
+    <div class="notes"><b>How you get home:</b> tap the ObservationPoint logo. <b>How you go back:</b> tap ←.<br><b>How you reach Team / Network / Ask:</b> tap logo → Home, then tile.</div>
+  </div>
+
+
+  <!-- OPTION B: Bottom nav always (5 buttons incl. Home) -->
+  <div class="frame">
+    <div class="opt-label">Option B <span class="tag">bottom-nav always · 5 buttons incl. home</span></div>
+    <div class="intro">Top nav is informational. <b>Bottom bar on every page</b> with Home / Team / Touchpoint / Network / Ask.</div>
+
+    <nav class="nav">
+      <div class="nav-title">Observation<span class="o">Point</span></div>
+      <div class="nav-sub">Marcus Williams · Fundamentals</div>
+    </nav>
+
+    <div class="space-meter low">LESS FORM SPACE — bottom bar eats ~56px</div>
+
+    <div class="form-body">
+      <div class="card"><div class="card-title">Timer</div><div class="card-body">5:00 countdown, Start / Pause / Reset</div></div>
+      <div class="card"><div class="card-title">Class size</div><div class="card-body">25 students</div></div>
+      <div class="card"><div class="card-title">On Task · by minute</div><div class="card-body">5 rows of count inputs</div></div>
+      <div class="card"><div class="card-title">Verdict</div><div class="card-body">Average · QUALIFIES</div></div>
+      <div class="card"><div class="card-title">On Pace · CoL foundations</div><div class="card-body">Yes/No toggles</div></div>
+      <div class="card"><div class="card-title">Action Steps</div><div class="card-body">Bucketed cards, max 2</div></div>
+    </div>
+
+    <div class="bnav">
+      <a class="bnav-btn"><div class="bnav-ico">🏠</div>Home</a>
+      <a class="bnav-btn"><div class="bnav-ico">👥</div>Team</a>
+      <a class="bnav-btn active"><div class="bnav-ico">+</div>Touchpoint</a>
+      <a class="bnav-btn"><div class="bnav-ico">📊</div>Network</a>
+      <a class="bnav-btn ask"><div class="bnav-ico">✦</div>Ask</a>
+    </div>
+
+    <div class="notes"><b>How you get home:</b> tap Home. <b>How you go back:</b> browser back (no dedicated back arrow).<br><b>Trade-off:</b> Home always one tap away, but form has ~56px less vertical room.</div>
+  </div>
+
+
+  <!-- OPTION C: Both — back arrow + tappable logo + 4-button bottom nav -->
+  <div class="frame">
+    <div class="opt-label">Option C <span class="tag">both · back arrow + tap-logo-home + 4-button bottom</span></div>
+    <div class="intro">Top nav has back arrow + tappable logo (→ home). <b>Bottom bar keeps 4 buttons</b> (no Home — logo handles it).</div>
+
+    <nav class="nav">
+      <div class="back-arrow">←</div>
+      <div class="nav-title clickable">Observation<span class="o">Point</span></div>
+      <div class="nav-sub">Marcus Williams · Fundamentals</div>
+    </nav>
+
+    <div class="space-meter low">LESS FORM SPACE — bottom bar eats ~56px</div>
+
+    <div class="form-body">
+      <div class="card"><div class="card-title">Timer</div><div class="card-body">5:00 countdown, Start / Pause / Reset</div></div>
+      <div class="card"><div class="card-title">Class size</div><div class="card-body">25 students</div></div>
+      <div class="card"><div class="card-title">On Task · by minute</div><div class="card-body">5 rows of count inputs</div></div>
+      <div class="card"><div class="card-title">Verdict</div><div class="card-body">Average · QUALIFIES</div></div>
+      <div class="card"><div class="card-title">On Pace · CoL foundations</div><div class="card-body">Yes/No toggles</div></div>
+      <div class="card"><div class="card-title">Action Steps</div><div class="card-body">Bucketed cards, max 2</div></div>
+    </div>
+
+    <div class="bnav">
+      <a class="bnav-btn"><div class="bnav-ico">👥</div>Team</a>
+      <a class="bnav-btn active"><div class="bnav-ico">+</div>Touchpoint</a>
+      <a class="bnav-btn"><div class="bnav-ico">📊</div>Network</a>
+      <a class="bnav-btn ask"><div class="bnav-ico">✦</div>Ask</a>
+    </div>
+
+    <div class="notes"><b>How you get home:</b> tap logo. <b>How you go back:</b> tap ←. <b>How you reach Team / Network / Ask:</b> bottom bar.<br><b>Most complete</b> but most visual chrome.</div>
+  </div>
+
+</div>
+
+</body></html>

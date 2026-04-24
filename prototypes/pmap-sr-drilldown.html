@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>PMAP + SR Completion Drill-Down</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.mock-banner{background:#d1fae5;color:#065f46;font-size:11px;font-weight:700;text-align:center;padding:6px 12px;letter-spacing:.05em}
+.nav{background:#002f60;padding:10px 12px;display:flex;align-items:center;gap:10px}
+.back{color:#fff;font-size:22px;font-weight:700;text-decoration:none;padding:4px 8px;cursor:pointer}
+.nav-t{flex:1}
+.nav-title{font-size:14px;font-weight:700;color:#fff}
+.nav-sub{font-size:11px;color:rgba(255,255,255,.65);margin-top:1px}
+
+.mode-bar{background:#fff;padding:10px 12px;border-bottom:1px solid #e5e7eb;display:flex;gap:6px;justify-content:center}
+.mode-btn{padding:8px 18px;border-radius:18px;font-size:11px;font-weight:700;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;cursor:pointer;flex:1;max-width:180px}
+.mode-btn.on{background:#002f60;color:#fff;border-color:#002f60}
+
+.hero{background:linear-gradient(135deg,#002f60,#003b7a);padding:16px;color:#fff}
+.hero-inner{max-width:720px;margin:0 auto;display:flex;align-items:center;gap:14px}
+.hero-ring{width:90px;height:90px;flex-shrink:0}
+.hero-big{font-size:36px;font-weight:900;line-height:1;color:#fff}
+.hero-big .pct{color:#e47727;font-size:20px}
+.hero-sub{font-size:12px;color:rgba(255,255,255,.8);margin-top:4px}
+.hero-schools{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.15);max-width:720px;margin-left:auto;margin-right:auto}
+.hero-s{text-align:center}
+.hero-s{min-width:0}
+.hero-s-v{font-size:16px;font-weight:800;color:#fff}
+.hero-s-l{font-size:9px;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.03em;margin-top:2px;line-height:1.25;word-break:break-word}
+@media (max-width:400px){.hero-s-l{font-size:8px;letter-spacing:.01em}.hero-s-v{font-size:14px}}
+
+.filter{background:#fff;border-bottom:1px solid #e5e7eb;padding:10px 12px;position:sticky;top:0;z-index:10}
+.filter-inner{max-width:720px;margin:0 auto}
+.tabs{display:flex;gap:6px;margin-bottom:8px}
+.tab{flex:1;padding:10px 8px;border-radius:10px;border:1.5px solid #e5e7eb;background:#fff;font-size:12px;font-weight:700;color:#6b7280;cursor:pointer;text-align:center}
+.tab.on.red{background:#fee2e2;border-color:#fca5a5;color:#991b1b}
+.tab.on.green{background:#dcfce7;border-color:#86efac;color:#166534}
+.tab .num{display:block;font-size:18px;font-weight:800;line-height:1;margin-bottom:2px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{padding:6px 12px;border-radius:14px;border:1px solid #e5e7eb;background:#fff;font-size:11px;font-weight:700;color:#6b7280;cursor:pointer;white-space:nowrap}
+.chip.on{background:#002f60;color:#fff;border-color:#002f60}
+
+.content{max-width:720px;margin:0 auto;padding:10px 12px 80px}
+.list-head{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;padding:10px 4px 6px}
+.row{background:#fff;border-radius:12px;padding:12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+.row:hover{background:#fafbfc}
+.avatar{width:34px;height:34px;border-radius:50%;background:#dc2626;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.row-body{flex:1;min-width:0}
+.row-name{font-size:13px;font-weight:700;color:#111827}
+.row-meta{font-size:11px;color:#6b7280;margin-top:2px}
+.row-status{text-align:right;flex-shrink:0;font-size:11px;font-weight:700}
+.row-status.red{color:#dc2626}
+.row-status.green{color:#16a34a}
+.row-chev{color:#9ca3af;font-size:16px;font-weight:700;margin-left:2px}
+
+[data-mode="sr"] .pmap-only{display:none}
+[data-mode="pmap"] .sr-only{display:none}
+</style></head><body>
+
+<div class="mock-banner">REAL DATA · 2025-26 Postgres · live query results</div>
+
+<nav class="nav">
+  <a class="back" href="network-landing-v3.html">←</a>
+  <div class="nav-t">
+    <div class="nav-title">PMAP + Self-Reflection</div>
+    <div class="nav-sub">2025-26 completion</div>
+  </div>
+</nav>
+
+<div class="mode-bar">
+  <button class="mode-btn on" data-m="pmap">PMAP</button>
+  <button class="mode-btn" data-m="sr">Self-Reflection</button>
+</div>
+
+<!-- PMAP hero (default) -->
+<div class="hero pmap-only">
+  <div class="hero-inner">
+    <svg class="hero-ring" viewBox="0 0 90 90">
+      <circle cx="45" cy="45" r="38" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="10"/>
+      <circle cx="45" cy="45" r="38" fill="none" stroke="#e47727" stroke-width="10" stroke-linecap="round"
+              stroke-dasharray="224 239" transform="rotate(-90 45 45)"/>
+      <text x="45" y="51" text-anchor="middle" font-size="20" font-weight="800" fill="#fff">94%</text>
+    </svg>
+    <div>
+      <div class="hero-big">176<span class="pct">/187</span></div>
+      <div class="hero-sub">teachers submitted PMAP · 11 outstanding</div>
+    </div>
+  </div>
+  <div class="hero-schools">
+    <div class="hero-s"><div class="hero-s-v">94%</div><div class="hero-s-l">Langston Hughes 46/49</div></div>
+    <div class="hero-s"><div class="hero-s-v">92%</div><div class="hero-s-l">Wheatley 45/49</div></div>
+    <div class="hero-s"><div class="hero-s-v">94%</div><div class="hero-s-l">Ashe 46/49</div></div>
+    <div class="hero-s"><div class="hero-s-v">98%</div><div class="hero-s-l">Green 39/40</div></div>
+  </div>
+</div>
+
+<!-- SR hero (hidden by default) -->
+<div class="hero sr-only">
+  <div class="hero-inner">
+    <svg class="hero-ring" viewBox="0 0 90 90">
+      <circle cx="45" cy="45" r="38" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="10"/>
+      <circle cx="45" cy="45" r="38" fill="none" stroke="#e47727" stroke-width="10" stroke-linecap="round"
+              stroke-dasharray="221 239" transform="rotate(-90 45 45)"/>
+      <text x="45" y="51" text-anchor="middle" font-size="20" font-weight="800" fill="#fff">93%</text>
+    </svg>
+    <div>
+      <div class="hero-big">173<span class="pct">/187</span></div>
+      <div class="hero-sub">teachers completed Self-Reflection · 14 outstanding</div>
+    </div>
+  </div>
+  <div class="hero-schools">
+    <div class="hero-s"><div class="hero-s-v">90%</div><div class="hero-s-l">Langston Hughes 44/49</div></div>
+    <div class="hero-s"><div class="hero-s-v">92%</div><div class="hero-s-l">Wheatley 45/49</div></div>
+    <div class="hero-s"><div class="hero-s-v">94%</div><div class="hero-s-l">Ashe 46/49</div></div>
+    <div class="hero-s"><div class="hero-s-v">95%</div><div class="hero-s-l">Green 38/40</div></div>
+  </div>
+</div>
+
+<div class="filter">
+  <div class="filter-inner">
+    <div class="tabs">
+      <button class="tab on red"><span class="num pmap-only">11</span><span class="num sr-only">14</span>Not Submitted</button>
+      <button class="tab"><span class="num pmap-only">176</span><span class="num sr-only">173</span>Submitted</button>
+    </div>
+    <div class="chips">
+      <button class="chip on">All schools</button>
+      <button class="chip">Langston Hughes</button>
+      <button class="chip">Wheatley</button>
+      <button class="chip">Ashe</button>
+      <button class="chip">Green</button>
+    </div>
+  </div>
+</div>
+
+<div class="content" data-mode="pmap" id="listRoot">
+
+<!-- PMAP NOT SUBMITTED — 11 real teachers -->
+<div class="pmap-only">
+<div class="list-head">Not Submitted · 11 teachers · from Postgres</div>
+
+<div class="row"><div class="avatar">JC</div>
+  <div class="row-body"><div class="row-name">Jean Curry</div><div class="row-meta">Ashe · Whole School Dance</div></div>
+  <div class="row-status red">Pending</div><div class="row-chev">›</div></div>
+<div class="row"><div class="avatar">LF</div>
+  <div class="row-body"><div class="row-name">Lavette Floyd</div><div class="row-meta">Ashe · 6th ELA</div></div>
+  <div class="row-status red">Pending</div><div class="row-chev">›</div></div>
+<div class="row"><div class="avatar">MT</div>
+  <div class="row-body"><div class="row-name">Mitchell Tranchina</div><div class="row-meta">Ashe · 3rd/4th ELA</div></div>
+  <div class="row-status red">Pending</div><div class="row-chev">›</div></div>
+<div class="row"><div class="avatar">LC</div>
+  <div class="row-body"><div class="row-name">Lanceing Clemens</div><div class="row-meta">Langston Hughes · All Subjects</div></div>
+  <div class="row-status red">Pending</div><div class="row-chev">›</div></div>
+<div class="row"><div class="avatar">TC</div>
+  <div class="row-body"><div class="row-name">Triege Cotton</div><div class="row-meta">Langston Hughes · PreK</div></div>
+  <div class="row-status red">Pending</div><div class="row-chev">›</div></div>
+<div class="row"><div class="avatar">KW</div>
+  <div class="row-body"><div class="row-name">Kristi Walton</div><div class="row-meta">Langston Hughes · PreK</div></div>
+  <div class="row-status red">Pending</div><div class="row-chev">›</div></div>
+<div class="row"><div class="avatar">CB</div>
+  <div class="row-body"><div class="row-name">Courtney Brumfield</div><div class="row-meta">Wheatley · All Subjects</div></div>
+  <div class="row-status red">Pending</div><div class="row-chev">›</div></div>
+<div class="row"><div class="avatar">MH</div>
+  <div class="row-body"><div class="row-name">Myron Hawkins</div><div class="row-meta">Wheatley · Middle School Student Support</div></div>
+  <div class="row-status red">Pending</div><div class="row-chev">›</div></div>
+<div class="row"><div class="avatar">LJ</div>
+  <div class="row-body"><div class="row-name">Latoya Johnson</div><div class="row-meta">Wheatley · All Subjects</div></div>
+  <div class="row-status red">Pending</div><div class="row-chev">›</div></div>
+<div class="row"><div class="avatar">MS</div>
+  <div class="row-body"><div class="row-name">Michael Savage</div><div class="row-meta">Wheatley · 8th ELA</div></div>
+  <div class="row-status red">Pending</div><div class="row-chev">›</div></div>
+<div class="row"><div class="avatar">AB</div>
+  <div class="row-body"><div class="row-name">Ashley Barnett</div><div class="row-meta">Green · PreK</div></div>
+  <div class="row-status red">Pending</div><div class="row-chev">›</div></div>
+</div>
+
+<!-- SR NOT SUBMITTED — 14 real teachers -->
+<div class="sr-only">
+<div class="list-head">Not Submitted · 14 teachers · from Postgres</div>
+
+<div class="row"><div class="avatar">JC</div>
+  <div class="row-body"><div class="row-name">Jean Curry</div><div class="row-meta">Ashe · Whole School Dance</div></div>
+  <div class="row-status red">Pending</div><div class="row-chev">›</div></div>
+<div class="row"><div class="avatar">LF</div>
+  <div class="row-body"><div class="row-name">Lavette Floyd</div><div class="row-meta">Ashe · 6th ELA</div></div>
+  <div class="row-status red">Pending</div><div class="row-chev">›</div></div>
+<div class="row"><div class="avatar">MT</div>
+  <div class="row-body"><div class="row-name">Mitchell Tranchina</div><div class="row-meta">Ashe · 3rd/4th ELA</div></div>
+  <div class="row-status red">Pending</div><div class="row-chev">›</div></div>
+<div class="row"><div class="avatar">LC</div>
+  <div class="row-body"><div class="row-name">Lanceing Clemens</div><div class="row-meta">Langston Hughes · All Subjects</div></div>
+  <div class="row-status red">Pending</div><div class="row-chev">›</div></div>
+<div class="row"><div class="avatar">TC</div>
+  <div class="row-body"><div class="row-name">Triege Cotton</div><div class="row-meta">Langston Hughes · PreK</div></div>
+  <div class="row-status red">Pending</div><div class="row-chev">›</div></div>
+<div class="row"><div class="avatar">BH</div>
+  <div class="row-body"><div class="row-name">Brittany Hookfin</div><div class="row-meta">Langston Hughes · 3rd/4th ELA</div></div>
+  <div class="row-status red">Pending</div><div class="row-chev">›</div></div>
+<div class="row"><div class="avatar">ES</div>
+  <div class="row-body"><div class="row-name">Elizabeth Schexnider</div><div class="row-meta">Langston Hughes · Lower School SPED</div></div>
+  <div class="row-status red">Pending</div><div class="row-chev">›</div></div>
+<div class="row"><div class="avatar">KW</div>
+  <div class="row-body"><div class="row-name">Kristi Walton</div><div class="row-meta">Langston Hughes · PreK</div></div>
+  <div class="row-status red">Pending</div><div class="row-chev">›</div></div>
+<div class="row"><div class="avatar">CB</div>
+  <div class="row-body"><div class="row-name">Courtney Brumfield</div><div class="row-meta">Wheatley · All Subjects</div></div>
+  <div class="row-status red">Pending</div><div class="row-chev">›</div></div>
+<div class="row"><div class="avatar">MH</div>
+  <div class="row-body"><div class="row-name">Myron Hawkins</div><div class="row-meta">Wheatley · Middle School Student Support</div></div>
+  <div class="row-status red">Pending</div><div class="row-chev">›</div></div>
+<div class="row"><div class="avatar">LJ</div>
+  <div class="row-body"><div class="row-name">Latoya Johnson</div><div class="row-meta">Wheatley · All Subjects</div></div>
+  <div class="row-status red">Pending</div><div class="row-chev">›</div></div>
+<div class="row"><div class="avatar">MS</div>
+  <div class="row-body"><div class="row-name">Michael Savage</div><div class="row-meta">Wheatley · 8th ELA</div></div>
+  <div class="row-status red">Pending</div><div class="row-chev">›</div></div>
+<div class="row"><div class="avatar">AB</div>
+  <div class="row-body"><div class="row-name">Ashley Barnett</div><div class="row-meta">Green · PreK</div></div>
+  <div class="row-status red">Pending</div><div class="row-chev">›</div></div>
+<div class="row"><div class="avatar">NR</div>
+  <div class="row-body"><div class="row-name">Norbert Rome Jr</div><div class="row-meta">Green · Lower School PE</div></div>
+  <div class="row-status red">Pending</div><div class="row-chev">›</div></div>
+</div>
+
+</div>
+
+<script>
+document.querySelectorAll('.mode-btn').forEach(b => b.addEventListener('click', e => {
+  document.querySelectorAll('.mode-btn').forEach(x => x.classList.remove('on'))
+  e.target.classList.add('on')
+  document.getElementById('listRoot').dataset.mode = e.target.dataset.m
+  document.querySelectorAll('.pmap-only, .sr-only').forEach(el => {
+    const show = (el.classList.contains('pmap-only') && e.target.dataset.m === 'pmap') ||
+                 (el.classList.contains('sr-only') && e.target.dataset.m === 'sr')
+    el.style.display = show ? '' : 'none'
+  })
+}))
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', e => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('on','red','green'))
+  e.currentTarget.classList.add('on')
+  e.currentTarget.classList.add(e.currentTarget.textContent.includes('Not') ? 'red' : 'green')
+}))
+document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', e => {
+  document.querySelectorAll('.chip').forEach(x => x.classList.remove('on'))
+  e.target.classList.add('on')
+}))
+// init
+document.querySelectorAll('.sr-only').forEach(el => el.style.display = 'none')
+</script>
+
+</body></html>

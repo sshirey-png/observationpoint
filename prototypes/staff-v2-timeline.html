@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Staff V2 — Timeline</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.mock-banner{background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;text-align:center;padding:6px 12px;letter-spacing:.05em}
+.topnav{background:#002f60;padding:10px 12px;display:flex;align-items:center;gap:10px}
+.back{color:#fff;font-size:22px;font-weight:700;text-decoration:none;padding:4px 8px}
+.topnav-t{flex:1}
+.topnav-title{font-size:13px;font-weight:700;color:#fff}
+.topnav-sub{font-size:11px;color:rgba(255,255,255,.65);margin-top:1px}
+
+/* Compact ID bar */
+.id-bar{background:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #e5e7eb}
+.avatar{width:52px;height:52px;border-radius:50%;background:#e47727;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;flex-shrink:0}
+.id-body{flex:1;min-width:0}
+.id-name{font-size:16px;font-weight:800;color:#002f60;line-height:1.2}
+.id-role{font-size:11px;color:#6b7280;margin-top:2px}
+
+/* Stat strip */
+.stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:12px;max-width:720px;margin:0 auto}
+.stat{background:#fff;border-radius:10px;padding:10px 6px;box-shadow:0 1px 3px rgba(0,0,0,.05);text-align:center}
+.stat-v{font-size:18px;font-weight:800;color:#002f60;line-height:1}
+.stat-l{font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-top:4px}
+
+.content{max-width:720px;margin:0 auto;padding:0 12px 40px}
+.section-h{font-size:11px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;padding:14px 4px 8px}
+
+/* Current focus collapsed tile */
+.focus-tile{background:#fff;border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:12px;border-left:4px solid #e47727}
+.focus-t-h{font-size:11px;font-weight:800;color:#e47727;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.focus-goal{font-size:13px;font-weight:700;color:#002f60;margin-bottom:8px;line-height:1.3}
+.focus-steps-n{display:flex;gap:8px;font-size:11px;color:#6b7280}
+.focus-steps-n b{color:#002f60;font-weight:800;font-size:13px}
+
+/* Timeline */
+.timeline{position:relative;padding-left:30px}
+.timeline::before{content:'';position:absolute;left:10px;top:8px;bottom:8px;width:2px;background:#e5e7eb}
+.tl-item{position:relative;background:#fff;border-radius:12px;padding:12px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.tl-dot{position:absolute;left:-24px;top:14px;width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid #6b7280;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800}
+.tl-dot.obs{border-color:#002f60;background:#002f60;color:#fff}
+.tl-dot.cel{border-color:#e47727;background:#e47727;color:#fff}
+.tl-dot.step{border-color:#22c55e;background:#22c55e;color:#fff}
+.tl-dot.pmap{border-color:#8b5cf6;background:#8b5cf6;color:#fff}
+.tl-date{font-size:10px;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.tl-title{font-size:13px;font-weight:700;color:#111827}
+.tl-body{font-size:11px;color:#4b5563;margin-top:4px;line-height:1.4}
+.tl-meta{font-size:10px;color:#9ca3af;margin-top:4px}
+.tl-score{display:inline-block;background:#f3f4f6;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:700;color:#002f60;margin-left:6px}
+.tl-quote{font-style:italic;color:#4b5563}
+</style></head><body>
+
+<div class="mock-banner">DESIGN MOCK · placeholder numbers · V2 Timeline (journey-first)</div>
+
+<nav class="topnav">
+  <a class="back" href="#">←</a>
+  <div class="topnav-t">
+    <div class="topnav-title">Staff Profile</div>
+    <div class="topnav-sub">2026-27 · Cycle 1</div>
+  </div>
+</nav>
+
+<!-- Compact identity -->
+<div class="id-bar">
+  <div class="avatar">MW</div>
+  <div class="id-body">
+    <div class="id-name">Marcus Williams</div>
+    <div class="id-role">5th grade ELA · Langston Hughes</div>
+  </div>
+</div>
+
+<!-- Stat strip: four key numbers -->
+<div class="stat-strip">
+  <div class="stat"><div class="stat-v">24</div><div class="stat-l">Touchpoints</div></div>
+  <div class="stat"><div class="stat-v">3.6</div><div class="stat-l">Obs Score</div></div>
+  <div class="stat"><div class="stat-v">4</div><div class="stat-l">Celebrations</div></div>
+  <div class="stat"><div class="stat-v">3<span style="font-size:11px;color:#9ca3af">/11</span></div><div class="stat-l">Action Steps</div></div>
+</div>
+
+<div class="content">
+
+<!-- Current focus stays pinned -->
+<div class="section-h">Current focus</div>
+<div class="focus-tile">
+  <div class="focus-t-h">Active Goal</div>
+  <div class="focus-goal">Increase cognitive engagement in independent practice</div>
+  <div class="focus-steps-n">
+    <span><b>3</b> action steps active</span>
+    <span>·</span>
+    <span><b>8</b> completed this year</span>
+  </div>
+</div>
+
+<!-- The story: chronological timeline -->
+<div class="section-h">Story · most recent first</div>
+
+<div class="timeline">
+
+  <div class="tl-item">
+    <div class="tl-dot cel">★</div>
+    <div class="tl-date">2 days ago · Nov 20</div>
+    <div class="tl-title">Celebration from Tina</div>
+    <div class="tl-body tl-quote">"Loved the cold-call energy in 5th period."</div>
+  </div>
+
+  <div class="tl-item">
+    <div class="tl-dot obs">O</div>
+    <div class="tl-date">Nov 18</div>
+    <div class="tl-title">Teacher Observation <span class="tl-score">3.8 avg</span></div>
+    <div class="tl-body">Strong questioning, clear cog-eng bumps in 2nd half. On Task 4.0, Cog Eng 3.6.</div>
+    <div class="tl-meta">by Tina Patel</div>
+  </div>
+
+  <div class="tl-item">
+    <div class="tl-dot step">✓</div>
+    <div class="tl-date">Nov 18</div>
+    <div class="tl-title">Action step assigned</div>
+    <div class="tl-body">Anchor chart for discussion norms — practice landing.</div>
+    <div class="tl-meta">by Tina · tied to engagement goal</div>
+  </div>
+
+  <div class="tl-item">
+    <div class="tl-dot obs">F</div>
+    <div class="tl-date">Nov 4</div>
+    <div class="tl-title">Quick Feedback</div>
+    <div class="tl-body">"2 turn-and-talks landed — saw students referencing partner's thinking."</div>
+    <div class="tl-meta">by Tina</div>
+  </div>
+
+  <div class="tl-item">
+    <div class="tl-dot step">✓</div>
+    <div class="tl-date">Nov 1</div>
+    <div class="tl-title">Action step completed</div>
+    <div class="tl-body tl-quote" style="text-decoration:line-through;color:#9ca3af">Use "What did your partner say?" check — evidence observed</div>
+  </div>
+
+  <div class="tl-item">
+    <div class="tl-dot obs">O</div>
+    <div class="tl-date">Oct 22</div>
+    <div class="tl-title">Teacher Observation <span class="tl-score">3.4 avg</span></div>
+    <div class="tl-body">Focus on engagement. Cog Eng 2.9 — next step came out of this.</div>
+    <div class="tl-meta">by Tina Patel</div>
+  </div>
+
+  <div class="tl-item">
+    <div class="tl-dot pmap">P</div>
+    <div class="tl-date">Oct 8</div>
+    <div class="tl-title">PMAP · Cycle 1 <span class="tl-score">3.6 avg</span></div>
+    <div class="tl-body">Self-reflection matched supervisor ratings. On Task 3.8, CoL 3.3.</div>
+    <div class="tl-meta">by Tina</div>
+  </div>
+
+  <div class="tl-item">
+    <div class="tl-dot cel">★</div>
+    <div class="tl-date">Sep 28</div>
+    <div class="tl-title">Celebration from Tina</div>
+    <div class="tl-body tl-quote">"Teacher presence during transitions was exceptional."</div>
+  </div>
+
+  <div class="tl-item">
+    <div class="tl-dot step">✓</div>
+    <div class="tl-date">Sep 15</div>
+    <div class="tl-title">Goal set</div>
+    <div class="tl-body">Increase cognitive engagement in independent practice</div>
+    <div class="tl-meta">Cycle 1 PMAP goal</div>
+  </div>
+
+</div>
+
+<div style="text-align:center;padding:12px;font-size:11px;color:#9ca3af">Load earlier activity ↓</div>
+
+</div>
+
+</body></html>

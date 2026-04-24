@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Network Team — where to show</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#e5e7eb;color:#111827;-webkit-font-smoothing:antialiased;padding:20px 0}
+.wrap{max-width:1400px;margin:0 auto;padding:0 16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:24px}
+.frame{background:#f5f7fa;border-radius:20px;box-shadow:0 4px 20px rgba(0,0,0,.15);overflow:hidden;display:flex;flex-direction:column;min-height:760px}
+.opt-label{background:#002f60;color:#fff;padding:10px 16px;font-size:13px;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
+.opt-label .tag{font-size:10px;font-weight:600;opacity:.7;margin-left:6px;text-transform:none;letter-spacing:0}
+.intro{padding:12px 16px;font-size:12px;color:#4b5563;background:#fff;border-bottom:1px solid #e5e7eb;line-height:1.4}
+
+/* Shared page elements */
+.nav{background:#002f60;padding:14px 16px;text-align:center}
+.nav-title{font-size:17px;font-weight:800;color:#fff}
+.nav-title .o{color:#e47727}
+.nav-sub{font-size:12px;color:rgba(255,255,255,.6);margin-top:2px}
+.year-bar{background:#fff;padding:8px 16px;display:flex;justify-content:center}
+.year-pill-wrap{background:#f3f4f6;border-radius:18px;padding:3px;display:inline-flex}
+.year-pill{padding:5px 16px;border-radius:16px;font-size:11px;font-weight:700;border:none;background:transparent;color:#6b7280;cursor:pointer}
+.year-pill.on{background:#fff;color:#002f60;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+
+/* Role toggle for Option 3 */
+.role-bar{background:#fff;padding:8px 12px;border-bottom:1px solid #e5e7eb;display:flex;gap:6px;overflow-x:auto}
+.role-bar::-webkit-scrollbar{display:none}
+.role-pill{padding:6px 12px;border-radius:14px;border:1px solid #e5e7eb;background:#fff;font-size:11px;font-weight:700;color:#6b7280;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.role-pill.on{background:#002f60;color:#fff;border-color:#002f60}
+
+.cycle-bar{background:#fff;padding:10px 16px 12px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:center;gap:6px}
+.cycle-btn{padding:7px 14px;border-radius:18px;font-size:11px;font-weight:700;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;cursor:pointer;flex:1;max-width:90px}
+.cycle-btn.on{background:#002f60;color:#fff;border-color:#002f60}
+.legend{text-align:center;font-size:10px;color:#9ca3af;padding:5px 12px;background:#f5f7fa}
+.legend .a{color:#e47727;font-weight:700}
+
+.content{padding:14px 14px 20px;flex:1;overflow-y:auto}
+
+/* Hero */
+.hero{background:linear-gradient(135deg,#002f60,#003b7a);color:#fff;border-radius:18px;padding:18px;margin-bottom:12px;box-shadow:0 3px 12px rgba(0,47,96,.2)}
+.hero-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.7);margin-bottom:6px;text-align:center}
+.hero-main{display:flex;align-items:center;gap:16px;margin-top:6px}
+.hero-donut{width:110px;height:110px;flex-shrink:0}
+.hero-big{font-size:34px;font-weight:900;line-height:1;color:#fff}
+.hero-big .pct{color:#e47727;font-size:18px}
+.hero-sub{font-size:12px;color:rgba(255,255,255,.8);margin-top:6px}
+.hero-foot{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.15)}
+.hero-foot-5{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.15)}
+.hero-foot-item{cursor:pointer;text-align:center;min-width:0}
+.hero-foot-item.net{background:rgba(228,119,39,.15);padding:4px;border-radius:6px}
+.hero-foot-v{font-size:16px;font-weight:800;color:#fff}
+.hero-foot-l{font-size:9px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.03em;margin-top:2px;line-height:1.2;word-break:break-word}
+
+/* Other-staff mini-cards (Option B) */
+.other-head{font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;padding:10px 4px 6px}
+.other-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.other-card{background:#fff;border-radius:12px;padding:12px 10px;box-shadow:0 1px 3px rgba(0,0,0,.05);text-align:center;cursor:pointer}
+.other-card:hover{background:#fafbfc}
+.other-v{font-size:22px;font-weight:800;color:#002f60;line-height:1}
+.other-l{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-top:6px}
+.other-m{font-size:9px;color:#9ca3af;margin-top:2px}
+
+.notes{font-size:11px;color:#6b7280;padding:10px 16px;background:#f9fafb;border-top:1px solid #e5e7eb;line-height:1.5}
+.notes b{color:#002f60}
+</style></head><body>
+
+<div class="wrap">
+
+  <!-- OPTION A: 5th pill in hero footer -->
+  <div class="frame">
+    <div class="opt-label">Option A <span class="tag">5th pill in hero footer</span></div>
+    <div class="intro">Network Team sits alongside the 4 schools in the hero footer, subtly highlighted.</div>
+
+    <nav class="nav">
+      <div class="nav-title">Observation<span class="o">Point</span></div>
+      <div class="nav-sub">Network · 2026-2027</div>
+    </nav>
+    <div class="year-bar"><div class="year-pill-wrap"><button class="year-pill on">2026-27</button><button class="year-pill">2025-26</button></div></div>
+    <div class="cycle-bar">
+      <button class="cycle-btn on">Cycle 1</button><button class="cycle-btn">Cycle 2</button>
+      <button class="cycle-btn">Cycle 3</button><button class="cycle-btn">Cycle 4</button>
+    </div>
+    <div class="legend"><span class="a">*</span> = mock data</div>
+
+    <div class="content">
+      <div class="hero">
+        <div class="hero-label">% Mastering Fundamentals · Cycle 1</div>
+        <div class="hero-main">
+          <svg class="hero-donut" viewBox="0 0 110 110">
+            <circle cx="55" cy="55" r="47" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="12"/>
+          </svg>
+          <div>
+            <div class="hero-big">0<span class="pct">/187</span></div>
+            <div class="hero-sub">teachers mastering · 1 obs captured</div>
+          </div>
+        </div>
+        <div class="hero-foot-5">
+          <div class="hero-foot-item"><div class="hero-foot-v">—</div><div class="hero-foot-l">Langston Hughes</div></div>
+          <div class="hero-foot-item"><div class="hero-foot-v">—</div><div class="hero-foot-l">Wheatley</div></div>
+          <div class="hero-foot-item"><div class="hero-foot-v">—</div><div class="hero-foot-l">Ashe</div></div>
+          <div class="hero-foot-item"><div class="hero-foot-v">—</div><div class="hero-foot-l">Green</div></div>
+          <div class="hero-foot-item net"><div class="hero-foot-v">53</div><div class="hero-foot-l">Network Team</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes"><b>Pros:</b> one unified row, consistent tap target. <b>Cons:</b> 5 pills get cramped on narrow phones; mixes teachers with non-teacher network staff in the same count.</div>
+  </div>
+
+
+  <!-- OPTION B: Separate mini-cards below hero -->
+  <div class="frame">
+    <div class="opt-label">Option B <span class="tag">"other staff" mini-cards below hero</span></div>
+    <div class="intro">School hero stays clean (just the 4 schools). Network / Leadership / Support get their own section below.</div>
+
+    <nav class="nav">
+      <div class="nav-title">Observation<span class="o">Point</span></div>
+      <div class="nav-sub">Network · 2026-2027</div>
+    </nav>
+    <div class="year-bar"><div class="year-pill-wrap"><button class="year-pill on">2026-27</button><button class="year-pill">2025-26</button></div></div>
+    <div class="cycle-bar">
+      <button class="cycle-btn on">Cycle 1</button><button class="cycle-btn">Cycle 2</button>
+      <button class="cycle-btn">Cycle 3</button><button class="cycle-btn">Cycle 4</button>
+    </div>
+    <div class="legend"><span class="a">*</span> = mock data</div>
+
+    <div class="content">
+      <div class="hero">
+        <div class="hero-label">% Mastering Fundamentals · Cycle 1</div>
+        <div class="hero-main">
+          <svg class="hero-donut" viewBox="0 0 110 110">
+            <circle cx="55" cy="55" r="47" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="12"/>
+          </svg>
+          <div>
+            <div class="hero-big">0<span class="pct">/187</span></div>
+            <div class="hero-sub">teachers mastering · 1 obs captured</div>
+          </div>
+        </div>
+        <div class="hero-foot">
+          <div class="hero-foot-item"><div class="hero-foot-v">—</div><div class="hero-foot-l">Langston Hughes</div></div>
+          <div class="hero-foot-item"><div class="hero-foot-v">—</div><div class="hero-foot-l">Wheatley</div></div>
+          <div class="hero-foot-item"><div class="hero-foot-v">—</div><div class="hero-foot-l">Ashe</div></div>
+          <div class="hero-foot-item"><div class="hero-foot-v">—</div><div class="hero-foot-l">Green</div></div>
+        </div>
+      </div>
+
+      <div class="other-head">Other staff</div>
+      <div class="other-row">
+        <div class="other-card"><div class="other-v">53</div><div class="other-l">Network</div><div class="other-m">tap to view</div></div>
+        <div class="other-card"><div class="other-v">41</div><div class="other-l">Leadership</div><div class="other-m">tap to view</div></div>
+        <div class="other-card"><div class="other-v">125</div><div class="other-l">Support</div><div class="other-m">tap to view</div></div>
+      </div>
+    </div>
+
+    <div class="notes"><b>Pros:</b> clean separation — school teachers in hero, everyone else in their own section. Each card taps into its own scoped view. <b>Cons:</b> extra real estate on the page.</div>
+  </div>
+
+
+  <!-- OPTION C: Role toggle at top -->
+  <div class="frame">
+    <div class="opt-label">Option C <span class="tag">role toggle · whole page re-scopes</span></div>
+    <div class="intro">A role selector right under the cycle toggle: Teachers / Network / Leadership / Support. Entire page re-queries when you switch roles.</div>
+
+    <nav class="nav">
+      <div class="nav-title">Observation<span class="o">Point</span></div>
+      <div class="nav-sub">Network · 2026-2027</div>
+    </nav>
+    <div class="year-bar"><div class="year-pill-wrap"><button class="year-pill on">2026-27</button><button class="year-pill">2025-26</button></div></div>
+    <div class="cycle-bar">
+      <button class="cycle-btn on">Cycle 1</button><button class="cycle-btn">Cycle 2</button>
+      <button class="cycle-btn">Cycle 3</button><button class="cycle-btn">Cycle 4</button>
+    </div>
+    <div class="role-bar">
+      <button class="role-pill on">Teachers (187)</button>
+      <button class="role-pill">Network (53)</button>
+      <button class="role-pill">Leadership (41)</button>
+      <button class="role-pill">Support (125)</button>
+    </div>
+    <div class="legend"><span class="a">*</span> = mock data</div>
+
+    <div class="content">
+      <div class="hero">
+        <div class="hero-label">% Mastering Fundamentals · Cycle 1 · Teachers</div>
+        <div class="hero-main">
+          <svg class="hero-donut" viewBox="0 0 110 110">
+            <circle cx="55" cy="55" r="47" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="12"/>
+          </svg>
+          <div>
+            <div class="hero-big">0<span class="pct">/187</span></div>
+            <div class="hero-sub">Teachers mastering · 1 obs captured</div>
+          </div>
+        </div>
+        <div class="hero-foot">
+          <div class="hero-foot-item"><div class="hero-foot-v">—</div><div class="hero-foot-l">Langston Hughes</div></div>
+          <div class="hero-foot-item"><div class="hero-foot-v">—</div><div class="hero-foot-l">Wheatley</div></div>
+          <div class="hero-foot-item"><div class="hero-foot-v">—</div><div class="hero-foot-l">Ashe</div></div>
+          <div class="hero-foot-item"><div class="hero-foot-v">—</div><div class="hero-foot-l">Green</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes"><b>Pros:</b> most flexible — entire page can re-query by role. Network has different rubrics (PMAP Network, SR Network) so a role-scoped page is honest. <b>Cons:</b> extra row of chrome; users have to remember which role they're viewing.</div>
+  </div>
+
+</div>
+
+</body></html>

@@ -1,20 +1,72 @@
-import { useState } from 'react'
-import { useNavigate, Link, useSearchParams } from 'react-router-dom'
-import Nav from '../components/Nav'
-import StaffPicker from '../components/StaffPicker'
-import RubricCard from '../components/RubricCard'
+import { useState, useRef, useEffect } from 'react'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
+import SubjectBlock from '../components/SubjectBlock'
+import FormShell from '../components/FormShell'
 import { api } from '../lib/api'
 import { TEACHER_RUBRIC, LEADER_RUBRIC } from '../lib/rubric-descriptors'
-import FormShell from '../components/FormShell'
+import RubricCard from '../components/RubricCard'
 
 /**
- * PMAP — Performance Map. Role-aware: we pick the right form_type
- * (pmap_teacher / pmap_leader / pmap_network / pmap_support / pmap_prek)
- * based on the teacher's job_function + job_title. The teacher rubric
- * (T1-T5) is only shown and saved for teacher/prek roles — leader/network/
- * support PMAPs go through the narrative sections only until we wire their
- * rubrics up.
+ * PMAP — Performance Map. Role-aware: form_type derived from the person's
+ * job_function + job_title. Teacher rubric (T1-T5) for pmap_teacher/pmap_prek;
+ * Leader rubric (L1-L5) for pmap_leader; Network/Support are narrative-only.
+ *
+ * Ported to the Fundamentals/Celebrate navy V3 pattern:
+ * - inline styles (not Tailwind at the form level — RubricCard keeps its own)
+ * - draft paradigm (resume + 2s autosave + abandon)
+ * - 3-button submit bar (Save draft / Publish / Publish & Send)
  */
+
+const CARD = {
+  background: '#fff',
+  borderRadius: 14,
+  padding: 16,
+  boxShadow: '0 1px 3px rgba(0,0,0,.05)',
+  marginBottom: 12,
+}
+
+const SECTION_LABEL = {
+  fontSize: 12,
+  fontWeight: 800,
+  color: '#111827',
+  textTransform: 'uppercase',
+  letterSpacing: '.05em',
+}
+
+const FIELD_LABEL = {
+  fontSize: 11,
+  fontWeight: 700,
+  color: '#6b7280',
+  textTransform: 'uppercase',
+  letterSpacing: '.05em',
+  marginBottom: 6,
+  marginTop: 10,
+}
+
+const TEXTAREA = {
+  width: '100%',
+  minHeight: 72,
+  padding: 12,
+  border: '1.5px solid #e5e7eb',
+  borderRadius: 10,
+  fontSize: 13,
+  fontFamily: 'inherit',
+  resize: 'vertical',
+  color: '#111827',
+  boxSizing: 'border-box',
+}
+
+const SELECT = {
+  width: '100%',
+  padding: '11px 12px',
+  border: '1.5px solid #e5e7eb',
+  borderRadius: 10,
+  fontSize: 13,
+  fontFamily: 'inherit',
+  color: '#111827',
+  background: '#fff',
+  boxSizing: 'border-box',
+}
 
 // Derive the correct PMAP form_type for this person. Mirrors the backend
 // derive_form_type mapping in app.py /api/admin/enrich-narrative.
@@ -32,26 +84,38 @@ function pmapFormTypeFor(teacher) {
 // Network/Support don't have a defined rubric yet — narrative-only.
 const RUBRIC_FOR_ROLE = {
   pmap_teacher: TEACHER_RUBRIC,
-  pmap_prek: TEACHER_RUBRIC,  // fallback until PK rubric is wired (different scale, cycles)
+  pmap_prek: TEACHER_RUBRIC,
   pmap_leader: LEADER_RUBRIC,
 }
 
 function TrackButton({ label, value, onChange }) {
   return (
-    <div className="mb-2">
-      <div className="text-xs font-semibold text-gray-600 mb-1.5">{label}</div>
-      <div className="flex gap-2">
+    <div style={{ marginBottom: 10 }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: '#4b5563', marginBottom: 6 }}>{label}</div>
+      <div style={{ display: 'flex', gap: 8 }}>
         <button
+          type="button"
           onClick={() => onChange(value === 'off' ? null : 'off')}
-          className={`flex-1 py-2.5 rounded-lg text-[13px] font-semibold border-2 transition-all active:scale-95 ${
-            value === 'off' ? 'bg-red-500 border-red-500 text-white' : 'border-gray-200 text-gray-400'
-          }`}
+          style={{
+            flex: 1, padding: '10px 12px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+            cursor: 'pointer', fontFamily: 'inherit',
+            border: '1.5px solid',
+            borderColor: value === 'off' ? '#dc2626' : '#e5e7eb',
+            background: value === 'off' ? '#dc2626' : '#fff',
+            color: value === 'off' ? '#fff' : '#9ca3af',
+          }}
         >Off Track</button>
         <button
+          type="button"
           onClick={() => onChange(value === 'on' ? null : 'on')}
-          className={`flex-1 py-2.5 rounded-lg text-[13px] font-semibold border-2 transition-all active:scale-95 ${
-            value === 'on' ? 'bg-green-500 border-green-500 text-white' : 'border-gray-200 text-gray-400'
-          }`}
+          style={{
+            flex: 1, padding: '10px 12px', borderRadius: 10, fontSize: 13, fontWeight: 700,
+            cursor: 'pointer', fontFamily: 'inherit',
+            border: '1.5px solid',
+            borderColor: value === 'on' ? '#22c55e' : '#e5e7eb',
+            background: value === 'on' ? '#22c55e' : '#fff',
+            color: value === 'on' ? '#fff' : '#9ca3af',
+          }}
         >On Track</button>
       </div>
     </div>
@@ -101,68 +165,13 @@ export default function PMAP() {
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
 
-  function setScore(code, value) {
-    setScores(prev => ({ ...prev, [code]: value }))
-  }
-
-  function toggleConcern(item) {
-    setConcerns(prev => prev.includes(item) ? prev.filter(c => c !== item) : [...prev, item])
-  }
-
-  async function publish() {
-    if (!teacher) return
-    setSaving(true)
-    const formType = pmapFormTypeFor(teacher)
-    try {
-      await api.post('/api/touchpoints', {
-        form_type: formType,
-        teacher_email: teacher.email,
-        school: teacher.school || '',
-        // Only send scores for variants that use a wired rubric
-        scores: RUBRIC_FOR_ROLE[formType] ? scores : {},
-        notes: rubricComments,
-        feedback: JSON.stringify({
-          job_desc_reviewed: jobDescReviewed,
-          goals_notes: goalsNotes,
-          wig_track: wigTrack,
-          ag1_track: ag1Track,
-          ag2_track: ag2Track,
-          ag3_track: ag3Track,
-          progress_notes: progressNotes,
-          whirlwind,
-          strength_areas: strengthAreas,
-          growth_areas: growthAreas,
-          commit_strength: commitStrength,
-          commit_growth: commitGrowth,
-          career_goals: careerGoals,
-          licenses,
-          concerns,
-          concern_comments: concernComments,
-        }),
-      })
-      setDone(true)
-    } catch (e) {
-      alert('Failed to save: ' + e.message)
-    }
-    setSaving(false)
-  }
-
-  if (done) {
-    return (
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center">
-        <div className="bg-white rounded-2xl p-9 text-center mx-4 shadow-2xl">
-          <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3.5">
-            <svg width="28" height="28" fill="none" stroke="#059669" strokeWidth="3"><path d="M7 14l5 5 10-10" /></svg>
-          </div>
-          <div className="text-xl font-bold mb-1">PMAP Published!</div>
-          <div className="text-sm text-gray-500 mb-5">{teacher?.first_name} {teacher?.last_name} has been notified</div>
-          <button onClick={() => navigate('/')} className="bg-fls-orange text-white px-8 py-3 rounded-xl font-semibold">Done</button>
-        </div>
-      </div>
-    )
-  }
-
-  const inputClass = "w-full px-3 py-3 border border-gray-200 rounded-[10px] text-sm outline-none focus:border-fls-orange placeholder:text-gray-400"
+  // Draft paradigm state
+  const [draftId, setDraftId] = useState(null)
+  const [resumedDraft, setResumedDraft] = useState(false)
+  const [saveStatus, setSaveStatus] = useState('idle')  // 'idle' | 'saving' | 'saved' | 'error'
+  const [lastSavedAt, setLastSavedAt] = useState(null)
+  const saveTimerRef = useRef(null)
+  const hydratingRef = useRef(false)
 
   const currentFormType = pmapFormTypeFor(teacher)
   const activeRubric = RUBRIC_FOR_ROLE[currentFormType] || null
@@ -175,10 +184,193 @@ export default function PMAP() {
     pmap_support: 'Support',
   })[currentFormType] || 'Teacher'
 
-  // Validation: every required * field must be non-empty.
-  // Rubric cards are required only when a rubric is wired for this role.
-  const rubricFilled = !showRubric ||
-    activeRubric.every(d => scores[d.code] != null)
+  useEffect(() => () => clearTimeout(saveTimerRef.current), [])
+
+  // Resume existing draft when teacher selected
+  useEffect(() => {
+    if (!teacher) return
+    hydratingRef.current = true
+    let cancelled = false
+    const formType = pmapFormTypeFor(teacher)
+    async function loadDraft() {
+      try {
+        const existing = await api.get(
+          `/api/touchpoints/active-draft?teacher_email=${encodeURIComponent(teacher.email)}&form_type=${encodeURIComponent(formType)}`
+        )
+        if (cancelled || !existing) return
+        setDraftId(existing.id)
+        setResumedDraft(true)
+
+        // Scores — only hydrate if this role has a rubric
+        if (RUBRIC_FOR_ROLE[formType] && existing.scores && typeof existing.scores === 'object') {
+          setScores(existing.scores)
+        }
+        // notes = rubric comments
+        if (existing.notes) setRubricComments(existing.notes)
+
+        // feedback JSON holds everything narrative
+        const fb = (() => {
+          try { return existing.feedback ? JSON.parse(existing.feedback) : {} } catch { return {} }
+        })()
+        if (fb.job_desc_reviewed) setJobDescReviewed(fb.job_desc_reviewed)
+        if (fb.goals_notes) setGoalsNotes(fb.goals_notes)
+        if (fb.wig_track !== undefined) setWigTrack(fb.wig_track)
+        if (fb.ag1_track !== undefined) setAg1Track(fb.ag1_track)
+        if (fb.ag2_track !== undefined) setAg2Track(fb.ag2_track)
+        if (fb.ag3_track !== undefined) setAg3Track(fb.ag3_track)
+        if (fb.progress_notes) setProgressNotes(fb.progress_notes)
+        if (fb.whirlwind) setWhirlwind(fb.whirlwind)
+        if (fb.strength_areas) setStrengthAreas(fb.strength_areas)
+        if (fb.growth_areas) setGrowthAreas(fb.growth_areas)
+        if (fb.commit_strength) setCommitStrength(fb.commit_strength)
+        if (fb.commit_growth) setCommitGrowth(fb.commit_growth)
+        if (fb.career_goals) setCareerGoals(fb.career_goals)
+        if (fb.licenses) setLicenses(fb.licenses)
+        if (Array.isArray(fb.concerns)) setConcerns(fb.concerns)
+        if (fb.concern_comments) setConcernComments(fb.concern_comments)
+      } catch (e) {
+        // 404 is expected when no draft exists — silent
+      } finally {
+        setTimeout(() => { hydratingRef.current = false }, 100)
+      }
+    }
+    loadDraft()
+    return () => { cancelled = true }
+  }, [teacher])
+
+  // Debounced auto-save
+  useEffect(() => {
+    if (!teacher) return
+    if (hydratingRef.current) return
+    if (done) return
+    clearTimeout(saveTimerRef.current)
+    saveTimerRef.current = setTimeout(() => autoSave(), 2000)
+    return () => clearTimeout(saveTimerRef.current)
+    // eslint-disable-next-line
+  }, [
+    teacher, jobDescReviewed, goalsNotes, wigTrack, ag1Track, ag2Track, ag3Track,
+    progressNotes, whirlwind, scores, rubricComments,
+    strengthAreas, growthAreas, commitStrength, commitGrowth,
+    careerGoals, licenses, concerns, concernComments,
+  ])
+
+  function buildBody(status, isPublished) {
+    return {
+      form_type: currentFormType,
+      teacher_email: teacher.email,
+      school: teacher.school || '',
+      school_year: '2026-2027',
+      is_test: true,
+      status,
+      is_published: isPublished,
+      // Only send scores for variants that use a wired rubric
+      scores: RUBRIC_FOR_ROLE[currentFormType] ? scores : {},
+      notes: rubricComments,
+      feedback: JSON.stringify({
+        job_desc_reviewed: jobDescReviewed,
+        goals_notes: goalsNotes,
+        wig_track: wigTrack,
+        ag1_track: ag1Track,
+        ag2_track: ag2Track,
+        ag3_track: ag3Track,
+        progress_notes: progressNotes,
+        whirlwind,
+        strength_areas: strengthAreas,
+        growth_areas: growthAreas,
+        commit_strength: commitStrength,
+        commit_growth: commitGrowth,
+        career_goals: careerGoals,
+        licenses,
+        concerns,
+        concern_comments: concernComments,
+      }),
+    }
+  }
+
+  async function autoSave() {
+    if (!teacher) return
+    setSaveStatus('saving')
+    const body = buildBody('draft', false)
+    try {
+      if (draftId) {
+        await api.put(`/api/touchpoints/${draftId}`, body)
+      } else {
+        const res = await api.post('/api/touchpoints', body)
+        if (res.id) setDraftId(res.id)
+      }
+      setSaveStatus('saved')
+      setLastSavedAt(new Date())
+    } catch (e) {
+      setSaveStatus('error')
+    }
+  }
+
+  function setScore(code, value) {
+    setScores(prev => ({ ...prev, [code]: value }))
+  }
+
+  function toggleConcern(item) {
+    setConcerns(prev => prev.includes(item) ? prev.filter(c => c !== item) : [...prev, item])
+  }
+
+  async function submit(mode) {
+    // mode: 'draft' | 'publish' | 'publish_and_send'
+    if (!teacher) return
+    clearTimeout(saveTimerRef.current)
+    setSaving(true)
+    const asDraft = mode === 'draft'
+    const body = buildBody(asDraft ? 'draft' : 'published', !asDraft)
+
+    try {
+      let finalId = draftId
+      if (draftId) {
+        await api.put(`/api/touchpoints/${draftId}`, body)
+      } else {
+        const res = await api.post('/api/touchpoints', body)
+        if (res.id) { setDraftId(res.id); finalId = res.id }
+      }
+      if (asDraft) {
+        setSaveStatus('saved')
+        setLastSavedAt(new Date())
+        setSaving(false)
+      } else {
+        if (mode === 'publish_and_send' && finalId) {
+          try {
+            await api.post(`/api/touchpoints/${finalId}/notify`, {})
+          } catch (e) {
+            alert('PMAP published, but email to teacher failed: ' + e.message)
+          }
+        }
+        setDone(true)
+      }
+    } catch (e) {
+      alert('Save failed: ' + e.message)
+      setSaving(false)
+    }
+  }
+
+  async function abandonDraft() {
+    if (!draftId) return
+    if (!confirm('Abandon this draft and start fresh? Your work will be deleted.')) return
+    try {
+      await api.del(`/api/touchpoints/${draftId}`)
+      setDraftId(null); setResumedDraft(false)
+      setJobDescReviewed('')
+      setGoalsNotes(''); setWigTrack(null); setAg1Track(null); setAg2Track(null); setAg3Track(null)
+      setProgressNotes(''); setWhirlwind('')
+      setScores({}); setRubricComments('')
+      setStrengthAreas(''); setGrowthAreas('')
+      setCommitStrength(''); setCommitGrowth('')
+      setCareerGoals(''); setLicenses('')
+      setConcerns([]); setConcernComments('')
+      setSaveStatus('idle')
+    } catch (e) {
+      alert('Abandon failed: ' + e.message)
+    }
+  }
+
+  // Validation — publish gate
+  const rubricFilled = !showRubric || activeRubric.every(d => scores[d.code] != null)
   const narrativeFilled = (
     jobDescReviewed &&
     goalsNotes.trim() &&
@@ -193,238 +385,248 @@ export default function PMAP() {
   const concernsFilled = concerns.length === 0 || concernComments.trim()
   const canPublish = !!teacher && !saving && rubricFilled && narrativeFilled && concernsFilled
 
+  if (done) {
+    return (
+      <div style={{ minHeight: '100svh', background: '#f5f7fa', padding: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, sans-serif' }}>
+        <div style={{ background: '#fff', borderRadius: 18, padding: 28, textAlign: 'center', maxWidth: 360, boxShadow: '0 8px 24px rgba(0,0,0,.1)' }}>
+          <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', color: '#059669', fontSize: 28, fontWeight: 800 }}>✓</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: '#002f60' }}>PMAP Published</div>
+          <div style={{ fontSize: 13, color: '#6b7280', marginTop: 6 }}>{teacher?.first_name} {teacher?.last_name} · {roleLabel}</div>
+          <button
+            onClick={() => navigate(teacher ? `/app/staff/${teacher.email}` : '/')}
+            style={{ marginTop: 18, background: '#e47727', color: '#fff', border: 'none', borderRadius: 12, padding: '12px 24px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+          >View Profile</button>
+        </div>
+      </div>
+    )
+  }
+
+
   return (
     <FormShell>
-    <div className="pb-24">
-      <Nav title={`PMAP — ${roleLabel}`} />
-      <StaffPicker selected={teacher} onSelect={setTeacher} initialEmail={teacherParam} />
-      {teacher && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-white border-b border-gray-200">
-          <Link to={`/app/staff/${teacher.email}`} target="_blank"
-            className="flex items-center gap-1 px-2.5 py-1.5 border border-gray-200 rounded-lg text-[11px] font-semibold text-fls-navy no-underline">
-            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 16 16"><path d="M3 8h10m-4-4 4 4-4 4" /></svg>
-            History
-          </Link>
-          <span className="px-2.5 py-1 rounded-md text-[11px] font-bold bg-green-100 text-green-600">PMAP · {roleLabel}</span>
+    <div style={{ minHeight: '100svh', background: '#f5f7fa', paddingBottom: 'calc(100px + env(safe-area-inset-bottom))', fontFamily: 'Inter, sans-serif' }}>
+      <div style={{ background: '#fef3c7', color: '#92400e', fontSize: 11, fontWeight: 700, textAlign: 'center', padding: '6px 12px', letterSpacing: '.05em' }}>
+        DESIGN MOCK · PMAP form
+      </div>
+      <nav style={{ background: '#002f60', padding: '14px 16px', textAlign: 'center', position: 'relative' }}>
+        <button
+          onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}
+          aria-label="Back"
+          style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 20, fontWeight: 700, cursor: 'pointer', borderRadius: 8, background: 'rgba(255,255,255,.08)', border: 'none', fontFamily: 'inherit' }}
+        >←</button>
+        <Link to="/" style={{ display: 'inline-block', textDecoration: 'none' }}>
+          <div style={{ fontSize: 17, fontWeight: 800, color: '#fff', cursor: 'pointer' }}>Observation<span style={{ color: '#e47727' }}>Point</span></div>
+        </Link>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,.6)', marginTop: 2 }}>
+          {teacher ? (
+            <>{teacher.first_name} {teacher.last_name} · PMAP · {roleLabel}</>
+          ) : <>new PMAP</>}
+          <span style={{ display: 'inline-block', background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 10, fontSize: 10, fontWeight: 700, marginLeft: 6 }}>TEST MODE</span>
+        </div>
+      </nav>
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 10, color: '#9ca3af', padding: '6px 12px', background: '#f5f7fa' }}>
+        <span>Auto-save enabled</span>
+        {teacher && (
+          <span style={{ fontWeight: 600 }}>
+            {saveStatus === 'saving' && <span style={{ color: '#6b7280' }}>Saving…</span>}
+            {saveStatus === 'saved' && lastSavedAt && <span style={{ color: '#16a34a' }}>✓ Saved {lastSavedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span>}
+            {saveStatus === 'error' && <span style={{ color: '#dc2626' }}>Save failed — will retry</span>}
+          </span>
+        )}
+      </div>
+
+      {resumedDraft && teacher && (
+        <div style={{ background: '#fff7ed', borderBottom: '1px solid #fed7aa', padding: '10px 14px', fontSize: 11, color: '#9a3412', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ flex: 1 }}>Resumed your draft from earlier. Your work is preserved.</span>
+          <a onClick={abandonDraft} style={{ color: '#e47727', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}>Abandon & start fresh</a>
         </div>
       )}
 
-      <div className="px-4">
+      <div style={{ padding: 14, maxWidth: 720, margin: '0 auto' }}>
 
-        {/* 1. Meeting Checklist */}
-        <div className="mt-4">
-          <div className="text-base font-bold mb-2">Meeting Checklist</div>
-          <div className="bg-white rounded-xl shadow-sm p-4">
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">
-              Has the job description been reviewed? <span className="text-red-500">*</span>
-            </div>
-            <select value={jobDescReviewed} onChange={e => setJobDescReviewed(e.target.value)}
-              className={inputClass + ' bg-white appearance-none'}>
-              <option value="">Choose one...</option>
-              <option value="yes">Yes</option>
-              <option value="no">No</option>
-            </select>
-          </div>
-        </div>
+        <SubjectBlock
+          selected={teacher}
+          onSelect={setTeacher}
+          initialEmail={teacherParam}
+          roleLabel={`PMAP · ${roleLabel}`}
+          pickerLabel="Pick a teacher"
+        />
 
-        {/* 2. WIG + Annual Goals */}
-        <div className="mt-4">
-          <div className="text-base font-bold mb-2">WIG + Annual Goals Review</div>
-          <div className="bg-white rounded-xl shadow-sm p-4">
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">
-              WIG + Annual Goals <span className="text-red-500">*</span>
-            </div>
-            <textarea value={goalsNotes} onChange={e => setGoalsNotes(e.target.value)}
-              placeholder='Refer to the goals. Note any updates or changes, or write "N/A" if unchanged.'
-              rows={3} className={inputClass + ' resize-y'} />
-
-            <div className="mt-3.5 space-y-2">
-              <TrackButton label="Wildly Important Goal (WIG) *" value={wigTrack} onChange={setWigTrack} />
-              <TrackButton label="Annual Goal 1 (AG1)" value={ag1Track} onChange={setAg1Track} />
-              <TrackButton label="Annual Goal 2 (AG2)" value={ag2Track} onChange={setAg2Track} />
-              <TrackButton label="Annual Goal 3 (AG3)" value={ag3Track} onChange={setAg3Track} />
-            </div>
-
-            <div className="mt-3">
-              <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">Progress Toward Goal</div>
-              <textarea value={progressNotes} onChange={e => setProgressNotes(e.target.value)}
-                placeholder="Please provide data to support your ratings above." rows={2} className={inputClass + ' resize-y'} />
-            </div>
-          </div>
-        </div>
-
-        {/* 3. Whirlwind */}
-        <div className="mt-4">
-          <div className="text-base font-bold mb-1">Whirlwind Work Review</div>
-          <div className="text-xs text-gray-400 mb-2">Other responsibilities not defined by your WIG or Annual Goals.</div>
-          <div className="bg-white rounded-xl shadow-sm p-4">
-            <textarea value={whirlwind} onChange={e => setWhirlwind(e.target.value)}
-              placeholder="List the 3-5 most important aspects of whirlwind work and how those responsibilities are handled effectively."
-              rows={3} className={inputClass + ' resize-y'} />
-          </div>
-        </div>
-
-        <div className="h-px bg-gray-200 my-5" />
-
-        {/* 4. Rubric — teacher/prek get T1-T5, leader gets L1-L5,
-            network/support haven't defined theirs yet. */}
-        {showRubric ? (
+        {teacher && (
           <>
-            <div className="text-base font-bold mb-1">
-              {currentFormType === 'pmap_leader' ? 'FLS Leadership Competencies' : 'FLS Teacher Rubric'}
+
+            {/* 1. Meeting Checklist */}
+            <div style={CARD}>
+              <div style={SECTION_LABEL}>Meeting Checklist</div>
+              <div style={{ ...FIELD_LABEL, marginTop: 10 }}>
+                Has the job description been reviewed? <span style={{ color: '#dc2626' }}>*</span>
+              </div>
+              <select value={jobDescReviewed} onChange={e => setJobDescReviewed(e.target.value)} style={SELECT}>
+                <option value="">Choose one...</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
             </div>
-            <div className="text-xs text-gray-400 mb-3">Score each area.</div>
 
-            {activeRubric.map(dim => (
-              <RubricCard
-                key={dim.code}
-                code={dim.code}
-                name={dim.name}
-                question={dim.question}
-                descriptors={dim.descriptors}
-                required={true}
-                value={scores[dim.code] || null}
-                onChange={v => setScore(dim.code, v)}
-              />
-            ))}
+            {/* 2. WIG + Annual Goals */}
+            <div style={CARD}>
+              <div style={SECTION_LABEL}>WIG + Annual Goals Review</div>
+              <div style={{ ...FIELD_LABEL, marginTop: 10 }}>
+                WIG + Annual Goals <span style={{ color: '#dc2626' }}>*</span>
+              </div>
+              <textarea value={goalsNotes} onChange={e => setGoalsNotes(e.target.value)}
+                placeholder='Refer to the goals. Note any updates or changes, or write "N/A" if unchanged.'
+                style={TEXTAREA} />
 
-            <div className="bg-white rounded-xl shadow-sm p-4 mt-2">
-              <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">Additional Comments</div>
-              <textarea value={rubricComments} onChange={e => setRubricComments(e.target.value)}
-                placeholder="Any additional notes or context here." rows={2} className={inputClass + ' resize-y'} />
+              <div style={{ marginTop: 14 }}>
+                <TrackButton label="Wildly Important Goal (WIG) *" value={wigTrack} onChange={setWigTrack} />
+                <TrackButton label="Annual Goal 1 (AG1)" value={ag1Track} onChange={setAg1Track} />
+                <TrackButton label="Annual Goal 2 (AG2)" value={ag2Track} onChange={setAg2Track} />
+                <TrackButton label="Annual Goal 3 (AG3)" value={ag3Track} onChange={setAg3Track} />
+              </div>
+
+              <div style={FIELD_LABEL}>Progress Toward Goal</div>
+              <textarea value={progressNotes} onChange={e => setProgressNotes(e.target.value)}
+                placeholder="Please provide data to support your ratings above."
+                style={{ ...TEXTAREA, minHeight: 56 }} />
+            </div>
+
+            {/* 3. Whirlwind */}
+            <div style={CARD}>
+              <div style={SECTION_LABEL}>Whirlwind Work Review</div>
+              <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4, marginBottom: 10 }}>
+                Other responsibilities not defined by your WIG or Annual Goals.
+              </div>
+              <textarea value={whirlwind} onChange={e => setWhirlwind(e.target.value)}
+                placeholder="List the 3-5 most important aspects of whirlwind work and how those responsibilities are handled effectively."
+                style={TEXTAREA} />
+            </div>
+
+            {/* 4. Rubric — teacher/prek get T1-T5, leader gets L1-L5.
+                Network/support are narrative-only (no rubric). */}
+            {showRubric && (
+              <div style={CARD}>
+                <div style={SECTION_LABEL}>
+                  {currentFormType === 'pmap_leader' ? 'FLS Leadership Competencies' : 'FLS Teacher Rubric'}
+                </div>
+                <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4, marginBottom: 10 }}>Score each area.</div>
+
+                {activeRubric.map(dim => (
+                  <RubricCard
+                    key={dim.code}
+                    code={dim.code}
+                    name={dim.name}
+                    question={dim.question}
+                    descriptors={dim.descriptors}
+                    required={true}
+                    value={scores[dim.code] || null}
+                    onChange={v => setScore(dim.code, v)}
+                  />
+                ))}
+
+                <div style={FIELD_LABEL}>Additional Comments</div>
+                <textarea value={rubricComments} onChange={e => setRubricComments(e.target.value)}
+                  placeholder="Any additional notes or context here."
+                  style={{ ...TEXTAREA, minHeight: 56 }} />
+              </div>
+            )}
+
+            {/* 5. Rubric Review */}
+            <div style={CARD}>
+              <div style={SECTION_LABEL}>Rubric Review</div>
+              <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4, marginBottom: 8 }}>
+                Provide input on strength and growth areas.
+              </div>
+              <div style={{ ...FIELD_LABEL, marginTop: 4 }}>
+                Strength Areas <span style={{ color: '#dc2626' }}>*</span>
+              </div>
+              <textarea value={strengthAreas} onChange={e => setStrengthAreas(e.target.value)}
+                placeholder="Identify strengths and provide rationale"
+                style={{ ...TEXTAREA, minHeight: 56 }} />
+              <div style={FIELD_LABEL}>
+                Growth Areas <span style={{ color: '#dc2626' }}>*</span>
+              </div>
+              <textarea value={growthAreas} onChange={e => setGrowthAreas(e.target.value)}
+                placeholder="Identify areas for growth and provide rationale"
+                style={{ ...TEXTAREA, minHeight: 56 }} />
+            </div>
+
+            {/* 6. Commitments */}
+            <div style={CARD}>
+              <div style={SECTION_LABEL}>FLS Commitments</div>
+              <div style={{ ...FIELD_LABEL, marginTop: 10 }}>
+                FLS Commitment Strength <span style={{ color: '#dc2626' }}>*</span>
+              </div>
+              <textarea value={commitStrength} onChange={e => setCommitStrength(e.target.value)}
+                placeholder="Identify strengths and provide supporting rationale."
+                style={{ ...TEXTAREA, minHeight: 56 }} />
+              <div style={FIELD_LABEL}>
+                FLS Commitment Growth Area <span style={{ color: '#dc2626' }}>*</span>
+              </div>
+              <textarea value={commitGrowth} onChange={e => setCommitGrowth(e.target.value)}
+                placeholder="Identify growth areas and provide supporting rationale."
+                style={{ ...TEXTAREA, minHeight: 56 }} />
+            </div>
+
+            {/* 7. Career */}
+            <div style={CARD}>
+              <div style={SECTION_LABEL}>Professional Development & Career Growth</div>
+              <div style={{ ...FIELD_LABEL, marginTop: 10 }}>
+                Career Goals <span style={{ color: '#dc2626' }}>*</span>
+              </div>
+              <textarea value={careerGoals} onChange={e => setCareerGoals(e.target.value)}
+                placeholder="Reflect on long-term career goals and identify skills, experiences, or opportunities that would help close the gap."
+                style={{ ...TEXTAREA, minHeight: 56 }} />
+              <div style={FIELD_LABEL}>
+                Licenses, Certifications, and Trainings <span style={{ color: '#dc2626' }}>*</span>
+              </div>
+              <textarea value={licenses} onChange={e => setLicenses(e.target.value)}
+                placeholder="Discuss progress towards required licenses, certifications, and trainings. Write N/A if not applicable."
+                style={{ ...TEXTAREA, minHeight: 56 }} />
+            </div>
+
+            {/* 8. Concerns */}
+            <div style={CARD}>
+              <div style={SECTION_LABEL}>Area(s) of Concern</div>
+              <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4, marginBottom: 10 }}>
+                Indicate if there is an issue that could lead to a PIP (formerly IAP) or corrective action.
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
+                {['Professionalism', 'Performance', 'Commitment', 'None'].map(item => (
+                  <label key={item} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, fontWeight: 500, color: '#374151', cursor: 'pointer', padding: '4px 0' }}>
+                    <input type="checkbox" checked={concerns.includes(item)} onChange={() => toggleConcern(item)}
+                      style={{ width: 16, height: 16, accentColor: '#002f60' }} />
+                    {item}
+                  </label>
+                ))}
+              </div>
+              <div style={FIELD_LABEL}>
+                Area of Concern Comments <span style={{ color: '#dc2626' }}>*</span>
+              </div>
+              <textarea value={concernComments} onChange={e => setConcernComments(e.target.value)}
+                placeholder="Include any action steps and non-negotiable indicators of success."
+                style={{ ...TEXTAREA, minHeight: 56 }} />
             </div>
           </>
-        ) : null}
-
-        <div className="h-px bg-gray-200 my-5" />
-
-        {/* 5. Rubric Review */}
-        <div className="text-base font-bold mb-1">Rubric Review</div>
-        <div className="text-xs text-gray-400 mb-2">Provide input on strength and growth areas.</div>
-        <div className="bg-white rounded-xl shadow-sm p-4">
-          <div className="mb-3">
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">
-              Strength Areas <span className="text-red-500">*</span>
-            </div>
-            <textarea value={strengthAreas} onChange={e => setStrengthAreas(e.target.value)}
-              placeholder="Identify strengths and provide rationale" rows={2} className={inputClass + ' resize-y'} />
-          </div>
-          <div>
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">
-              Growth Areas <span className="text-red-500">*</span>
-            </div>
-            <textarea value={growthAreas} onChange={e => setGrowthAreas(e.target.value)}
-              placeholder="Identify areas for growth and provide rationale" rows={2} className={inputClass + ' resize-y'} />
-          </div>
-        </div>
-
-        <div className="h-px bg-gray-200 my-5" />
-
-        {/* 6. Commitments */}
-        <div className="text-base font-bold mb-2">FLS Commitments</div>
-        <div className="bg-white rounded-xl shadow-sm p-4">
-          <div className="mb-3">
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">
-              FLS Commitment Strength <span className="text-red-500">*</span>
-            </div>
-            <textarea value={commitStrength} onChange={e => setCommitStrength(e.target.value)}
-              placeholder="Identify strengths and provide supporting rationale." rows={2} className={inputClass + ' resize-y'} />
-          </div>
-          <div>
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">
-              FLS Commitment Growth Area <span className="text-red-500">*</span>
-            </div>
-            <textarea value={commitGrowth} onChange={e => setCommitGrowth(e.target.value)}
-              placeholder="Identify growth areas and provide supporting rationale." rows={2} className={inputClass + ' resize-y'} />
-          </div>
-        </div>
-
-        <div className="h-px bg-gray-200 my-5" />
-
-        {/* 7. Career */}
-        <div className="text-base font-bold mb-2">Professional Development & Career Growth</div>
-        <div className="bg-white rounded-xl shadow-sm p-4">
-          <div className="mb-3">
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">
-              Career Goals <span className="text-red-500">*</span>
-            </div>
-            <textarea value={careerGoals} onChange={e => setCareerGoals(e.target.value)}
-              placeholder="Reflect on long-term career goals and identify skills, experiences, or opportunities that would help close the gap."
-              rows={2} className={inputClass + ' resize-y'} />
-          </div>
-          <div>
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">
-              Licenses, Certifications, and Trainings <span className="text-red-500">*</span>
-            </div>
-            <textarea value={licenses} onChange={e => setLicenses(e.target.value)}
-              placeholder="Discuss progress towards required licenses, certifications, and trainings. Write N/A if not applicable."
-              rows={2} className={inputClass + ' resize-y'} />
-          </div>
-        </div>
-
-        <div className="h-px bg-gray-200 my-5" />
-
-        {/* 8. Concerns */}
-        <div className="text-base font-bold mb-1">Area(s) of Concern</div>
-        <div className="text-xs text-gray-400 mb-2">Indicate if there is an issue that could lead to an IAP or corrective action.</div>
-        <div className="bg-white rounded-xl shadow-sm p-4">
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-2">Area(s) of Concern</div>
-          <div className="space-y-1.5 mb-3">
-            {['Professionalism', 'Performance', 'Commitment', 'None'].map(item => (
-              <label key={item} className="flex items-center gap-2 text-[13px] font-medium cursor-pointer">
-                <input type="checkbox" checked={concerns.includes(item)} onChange={() => toggleConcern(item)}
-                  className="w-4 h-4 accent-fls-navy" />
-                {item}
-              </label>
-            ))}
-          </div>
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">
-            Area of Concern Comments <span className="text-red-500">*</span>
-          </div>
-          <textarea value={concernComments} onChange={e => setConcernComments(e.target.value)}
-            placeholder="Include any action steps and non-negotiable indicators of success."
-            rows={2} className={inputClass + ' resize-y'} />
-        </div>
+        )}
       </div>
 
-      {/* Bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2.5 pb-[max(10px,env(safe-area-inset-bottom))] flex gap-2 z-50">
-        <button
-          onClick={async () => {
-            if (!teacher) return
-            // Save as draft — bypass validation
-            setSaving(true)
-            try {
-              await api.post('/api/touchpoints', {
-                form_type: currentFormType,
-                teacher_email: teacher.email,
-                school: teacher.school || '',
-                status: 'draft',
-                is_published: false,
-                scores: ROLES_WITH_TEACHER_RUBRIC.has(currentFormType) ? scores : {},
-                notes: rubricComments,
-                feedback: JSON.stringify({
-                  job_desc_reviewed: jobDescReviewed, goals_notes: goalsNotes,
-                  wig_track: wigTrack, ag1_track: ag1Track, ag2_track: ag2Track, ag3_track: ag3Track,
-                  progress_notes: progressNotes, whirlwind,
-                  strength_areas: strengthAreas, growth_areas: growthAreas,
-                  commit_strength: commitStrength, commit_growth: commitGrowth,
-                  career_goals: careerGoals, licenses, concerns, concern_comments: concernComments,
-                }),
-              })
-              alert('Draft saved')
-            } catch (e) { alert('Draft save failed: ' + e.message) }
-            setSaving(false)
-          }}
-          disabled={!teacher || saving}
-          className="flex-1 py-3.5 rounded-xl text-sm font-semibold border border-gray-200 disabled:opacity-50">
-          Save Draft
-        </button>
-        <button onClick={publish} disabled={!canPublish}
-          title={!canPublish && teacher ? 'Fill in all required fields (*) to publish' : ''}
-          className={`flex-1 py-3.5 rounded-xl text-sm font-semibold text-white transition ${canPublish ? 'bg-fls-orange active:scale-95' : 'bg-gray-300 cursor-not-allowed'}`}>
-          {saving ? 'Saving…' : 'Publish'}
-        </button>
+      {/* Sticky 3-button bar — always rendered; buttons disabled until teacher + validation met */}
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#fff', borderTop: '1px solid #e5e7eb', padding: '10px 14px', paddingBottom: 'max(14px, env(safe-area-inset-bottom))', zIndex: 50 }}>
+        <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', gap: 6 }}>
+          <button onClick={() => submit('draft')} disabled={saving || !teacher}
+            style={{ flex: 1, padding: '13px 8px', border: 'none', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', background: '#f3f4f6', color: '#4b5563', opacity: (saving || !teacher) ? 0.5 : 1 }}
+          >Save draft</button>
+          <button onClick={() => submit('publish')} disabled={!canPublish}
+            title={!teacher ? 'Pick a teacher first' : !canPublish ? 'Fill in all required fields (*) to publish' : 'Publish — teacher NOT notified yet'}
+            style={{ flex: 1, padding: '13px 8px', border: '1.5px solid #002f60', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', background: '#fff', color: '#002f60', opacity: !canPublish ? 0.5 : 1 }}
+          >{saving ? '…' : 'Publish'}</button>
+          <button onClick={() => submit('publish_and_send')} disabled={!canPublish}
+            title={!teacher ? 'Pick a teacher first' : !canPublish ? 'Fill in all required fields (*) to publish' : 'Publish AND email the teacher now'}
+            style={{ flex: 1.3, padding: '13px 8px', border: 'none', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', background: '#002f60', color: '#fff', opacity: !canPublish ? 0.5 : 1 }}
+          >{saving ? 'Saving…' : 'Publish & Send'}</button>
+        </div>
       </div>
     </div>
     </FormShell>

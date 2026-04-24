@@ -1,32 +1,23 @@
 import { useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
-import Nav from '../components/Nav'
-import StaffPicker from '../components/StaffPicker'
-import { api } from '../lib/api'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
+import SubjectBlock from '../components/SubjectBlock'
 import FormShell from '../components/FormShell'
+import { api } from '../lib/api'
 
 /**
- * QuickFeedback — lightweight touchpoint. No rubric, no scoring.
- * Just a note with tags and share/private toggle.
- * Faithful port of prototypes/quick-feedback.html.
+ * QuickFeedback — single note + Share/Private. No tags, no rubric.
+ * V3 family: navy nav, SubjectBlock, single submit at bottom:0.
  */
-
-const TAGS = ['Culture', 'Instruction', 'Routines', 'Engagement', 'Kagan', 'Pacing', 'Content', 'Feedback to Students']
-
 export default function QuickFeedback() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const teacherParam = searchParams.get('teacher')
+
   const [teacher, setTeacher] = useState(null)
   const [note, setNote] = useState('')
-  const [tags, setTags] = useState([])
   const [shared, setShared] = useState(true)
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
-
-  function toggleTag(tag) {
-    setTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
-  }
 
   async function submit() {
     if (!teacher || !note.trim()) return
@@ -36,8 +27,12 @@ export default function QuickFeedback() {
         form_type: 'quick_feedback',
         teacher_email: teacher.email,
         school: teacher.school || '',
+        school_year: '2026-2027',
+        is_test: true,
+        status: 'published',
+        is_published: true,
         notes: note,
-        feedback: JSON.stringify({ tags, shared }),
+        feedback: JSON.stringify({ shared }),
       })
       setDone(true)
     } catch (e) {
@@ -48,23 +43,17 @@ export default function QuickFeedback() {
 
   if (done) {
     return (
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center">
-        <div className="bg-white rounded-2xl p-9 text-center mx-4 shadow-2xl">
-          <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3.5">
-            <svg width="28" height="28" fill="none" stroke="#059669" strokeWidth="3">
-              <path d="M7 14l5 5 10-10" />
-            </svg>
-          </div>
-          <div className="text-xl font-bold mb-1">Feedback Sent!</div>
-          <div className="text-sm text-gray-500 mb-5">
+      <div style={{ minHeight: '100svh', background: '#f5f7fa', padding: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, sans-serif' }}>
+        <div style={{ background: '#fff', borderRadius: 18, padding: 28, textAlign: 'center', maxWidth: 360, boxShadow: '0 8px 24px rgba(0,0,0,.1)' }}>
+          <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', color: '#059669', fontSize: 28, fontWeight: 800 }}>✓</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: '#002f60' }}>Feedback sent</div>
+          <div style={{ fontSize: 13, color: '#6b7280', marginTop: 6 }}>
             {shared ? `${teacher?.first_name} has been notified` : 'Saved as private note'}
           </div>
           <button
             onClick={() => navigate('/')}
-            className="bg-fls-orange text-white px-8 py-3 rounded-xl font-semibold"
-          >
-            Done
-          </button>
+            style={{ marginTop: 18, background: '#e47727', color: '#fff', border: 'none', borderRadius: 12, padding: '12px 24px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+          >Done</button>
         </div>
       </div>
     )
@@ -72,90 +61,75 @@ export default function QuickFeedback() {
 
   return (
     <FormShell>
-    <div className="pb-24">
-      <Nav title="Quick Feedback" />
-      <StaffPicker selected={teacher} onSelect={setTeacher} initialEmail={teacherParam} />
+    <div style={{ minHeight: '100svh', background: '#f5f7fa', paddingBottom: 'calc(100px + env(safe-area-inset-bottom))', fontFamily: 'Inter, sans-serif' }}>
+      <div style={{ background: '#fef3c7', color: '#92400e', fontSize: 11, fontWeight: 700, textAlign: 'center', padding: '6px 12px', letterSpacing: '.05em' }}>
+        DESIGN MOCK · Quick Feedback form
+      </div>
+      <nav style={{ background: '#002f60', padding: '14px 16px', textAlign: 'center', position: 'relative' }}>
+        <button
+          onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}
+          aria-label="Back"
+          style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 20, fontWeight: 700, cursor: 'pointer', borderRadius: 8, background: 'rgba(255,255,255,.08)', border: 'none', fontFamily: 'inherit' }}
+        >←</button>
+        <Link to="/" style={{ display: 'inline-block', textDecoration: 'none' }}>
+          <div style={{ fontSize: 17, fontWeight: 800, color: '#fff', cursor: 'pointer' }}>Observation<span style={{ color: '#e47727' }}>Point</span></div>
+        </Link>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,.6)', marginTop: 2 }}>
+          {teacher ? <>{teacher.first_name} {teacher.last_name} · Quick Feedback</> : 'Quick Feedback'}
+          <span style={{ display: 'inline-block', background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 10, fontSize: 10, fontWeight: 700, marginLeft: 6 }}>TEST MODE</span>
+        </div>
+      </nav>
 
-      <div className="px-4 pt-4">
-        <div className="text-base font-bold mb-1">Quick Feedback</div>
-        <div className="text-xs text-gray-400 mb-3.5">A quick touchpoint — no rubric, no scoring. Just a note.</div>
+      <div style={{ padding: 14, maxWidth: 720, margin: '0 auto' }}>
 
-        {/* Note */}
-        <div className="bg-white rounded-xl shadow-sm p-4 mb-3">
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">
-            What did you observe?
-          </div>
+        <SubjectBlock
+          selected={teacher}
+          onSelect={setTeacher}
+          initialEmail={teacherParam}
+          roleLabel="Quick"
+        />
+
+        <div style={{ background: '#fff', borderRadius: 14, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,.05)', marginBottom: 12 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: '#111827', textTransform: 'uppercase', letterSpacing: '.05em' }}>What did you observe?</div>
+          <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4, marginBottom: 10 }}>A quick touchpoint — no rubric, no scoring. Just a note.</div>
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Quick observation or feedback for the teacher..."
-            rows={4}
             autoFocus
-            className="w-full px-3 py-3 border border-gray-200 rounded-[10px] text-sm outline-none focus:border-fls-orange resize-y placeholder:text-gray-400"
+            style={{ width: '100%', minHeight: 100, padding: 12, border: '1.5px solid #e5e7eb', borderRadius: 10, fontSize: 14, fontFamily: 'inherit', color: '#111827', resize: 'vertical' }}
           />
         </div>
 
-        {/* Tags */}
-        <div className="bg-white rounded-xl shadow-sm p-4 mb-3">
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-2">
-            Tags
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {TAGS.map(tag => (
-              <button
-                key={tag}
-                onClick={() => toggleTag(tag)}
-                className={`px-3.5 py-2 rounded-full text-[13px] font-medium border transition-all active:scale-95 ${
-                  tags.includes(tag)
-                    ? 'bg-fls-orange text-white border-fls-orange'
-                    : 'bg-white text-gray-700 border-gray-200'
-                }`}
-              >
-                {tag}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Share / Private */}
-        <div className="bg-white rounded-xl shadow-sm p-4">
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-2">
-            Share with teacher?
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShared(true)}
-              className={`flex-1 py-3 rounded-[10px] text-[13px] font-semibold border transition-all ${
-                shared
-                  ? 'bg-fls-navy border-fls-navy text-white'
-                  : 'bg-white border-gray-200 text-gray-500'
-              }`}
-            >
-              Share
-            </button>
-            <button
-              onClick={() => setShared(false)}
-              className={`flex-1 py-3 rounded-[10px] text-[13px] font-semibold border transition-all ${
-                !shared
-                  ? 'bg-fls-navy border-fls-navy text-white'
-                  : 'bg-white border-gray-200 text-gray-500'
-              }`}
-            >
-              Private
-            </button>
+        <div style={{ background: '#fff', borderRadius: 14, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,.05)', marginBottom: 12 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: '#111827', textTransform: 'uppercase', letterSpacing: '.05em' }}>Share with teacher?</div>
+          <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4, marginBottom: 10 }}>Share sends a notification. Private keeps it on your dashboard only.</div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {[
+              { v: true, label: 'Share' },
+              { v: false, label: 'Private' },
+            ].map(({ v, label }) => {
+              const on = shared === v
+              return (
+                <button
+                  key={label}
+                  onClick={() => setShared(v)}
+                  style={{ flex: 1, padding: 12, border: `1.5px solid ${on ? '#002f60' : '#e5e7eb'}`, borderRadius: 10, fontSize: 13, fontWeight: 700, background: on ? '#002f60' : '#fff', color: on ? '#fff' : '#6b7280', cursor: 'pointer', fontFamily: 'inherit' }}
+                >{label}</button>
+              )
+            })}
           </div>
         </div>
       </div>
 
-      {/* Bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2.5 pb-[max(10px,env(safe-area-inset-bottom))] z-50">
-        <button
-          onClick={submit}
-          disabled={!teacher || !note.trim() || saving}
-          className="w-full py-3.5 rounded-xl text-sm font-semibold bg-fls-orange text-white disabled:opacity-50"
-        >
-          {saving ? 'Saving...' : 'Submit Feedback'}
-        </button>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#fff', borderTop: '1px solid #e5e7eb', padding: '10px 14px', paddingBottom: 'max(14px, env(safe-area-inset-bottom))', zIndex: 50 }}>
+        <div style={{ maxWidth: 720, margin: '0 auto' }}>
+          <button
+            onClick={submit}
+            disabled={!teacher || !note.trim() || saving}
+            style={{ width: '100%', padding: 14, border: 'none', borderRadius: 12, fontSize: 14, fontWeight: 700, background: '#e47727', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', opacity: (!teacher || !note.trim() || saving) ? 0.5 : 1 }}
+          >{saving ? 'Saving…' : 'Submit Feedback'}</button>
+        </div>
       </div>
     </div>
     </FormShell>

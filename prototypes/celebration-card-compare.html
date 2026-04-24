@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Celebration Card — Compare 4</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#e5e7eb;color:#111827;padding:20px 0}
+.wrap{max-width:1400px;margin:0 auto;padding:0 16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px}
+.frame{background:#f5f7fa;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,.1);overflow:hidden}
+.opt-label{background:#002f60;color:#fff;padding:10px 14px;font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.opt-label .tag{font-size:10px;font-weight:600;opacity:.7;margin-left:4px;text-transform:none;letter-spacing:0}
+.body{padding:14px}
+.card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.card-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.card-title{font-size:12px;font-weight:800;color:#111827;text-transform:uppercase;letter-spacing:.05em}
+.card-sub{font-size:11px;color:#6b7280}
+.card-sub b{color:#e47727;font-weight:800;font-size:13px}
+
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.tile{background:#fff7ed;border-left:3px solid #e47727;border-radius:10px;padding:12px;text-align:center}
+.tile-v{font-size:26px;font-weight:800;color:#002f60;line-height:1}
+.tile-l{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-top:6px}
+.tile-m{font-size:9px;color:#9ca3af;margin-top:2px}
+.tile-delta{font-size:10px;color:#16a34a;margin-top:2px;font-weight:700}
+
+.ppl-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #f3f4f6}
+.ppl-row:last-child{border:none}
+.av{width:28px;height:28px;border-radius:50%;background:#002f60;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.ppl-name{flex:1;font-size:12px;font-weight:600;color:#111827}
+.ppl-meta{font-size:10px;color:#9ca3af}
+.ppl-count{font-size:13px;font-weight:800;color:#e47727}
+
+.month-head{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;padding-top:12px;border-top:1px solid #f3f4f6}
+
+.notes{font-size:11px;color:#6b7280;padding:10px 14px;background:#f9fafb;border-top:1px solid #e5e7eb;line-height:1.4}
+.notes b{color:#002f60}
+</style></head><body>
+
+<div class="wrap">
+
+  <!-- A: saturation -->
+  <div class="frame">
+    <div class="opt-label">A <span class="tag">celebrations per staff per year</span></div>
+    <div class="body">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Celebration Coverage</div>
+          <div class="card-sub"><b>142</b> celebrations</div>
+        </div>
+        <div class="pair">
+          <div class="tile">
+            <div class="tile-v">68%</div>
+            <div class="tile-l">Staff Celebrated</div>
+            <div class="tile-m">136 of 200</div>
+          </div>
+          <div class="tile">
+            <div class="tile-v">2.3</div>
+            <div class="tile-l">Per Staff · Avg</div>
+            <div class="tile-m">target: 3+ / year</div>
+          </div>
+        </div>
+        <div class="month-head">By month</div>
+        <svg viewBox="0 0 320 50" style="width:100%;height:50px">
+          <rect x="8" y="38" width="24" height="10" fill="#e47727" rx="2"/>
+          <rect x="40" y="30" width="24" height="18" fill="#e47727" rx="2"/>
+          <rect x="72" y="22" width="24" height="26" fill="#e47727" rx="2"/>
+          <rect x="104" y="14" width="24" height="34" fill="#e47727" rx="2"/>
+          <rect x="136" y="20" width="24" height="28" fill="#e47727" rx="2"/>
+          <rect x="168" y="10" width="24" height="38" fill="#e47727" rx="2"/>
+          <rect x="200" y="6" width="24" height="42" fill="#002f60" rx="2"/>
+        </svg>
+      </div>
+    </div>
+    <div class="notes"><b>Best for:</b> benchmarking saturation. Principal knows if they're hitting target of 3+/staff/year. Cross-school comparison works clean.</div>
+  </div>
+
+  <!-- B: this month -->
+  <div class="frame">
+    <div class="opt-label">B <span class="tag">celebrations this month</span></div>
+    <div class="body">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Celebration Coverage</div>
+          <div class="card-sub"><b>142</b> celebrations</div>
+        </div>
+        <div class="pair">
+          <div class="tile">
+            <div class="tile-v">68%</div>
+            <div class="tile-l">Staff Celebrated</div>
+            <div class="tile-m">136 of 200</div>
+          </div>
+          <div class="tile">
+            <div class="tile-v">12</div>
+            <div class="tile-l">This Month</div>
+            <div class="tile-delta">↑ 2 vs last month</div>
+          </div>
+        </div>
+        <div class="month-head">By month</div>
+        <svg viewBox="0 0 320 50" style="width:100%;height:50px">
+          <rect x="8" y="38" width="24" height="10" fill="#e47727" rx="2"/>
+          <rect x="40" y="30" width="24" height="18" fill="#e47727" rx="2"/>
+          <rect x="72" y="22" width="24" height="26" fill="#e47727" rx="2"/>
+          <rect x="104" y="14" width="24" height="34" fill="#e47727" rx="2"/>
+          <rect x="136" y="20" width="24" height="28" fill="#e47727" rx="2"/>
+          <rect x="168" y="10" width="24" height="38" fill="#e47727" rx="2"/>
+          <rect x="200" y="6" width="24" height="42" fill="#002f60" rx="2"/>
+        </svg>
+      </div>
+    </div>
+    <div class="notes"><b>Best for:</b> activity pulse. Is celebration culture active right now? Trend arrow makes it easy to glance.</div>
+  </div>
+
+  <!-- C: top celebrated people -->
+  <div class="frame">
+    <div class="opt-label">C <span class="tag">hall of fame · top celebrated</span></div>
+    <div class="body">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Celebration Coverage</div>
+          <div class="card-sub"><b>142</b> celebrations · <b style="color:#002f60">68%</b> staff</div>
+        </div>
+        <div style="padding:2px 0 10px">
+          <div class="ppl-row">
+            <div class="av" style="background:#e47727">MW</div>
+            <div>
+              <div class="ppl-name">Marcus Williams</div>
+              <div class="ppl-meta">Langston Hughes · 5th</div>
+            </div>
+            <div class="ppl-count" style="margin-left:auto">4</div>
+          </div>
+          <div class="ppl-row">
+            <div class="av" style="background:#e47727">AJ</div>
+            <div>
+              <div class="ppl-name">Amara Johnson</div>
+              <div class="ppl-meta">Langston Hughes · 4th</div>
+            </div>
+            <div class="ppl-count" style="margin-left:auto">3</div>
+          </div>
+          <div class="ppl-row">
+            <div class="av" style="background:#e47727">KB</div>
+            <div>
+              <div class="ppl-name">Keisha Brown</div>
+              <div class="ppl-meta">Wheatley · 2nd</div>
+            </div>
+            <div class="ppl-count" style="margin-left:auto">3</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:#e47727;font-weight:700;text-align:center;padding-top:4px;border-top:1px solid #f3f4f6">See full leaderboard →</div>
+      </div>
+    </div>
+    <div class="notes"><b>Best for:</b> morale, recognition culture, naming names. Motivating to both observers and observed. But replaces the saturation / activity stat.</div>
+  </div>
+
+  <!-- D: just % + chart -->
+  <div class="frame">
+    <div class="opt-label">D <span class="tag">minimal · % + chart only</span></div>
+    <div class="body">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Celebration Coverage</div>
+          <div class="card-sub"><b>142</b> celebrations</div>
+        </div>
+        <div style="text-align:center;padding:8px 0 16px">
+          <div style="font-size:42px;font-weight:900;color:#002f60;line-height:1">68%</div>
+          <div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-top:6px;font-weight:700">Staff Celebrated</div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:2px">136 of 200 this year</div>
+        </div>
+        <div class="month-head">By month</div>
+        <svg viewBox="0 0 320 50" style="width:100%;height:50px">
+          <rect x="8" y="38" width="24" height="10" fill="#e47727" rx="2"/>
+          <rect x="40" y="30" width="24" height="18" fill="#e47727" rx="2"/>
+          <rect x="72" y="22" width="24" height="26" fill="#e47727" rx="2"/>
+          <rect x="104" y="14" width="24" height="34" fill="#e47727" rx="2"/>
+          <rect x="136" y="20" width="24" height="28" fill="#e47727" rx="2"/>
+          <rect x="168" y="10" width="24" height="38" fill="#e47727" rx="2"/>
+          <rect x="200" y="6" width="24" height="42" fill="#002f60" rx="2"/>
+        </svg>
+      </div>
+    </div>
+    <div class="notes"><b>Best for:</b> less-is-more. One number, one chart. Clean and honest. Drill-down is where the depth lives.</div>
+  </div>
+
+</div>
+
+</body></html>

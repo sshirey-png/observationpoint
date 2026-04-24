@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Staff V3 — Coaching-First</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.mock-banner{background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;text-align:center;padding:6px 12px;letter-spacing:.05em}
+.topnav{background:#002f60;padding:10px 12px;display:flex;align-items:center;gap:10px}
+.back{color:#fff;font-size:22px;font-weight:700;text-decoration:none;padding:4px 8px}
+.topnav-t{flex:1}
+.topnav-title{font-size:13px;font-weight:700;color:#fff}
+.topnav-sub{font-size:11px;color:rgba(255,255,255,.65);margin-top:1px}
+
+/* ID + stats combined hero */
+.hero{background:linear-gradient(135deg,#002f60,#003b7a);padding:18px 16px;color:#fff}
+.hero-inner{max-width:720px;margin:0 auto;display:flex;align-items:center;gap:14px}
+.avatar{width:56px;height:56px;border-radius:50%;background:#e47727;color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:800;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.id-body{flex:1;min-width:0}
+.name{font-size:18px;font-weight:800;color:#fff;line-height:1.2}
+.role{font-size:11px;color:rgba(255,255,255,.75);margin-top:3px}
+.hero-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:720px;margin:14px auto 0;padding-top:14px;border-top:1px solid rgba(255,255,255,.15)}
+.hs{text-align:center}
+.hs-v{font-size:20px;font-weight:800;color:#fff;line-height:1}
+.hs-l{font-size:9px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.05em;margin-top:4px}
+
+.content{max-width:720px;margin:0 auto;padding:14px 12px 40px}
+.section-h{font-size:11px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin:14px 4px 8px;display:flex;justify-content:space-between;align-items:baseline}
+.section-h .more{font-size:11px;color:#e47727;font-weight:700;text-decoration:none;text-transform:none;letter-spacing:0}
+.section-h.first{margin-top:4px}
+
+/* Coaching focus — highlighted up top */
+.focus-card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(228,119,39,.12);border:2px solid #fed7aa}
+.focus-goal-lbl{font-size:10px;font-weight:800;color:#e47727;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.focus-goal{font-size:15px;font-weight:700;color:#002f60;line-height:1.3;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #fed7aa}
+.active-steps-lbl{font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.step-row{display:flex;gap:10px;padding:8px;background:#fff7ed;border-radius:8px;margin-bottom:6px}
+.step-num{width:22px;height:22px;border-radius:50%;background:#e47727;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
+.step-body{flex:1;min-width:0}
+.step-t{font-size:12px;font-weight:600;color:#111827;line-height:1.3}
+.step-m{font-size:10px;color:#9ca3af;margin-top:2px}
+
+/* Observations tile with mini sparkline */
+.obs-tile{background:#fff;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.obs-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.obs-big{font-size:32px;font-weight:800;color:#002f60;line-height:1}
+.obs-big-l{font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-top:2px;font-weight:700}
+.obs-meta{font-size:11px;color:#9ca3af;text-align:right}
+.obs-meta b{color:#22c55e;font-weight:700}
+.spark{width:100%;height:40px;margin-top:4px}
+.obs-list{margin-top:10px;padding-top:10px;border-top:1px solid #f3f4f6}
+.obs-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:12px}
+.obs-item-l{color:#111827}
+.obs-item-l b{color:#002f60;font-weight:700}
+.obs-item-r{color:#002f60;font-weight:800}
+
+/* Dim card */
+.dim-card{background:#fff;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-top:10px}
+.dim-row{display:flex;align-items:center;gap:10px;font-size:12px;margin-bottom:6px}
+.dim-row .code{width:56px;font-weight:700;color:#6b7280;font-size:11px}
+.dim-row .bar{flex:1;height:8px;background:#f3f4f6;border-radius:4px;overflow:hidden}
+.dim-row .bar-fill{height:100%;border-radius:4px}
+.dim-row .val{width:32px;text-align:right;font-weight:700;color:#002f60}
+
+/* Cels */
+.cel-tile{background:#fff;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.cel-item{padding:8px;background:#fff7ed;border-left:3px solid #e47727;border-radius:8px;margin-bottom:6px}
+.cel-t{font-size:11px;color:#4b5563;line-height:1.4;font-style:italic}
+.cel-m{font-size:10px;color:#9ca3af;margin-top:4px}
+
+/* Completed */
+.done-tile{background:#fff;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.done-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.done-big{font-size:22px;font-weight:800;color:#22c55e}
+.done-l{font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+.done-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f3f4f6;font-size:12px}
+.done-row:last-child{border:none}
+.done-row .c{width:16px;height:16px;border-radius:50%;background:#22c55e;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.done-row .t{flex:1;color:#6b7280;text-decoration:line-through}
+.done-row .d{font-size:10px;color:#9ca3af}
+</style></head><body>
+
+<div class="mock-banner">DESIGN MOCK · placeholder numbers · V3 Coaching-First (focus on current work)</div>
+
+<nav class="topnav">
+  <a class="back" href="school-v3.html">←</a>
+  <div class="topnav-t">
+    <div class="topnav-title">Staff Profile</div>
+    <div class="topnav-sub">2026-27 · Cycle 1</div>
+  </div>
+</nav>
+
+<!-- Combined identity + stats hero -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="avatar">MW</div>
+    <div class="id-body">
+      <div class="name">Marcus Williams</div>
+      <div class="role">5th grade ELA · Langston Hughes · coached by Tina Patel</div>
+    </div>
+  </div>
+  <div class="hero-stats">
+    <div class="hs"><div class="hs-v">24</div><div class="hs-l">Touchpoints</div></div>
+    <div class="hs"><div class="hs-v">3.6</div><div class="hs-l">Obs Score</div></div>
+    <div class="hs"><div class="hs-v">4</div><div class="hs-l">Celebrations</div></div>
+    <div class="hs"><div class="hs-v">3/11</div><div class="hs-l">Steps active/done</div></div>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- CURRENT COACHING FOCUS — lead position -->
+<div class="section-h first">Coaching focus · what's active right now</div>
+<div class="focus-card">
+  <div class="focus-goal-lbl">Active Goal</div>
+  <div class="focus-goal">Increase cognitive engagement during independent practice</div>
+
+  <div class="active-steps-lbl">3 Action Steps Active</div>
+  <div class="step-row">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <div class="step-t">Plan 3 turn-and-talks per lesson</div>
+      <div class="step-m">Assigned Oct 22 · Tina · 4 weeks active</div>
+    </div>
+  </div>
+  <div class="step-row">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <div class="step-t">Use "What did your partner say?" comprehension check</div>
+      <div class="step-m">Assigned Nov 4 · Tina · 2 weeks active</div>
+    </div>
+  </div>
+  <div class="step-row">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <div class="step-t">Build anchor chart for discussion norms</div>
+      <div class="step-m">Assigned Nov 18 · Tina · 3 days active</div>
+    </div>
+  </div>
+</div>
+
+<!-- Observations -->
+<div class="section-h">Observations <a class="more" href="#">All 6 →</a></div>
+<div class="obs-tile">
+  <div class="obs-head">
+    <div>
+      <div class="obs-big">3.6</div>
+      <div class="obs-big-l">Obs Score Avg</div>
+    </div>
+    <div class="obs-meta">6 observations YTD<br><b>↑ 0.2</b> vs start of cycle</div>
+  </div>
+  <svg class="spark" viewBox="0 0 300 40" preserveAspectRatio="none">
+    <polyline points="10,28 60,24 110,26 160,22 210,18 260,14 290,12" fill="none" stroke="#002f60" stroke-width="2"/>
+    <circle cx="290" cy="12" r="4" fill="#e47727"/>
+  </svg>
+  <div class="obs-list">
+    <div class="obs-item"><div class="obs-item-l"><b>Nov 18</b> · Teacher Obs · Tina</div><div class="obs-item-r">3.8</div></div>
+    <div class="obs-item"><div class="obs-item-l"><b>Oct 22</b> · Teacher Obs · Tina</div><div class="obs-item-r">3.4</div></div>
+    <div class="obs-item"><div class="obs-item-l"><b>Oct 8</b> · PMAP · Tina</div><div class="obs-item-r">3.6</div></div>
+    <div class="obs-item"><div class="obs-item-l"><b>Sep 24</b> · Teacher Obs · Brandon</div><div class="obs-item-r">3.5</div></div>
+  </div>
+</div>
+
+<!-- Dimension detail -->
+<div class="dim-card">
+  <div style="font-size:11px;font-weight:800;color:#111827;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">By dimension</div>
+  <div class="dim-row"><span class="code">On Task</span><div class="bar"><div class="bar-fill" style="width:76%;background:#22c55e"></div></div><span class="val">3.8</span></div>
+  <div class="dim-row"><span class="code">CoL</span><div class="bar"><div class="bar-fill" style="width:66%;background:#eab308"></div></div><span class="val">3.3</span></div>
+  <div class="dim-row"><span class="code">Content</span><div class="bar"><div class="bar-fill" style="width:72%;background:#22c55e"></div></div><span class="val">3.6</span></div>
+  <div class="dim-row"><span class="code">Cog Eng</span><div class="bar"><div class="bar-fill" style="width:62%;background:#eab308"></div></div><span class="val">3.1</span></div>
+  <div class="dim-row"><span class="code">Demo</span><div class="bar"><div class="bar-fill" style="width:70%;background:#22c55e"></div></div><span class="val">3.5</span></div>
+</div>
+
+<!-- Celebrations -->
+<div class="section-h">Celebrations · 4 this year <a class="more" href="#">All →</a></div>
+<div class="cel-tile">
+  <div class="cel-item">
+    <div class="cel-t">"Loved the cold-call energy in 5th period."</div>
+    <div class="cel-m">by Tina · 2d ago</div>
+  </div>
+  <div class="cel-item">
+    <div class="cel-t">"Teacher presence during transitions was exceptional."</div>
+    <div class="cel-m">by Tina · 3w ago</div>
+  </div>
+</div>
+
+<!-- Completed -->
+<div class="section-h">Wins · completed action steps</div>
+<div class="done-tile">
+  <div class="done-head">
+    <div class="done-big">8</div>
+    <div class="done-l">Action Steps completed this year</div>
+  </div>
+  <div class="done-row">
+    <div class="c">✓</div>
+    <div class="t">Post daily objective at start of block</div>
+    <div class="d">Oct 15</div>
+  </div>
+  <div class="done-row">
+    <div class="c">✓</div>
+    <div class="t">Narrate the positive during independent practice</div>
+    <div class="d">Oct 1</div>
+  </div>
+  <div class="done-row">
+    <div class="c">✓</div>
+    <div class="t">Use timer + call-to-attention signal</div>
+    <div class="d">Sep 22</div>
+  </div>
+  <div style="text-align:center;padding-top:8px;font-size:11px;color:#9ca3af">+ 5 more</div>
+</div>
+
+</div>
+
+</body></html>

@@ -12,7 +12,12 @@ import Team from './pages/Team'
 import StaffProfile from './pages/StaffProfile'
 import Insights from './pages/Insights'
 import Network from './pages/Network'
+import School from './pages/School'
+import CelebrationDrilldown from './pages/CelebrationDrilldown'
 import TouchpointHub from './pages/TouchpointHub'
+import PIP from './pages/PIP'
+import WriteUp from './pages/WriteUp'
+import Acknowledge from './pages/Acknowledge'
 
 /**
  * App — the root component. React Router handles navigation.
@@ -36,11 +41,18 @@ export default function App() {
         <Route path="/app/solicit" element={<SolicitFeedback />} />
         <Route path="/app/pmap" element={<PMAP />} />
         <Route path="/app/self-reflection" element={<SelfReflection />} />
+        <Route path="/app/pip" element={<PIP />} />
+        <Route path="/app/write-up" element={<WriteUp />} />
+        {/* Public acknowledgment page — no auth */}
+        <Route path="/acknowledge/:token" element={<Acknowledge />} />
+        <Route path="/acknowledge" element={<Acknowledge />} />
         <Route path="/app/team" element={<Team />} />
         <Route path="/app/touchpoint" element={<TouchpointHub />} />
         <Route path="/app/staff/:email" element={<StaffProfile />} />
         <Route path="/app/insights" element={<Insights />} />
         <Route path="/app/network" element={<Network />} />
+        <Route path="/app/network/school/:name" element={<School />} />
+        <Route path="/app/network/celebration" element={<CelebrationDrilldown />} />
       </Routes>
     </BrowserRouter>
   )

@@ -4,8 +4,11 @@ ObservationPoint — Flask Application
 import os
 import json
 import logging
+import smtplib
 import psycopg2
 import psycopg2.extras
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from flask import Flask, session, redirect, request, jsonify, send_from_directory
 from flask_cors import CORS
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -35,6 +38,49 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 app.secret_key = SECRET_KEY
 CORS(app)
 init_oauth(app)
+
+
+# ------------------------------------------------------------------
+# Startup migrations — idempotent column adds for new features
+# ------------------------------------------------------------------
+def _run_migrations():
+    try:
+        conn = db.get_conn()
+        cur = conn.cursor()
+        cur.execute("""
+            ALTER TABLE touchpoints
+              ADD COLUMN IF NOT EXISTS acknowledgment_token TEXT UNIQUE,
+              ADD COLUMN IF NOT EXISTS acknowledgment_name TEXT,
+              ADD COLUMN IF NOT EXISTS acknowledgment_at TIMESTAMPTZ,
+              ADD COLUMN IF NOT EXISTS acknowledgment_ip TEXT,
+              ADD COLUMN IF NOT EXISTS acknowledgment_ua TEXT,
+              ADD COLUMN IF NOT EXISTS refused_at TIMESTAMPTZ,
+              ADD COLUMN IF NOT EXISTS notified_at TIMESTAMPTZ
+        """)
+        conn.commit()
+        conn.close()
+        log.info("Startup migration: acknowledgment columns ensured on touchpoints")
+    except Exception as e:
+        log.error(f"Startup migration failed: {e}")
+
+try:
+    _run_migrations()
+except Exception:
+    pass
+
+
+# ------------------------------------------------------------------
+# HR doc gate — only Leadership, Network, or admins may file PIP / Write-Up
+# ------------------------------------------------------------------
+HR_DOC_FORM_TYPES = ('performance_improvement_plan', 'iap', 'write_up')
+
+def _can_file_hr_doc(user):
+    if not user:
+        return False
+    if user.get('is_admin'):
+        return True
+    jf = (user.get('job_function') or '').lower()
+    return jf in ('leadership', 'network')
 
 
 # ------------------------------------------------------------------
@@ -119,6 +165,7 @@ def auth_status():
                 'email': DEV_USER_EMAIL,
                 'name': 'Dev User',
                 'is_admin': True,
+                'can_file_hr_doc': True,
                 'accessible_count': 999,
             }
         })
@@ -133,8 +180,10 @@ def auth_status():
                 'picture': user.get('picture', ''),
                 'job_title': user.get('job_title', ''),
                 'school': user.get('school', ''),
+                'job_function': user.get('job_function', ''),
                 'is_admin': user.get('is_admin', False),
                 'is_supervisor': is_supervisor(user),
+                'can_file_hr_doc': _can_file_hr_doc(user),
                 'accessible_count': len(user.get('accessible_emails', [])),
             },
             # Admin-only info: the real signed-in user and whether they're
@@ -1301,16 +1350,24 @@ def api_impersonation_log():
 
 REACT_DIR = os.path.join(os.path.dirname(__file__), 'frontend', 'dist')
 
+def _nocache_html(resp):
+    """HTML responses must never be cached — each deploy gets a new JS hash
+    and the index.html needs to reflect it immediately. The hashed assets
+    themselves cache forever (filename changes on every build)."""
+    resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    resp.headers['Pragma'] = 'no-cache'
+    resp.headers['Expires'] = '0'
+    return resp
+
+
 @app.route('/')
 def index():
     if not DEV_MODE and not get_current_user():
         return redirect('/login')
-    # React app is canonical. Prototypes remain reachable at /prototypes/*
-    # as design reference. Home.jsx handles the 4-button landing.
     react_index = os.path.join(REACT_DIR, 'index.html')
     if os.path.exists(react_index):
-        return send_from_directory(REACT_DIR, 'index.html')
-    return send_from_directory('prototypes', 'home-updated.html')
+        return _nocache_html(send_from_directory(REACT_DIR, 'index.html'))
+    return _nocache_html(send_from_directory('prototypes', 'home-updated.html'))
 
 
 @app.route('/app')
@@ -1322,14 +1379,18 @@ def serve_react(path=None):
         return redirect('/login')
     react_index = os.path.join(REACT_DIR, 'index.html')
     if os.path.exists(react_index):
-        return send_from_directory(REACT_DIR, 'index.html')
+        return _nocache_html(send_from_directory(REACT_DIR, 'index.html'))
     return 'React app not built. Run: cd frontend && npm run build', 404
 
 
 @app.route('/assets/<path:path>')
 def serve_react_assets(path):
-    """Serve React build assets (JS, CSS chunks)."""
-    return send_from_directory(os.path.join(REACT_DIR, 'assets'), path)
+    """Serve React build assets (JS, CSS chunks).
+    Vite hashes the filenames (e.g. index-abc123.js), so these can cache
+    forever — every build gets a new filename."""
+    resp = send_from_directory(os.path.join(REACT_DIR, 'assets'), path)
+    resp.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+    return resp
 
 
 # Vanilla JS prototypes — preserved at /prototypes/*
@@ -1337,7 +1398,10 @@ def serve_react_assets(path):
 def serve_prototype(filename):
     if not DEV_MODE and not get_current_user():
         return redirect('/login')
-    return send_from_directory('prototypes', filename)
+    resp = send_from_directory('prototypes', filename)
+    if filename.endswith('.html'):
+        return _nocache_html(resp)
+    return resp
 
 
 # ------------------------------------------------------------------
@@ -1608,16 +1672,514 @@ def api_staff_search():
 # API: Save Touchpoint
 # ------------------------------------------------------------------
 
+@app.route('/api/touchpoints/active-draft')
+@require_auth
+def api_active_draft():
+    """Draft paradigm — one coach + one teacher + one form type = one draft.
+    Returns the coach's active draft for (teacher_email, form_type) if one exists, else null."""
+    user = get_current_user()
+    observer = user['email'] if user else DEV_USER_EMAIL
+    teacher_email = request.args.get('teacher_email', '').strip()
+    form_type = request.args.get('form_type', '').strip()
+    if not teacher_email or not form_type:
+        return jsonify({'error': 'teacher_email and form_type required'}), 400
+    draft = db.find_active_draft(observer, teacher_email, form_type)
+    return jsonify(draft)
+
+
+@app.route('/api/touchpoints/<tp_id>', methods=['PUT'])
+@require_auth
+@require_no_impersonation
+def api_update_touchpoint(tp_id):
+    """Auto-save target. Only the original observer can edit their own touchpoint."""
+    user = get_current_user()
+    observer = user['email'] if user else DEV_USER_EMAIL
+    data = request.get_json() or {}
+    # Role gate on HR doc updates — return 200 with authorized:false so the
+    # frontend can render a friendly screen instead of a raw 403.
+    if data.get('form_type') in HR_DOC_FORM_TYPES and not _can_file_hr_doc(user):
+        return jsonify({'authorized': False, 'error': 'not authorized to file HR documents'})
+    try:
+        db.update_touchpoint(tp_id, observer, data)
+        return jsonify({'id': tp_id})
+    except PermissionError as e:
+        return jsonify({'error': str(e)}), 403
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ------------------------------------------------------------------
+# Email helpers — FLS standard (navy header, white card, Open Sans)
+# ------------------------------------------------------------------
+SMTP_EMAIL = os.environ.get('SMTP_EMAIL', 'sshirey@firstlineschools.org')
+SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD', '')
+SMTP_SERVER = 'smtp.gmail.com'
+SMTP_PORT = 587
+TALENT_EMAIL = 'talent@firstlineschools.org'
+
+
+def _send_email(to_email, subject, html_body, cc_emails=None):
+    """FLS standard Gmail SMTP send. Returns True on success."""
+    if not SMTP_PASSWORD:
+        log.warning('SMTP_PASSWORD not configured; skipping send')
+        return False
+    try:
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = f'ObservationPoint <{SMTP_EMAIL}>'
+        msg['To'] = to_email
+        if cc_emails:
+            msg['Cc'] = ', '.join(cc_emails)
+        msg.attach(MIMEText(html_body, 'html'))
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_EMAIL, SMTP_PASSWORD)
+            recipients = [to_email] + (cc_emails or [])
+            server.sendmail(SMTP_EMAIL, recipients, msg.as_string())
+        log.info(f'Email sent to {to_email}: {subject}')
+        return True
+    except Exception as e:
+        log.error(f'Email send failed: {e}')
+        return False
+
+
+def _fundamentals_email_html(teacher, observer, tp_row, action_steps, skills_text):
+    """FLS-standard email template for a Fundamentals observation notification."""
+    teacher_first = (teacher.get('first_name') or teacher.get('email', '').split('@')[0]).strip()
+    observer_name = f"{observer.get('first_name', '')} {observer.get('last_name', '')}".strip() or observer.get('email', '')
+    observed_at = tp_row.get('observed_at')
+    obs_date = observed_at.strftime('%B %-d, %Y') if observed_at else ''
+    scores = tp_row.get('scores') or {}
+    mvals = [scores.get(f'M{i}') for i in range(1, 6) if scores.get(f'M{i}') is not None]
+    avg_pct = round(sum(mvals) / len(mvals)) if mvals else None
+    qualifies = avg_pct is not None and avg_pct >= 90
+
+    badge_color = '#22c55e' if qualifies else '#e47727'
+    badge_text = '✓ Qualifies toward mastery' if qualifies else 'Keep building'
+
+    steps_html = ''
+    if action_steps:
+        steps_html = '<div style="margin-top:16px;padding-top:16px;border-top:1px solid #e5e7eb"><div style="font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:8px">Action Steps to Focus On</div>'
+        for s in action_steps:
+            steps_html += f'<div style="padding:10px 12px;background:#fff7ed;border-left:3px solid #e47727;border-radius:6px;margin-bottom:6px;font-size:14px;color:#111827"><strong>{s.get("cat","")}</strong> · {s.get("action","")}</div>'
+        steps_html += '</div>'
+
+    skills_html = ''
+    if skills_text:
+        skills_html = f'<div style="margin-top:16px;padding-top:16px;border-top:1px solid #e5e7eb"><div style="font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:8px">Notes from the observation</div><div style="font-size:14px;color:#374151;line-height:1.5;font-style:italic">{skills_text}</div></div>'
+
+    app_url = 'https://observationpoint-965913991496.us-central1.run.app'
+
+    return f'''<!DOCTYPE html>
+<html><body style="margin:0;padding:0;background:#f8f9fa;font-family:'Open Sans',Arial,sans-serif">
+  <div style="background:#002f60;padding:24px 16px;text-align:center">
+    <h1 style="margin:0;color:#fff;font-size:22px;font-weight:700">New Fundamentals Observation</h1>
+  </div>
+  <div style="padding:28px 16px;max-width:600px;margin:0 auto">
+    <p style="font-size:16px;color:#111827;margin:0 0 16px">Hi {teacher_first},</p>
+    <p style="font-size:14px;color:#374151;line-height:1.6;margin:0 0 20px">{observer_name} published a Fundamentals observation from {obs_date}.</p>
+    <div style="background:#fff;border-radius:8px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+      <div style="text-align:center;padding:10px 16px;background:{badge_color};color:#fff;border-radius:20px;font-size:13px;font-weight:700;margin-bottom:16px;display:inline-block">{badge_text}</div>
+      <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;border-collapse:collapse">
+        <tr>
+          <td style="color:#6b7280;padding:8px 0;border-bottom:1px solid #f3f4f6">Average on-task</td>
+          <td style="color:#002f60;font-weight:700;padding:8px 0;border-bottom:1px solid #f3f4f6;text-align:right">{avg_pct if avg_pct is not None else '—'}%</td>
+        </tr>
+      </table>
+      {steps_html}
+      {skills_html}
+    </div>
+    <div style="text-align:center;margin-top:24px">
+      <a href="{app_url}/app/staff/{teacher.get("email","")}" style="display:inline-block;background:#e47727;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px">View your full profile</a>
+    </div>
+    <p style="font-size:12px;color:#6b7280;text-align:center;margin-top:32px">Questions? Contact talent@firstlineschools.org</p>
+  </div>
+  <div style="background:#002f60;padding:12px;text-align:center"><div style="color:rgba(255,255,255,.7);font-size:11px">FirstLine Schools — Education For Life</div></div>
+</body></html>'''
+
+
+def _celebrate_email_html(teacher, observer, tp_row, commitments, personal_note):
+    """FLS-standard celebration email — orange gradient hero, quote card, commitments, CTA."""
+    teacher_first = (teacher.get('first_name') or teacher.get('email', '').split('@')[0]).strip()
+    observer_name = f"{observer.get('first_name', '')} {observer.get('last_name', '')}".strip() or observer.get('email', '')
+    note_text = (tp_row.get('notes') or '').strip()
+
+    commitments_html = ''
+    if commitments:
+        chips = ''.join(
+            f'<span style="display:inline-block;background:#fff7ed;color:#e47727;padding:6px 12px;border-radius:16px;font-size:12px;font-weight:700;margin-right:6px;margin-bottom:6px">{c}</span>'
+            for c in commitments
+        )
+        commitments_html = f'''
+        <div style="margin-bottom:18px">
+          <div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-bottom:8px">Reflects our commitments</div>
+          <div>{chips}</div>
+        </div>'''
+
+    pn_html = ''
+    if personal_note and personal_note.strip():
+        pn_html = f'''
+        <div style="background:#f0fdf4;border-left:4px solid #22c55e;border-radius:8px;padding:16px;margin-bottom:22px">
+          <div style="font-size:11px;color:#15803d;text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:6px">A personal note from {observer_name.split()[0] if observer_name else 'your coach'}</div>
+          <div style="font-size:14px;color:#111827;line-height:1.6;font-style:italic">{personal_note}</div>
+        </div>'''
+
+    app_url = 'https://observationpoint-965913991496.us-central1.run.app'
+    return f'''<!DOCTYPE html>
+<html><body style="margin:0;padding:0;background:#f8f9fa;font-family:'Open Sans',Arial,sans-serif">
+  <div style="background:linear-gradient(135deg,#e47727 0%,#f59e0b 100%);padding:40px 24px 32px;text-align:center">
+    <div style="font-size:44px;line-height:1;margin-bottom:12px">🎉</div>
+    <h1 style="margin:0;color:#fff;font-size:26px;font-weight:800;letter-spacing:-.01em">You've been celebrated!</h1>
+    <div style="margin-top:8px;color:rgba(255,255,255,.95);font-size:14px;font-weight:600">by {observer_name}</div>
+  </div>
+  <div style="padding:28px 20px 4px;max-width:600px;margin:0 auto">
+    <div style="font-size:18px;color:#111827;margin:0 0 20px;font-weight:600">Hey {teacher_first} —</div>
+    <div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,.06);position:relative;margin-bottom:18px">
+      <div style="position:absolute;top:-10px;left:16px;background:#e47727;color:#fff;padding:4px 12px;border-radius:12px;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase">What {observer_name.split()[0] if observer_name else 'your coach'} saw</div>
+      <div style="padding-top:6px;font-size:16px;color:#111827;line-height:1.6">{note_text or '(no note provided)'}</div>
+    </div>
+    {commitments_html}
+    {pn_html}
+    <div style="text-align:center;margin:28px 0 20px">
+      <a href="{app_url}/app/staff/{teacher.get("email","")}" style="display:inline-block;background:#002f60;color:#fff;padding:14px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px">See your full profile →</a>
+    </div>
+    <div style="font-size:12px;color:#6b7280;text-align:center;margin-top:20px">Recognition captured by ObservationPoint<br>Questions? talent@firstlineschools.org</div>
+  </div>
+  <div style="background:#002f60;padding:16px;text-align:center">
+    <div style="color:rgba(255,255,255,.85);font-size:12px;font-weight:700">FirstLine Schools</div>
+    <div style="color:rgba(255,255,255,.6);font-size:10px;margin-top:4px">Education For Life</div>
+  </div>
+</body></html>'''
+
+
+def _hr_doc_email_html(doc_label, teacher, observer, tp_row, ack_url, summary_bullets):
+    """Email for a formal HR doc (PIP / Write-Up). Red accents, ack CTA."""
+    teacher_first = (teacher.get('first_name') or teacher.get('email', '').split('@')[0]).strip()
+    observer_name = f"{observer.get('first_name', '')} {observer.get('last_name', '')}".strip() or observer.get('email', '')
+    bullets_html = ''.join(
+        f'<li style="margin-bottom:6px"><b style="color:#111827">{b.get("label","")}:</b> <span style="color:#374151">{b.get("value","")}</span></li>'
+        for b in summary_bullets if b.get('value')
+    )
+    return f'''<!DOCTYPE html>
+<html><body style="margin:0;padding:0;background:#f8f9fa;font-family:'Open Sans',Arial,sans-serif">
+  <div style="background:#dc2626;padding:32px 24px;text-align:center">
+    <div style="color:#fff;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;opacity:.9">Formal HR Document</div>
+    <h1 style="margin:8px 0 0;color:#fff;font-size:22px;font-weight:800">{doc_label}</h1>
+    <div style="margin-top:6px;color:rgba(255,255,255,.9);font-size:13px">Issued by {observer_name}</div>
+  </div>
+  <div style="padding:28px 20px;max-width:600px;margin:0 auto">
+    <div style="font-size:16px;color:#111827;margin:0 0 14px;font-weight:600">Hi {teacher_first},</div>
+    <div style="font-size:14px;color:#374151;line-height:1.6;margin-bottom:18px">
+      You have been issued a <b>{doc_label}</b>. This is a formal document that will be stored in your employment record. Please review it and acknowledge receipt using the button below.
+    </div>
+    {f'<div style="background:#fff;border-radius:10px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:18px"><div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:10px">Summary</div><ul style="margin:0;padding-left:18px;font-size:13px;line-height:1.5">{bullets_html}</ul></div>' if bullets_html else ''}
+    <div style="text-align:center;margin:24px 0">
+      <a href="{ack_url}" style="display:inline-block;background:#002f60;color:#fff;padding:14px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px">Review &amp; Acknowledge</a>
+    </div>
+    <div style="font-size:12px;color:#6b7280;line-height:1.5;margin-top:18px">
+      Acknowledging this document confirms you have received it. It does not imply agreement with the content.
+      If you have questions, contact your supervisor or talent@firstlineschools.org.
+    </div>
+  </div>
+  <div style="background:#002f60;padding:16px;text-align:center">
+    <div style="color:rgba(255,255,255,.85);font-size:12px;font-weight:700">FirstLine Schools</div>
+    <div style="color:rgba(255,255,255,.6);font-size:10px;margin-top:4px">Education For Life</div>
+  </div>
+</body></html>'''
+
+
+@app.route('/api/touchpoints/<tp_id>/notify', methods=['POST'])
+@require_auth
+@require_no_impersonation
+def api_notify_teacher(tp_id):
+    """Send the Fundamentals observation to the teacher's inbox + mark notified_at.
+    Only the original observer can trigger this, only on a published obs."""
+    user = get_current_user()
+    observer_email = user['email'] if user else DEV_USER_EMAIL
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            SELECT t.*, s.first_name AS teacher_first, s.last_name AS teacher_last
+            FROM touchpoints t LEFT JOIN staff s ON LOWER(s.email) = LOWER(t.teacher_email)
+            WHERE t.id = %s
+        """, (tp_id,))
+        tp = cur.fetchone()
+        if not tp:
+            return jsonify({'error': 'not found'}), 404
+        if tp['observer_email'].lower() != observer_email.lower():
+            return jsonify({'error': 'not your touchpoint'}), 403
+        if tp['status'] != 'published':
+            return jsonify({'error': 'only published obs can be sent'}), 400
+
+        # Gather scores for this touchpoint
+        cur.execute('SELECT dimension_code, score FROM scores WHERE touchpoint_id = %s', (tp_id,))
+        scores = {r['dimension_code']: float(r['score']) for r in cur.fetchall()}
+        tp_dict = dict(tp); tp_dict['scores'] = scores
+
+        teacher = {'email': tp['teacher_email'], 'first_name': tp['teacher_first'], 'last_name': tp['teacher_last']}
+        observer = user or {'email': observer_email}
+
+        # Branch on form_type — pick the right email template
+        fb = {}
+        try:
+            if tp.get('feedback'):
+                fb = json.loads(tp['feedback']) if isinstance(tp['feedback'], str) else tp['feedback']
+        except (ValueError, TypeError):
+            fb = {}
+
+        form_type = tp.get('form_type', '')
+        observer_name = f"{observer.get('first_name', '')} {observer.get('last_name', '')}".strip() or observer.get('email', '')
+
+        if form_type == 'celebrate':
+            commitments = fb.get('commitments') or []
+            personal_note = fb.get('personal_note') or ''
+            html = _celebrate_email_html(teacher, observer, tp_dict, commitments, personal_note)
+            subject = f"You've been celebrated by {observer_name}"
+        elif form_type in ('performance_improvement_plan', 'iap', 'write_up'):
+            # Generate an ack token if missing
+            ack_token = tp.get('acknowledgment_token')
+            if not ack_token:
+                import secrets as _sec
+                ack_token = _sec.token_urlsafe(24)
+                cur.execute("UPDATE touchpoints SET acknowledgment_token = %s WHERE id = %s", (ack_token, tp_id))
+                conn.commit()
+
+            app_url = 'https://observationpoint-965913991496.us-central1.run.app'
+            ack_url = f'{app_url}/acknowledge/{ack_token}'
+
+            if form_type == 'write_up':
+                doc_label = 'Write-Up'
+                summary_bullets = [
+                    {'label': 'Type', 'value': fb.get('warning_type') or ''},
+                    {'label': 'Category', 'value': ', '.join(fb.get('categories') or [])},
+                    {'label': 'Date of Incident', 'value': fb.get('incident_date') or ''},
+                ]
+            else:
+                doc_label = 'Performance Improvement Plan'
+                summary_bullets = [
+                    {'label': 'Area(s) of Concern', 'value': ', '.join(fb.get('concerns') or [])},
+                    {'label': 'Start Date', 'value': fb.get('start_date') or ''},
+                    {'label': 'Review Date', 'value': fb.get('review_date') or ''},
+                ]
+            html = _hr_doc_email_html(doc_label, teacher, observer, tp_dict, ack_url, summary_bullets)
+            subject = f'Action required: {doc_label} from {observer_name}'
+        else:
+            cur.execute("""SELECT body_text FROM assignments
+                           WHERE observation_grow_id::text = %s AND type = 'actionStep'""", (str(tp_id),))
+            action_steps = [{'cat': '', 'action': r['body_text']} for r in cur.fetchall()]
+            html = _fundamentals_email_html(teacher, observer, tp_dict, action_steps, tp.get('notes', '') or '')
+            subject = f'New Fundamentals observation from {observer_name}'
+
+        # SAFETY: test-mode submissions NEVER reach the actual teacher.
+        # Email goes only to the observer (tester) so real teachers aren't confused.
+        if tp.get('is_test'):
+            recipient = observer_email
+            subject = '[TEST · would go to teacher] ' + subject
+            cc = []
+        else:
+            recipient = tp['teacher_email']
+            cc = [observer_email]
+        ok = _send_email(recipient, subject, html, cc_emails=cc)
+        if ok:
+            cur.execute("UPDATE touchpoints SET notified_at = NOW() WHERE id = %s", (tp_id,))
+            conn.commit()
+            return jsonify({'sent': True, 'to': tp['teacher_email']})
+        return jsonify({'error': 'email send failed'}), 500
+    finally:
+        conn.close()
+
+
+# ------------------------------------------------------------------
+# Public acknowledgment endpoints — NO AUTH (the token IS the auth)
+# ------------------------------------------------------------------
+
+@app.route('/acknowledge/<path:path>')
+@app.route('/acknowledge')
+def serve_acknowledge(path=None):
+    """Public route — employees clicking the email link land here. Serves the React SPA."""
+    react_index = os.path.join(REACT_DIR, 'index.html')
+    if os.path.exists(react_index):
+        return _nocache_html(send_from_directory(REACT_DIR, 'index.html'))
+    return 'React app not built', 404
+
+
+@app.route('/api/ack/<token>', methods=['GET'])
+def api_ack_load(token):
+    """Load document details for the acknowledgment page (public, token-based)."""
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            SELECT t.*,
+                   s.first_name AS employee_first, s.last_name AS employee_last,
+                   o.first_name AS observer_first, o.last_name AS observer_last
+            FROM touchpoints t
+            LEFT JOIN staff s ON LOWER(s.email) = LOWER(t.teacher_email)
+            LEFT JOIN staff o ON LOWER(o.email) = LOWER(t.observer_email)
+            WHERE t.acknowledgment_token = %s
+        """, (token,))
+        tp = cur.fetchone()
+        if not tp:
+            return jsonify({'error': 'not found'}), 404
+
+        fb = {}
+        try:
+            if tp.get('feedback'):
+                fb = json.loads(tp['feedback']) if isinstance(tp['feedback'], str) else tp['feedback']
+        except (ValueError, TypeError):
+            fb = {}
+
+        form_type = tp.get('form_type', '')
+        summary_lines = []
+        if form_type == 'write_up':
+            if fb.get('warning_type'): summary_lines.append({'label': 'Type', 'value': fb['warning_type']})
+            if fb.get('categories'): summary_lines.append({'label': 'Category', 'value': ', '.join(fb['categories'])})
+            if fb.get('description'): summary_lines.append({'label': 'Description', 'value': fb['description']})
+            if fb.get('prior_discussions'): summary_lines.append({'label': 'Prior Discussions', 'value': fb['prior_discussions']})
+            if fb.get('expectations'): summary_lines.append({'label': 'Expectations', 'value': fb['expectations']})
+            if fb.get('consequences'): summary_lines.append({'label': 'Consequences', 'value': fb['consequences']})
+        else:
+            if fb.get('concerns'): summary_lines.append({'label': 'Area(s) of Concern', 'value': ', '.join(fb['concerns'])})
+            if fb.get('description_of_concern'): summary_lines.append({'label': 'Description', 'value': fb['description_of_concern']})
+            if fb.get('action_steps'): summary_lines.append({'label': 'Action Steps', 'value': fb['action_steps']})
+            if fb.get('indicators_of_success'): summary_lines.append({'label': 'Indicators of Success', 'value': fb['indicators_of_success']})
+            if fb.get('consequences'): summary_lines.append({'label': 'Consequences', 'value': fb['consequences']})
+
+        return jsonify({
+            'form_type': form_type,
+            'employee_name': f"{tp.get('employee_first','')} {tp.get('employee_last','')}".strip() or tp.get('teacher_email',''),
+            'employee_first': tp.get('employee_first', ''),
+            'observer_name': f"{tp.get('observer_first','')} {tp.get('observer_last','')}".strip() or tp.get('observer_email',''),
+            'issued_date': tp.get('observed_at').isoformat() if tp.get('observed_at') else None,
+            'review_date': fb.get('review_date'),
+            'summary_lines': summary_lines,
+            'already_acknowledged': bool(tp.get('acknowledgment_at')),
+            'acknowledged_at': tp.get('acknowledgment_at').isoformat() if tp.get('acknowledgment_at') else None,
+        })
+    finally:
+        conn.close()
+
+
+@app.route('/api/ack/<token>', methods=['POST'])
+def api_ack_submit(token):
+    """Record the typed acknowledgment. Public — token is the auth."""
+    body = request.get_json() or {}
+    typed_name = (body.get('typed_name') or '').strip()
+    if not typed_name:
+        return jsonify({'error': 'name required'}), 400
+    ip = (request.headers.get('X-Forwarded-For') or request.remote_addr or '').split(',')[0].strip()
+    ua = (request.headers.get('User-Agent') or '')[:500]
+
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            UPDATE touchpoints
+            SET acknowledgment_name = %s,
+                acknowledgment_at = NOW(),
+                acknowledgment_ip = %s,
+                acknowledgment_ua = %s
+            WHERE acknowledgment_token = %s AND acknowledgment_at IS NULL
+            RETURNING id, teacher_email, observer_email, form_type
+        """, (typed_name, ip, ua, token))
+        row = cur.fetchone()
+        if not row:
+            return jsonify({'error': 'invalid or already acknowledged'}), 400
+        conn.commit()
+        from datetime import datetime as _dt
+        return jsonify({'acknowledged': True, 'at': _dt.now().isoformat()})
+    except Exception as e:
+        log.error(f"ack submit failed: {e}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
+@app.route('/api/touchpoints/<tp_id>', methods=['DELETE'])
+@require_auth
+@require_no_impersonation
+def api_abandon_touchpoint(tp_id):
+    """Abandon a draft. Only drafts, only your own."""
+    user = get_current_user()
+    observer = user['email'] if user else DEV_USER_EMAIL
+    try:
+        db.archive_touchpoint(tp_id, observer)
+        return jsonify({'id': tp_id, 'archived': True})
+    except PermissionError as e:
+        return jsonify({'error': str(e)}), 403
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/api/touchpoints', methods=['POST'])
 @require_auth
 @require_no_impersonation
 def api_save_touchpoint():
     user = get_current_user()
     data = request.get_json()
+    # Role gate: PIP and Write-Up are formal HR documents — restrict to
+    # Leadership, Network, or admins. Return 200 with authorized:false so
+    # the frontend can show a friendly screen (not a raw 403).
+    if data.get('form_type') in HR_DOC_FORM_TYPES and not _can_file_hr_doc(user):
+        return jsonify({'authorized': False, 'error': 'not authorized to file HR documents'})
     data['observer_email'] = user['email'] if user else DEV_USER_EMAIL
-    data['school_year'] = CURRENT_SCHOOL_YEAR
+    # Honor school_year from request body (e.g., test cohort submits with '2026-2027')
+    # Fall back to CURRENT_SCHOOL_YEAR if not provided
+    if not data.get('school_year'):
+        data['school_year'] = CURRENT_SCHOOL_YEAR
+
+    # Draft paradigm: if no id and no explicit new-row intent, try reusing an active draft
+    # for (observer, teacher, form_type). If one exists, update in place instead of creating.
+    if not data.get('id') and data.get('teacher_email') and data.get('form_type'):
+        existing = db.find_active_draft(
+            data['observer_email'], data['teacher_email'], data['form_type']
+        )
+        if existing:
+            try:
+                db.update_touchpoint(existing['id'], data['observer_email'], data)
+                # Mirror the action-step creation path below
+                steps = data.get('action_steps_selected') or []
+                if steps and data.get('status') == 'published':
+                    conn = db.get_conn()
+                    try:
+                        cur = conn.cursor()
+                        for s in steps:
+                            cur.execute("""
+                                INSERT INTO assignments (type, teacher_email, creator_email,
+                                    observation_grow_id, body_text, school_year, created_at, last_modified)
+                                VALUES ('actionStep', %s, %s, %s, %s, %s, NOW(), NOW())
+                            """, (data['teacher_email'], data['observer_email'], existing['id'],
+                                  s.get('action', '')[:1000], data['school_year']))
+                        conn.commit()
+                    finally:
+                        conn.close()
+                return jsonify({'id': existing['id'], 'reused_draft': True})
+            except Exception as e:
+                return jsonify({'error': str(e)}), 500
+
     try:
         tp_id = db.save_touchpoint(data)
+        # Create action step assignments if provided
+        steps = data.get('action_steps_selected') or []
+        if steps:
+            conn = db.get_conn()
+            try:
+                cur = conn.cursor()
+                for s in steps:
+                    cur.execute("""
+                        INSERT INTO assignments (type, teacher_email, creator_email,
+                            observation_grow_id, body_text, school_year, created_at, last_modified)
+                        VALUES ('actionStep', %s, %s, %s, %s, %s, NOW(), NOW())
+                    """, (data['teacher_email'], data['observer_email'], tp_id,
+                          s.get('action', '')[:1000], data['school_year']))
+                conn.commit()
+            finally:
+                conn.close()
         return jsonify({'id': tp_id})
     except Exception as e:
         return jsonify({'error': str(e)}), 500

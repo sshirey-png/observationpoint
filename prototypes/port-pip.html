@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Port · PIP · ObservationPoint</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased;padding-bottom:110px}
+.banner{background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;text-align:center;padding:6px 12px;letter-spacing:.05em}
+.port-banner{background:#dcfce7;color:#166534;font-size:11px;font-weight:700;text-align:center;padding:6px 12px}
+.nav{background:#002f60;padding:14px 16px;text-align:center;position:relative}
+.nav-back{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:700;border-radius:8px;background:rgba(255,255,255,.08)}
+.nav-title{font-size:17px;font-weight:800;color:#fff}
+.nav-title span{color:#e47727}
+.nav-sub{font-size:12px;color:rgba(255,255,255,.6);margin-top:2px}
+.nav-badge{display:inline-block;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;margin-left:6px}
+.status-strip{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:#9ca3af;padding:6px 12px;background:#f5f7fa}
+.wrap{padding:14px;max-width:720px;margin:0 auto}
+.subject{position:relative;background:linear-gradient(135deg,#002f60,#003b7a);border-radius:14px;padding:14px;margin-bottom:12px;color:#fff;display:flex;align-items:center;gap:12px;box-shadow:0 3px 10px rgba(0,47,96,.2)}
+.subject-av{width:48px;height:48px;border-radius:50%;background:#e47727;color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;flex-shrink:0}
+.subject-name{font-size:16px;font-weight:800;line-height:1.2}
+.subject-meta{font-size:11px;color:rgba(255,255,255,.75);margin-top:3px}
+.subject-meta .badge{display:inline-block;background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;margin-left:6px}
+.subject-change{position:absolute;top:10px;right:12px;font-size:11px;color:rgba(255,255,255,.85);background:rgba(255,255,255,.1);padding:4px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.2);font-weight:600}
+.warning{background:#fef2f2;border-left:4px solid #dc2626;border-radius:0 10px 10px 0;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#991b1b;line-height:1.5}
+.section-title{font-size:15px;font-weight:800;color:#111827;margin:18px 4px 4px}
+.section-title .formerly{font-size:11px;font-weight:600;color:#9ca3af;margin-left:6px}
+.section-sub{font-size:11px;color:#6b7280;margin:0 4px 10px}
+.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:12px}
+.card-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-top:10px;margin-bottom:6px}
+.req{color:#dc2626}
+textarea{width:100%;min-height:80px;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:inherit;color:#111827;resize:vertical;line-height:1.5}
+input[type=date],input[type=text]{width:100%;padding:11px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;color:#111827;background:#fff}
+.checks{display:flex;flex-wrap:wrap;gap:6px}
+.check{display:flex;align-items:center;gap:6px;padding:8px 12px;background:#f5f7fa;border-radius:8px;font-size:13px;cursor:pointer}
+.check input{width:16px;height:16px;accent-color:#dc2626}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid2 .sublabel{font-size:11px;color:#6b7280;margin-bottom:4px}
+.submit-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;padding:10px 14px;padding-bottom:max(14px,env(safe-area-inset-bottom));z-index:50;display:flex;gap:6px}
+.sbtn{flex:1;padding:13px 8px;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.sbtn.draft{background:#f3f4f6;color:#4b5563}
+.sbtn.submit{background:#dc2626;color:#fff;flex:1.4}
+.sbtn.submit-send{background:#991b1b;color:#fff;flex:1.4}
+</style>
+</head>
+<body>
+<div class="banner">DESIGN MOCK · Performance Improvement Plan</div>
+<div class="port-banner">PORT PREVIEW · PIP (formerly IAP)</div>
+<nav class="nav">
+  <div class="nav-back">&larr;</div>
+  <div class="nav-title">Observation<span>Point</span></div>
+  <div class="nav-sub">Marcus Williams &middot; PIP<span class="nav-badge">TEST MODE</span></div>
+</nav>
+<div class="status-strip"><span>Auto-save enabled</span><span style="color:#16a34a;font-weight:600">&#10003; Saved 7:37 PM</span></div>
+
+<div class="wrap">
+
+  <div class="subject">
+    <div class="subject-av">MW</div>
+    <div>
+      <div class="subject-name">Marcus Williams</div>
+      <div class="subject-meta">Samuel J. Green &middot; 5th Grade Math<span class="badge">PIP</span></div>
+    </div>
+    <div class="subject-change">Change</div>
+  </div>
+
+  <div class="warning">
+    <b>Formal HR document.</b> This Performance Improvement Plan (PIP) will be stored in the employee's record and may be referenced in future performance or employment decisions.
+  </div>
+
+  <div class="section-title">Performance Improvement Plan<span class="formerly">formerly IAP</span></div>
+  <div class="section-sub">Document the specific performance concern and support provided to date.</div>
+
+  <div class="card">
+    <div class="card-label">Area(s) of Concern <span class="req">*</span></div>
+    <div class="checks">
+      <label class="check"><input type="checkbox"> Professionalism</label>
+      <label class="check"><input type="checkbox" checked> Performance</label>
+      <label class="check"><input type="checkbox"> Commitment</label>
+    </div>
+    <div class="card-label">Description of Concern <span class="req">*</span></div>
+    <textarea placeholder="Describe the specific performance or behavioral concern. Include dates, examples, and context."></textarea>
+    <div class="card-label">Prior Conversations & Support <span class="req">*</span></div>
+    <textarea placeholder="What prior conversations, coaching, or support has been provided? Include dates."></textarea>
+  </div>
+
+  <div class="section-title">Improvement Plan</div>
+  <div class="section-sub">What needs to change, how success will be measured, and by when.</div>
+
+  <div class="card">
+    <div class="card-label">Action Steps for Improvement <span class="req">*</span></div>
+    <textarea placeholder="Specific, measurable steps the employee must take to improve."></textarea>
+    <div class="card-label">Non-Negotiable Indicators of Success <span class="req">*</span></div>
+    <textarea placeholder="What must be demonstrated for the PIP to be considered resolved? Be specific."></textarea>
+    <div class="card-label">Support to be Provided</div>
+    <textarea placeholder="What support, resources, or coaching will the supervisor provide?" style="min-height:60px"></textarea>
+    <div class="card-label">Timeline <span class="req">*</span></div>
+    <div class="grid2">
+      <div>
+        <div class="sublabel">Start Date</div>
+        <input type="date">
+      </div>
+      <div>
+        <div class="sublabel">Review Date</div>
+        <input type="date">
+      </div>
+    </div>
+    <div class="card-label">Consequences if Not Corrected <span class="req">*</span></div>
+    <textarea placeholder="What will happen if the employee does not meet the indicators of success within the timeline?" style="min-height:60px"></textarea>
+  </div>
+
+  <div class="section-title">Employee Acknowledgment</div>
+  <div class="section-sub">Typed signature collected via email link after you Submit & Send.</div>
+
+  <div class="card" style="background:#fffbeb;border:1px solid #fde68a">
+    <div style="display:flex;align-items:flex-start;gap:10px">
+      <div style="width:28px;height:28px;border-radius:6px;background:#e47727;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0">&#9993;</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:#92400e">How acknowledgment works</div>
+        <div style="font-size:12px;color:#78350f;line-height:1.6;margin-top:4px">
+          &bull; Submit &amp; Send emails the PIP to the employee<br>
+          &bull; Employee clicks a link, reviews the document<br>
+          &bull; Employee types their full name to acknowledge receipt<br>
+          &bull; Timestamp + IP captured; you&rsquo;re notified
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="submit-bar">
+  <button class="sbtn draft">Save draft</button>
+  <button class="sbtn submit">Submit PIP</button>
+  <button class="sbtn submit-send">Submit & Send</button>
+</div>
+</body>
+</html>

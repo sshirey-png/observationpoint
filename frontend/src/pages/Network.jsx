@@ -569,7 +569,7 @@ function GoalsNetworkView({ schoolYear }) {
   )
 }
 
-const SCHOOL_YEARS = ['2025-2026', '2024-2025', '2023-2024']
+const SCHOOL_YEARS = ['2026-2027', '2025-2026', '2024-2025', '2023-2024']
 
 // Horizontal bar row — HR Dashboard pattern. Pure HTML/CSS, no Chart.js.
 function HBar({ label, sub, value, max, color = '#002f60' }) {
@@ -730,12 +730,136 @@ function NetworkTotalsCard({ data }) {
   )
 }
 
+// --- V3 design port ---
+const V3_HERO_BG = { background: 'linear-gradient(135deg, #002f60, #003b7a)', color: '#fff', borderRadius: 20, padding: 22, marginBottom: 14, boxShadow: '0 4px 14px rgba(0,47,96,.25)' }
+const V3_HERO_LABEL = { fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: 'rgba(255,255,255,.7)', marginBottom: 8, textAlign: 'center' }
+const V3_HERO_SUB = { fontSize: 13, color: 'rgba(255,255,255,.8)', marginTop: 8 }
+const V3_FOOT = { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,.15)' }
+const AST = { fontSize: '.55em', color: '#e47727', verticalAlign: 'super', marginLeft: 1, fontWeight: 700 }
+
+function V3Donut({ pct, label, color = '#e47727', size = 130 }) {
+  const r = (size / 2) - 7; const cx = size / 2; const c = 2 * Math.PI * r
+  const dash = pct != null ? (pct / 100) * c : 0
+  return (
+    <svg viewBox={`0 0 ${size} ${size}`} style={{ width: size, height: size, flexShrink: 0 }}>
+      <circle cx={cx} cy={cx} r={r} fill="none" stroke="rgba(255,255,255,.15)" strokeWidth="14" />
+      {pct != null && (
+        <circle cx={cx} cy={cx} r={r} fill="none" stroke={color} strokeWidth="14" strokeLinecap="round"
+          strokeDasharray={`${dash} ${c}`} transform={`rotate(-90 ${cx} ${cx})`} />
+      )}
+      <text x={cx} y={cx + 8} textAnchor="middle" fontSize="30" fontWeight="800" fill="#fff">{label}</text>
+    </svg>
+  )
+}
+
+function V3DimBar({ name, avg }) {
+  const width = avg != null ? Math.min(100, (avg / 5) * 100) : 0
+  const color = avg == null ? '#d1d5db' : avg >= 3.5 ? '#22c55e' : avg >= 3.0 ? '#eab308' : '#dc2626'
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, marginBottom: 6 }}>
+      <span style={{ width: 52, fontWeight: 700, color: '#6b7280', fontSize: 10 }}>{name}</span>
+      <div style={{ flex: 1, height: 7, background: '#f3f4f6', borderRadius: 3, overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${width}%`, background: color, borderRadius: 3 }} />
+      </div>
+      <span style={{ width: 28, textAlign: 'right', fontWeight: 700, color: '#002f60' }}>{avg != null ? avg : '—'}</span>
+    </div>
+  )
+}
+
+function V3FundamentalsHero({ data, onSchool, useMock }) {
+  const fm = data?.fundamentals_mastery || {}
+  // For 2025-26 view, fall back to realistic mock numbers so testers can envision
+  const mastered = useMock ? Math.round((fm.total_teachers || 187) * 0.72) : (fm.mastered ?? 0)
+  const total = fm.total_teachers ?? 0
+  const pct = useMock ? 72 : (fm.pct ?? 0)
+  const obsCount = useMock ? 779 : (fm.obs_count ?? 0)
+  const MOCK_BY_SCHOOL = {
+    'Langston Hughes Academy': { mastered: 38, observed: 49 },
+    'Phillis Wheatley Community School': { mastered: 37, observed: 49 },
+    'Arthur Ashe Charter School': { mastered: 32, observed: 49 },
+    'Samuel J Green Charter School': { mastered: 28, observed: 40 },
+  }
+  const byIS = useMock ? MOCK_BY_SCHOOL : (fm.by_school || {})
+  // Known 4 schools — even if API returns no row, show the school with 0
+  const SCHOOLS = [
+    'Langston Hughes Academy',
+    'Phillis Wheatley Community School',
+    'Arthur Ashe Charter School',
+    'Samuel J Green Charter School',
+  ]
+  return (
+    <div style={V3_HERO_BG}>
+      <div style={V3_HERO_LABEL}>% Mastering Fundamentals · Cycle 1</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginTop: 6 }}>
+        <V3Donut pct={pct} label={`${pct}%`} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 42, fontWeight: 900, lineHeight: 1, letterSpacing: '-.02em', color: '#fff' }}>
+            {mastered}<span style={{ fontSize: 22, color: '#e47727' }}>/{total}</span>
+          </div>
+          <div style={V3_HERO_SUB}>
+            teachers mastering · <b>{obsCount}</b> Fundamentals obs captured
+          </div>
+        </div>
+      </div>
+      <div style={V3_FOOT}>
+        {SCHOOLS.map((s) => {
+          const row = byIS[s] || { mastered: 0, observed: 0 }
+          return (
+            <a key={s} onClick={(e) => { e.preventDefault(); onSchool(s) }}
+              style={{ cursor: 'pointer', textDecoration: 'none', color: 'inherit', minWidth: 0, textAlign: 'center' }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>
+                {row.observed > 0 ? `${Math.round(100 * row.mastered / row.observed)}%` : '—'}
+              </div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,.65)', textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 2, lineHeight: 1.25, wordBreak: 'break-word' }}>
+                {shortSchool(s)}
+              </div>
+            </a>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function V3ObsScoreHero({ data, onSchool }) {
+  const avg = data?.obs_score?.network_avg
+  const totalObs = data?.kpis?.observations_total || 0
+  const teachers = data?.teachers_total || 0
+  const pct = avg != null ? Math.round((avg / 5) * 100) : null
+  const schools = data?.schools_grid || []
+  return (
+    <div style={V3_HERO_BG}>
+      <div style={V3_HERO_LABEL}>Observation Score Avg · this year</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginTop: 6 }}>
+        <V3Donut pct={pct} label={avg != null ? `${avg}` : '—'} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 38, fontWeight: 900, lineHeight: 1, color: '#fff' }}>
+            {totalObs.toLocaleString()}<span style={{ fontSize: 20, color: '#e47727' }}> obs</span>
+          </div>
+          <div style={V3_HERO_SUB}>across {teachers} teachers</div>
+        </div>
+      </div>
+      <div style={V3_FOOT}>
+        {schools.slice(0, 4).map((s) => (
+          <a key={s.school} onClick={(e) => { e.preventDefault(); onSchool(s.school) }}
+            style={{ cursor: 'pointer', textDecoration: 'none', color: 'inherit', minWidth: 0, textAlign: 'center' }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{s.on_task_pct != null ? s.on_task_pct.toFixed(2) : '—'}</div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,.65)', textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 2, lineHeight: 1.25, wordBreak: 'break-word' }}>
+              {shortSchool(s.school)}
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function Network() {
   const navigate = useNavigate()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [schoolYear, setSchoolYear] = useState(SCHOOL_YEARS[0])
-  const [mode, setMode] = useState('this')  // 'this' | 'yoy'
+  const [cycle, setCycle] = useState(1)
   const [aiOpen, setAiOpen] = useState(false)
 
   useEffect(() => {
@@ -758,51 +882,205 @@ export default function Network() {
     navigate(`/app/network/school/${encodeURIComponent(name)}`)
   }
 
+  const showFundamentals = cycle === 1
+  const obs = data?.obs_score || {}
+  const obsDim = obs.by_dim || {}
+  const pmapDim = data?.network_avg || {}
+  const pc = data?.pmap_completion || {}
+  const sc = data?.sr_completion || {}
+
   return (
-    <div className="min-h-[100svh] bg-[#f5f7fa] pb-20">
+    <div style={{ minHeight: '100svh', background: '#f5f7fa', paddingBottom: 80, fontFamily: 'Inter, sans-serif' }}>
       <ImpersonationBanner />
-      <nav className="sticky top-0 z-50 bg-fls-navy px-4 py-4 flex items-center gap-3">
-        <Link to="/" className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center no-underline">
+      <nav className="sticky top-0 z-50 bg-fls-navy px-4 py-[14px] flex items-center gap-3">
+        <button
+          onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}
+          aria-label="Back"
+          className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center border-0 cursor-pointer"
+        >
           <svg width="18" height="18" fill="none" stroke="white" strokeWidth="2">
             <path d="M15 9H3m0 0l5-5M3 9l5 5" />
           </svg>
+        </button>
+        <Link to="/" className="flex-1 text-center no-underline">
+          <div style={{ fontSize: 17, fontWeight: 800, color: '#fff' }}>Observation<span style={{ color: '#e47727' }}>Point</span></div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,.6)', marginTop: 2 }}>Network · {schoolYear}</div>
         </Link>
-        <div className="flex-1 text-center text-[16px] font-bold text-white">Network Dashboard</div>
         <div className="w-8" />
       </nav>
 
-      <div className="px-4 pt-4 pb-2 max-w-[900px] mx-auto">
-        <div className="text-[13px] text-gray-500 mb-3">FirstLine Schools · {schoolYear}</div>
-        {/* This Year / YoY toggle */}
-        <div className="inline-flex rounded-full bg-gray-100 p-1 mb-4">
-          <button onClick={() => setMode('this')}
-            className={`px-4 py-1.5 rounded-full text-xs font-bold transition ${mode === 'this' ? 'bg-white text-fls-navy shadow-sm' : 'text-gray-500'}`}>
-            This Year
-          </button>
-          <button onClick={() => setMode('yoy')}
-            className={`px-4 py-1.5 rounded-full text-xs font-bold transition ${mode === 'yoy' ? 'bg-white text-fls-navy shadow-sm' : 'text-gray-500'}`}>
-            YoY Trends
-          </button>
+      {/* Year toggle — subtle pills */}
+      <div style={{ background: '#fff', padding: '8px 16px', borderBottom: schoolYear === '2025-2026' ? '1px solid #e5e7eb' : 'none', display: 'flex', justifyContent: 'center', gap: 4 }}>
+        <div style={{ display: 'inline-flex', background: '#f3f4f6', borderRadius: 18, padding: 3 }}>
+          {['2026-2027', '2025-2026'].map((y) => {
+            const on = schoolYear === y
+            const label = y === '2026-2027' ? '2026-27' : '2025-26'
+            return (
+              <button key={y} onClick={() => setSchoolYear(y)}
+                style={{
+                  padding: '5px 16px', borderRadius: 16,
+                  fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                  border: 'none',
+                  background: on ? '#fff' : 'transparent',
+                  color: on ? '#002f60' : '#6b7280',
+                  boxShadow: on ? '0 1px 2px rgba(0,0,0,.08)' : 'none',
+                }}
+              >{label}</button>
+            )
+          })}
         </div>
       </div>
 
-      <div className="px-4 pb-6 max-w-[900px] mx-auto">
-        {loading && <div className="text-center text-gray-400 text-sm py-10">Loading network…</div>}
-        {!loading && !data && <Empty msg="Could not load network dashboard. Check access." />}
-        {!loading && data && mode === 'this' && (
+      {/* Cycle toggle — only on 2026-27 (Grow didn't have OP cycles) */}
+      {schoolYear === '2026-2027' && (
+        <div style={{ background: '#fff', padding: '10px 16px 12px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'center', gap: 6 }}>
+          {[1, 2, 3, 4].map((n) => (
+            <button key={n} onClick={() => setCycle(n)}
+              style={{
+                flex: 1, maxWidth: 120, padding: '8px 20px', borderRadius: 20,
+                fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                border: `1.5px solid ${cycle === n ? '#002f60' : '#e5e7eb'}`,
+                background: cycle === n ? '#002f60' : '#fff',
+                color: cycle === n ? '#fff' : '#6b7280',
+              }}
+            >Cycle {n}</button>
+          ))}
+        </div>
+      )}
+
+      {/* Mock-data legend */}
+      <div style={{ textAlign: 'center', fontSize: 10, color: '#9ca3af', padding: '6px 12px', background: '#f5f7fa' }}>
+        <span style={{ color: '#e47727', fontWeight: 700 }}>*</span> = mock data (real when OP forms capture it)
+      </div>
+
+      {schoolYear === '2026-2027' && (
+        <div style={{ background: '#fff7ed', borderBottom: '1px solid #fed7aa', padding: '8px 16px', textAlign: 'center', fontSize: 11, color: '#9a3412' }}>
+          <b style={{ color: '#e47727' }}>Pre-launch test data</b> · submissions flow in live · wiped clean July 1
+        </div>
+      )}
+
+      <div style={{ padding: 16, maxWidth: 720, margin: '0 auto' }}>
+        {loading && <div style={{ textAlign: 'center', color: '#9ca3af', fontSize: 14, padding: 40 }}>Loading network…</div>}
+        {!loading && !data && <div style={{ background: '#fff', borderRadius: 12, padding: 24, textAlign: 'center', color: '#9ca3af', fontSize: 14 }}>Could not load network dashboard. Check access.</div>}
+
+        {!loading && data && (
           <>
-            <SchoolCardGrid schools={data.schools_grid || []} onPick={goToSchool} />
-            <NetworkTotalsCard data={data} />
+            {/* Hero — Fundamentals C1, Obs Score C2/C3 */}
+            {showFundamentals
+              ? <V3FundamentalsHero data={data} onSchool={goToSchool} useMock={schoolYear === '2025-2026'} />
+              : <V3ObsScoreHero data={data} onSchool={goToSchool} />}
+
+            {/* Stat strip */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 14 }}>
+              <div style={{ background: '#fff', borderRadius: 14, padding: '14px 12px', boxShadow: '0 1px 3px rgba(0,0,0,.05)', textAlign: 'center' }}>
+                <div style={{ fontSize: 28, fontWeight: 800, color: '#002f60', lineHeight: 1 }}>{obs.network_avg ?? '—'}</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.05em', marginTop: 6 }}>Obs Score Avg</div>
+                <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 3 }}>real · {obs.total_dim_scores || 0} dim-scores</div>
+              </div>
+              <div style={{ background: '#fff', borderRadius: 14, padding: '14px 12px', boxShadow: '0 1px 3px rgba(0,0,0,.05)', textAlign: 'center' }}>
+                <div style={{ fontSize: 28, fontWeight: 800, color: '#002f60', lineHeight: 1 }}>{(data.kpis?.observations_total || 0).toLocaleString()}</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.05em', marginTop: 6 }}>Observations</div>
+                <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 3 }}>{schoolYear}</div>
+              </div>
+              <div style={{ background: '#fff', borderRadius: 14, padding: '14px 12px', boxShadow: '0 1px 3px rgba(0,0,0,.05)', textAlign: 'center' }}>
+                <div style={{ fontSize: 28, fontWeight: 800, color: '#002f60', lineHeight: 1 }}>{data.teachers_total || 0}</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.05em', marginTop: 6 }}>Teachers</div>
+                <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 3 }}>network-wide active</div>
+              </div>
+            </div>
+
+            {/* Completion pair */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+              <div style={{ background: '#fff', borderRadius: 14, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,.05)' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 4 }}>PMAP Completion</div>
+                <div style={{ fontSize: 32, fontWeight: 800, color: '#002f60', lineHeight: 1 }}>{pc.pct != null ? `${pc.pct}%` : '—'}</div>
+                <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 4 }}>{pc.done ?? 0} of {pc.total ?? 0} teachers</div>
+                <div style={{ height: 6, background: '#f3f4f6', borderRadius: 3, overflow: 'hidden', marginTop: 10 }}>
+                  <div style={{ height: '100%', width: `${pc.pct || 0}%`, background: '#002f60', borderRadius: 3 }} />
+                </div>
+              </div>
+              <div style={{ background: '#fff', borderRadius: 14, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,.05)' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 4 }}>Self-Reflection</div>
+                <div style={{ fontSize: 32, fontWeight: 800, color: '#002f60', lineHeight: 1 }}>{sc.pct != null ? `${sc.pct}%` : '—'}</div>
+                <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 4 }}>{sc.done ?? 0} of {sc.total ?? 0} teachers</div>
+                <div style={{ height: 6, background: '#f3f4f6', borderRadius: 3, overflow: 'hidden', marginTop: 10 }}>
+                  <div style={{ height: '100%', width: `${sc.pct || 0}%`, background: '#e47727', borderRadius: 3 }} />
+                </div>
+              </div>
+            </div>
+
+            {/* Celebration Coverage — click to drill down */}
+            <div
+              onClick={() => navigate('/app/network/celebration')}
+              style={{ background: '#fff', borderRadius: 14, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,.05)', marginBottom: 14, cursor: 'pointer' }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: '#111827', textTransform: 'uppercase', letterSpacing: '.05em' }}>Celebration Coverage</div>
+                <div style={{ fontSize: 11, color: '#6b7280' }}><b style={{ color: '#e47727', fontWeight: 800, fontSize: 14 }}>{data.celebration?.cel_count || 0}</b> celebrations · {data.celebration?.touchpoints_total || 0} touchpoints</div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+                <div style={{ background: '#fff7ed', borderRadius: 10, padding: 14, textAlign: 'center', borderLeft: '3px solid #e47727' }}>
+                  <div style={{ fontSize: 28, fontWeight: 800, color: '#002f60', lineHeight: 1 }}>
+                    {data.celebration?.staff_celebrated_pct ?? 0}%
+                  </div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.05em', marginTop: 6 }}>Staff Celebrated</div>
+                  <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2 }}>{data.celebration?.staff_celebrated || 0} of {data.celebration?.staff_total || 0}</div>
+                </div>
+                <div style={{ background: '#fff7ed', borderRadius: 10, padding: 14, textAlign: 'center', borderLeft: '3px solid #e47727' }}>
+                  <div style={{ fontSize: 28, fontWeight: 800, color: '#002f60', lineHeight: 1 }}>
+                    {data.celebration?.staff_total ? (data.celebration.cel_count / data.celebration.staff_total).toFixed(1) : '0.0'}
+                  </div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.05em', marginTop: 6 }}>Per Staff · Avg</div>
+                  <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2 }}>target: 3+ / year</div>
+                </div>
+              </div>
+              {/* Month-by-month bar chart */}
+              <div style={{ paddingTop: 14, borderTop: '1px solid #f3f4f6' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 8 }}>Staff celebrated · month by month</div>
+                <svg viewBox="0 0 320 70" style={{ width: '100%', height: 70 }}>
+                  {[8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6].map((m, i) => {
+                    const count = data.celebration?.by_month?.[m] || 0
+                    const maxN = Math.max(1, ...Object.values(data.celebration?.by_month || {1: 1}))
+                    const h = Math.max(2, (count / maxN) * 54)
+                    const x = 8 + i * 29
+                    const y = 64 - h
+                    return <rect key={m} x={x} y={y} width={22} height={h} fill={count > 0 ? '#e47727' : '#e5e7eb'} rx={2} />
+                  })}
+                  <g fontSize="8" fill="#9ca3af" textAnchor="middle" fontWeight="600">
+                    {['Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun'].map((label, i) => (
+                      <text key={label} x={19 + i * 29} y={72}>{label}</text>
+                    ))}
+                  </g>
+                </svg>
+              </div>
+            </div>
+
+            {/* Dimensions card */}
+            <div style={{ background: '#fff', borderRadius: 14, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,.05)', marginBottom: 14 }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#111827', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 12 }}>
+                Score Averages by Dimension
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, paddingTop: 4 }}>
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid #f3f4f6' }}>
+                    Observations · {obs.network_avg ?? '—'}
+                  </div>
+                  {['T1', 'T2', 'T3', 'T4', 'T5'].map((d) => (
+                    <V3DimBar key={d} name={DIM_SHORT[d]} avg={obsDim[d]?.avg} />
+                  ))}
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid #f3f4f6' }}>
+                    PMAP · real
+                  </div>
+                  {['T1', 'T2', 'T3', 'T4', 'T5'].map((d) => (
+                    <V3DimBar key={d} name={DIM_SHORT[d]} avg={pmapDim[d]} />
+                  ))}
+                </div>
+              </div>
+            </div>
           </>
         )}
-        {!loading && data && mode === 'yoy' && (
-          <div className="bg-white rounded-xl p-6 shadow-sm text-center text-sm text-gray-500">
-            YoY Trends view coming after we have 2 full years of OP data. For now — switch to "This Year".
-          </div>
-        )}
-        <div className="text-center mt-6">
-          <span className="text-[11px] text-gray-400">Historic (pre-OP Grow data) · coming soon</span>
-        </div>
       </div>
 
       <BottomNav active="network" onAskClick={() => setAiOpen(true)} aiOpen={aiOpen} />

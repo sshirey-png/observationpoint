@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Staff V1 — Snapshot</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.mock-banner{background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;text-align:center;padding:6px 12px;letter-spacing:.05em}
+.topnav{background:#002f60;padding:10px 12px;display:flex;align-items:center;gap:10px}
+.back{color:#fff;font-size:22px;font-weight:700;text-decoration:none;padding:4px 8px}
+.topnav-t{flex:1}
+.topnav-title{font-size:13px;font-weight:700;color:#fff}
+.topnav-sub{font-size:11px;color:rgba(255,255,255,.65);margin-top:1px}
+
+/* Identity hero */
+.hero{background:linear-gradient(135deg,#002f60,#003b7a);padding:20px 16px;color:#fff;text-align:center}
+.avatar{width:72px;height:72px;border-radius:50%;background:#e47727;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;margin:0 auto 10px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.name{font-size:20px;font-weight:800;color:#fff;margin-bottom:3px}
+.role{font-size:12px;color:rgba(255,255,255,.75)}
+.big-number{font-size:40px;font-weight:900;margin-top:14px;line-height:1}
+.big-label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.7);margin-top:4px}
+
+/* Stat strip */
+.stat-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:14px 12px;max-width:720px;margin:0 auto}
+.stat{background:#fff;border-radius:12px;padding:12px 10px;box-shadow:0 1px 3px rgba(0,0,0,.05);text-align:center}
+.stat-v{font-size:22px;font-weight:800;color:#002f60;line-height:1}
+.stat-l{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-top:6px}
+.stat-m{font-size:10px;color:#9ca3af;margin-top:2px}
+
+.content{max-width:720px;margin:0 auto;padding:0 12px 40px}
+.card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:12px}
+.card-title{font-size:11px;font-weight:800;color:#111827;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;display:flex;justify-content:space-between;align-items:baseline}
+.card-title .more{font-size:11px;color:#e47727;font-weight:700;text-decoration:none}
+
+/* Dimension bars */
+.dim-row{display:flex;align-items:center;gap:10px;font-size:12px;margin-bottom:6px}
+.dim-row .code{width:56px;font-weight:700;color:#6b7280;font-size:11px}
+.dim-row .bar{flex:1;height:8px;background:#f3f4f6;border-radius:4px;overflow:hidden}
+.dim-row .bar-fill{height:100%;border-radius:4px}
+.dim-row .val{width:32px;text-align:right;font-weight:700;color:#002f60}
+
+/* Focus card */
+.focus-item{display:flex;gap:10px;padding:10px;background:#fff7ed;border-radius:10px;border-left:3px solid #e47727;margin-bottom:8px}
+.focus-icon{width:28px;height:28px;border-radius:50%;background:#e47727;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.focus-body{flex:1;min-width:0}
+.focus-t{font-size:12px;font-weight:700;color:#111827}
+.focus-m{font-size:10px;color:#9ca3af;margin-top:2px}
+
+/* Obs rows */
+.obs-row{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f3f4f6}
+.obs-row:last-child{border-bottom:none}
+.obs-date{width:40px;flex-shrink:0;text-align:center}
+.obs-m{font-size:10px;font-weight:700;color:#e47727;text-transform:uppercase;letter-spacing:.05em}
+.obs-d{font-size:16px;font-weight:800;color:#002f60;line-height:1}
+.obs-body{flex:1;min-width:0}
+.obs-t{font-size:12px;font-weight:700;color:#111827}
+.obs-m2{font-size:10px;color:#9ca3af;margin-top:2px}
+.obs-score{text-align:right;flex-shrink:0}
+.obs-score .s{font-size:16px;font-weight:800;color:#002f60}
+.obs-score .l{font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;margin-top:1px}
+
+/* Celebrations */
+.cel-card{background:#fff7ed;border-left:3px solid #e47727;border-radius:8px;padding:10px;margin-bottom:6px}
+.cel-t{font-size:11px;color:#4b5563;line-height:1.4;font-style:italic}
+.cel-m{font-size:10px;color:#9ca3af;margin-top:4px}
+
+/* Action steps */
+.step-row{display:flex;gap:10px;padding:8px 0;align-items:center}
+.step-check{width:20px;height:20px;border-radius:50%;border:2px solid #d1d5db;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.step-check.done{background:#22c55e;border-color:#22c55e;color:#fff}
+.step-t{flex:1;font-size:12px;color:#111827}
+.step-t.done{color:#9ca3af;text-decoration:line-through}
+.step-d{font-size:10px;color:#9ca3af;flex-shrink:0}
+</style></head><body>
+
+<div class="mock-banner">DESIGN MOCK · placeholder numbers · V1 Snapshot (numbers-first)</div>
+
+<nav class="topnav">
+  <a class="back" href="#">←</a>
+  <div class="topnav-t">
+    <div class="topnav-title">Staff Profile</div>
+    <div class="topnav-sub">2026-27 · Cycle 1</div>
+  </div>
+</nav>
+
+<!-- Identity hero with big touchpoint headline -->
+<div class="hero">
+  <div class="avatar">MW</div>
+  <div class="name">Marcus Williams</div>
+  <div class="role">5th grade ELA · Langston Hughes</div>
+  <div class="big-number">24</div>
+  <div class="big-label">Touchpoints YTD</div>
+</div>
+
+<!-- Three quick stats -->
+<div class="stat-strip">
+  <div class="stat">
+    <div class="stat-v">3.6</div>
+    <div class="stat-l">Obs Score</div>
+    <div class="stat-m">↑ 0.2 vs C1</div>
+  </div>
+  <div class="stat">
+    <div class="stat-v">4</div>
+    <div class="stat-l">Celebrations</div>
+    <div class="stat-m">this year</div>
+  </div>
+  <div class="stat">
+    <div class="stat-v">3/11</div>
+    <div class="stat-l">Action Steps</div>
+    <div class="stat-m">active / done</div>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- Observation score with dimension breakdown -->
+<div class="card">
+  <div class="card-title">Observation Score · by dimension</div>
+  <div class="dim-row"><span class="code">On Task</span><div class="bar"><div class="bar-fill" style="width:76%;background:#22c55e"></div></div><span class="val">3.8</span></div>
+  <div class="dim-row"><span class="code">CoL</span><div class="bar"><div class="bar-fill" style="width:66%;background:#eab308"></div></div><span class="val">3.3</span></div>
+  <div class="dim-row"><span class="code">Content</span><div class="bar"><div class="bar-fill" style="width:72%;background:#22c55e"></div></div><span class="val">3.6</span></div>
+  <div class="dim-row"><span class="code">Cog Eng</span><div class="bar"><div class="bar-fill" style="width:62%;background:#eab308"></div></div><span class="val">3.1</span></div>
+  <div class="dim-row"><span class="code">Demo</span><div class="bar"><div class="bar-fill" style="width:70%;background:#22c55e"></div></div><span class="val">3.5</span></div>
+</div>
+
+<!-- Current coaching focus -->
+<div class="card">
+  <div class="card-title">Current Focus <a class="more" href="#">All →</a></div>
+  <div class="focus-item">
+    <div class="focus-icon" style="background:#002f60">G</div>
+    <div class="focus-body">
+      <div class="focus-t">Goal · Increase cognitive engagement in independent practice</div>
+      <div class="focus-m">Started 9/15 · 2 PMAPs in progress</div>
+    </div>
+  </div>
+  <div class="focus-item">
+    <div class="focus-icon">1</div>
+    <div class="focus-body">
+      <div class="focus-t">Action Step · Plan 3 turn-and-talks per lesson</div>
+      <div class="focus-m">Active · assigned 10/22 by Tina</div>
+    </div>
+  </div>
+  <div class="focus-item">
+    <div class="focus-icon">2</div>
+    <div class="focus-body">
+      <div class="focus-t">Action Step · Use "What did your partner say?" check</div>
+      <div class="focus-m">Active · assigned 11/4 by Tina</div>
+    </div>
+  </div>
+  <div class="focus-item">
+    <div class="focus-icon">3</div>
+    <div class="focus-body">
+      <div class="focus-t">Action Step · Anchor chart for discussion norms</div>
+      <div class="focus-m">Active · assigned 11/18 by Tina</div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent observations -->
+<div class="card">
+  <div class="card-title">Recent Observations · 6 YTD <a class="more" href="#">All →</a></div>
+  <div class="obs-row">
+    <div class="obs-date"><div class="obs-m">Nov</div><div class="obs-d">18</div></div>
+    <div class="obs-body"><div class="obs-t">Teacher Observation</div><div class="obs-m2">by Tina · strong questioning</div></div>
+    <div class="obs-score"><div class="s">3.8</div><div class="l">avg</div></div>
+  </div>
+  <div class="obs-row">
+    <div class="obs-date"><div class="obs-m">Nov</div><div class="obs-d">4</div></div>
+    <div class="obs-body"><div class="obs-t">Quick Feedback</div><div class="obs-m2">by Tina · 2 turn-and-talks landed</div></div>
+    <div class="obs-score"><div class="s">—</div><div class="l">fb only</div></div>
+  </div>
+  <div class="obs-row">
+    <div class="obs-date"><div class="obs-m">Oct</div><div class="obs-d">22</div></div>
+    <div class="obs-body"><div class="obs-t">Teacher Observation</div><div class="obs-m2">by Tina · focus on engagement</div></div>
+    <div class="obs-score"><div class="s">3.4</div><div class="l">avg</div></div>
+  </div>
+  <div class="obs-row">
+    <div class="obs-date"><div class="obs-m">Oct</div><div class="obs-d">8</div></div>
+    <div class="obs-body"><div class="obs-t">PMAP · Teacher</div><div class="obs-m2">Cycle 1 · self-refl matched</div></div>
+    <div class="obs-score"><div class="s">3.6</div><div class="l">avg</div></div>
+  </div>
+</div>
+
+<!-- Celebrations -->
+<div class="card">
+  <div class="card-title">Celebrations · 4 this year <a class="more" href="#">All →</a></div>
+  <div class="cel-card">
+    <div class="cel-t">"Loved the cold-call energy in 5th period."</div>
+    <div class="cel-m">by Tina · 2d ago</div>
+  </div>
+  <div class="cel-card">
+    <div class="cel-t">"Teacher presence during transitions was exceptional."</div>
+    <div class="cel-m">by Tina · 3w ago</div>
+  </div>
+</div>
+
+<!-- Completed action steps -->
+<div class="card">
+  <div class="card-title">Completed Action Steps · 8 YTD</div>
+  <div class="step-row">
+    <div class="step-check done">✓</div>
+    <div class="step-t done">Post daily objective at start of block</div>
+    <div class="step-d">Oct 15</div>
+  </div>
+  <div class="step-row">
+    <div class="step-check done">✓</div>
+    <div class="step-t done">Narrate the positive during independent practice</div>
+    <div class="step-d">Oct 1</div>
+  </div>
+  <div class="step-row">
+    <div class="step-check done">✓</div>
+    <div class="step-t done">Use timer + call-to-attention signal</div>
+    <div class="step-d">Sep 22</div>
+  </div>
+  <div style="text-align:center;font-size:11px;color:#9ca3af;padding-top:8px">+ 5 more</div>
+</div>
+
+</div>
+
+</body></html>

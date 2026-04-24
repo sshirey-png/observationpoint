@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Fundamentals Drill-Down</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.mock-banner{background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;text-align:center;padding:6px 12px;letter-spacing:.05em}
+.nav{background:#002f60;padding:10px 12px;display:flex;align-items:center;gap:10px}
+.back{color:#fff;font-size:22px;font-weight:700;text-decoration:none;padding:4px 8px;cursor:pointer}
+.nav-t{flex:1}
+.nav-title{font-size:14px;font-weight:700;color:#fff}
+.nav-sub{font-size:11px;color:rgba(255,255,255,.65);margin-top:1px}
+
+/* Summary hero */
+.hero{background:linear-gradient(135deg,#002f60,#003b7a);padding:16px 16px 20px;color:#fff}
+.hero-inner{max-width:720px;margin:0 auto;display:flex;align-items:center;gap:14px}
+.hero-donut{width:80px;height:80px;flex-shrink:0}
+.hero-big{font-size:36px;font-weight:900;line-height:1;color:#fff}
+.hero-big .pct{color:#e47727;font-size:22px}
+.hero-sub{font-size:12px;color:rgba(255,255,255,.8);margin-top:4px}
+.hero-schools{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.15);max-width:720px;margin-left:auto;margin-right:auto}
+.hero-s{text-align:center}
+.hero-s{min-width:0}
+.hero-s-v{font-size:16px;font-weight:800;color:#fff}
+.hero-s-l{font-size:9px;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.03em;margin-top:2px;line-height:1.25;word-break:break-word}
+@media (max-width:400px){.hero-s-l{font-size:8px;letter-spacing:.01em}.hero-s-v{font-size:14px}}
+
+/* Filter bar */
+.filter{background:#fff;border-bottom:1px solid #e5e7eb;padding:10px 12px;position:sticky;top:0;z-index:10}
+.filter-inner{max-width:720px;margin:0 auto}
+.tabs{display:flex;gap:6px;margin-bottom:8px}
+.tab{flex:1;padding:10px 8px;border-radius:10px;border:1.5px solid #e5e7eb;background:#fff;font-size:12px;font-weight:700;color:#6b7280;cursor:pointer;text-align:center}
+.tab.on.red{background:#fee2e2;border-color:#fca5a5;color:#991b1b}
+.tab.on.green{background:#dcfce7;border-color:#86efac;color:#166534}
+.tab .num{display:block;font-size:18px;font-weight:800;line-height:1;margin-bottom:2px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{padding:6px 12px;border-radius:14px;border:1px solid #e5e7eb;background:#fff;font-size:11px;font-weight:700;color:#6b7280;cursor:pointer;white-space:nowrap}
+.chip.on{background:#002f60;color:#fff;border-color:#002f60}
+
+/* List */
+.content{max-width:720px;margin:0 auto;padding:10px 12px 80px}
+.list-head{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;padding:10px 4px 6px}
+.row{background:#fff;border-radius:12px;padding:12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+.row:hover{background:#fafbfc}
+.avatar{width:36px;height:36px;border-radius:50%;background:#002f60;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.avatar.nope{background:#dc2626}
+.row-body{flex:1;min-width:0}
+.row-name{font-size:13px;font-weight:700;color:#111827}
+.row-meta{font-size:11px;color:#6b7280;margin-top:2px}
+.row-status{text-align:right;flex-shrink:0}
+.row-status .s{font-size:13px;font-weight:800;color:#002f60;line-height:1}
+.row-status .l{font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.03em;margin-top:2px}
+.row-chev{color:#9ca3af;font-size:16px;font-weight:700;margin-left:2px}
+.pill{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700;margin-left:4px}
+.pill-g{background:#dcfce7;color:#166534}
+.pill-r{background:#fee2e2;color:#991b1b}
+.pill-y{background:#fef9c3;color:#854d0e}
+
+.empty{text-align:center;padding:40px 20px;color:#9ca3af;font-size:12px}
+</style></head><body>
+
+<div class="mock-banner">DESIGN MOCK · placeholder numbers · Fundamentals drill-down</div>
+
+<nav class="nav">
+  <a class="back" href="network-landing-v3.html">←</a>
+  <div class="nav-t">
+    <div class="nav-title">Fundamentals</div>
+    <div class="nav-sub">Cycle 1 · 2026-27</div>
+  </div>
+</nav>
+
+<!-- Compact summary -->
+<div class="hero">
+  <div class="hero-inner">
+    <svg class="hero-donut" viewBox="0 0 80 80">
+      <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="9"/>
+      <circle cx="40" cy="40" r="34" fill="none" stroke="#e47727" stroke-width="9" stroke-linecap="round"
+              stroke-dasharray="154 214" transform="rotate(-90 40 40)"/>
+      <text x="40" y="46" text-anchor="middle" font-size="19" font-weight="800" fill="#fff">72%</text>
+    </svg>
+    <div>
+      <div class="hero-big">135<span class="pct">/187</span></div>
+      <div class="hero-sub">teachers mastering · 52 not yet</div>
+    </div>
+  </div>
+  <div class="hero-schools">
+    <div class="hero-s"><div class="hero-s-v">82%</div><div class="hero-s-l">Langston Hughes 40/49</div></div>
+    <div class="hero-s"><div class="hero-s-v">76%</div><div class="hero-s-l">Wheatley 37/49</div></div>
+    <div class="hero-s"><div class="hero-s-v">65%</div><div class="hero-s-l">Ashe 32/49</div></div>
+    <div class="hero-s"><div class="hero-s-v">65%</div><div class="hero-s-l">Green 26/40</div></div>
+  </div>
+</div>
+
+<!-- Tabs + school chips -->
+<div class="filter">
+  <div class="filter-inner">
+    <div class="tabs">
+      <button class="tab on red" data-tab="not">
+        <span class="num">56</span>Not Yet
+      </button>
+      <button class="tab" data-tab="mastered">
+        <span class="num">144</span>Mastering
+      </button>
+      <button class="tab" data-tab="all">
+        <span class="num">200</span>All
+      </button>
+    </div>
+    <div class="chips">
+      <button class="chip on">All schools</button>
+      <button class="chip">Langston Hughes</button>
+      <button class="chip">Wheatley</button>
+      <button class="chip">Ashe</button>
+      <button class="chip">Green</button>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- NOT YET list (default tab) -->
+<div id="list-not">
+  <div class="list-head">Not Yet · 56 teachers · sorted by fewest observations</div>
+
+  <div class="row" onclick="goProfile('Tasha Robinson')">
+    <div class="avatar nope">TR</div>
+    <div class="row-body">
+      <div class="row-name">Tasha Robinson</div>
+      <div class="row-meta">Langston Hughes ·3rd grade · last obs 28d ago</div>
+    </div>
+    <div class="row-status">
+      <div class="s">0 / 3</div>
+      <div class="l">observations</div>
+    </div>
+    <div class="row-chev">›</div>
+  </div>
+
+  <div class="row" onclick="goProfile('James Baker')">
+    <div class="avatar nope">JB</div>
+    <div class="row-body">
+      <div class="row-name">James Baker</div>
+      <div class="row-meta">Ashe · 5th grade · last obs 22d ago</div>
+    </div>
+    <div class="row-status">
+      <div class="s">0 / 3</div>
+      <div class="l">observations</div>
+    </div>
+    <div class="row-chev">›</div>
+  </div>
+
+  <div class="row" onclick="goProfile('Mireille Pierre')">
+    <div class="avatar nope">MP</div>
+    <div class="row-body">
+      <div class="row-name">Mireille Pierre</div>
+      <div class="row-meta">Langston Hughes ·K · last obs 14d ago</div>
+    </div>
+    <div class="row-status">
+      <div class="s">1 / 3</div>
+      <div class="l">observations</div>
+    </div>
+    <div class="row-chev">›</div>
+  </div>
+
+  <div class="row" onclick="goProfile('Devon Harris')">
+    <div class="avatar nope">DH</div>
+    <div class="row-body">
+      <div class="row-name">Devon Harris</div>
+      <div class="row-meta">Ashe · 2nd grade · last obs 11d ago</div>
+    </div>
+    <div class="row-status">
+      <div class="s">1 / 3</div>
+      <div class="l">observations</div>
+    </div>
+    <div class="row-chev">›</div>
+  </div>
+
+  <div class="row" onclick="goProfile('Rachel Nguyen')">
+    <div class="avatar nope">RN</div>
+    <div class="row-body">
+      <div class="row-name">Rachel Nguyen</div>
+      <div class="row-meta">Wheatley · 4th grade · last obs 9d ago</div>
+    </div>
+    <div class="row-status">
+      <div class="s">1 / 3</div>
+      <div class="l">observations</div>
+    </div>
+    <div class="row-chev">›</div>
+  </div>
+
+  <div class="row" onclick="goProfile('Andre Mitchell')">
+    <div class="avatar nope">AM</div>
+    <div class="row-body">
+      <div class="row-name">Andre Mitchell</div>
+      <div class="row-meta">Langston Hughes ·1st grade · last obs 6d ago</div>
+    </div>
+    <div class="row-status">
+      <div class="s">2 / 3</div>
+      <div class="l">observations</div>
+    </div>
+    <div class="row-chev">›</div>
+  </div>
+
+  <div class="row" onclick="goProfile('Lauren Bowman')">
+    <div class="avatar nope">LB</div>
+    <div class="row-body">
+      <div class="row-name">Lauren Bowman</div>
+      <div class="row-meta">Ashe · PreK · last obs 4d ago</div>
+    </div>
+    <div class="row-status">
+      <div class="s">2 / 3</div>
+      <div class="l">observations</div>
+    </div>
+    <div class="row-chev">›</div>
+  </div>
+
+  <div style="text-align:center;padding:12px;font-size:11px;color:#9ca3af">49 more · scroll to see all</div>
+</div>
+
+<!-- MASTERED list (hidden until tab switch) -->
+<div id="list-mastered" style="display:none">
+  <div class="list-head">Mastering · 144 teachers · recently met</div>
+
+  <div class="row" onclick="goProfile('Marcus Williams')">
+    <div class="avatar" style="background:#22c55e">MW</div>
+    <div class="row-body">
+      <div class="row-name">Marcus Williams</div>
+      <div class="row-meta">Langston Hughes ·5th grade · 4 obs · avg 4.1</div>
+    </div>
+    <div class="row-status">
+      <div class="s">4 / 3</div>
+      <div class="l" style="color:#16a34a">✓ met</div>
+    </div>
+    <div class="row-chev">›</div>
+  </div>
+
+  <div class="row" onclick="goProfile('Keisha Brown')">
+    <div class="avatar" style="background:#22c55e">KB</div>
+    <div class="row-body">
+      <div class="row-name">Keisha Brown</div>
+      <div class="row-meta">Wheatley · 2nd grade · 3 obs · avg 3.8</div>
+    </div>
+    <div class="row-status">
+      <div class="s">3 / 3</div>
+      <div class="l" style="color:#16a34a">✓ met</div>
+    </div>
+    <div class="row-chev">›</div>
+  </div>
+
+  <div class="row" onclick="goProfile('Amara Johnson')">
+    <div class="avatar" style="background:#22c55e">AJ</div>
+    <div class="row-body">
+      <div class="row-name">Amara Johnson</div>
+      <div class="row-meta">Langston Hughes ·4th grade · 3 obs · avg 3.9</div>
+    </div>
+    <div class="row-status">
+      <div class="s">3 / 3</div>
+      <div class="l" style="color:#16a34a">✓ met</div>
+    </div>
+    <div class="row-chev">›</div>
+  </div>
+
+  <div style="text-align:center;padding:12px;font-size:11px;color:#9ca3af">141 more · scroll to see all</div>
+</div>
+
+</div>
+
+<script>
+function goProfile(name){
+  alert('→ would navigate to profile for: ' + name + '\n(shows observations, PMAP, action steps, etc.)')
+}
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', e => {
+  const btn = e.currentTarget
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('on','red','green'))
+  btn.classList.add('on')
+  const tab = btn.dataset.tab
+  if(tab === 'not') btn.classList.add('red')
+  if(tab === 'mastered') btn.classList.add('green')
+  document.getElementById('list-not').style.display = (tab === 'not') ? 'block' : 'none'
+  document.getElementById('list-mastered').style.display = (tab === 'mastered') ? 'block' : 'none'
+}))
+document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', e => {
+  document.querySelectorAll('.chip').forEach(x => x.classList.remove('on'))
+  e.target.classList.add('on')
+}))
+</script>
+
+</body></html>

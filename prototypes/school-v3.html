@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>School V3 — Langston Hughes</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.mock-banner{background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;text-align:center;padding:6px 12px;letter-spacing:.05em}
+.nav{background:#002f60;padding:14px 16px;text-align:center}
+.nav-title{font-size:17px;font-weight:800;color:#fff}
+.nav-title .o{color:#e47727}
+.nav-sub{font-size:12px;color:rgba(255,255,255,.6);margin-top:2px}
+.nav-sub a{color:rgba(255,255,255,.8);text-decoration:none}
+.nav-sub a:hover{color:#fff}
+
+.cycle-bar{background:#fff;padding:12px 16px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:center;gap:8px}
+.cycle-btn{padding:8px 20px;border-radius:20px;font-size:12px;font-weight:700;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;cursor:pointer;flex:1;max-width:120px}
+.cycle-btn.on{background:#002f60;color:#fff;border-color:#002f60}
+
+.content{padding:16px;max-width:720px;margin:0 auto}
+
+/* Hero — identical to Network V3 */
+.hero{background:linear-gradient(135deg,#002f60,#003b7a);color:#fff;border-radius:20px;padding:22px;margin-bottom:14px;box-shadow:0 4px 14px rgba(0,47,96,.25)}
+.hero-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.7);margin-bottom:8px}
+.hero-value{font-size:56px;font-weight:900;line-height:1;letter-spacing:-.02em}
+.hero-value .pct{font-size:32px;color:#e47727;margin-left:2px}
+.hero-sub{font-size:13px;color:rgba(255,255,255,.8);margin-top:8px}
+.hero-foot{display:flex;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.15)}
+.hero-foot-item{flex:1;min-width:0;text-align:center;text-decoration:none;color:inherit;cursor:pointer}
+.hero-foot-v{font-size:18px;font-weight:800;color:#fff}
+.hero-foot-l{font-size:10px;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.04em;margin-top:2px;line-height:1.25;word-break:break-word}
+@media (max-width:400px){
+  .hero-foot-l{font-size:9px;letter-spacing:.02em}
+  .hero-foot-v{font-size:16px}
+}
+
+/* Stat strip */
+.stat-strip{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+.stat{background:#fff;border-radius:14px;padding:14px 12px;box-shadow:0 1px 3px rgba(0,0,0,.05);text-align:center}
+.stat-big{font-size:28px;font-weight:800;color:#002f60;line-height:1}
+.stat-big .unit{font-size:16px;color:#e47727}
+.stat-lbl{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-top:6px}
+.stat-meta{font-size:10px;color:#9ca3af;margin-top:3px}
+
+/* Completion row */
+.comp-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.comp-tile{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);position:relative;overflow:hidden}
+.comp-tile-lbl{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.comp-tile-pct{font-size:32px;font-weight:800;color:#002f60;line-height:1}
+.comp-tile-meta{font-size:11px;color:#9ca3af;margin-top:4px}
+.comp-progress{height:6px;background:#f3f4f6;border-radius:3px;overflow:hidden;margin-top:10px}
+.comp-progress-fill{height:100%;border-radius:3px}
+
+/* Dimensions card */
+.dim-card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:14px}
+.dim-card-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.dim-card-title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#111827}
+.dim-card-avg{font-size:20px;font-weight:800;color:#002f60}
+.dim-bar{display:flex;align-items:center;gap:10px;font-size:12px;margin-bottom:6px}
+.dim-bar .n{width:60px;font-weight:700;color:#6b7280;font-size:11px}
+.dim-bar .b{flex:1;height:8px;background:#f3f4f6;border-radius:4px;overflow:hidden}
+.dim-bar .b i{display:block;height:100%;border-radius:4px}
+.dim-bar .v{width:32px;text-align:right;font-weight:700;color:#002f60}
+
+/* Teachers section — same card base */
+.list-card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:14px}
+.list-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.list-title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#111827}
+.list-more{font-size:11px;color:#e47727;font-weight:700;text-decoration:none}
+.t-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f3f4f6;cursor:pointer}
+.t-row:last-child{border-bottom:none}
+.t-avatar{width:32px;height:32px;border-radius:50%;background:#002f60;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.t-avatar.red{background:#dc2626}
+.t-avatar.green{background:#22c55e}
+.t-body{flex:1;min-width:0}
+.t-name{font-size:13px;font-weight:700;color:#111827}
+.t-meta{font-size:11px;color:#6b7280;margin-top:2px}
+.t-status{text-align:right;flex-shrink:0}
+.t-s{font-size:13px;font-weight:800;color:#002f60;line-height:1}
+.t-l{font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:.03em;margin-top:2px}
+.t-chev{color:#9ca3af;font-size:16px;font-weight:700}
+</style></head><body>
+
+<div class="mock-banner">DESIGN MOCK · placeholder numbers · School · matches Network V3</div>
+<nav class="nav">
+  <div class="nav-title">Observation<span class="o">Point</span></div>
+  <div class="nav-sub"><a href="network-landing-v3.html">← Network</a> · Langston Hughes · 2026-27</div>
+</nav>
+
+<div class="cycle-bar">
+  <button class="cycle-btn on">Cycle 1</button>
+  <button class="cycle-btn">Cycle 2</button>
+  <button class="cycle-btn">Cycle 3</button>
+</div>
+
+<div class="content">
+
+<!-- Hero — Fundamentals for this school (Cycle 1 default) -->
+<div class="hero">
+  <div class="hero-label">% Mastering Fundamentals · Cycle 1</div>
+  <div style="display:flex;align-items:center;gap:18px;margin-top:6px">
+    <svg viewBox="0 0 130 130" style="width:130px;height:130px;flex-shrink:0">
+      <circle cx="65" cy="65" r="56" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="14"/>
+      <circle cx="65" cy="65" r="56" fill="none" stroke="#e47727" stroke-width="14" stroke-linecap="round"
+              stroke-dasharray="289 352" transform="rotate(-90 65 65)"/>
+      <text x="65" y="73" text-anchor="middle" font-size="30" font-weight="800" fill="#fff">82%</text>
+    </svg>
+    <div style="flex:1;min-width:0">
+      <div class="hero-value" style="font-size:42px">40<span class="pct" style="font-size:22px">/49</span><span style="color:#e47727;font-size:22px">*</span></div>
+      <div class="hero-sub">teachers mastering · Langston Hughes</div>
+    </div>
+  </div>
+  <div class="hero-foot">
+    <a class="hero-foot-item" data-band="PK-2" style="cursor:pointer" onclick="filterBand('PK-2')"><div class="hero-foot-v">11</div><div class="hero-foot-l">PK-2</div></a>
+    <a class="hero-foot-item" data-band="3-4" style="cursor:pointer" onclick="filterBand('3-4')"><div class="hero-foot-v">8</div><div class="hero-foot-l">3-4</div></a>
+    <a class="hero-foot-item" data-band="5-8" style="cursor:pointer" onclick="filterBand('5-8')"><div class="hero-foot-v">18</div><div class="hero-foot-l">5-8</div></a>
+    <a class="hero-foot-item" data-band="Enrichment" style="cursor:pointer" onclick="filterBand('Enrichment')"><div class="hero-foot-v">9</div><div class="hero-foot-l">Enrichment</div></a>
+    <a class="hero-foot-item" data-band="ELL" style="cursor:pointer" onclick="filterBand('ELL')"><div class="hero-foot-v">2</div><div class="hero-foot-l">ELL</div></a>
+  </div>
+</div>
+
+<!-- Unobtrusive unmapped indicator (only surfaces when >0) -->
+<div style="text-align:center;margin-top:-8px;margin-bottom:12px;font-size:10px;color:#9ca3af">
+  <a href="#" onclick="alert('All teachers mapped to a band. ✓'); return false" style="color:#9ca3af;text-decoration:none">0 unmapped</a>
+</div>
+
+<!-- Stat strip -->
+<div class="stat-strip">
+  <div class="stat">
+    <div class="stat-big">3.4</div>
+    <div class="stat-lbl">Obs Score Avg</div>
+    <div class="stat-meta">Langston Hughes · real</div>
+  </div>
+  <div class="stat">
+    <div class="stat-big">204</div>
+    <div class="stat-lbl">Observations</div>
+    <div class="stat-meta">2025-26 · real</div>
+  </div>
+  <div class="stat">
+    <div class="stat-big">49</div>
+    <div class="stat-lbl">Teachers</div>
+    <div class="stat-meta">school-wide · real</div>
+  </div>
+</div>
+
+<!-- Needs attention list — same card styling as Network sections -->
+<div class="list-card">
+  <div class="list-head">
+    <div class="list-title">Needs Attention · 9 not yet mastering</div>
+    <a class="list-more" href="fundamentals-drilldown.html">View all →</a>
+  </div>
+  <div class="t-row" onclick="location.href='staff-v3-coaching.html'">
+    <div class="t-avatar red">LC</div>
+    <div class="t-body">
+      <div class="t-name">Lanceing Clemens</div>
+      <div class="t-meta">All Subjects · last obs 12d ago</div>
+    </div>
+    <div class="t-status"><div class="t-s">0 / 5</div><div class="t-l">fundamentals</div></div>
+    <div class="t-chev">›</div>
+  </div>
+  <div class="t-row" onclick="location.href='staff-v3-coaching.html'">
+    <div class="t-avatar red">TC</div>
+    <div class="t-body">
+      <div class="t-name">Triege Cotton</div>
+      <div class="t-meta">PreK · last obs 6d ago</div>
+    </div>
+    <div class="t-status"><div class="t-s">2 / 5</div><div class="t-l">fundamentals</div></div>
+    <div class="t-chev">›</div>
+  </div>
+  <div class="t-row" onclick="location.href='staff-v3-coaching.html'">
+    <div class="t-avatar red">KW</div>
+    <div class="t-body">
+      <div class="t-name">Kristi Walton</div>
+      <div class="t-meta">PreK · last obs 14d ago</div>
+    </div>
+    <div class="t-status"><div class="t-s">1 / 5</div><div class="t-l">fundamentals</div></div>
+    <div class="t-chev">›</div>
+  </div>
+</div>
+
+<!-- Completion pair — matches Network V3 -->
+<div class="comp-pair">
+  <div class="comp-tile">
+    <div class="comp-tile-lbl">PMAP Completion</div>
+    <div class="comp-tile-pct">94%</div>
+    <div class="comp-tile-meta">46 of 49 · real</div>
+    <div class="comp-progress"><div class="comp-progress-fill" style="width:94%;background:#002f60"></div></div>
+  </div>
+  <div class="comp-tile">
+    <div class="comp-tile-lbl">Self-Reflection</div>
+    <div class="comp-tile-pct">90%</div>
+    <div class="comp-tile-meta">44 of 49 · real</div>
+    <div class="comp-progress"><div class="comp-progress-fill" style="width:90%;background:#e47727"></div></div>
+  </div>
+</div>
+
+<!-- Dim card — single group since this is one school -->
+<div class="dim-card">
+  <div class="dim-card-head">
+    <div class="dim-card-title">Observation Score · by dimension</div>
+    <div class="dim-card-avg">3.4 <small>of 5</small></div>
+  </div>
+  <div class="dim-bar"><span class="n">On Task</span><div class="b"><i style="width:75%;background:#22c55e"></i></div><span class="v">3.8</span></div>
+  <div class="dim-bar"><span class="n">CoL</span><div class="b"><i style="width:65%;background:#eab308"></i></div><span class="v">3.2</span></div>
+  <div class="dim-bar"><span class="n">Content</span><div class="b"><i style="width:66%;background:#eab308"></i></div><span class="v">3.3</span></div>
+  <div class="dim-bar"><span class="n">Cog Eng</span><div class="b"><i style="width:60%;background:#eab308"></i></div><span class="v">3.0</span></div>
+  <div class="dim-bar"><span class="n">Demo</span><div class="b"><i style="width:56%;background:#eab308"></i></div><span class="v">2.8</span></div>
+</div>
+
+<!-- Transparency legend -->
+<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:11px;color:#9a3412;line-height:1.4">
+  <b style="color:#e47727">*</b> Fundamentals mastery is <b>placeholder</b> — no `locked_in` data until the OP Fundamentals form goes live Fall 2026. Band counts (PK-2, 3-4, 5-8, Enrichment) are <b>live from Postgres</b>.
+</div>
+
+<!-- Celebrating recent -->
+<div class="list-card">
+  <div class="list-head">
+    <div class="list-title">Celebrating · recent wins</div>
+    <a class="list-more" href="celebration-drilldown.html">View all →</a>
+  </div>
+  <div class="t-row" onclick="location.href='staff-v3-coaching.html'">
+    <div class="t-avatar green">MW</div>
+    <div class="t-body">
+      <div class="t-name">Marcus Williams</div>
+      <div class="t-meta">5th · 3 celebrations this cycle</div>
+    </div>
+    <div class="t-status"><div class="t-s">3.8</div><div class="t-l">obs avg</div></div>
+    <div class="t-chev">›</div>
+  </div>
+  <div class="t-row" onclick="location.href='staff-v3-coaching.html'">
+    <div class="t-avatar green">AJ</div>
+    <div class="t-body">
+      <div class="t-name">Amara Johnson</div>
+      <div class="t-meta">4th · 2 celebrations this cycle</div>
+    </div>
+    <div class="t-status"><div class="t-s">3.9</div><div class="t-l">obs avg</div></div>
+    <div class="t-chev">›</div>
+  </div>
+</div>
+
+</div>
+
+<script>
+document.querySelectorAll('.cycle-btn').forEach(b => b.addEventListener('click', e => {
+  document.querySelectorAll('.cycle-btn').forEach(x => x.classList.remove('on'))
+  e.target.classList.add('on')
+}))
+function filterBand(band){
+  document.querySelectorAll('.hero-foot-item').forEach(el => {
+    el.style.background = el.dataset.band === band ? 'rgba(228,119,39,.25)' : ''
+    el.style.borderRadius = '8px'
+  })
+  // placeholder — in real app would filter the "Needs Attention" list by the band
+  alert('Filtered to ' + band + ' · Needs Attention list would narrow to teachers in this band')
+}
+</script>
+
+</body></html>

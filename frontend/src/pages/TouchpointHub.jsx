@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import BottomNav from '../components/BottomNav'
 import AIPanel from '../components/AIPanel'
 import ImpersonationBanner from '../components/ImpersonationBanner'
@@ -22,6 +22,9 @@ const FORM_LABELS = {
   self_reflection_teacher: { label: 'Self-Refl', color: '#7c3aed', bg: '#ede9fe', route: '/app/self-reflection' },
   self_reflection_leader: { label: 'Self-Refl', color: '#7c3aed', bg: '#ede9fe', route: '/app/self-reflection' },
   solicited_feedback: { label: 'Solicited', color: '#2563eb', bg: '#dbeafe', route: '/app/solicit' },
+  performance_improvement_plan: { label: 'PIP', color: '#dc2626', bg: '#fee2e2', route: '/app/pip' },
+  iap: { label: 'PIP', color: '#dc2626', bg: '#fee2e2', route: '/app/pip' },
+  write_up: { label: 'Write-Up', color: '#dc2626', bg: '#fee2e2', route: '/app/write-up' },
 }
 
 function initials(name) {
@@ -95,28 +98,37 @@ function RecentItem({ to, initials, name, meta, badge, badgeBg, badgeColor }) {
 }
 
 export default function TouchpointHub() {
+  const navigate = useNavigate()
   const [aiOpen, setAiOpen] = useState(false)
   const [recent, setRecent] = useState([])
+  const [canFileHrDoc, setCanFileHrDoc] = useState(false)
 
   useEffect(() => {
     api.get('/api/my-recent-touchpoints?limit=5')
       .then(r => setRecent(Array.isArray(r) ? r : []))
       .catch(() => setRecent([]))
+    api.get('/api/auth/status')
+      .then(r => setCanFileHrDoc(!!r?.user?.can_file_hr_doc))
+      .catch(() => {})
   }, [])
 
   return (
     <div className="min-h-[100svh] bg-[#f5f7fa] pb-20">
       <ImpersonationBanner />
-      {/* Top nav — centered title, back arrow to home */}
+      {/* Top nav — back arrow (prev page), tap logo for home */}
       <nav className="sticky top-0 z-50 bg-fls-navy px-4 py-4 flex items-center gap-3">
-        <Link to="/" className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center no-underline">
+        <button
+          onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}
+          aria-label="Back"
+          className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center border-0 cursor-pointer"
+        >
           <svg width="18" height="18" fill="none" stroke="white" strokeWidth="2">
             <path d="M15 9H3m0 0l5-5M3 9l5 5" />
           </svg>
-        </Link>
-        <div className="flex-1 text-center text-[16px] font-bold text-white">
+        </button>
+        <Link to="/" className="flex-1 text-center text-[16px] font-bold text-white no-underline">
           Observation<span className="text-fls-orange">Point</span>
-        </div>
+        </Link>
         <div className="w-8" />
       </nav>
 
@@ -156,12 +168,14 @@ export default function TouchpointHub() {
           </div>
         </Section>
 
-        <Section label="Discipline" count="2">
-          <div className="grid grid-cols-2 gap-2.5">
-            <Card to="/app/pmap" icon="⚠️" iconBg="#fee2e2" title="IAP" sub="Improvement Plan" />
-            <Card to="/app/pmap" icon="📝" iconBg="#fee2e2" title="Write-Up" sub="Employee Discipline" />
-          </div>
-        </Section>
+        {canFileHrDoc && (
+          <Section label="Discipline" count="2">
+            <div className="grid grid-cols-2 gap-2.5">
+              <Card to="/app/pip" icon="⚠️" iconBg="#fee2e2" title="PIP" sub="Performance Improvement Plan · formerly IAP" />
+              <Card to="/app/write-up" icon="📝" iconBg="#fee2e2" title="Write-Up" sub="Employee Discipline" />
+            </div>
+          </Section>
+        )}
 
         {/* Recent TouchPoints removed per Scott — keep TouchpointHub focused on the form picker. */}
       </div>

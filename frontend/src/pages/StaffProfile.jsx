@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import BottomNav from '../components/BottomNav'
 import AIPanel from '../components/AIPanel'
 import LogTouchpointModal from '../components/LogTouchpointModal'
@@ -32,7 +32,8 @@ const FORM_LABEL = {
   'meeting_data_meeting_(relay)': 'Data Meeting',
   solicited_feedback: 'Solicited Feedback',
   write_up: 'Write-Up',
-  iap: 'IAP',
+  performance_improvement_plan: 'PIP',
+  iap: 'PIP',
 }
 
 /**
@@ -805,6 +806,7 @@ function GoalsView({ email }) {
 }
 
 export default function StaffProfile() {
+  const navigate = useNavigate()
   const { email: rawEmail } = useParams()
   const email = decodeURIComponent(rawEmail || '')
   const [data, setData] = useState(null)
@@ -855,14 +857,18 @@ export default function StaffProfile() {
     <div className="min-h-[100svh] bg-[#f5f7fa] pb-20">
       <ImpersonationBanner />
       <nav className="sticky top-0 z-50 bg-fls-navy px-4 py-4 flex items-center gap-3">
-        <Link to="/" className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center no-underline">
+        <button
+          onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}
+          aria-label="Back"
+          className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center border-0 cursor-pointer"
+        >
           <svg width="18" height="18" fill="none" stroke="white" strokeWidth="2">
             <path d="M15 9H3m0 0l5-5M3 9l5 5" />
           </svg>
-        </Link>
-        <div className="flex-1 text-center text-[16px] font-bold text-white">
+        </button>
+        <Link to="/" className="flex-1 text-center text-[16px] font-bold text-white no-underline">
           Observation<span className="text-fls-orange">Point</span>
-        </div>
+        </Link>
         <div className="w-8" />
       </nav>
 

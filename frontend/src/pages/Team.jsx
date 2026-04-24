@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import BottomNav from '../components/BottomNav'
 import AIPanel from '../components/AIPanel'
 import ImpersonationBanner from '../components/ImpersonationBanner'
@@ -30,6 +30,7 @@ function daysSince(dateStr) {
 }
 
 export default function Team() {
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [staff, setStaff] = useState([])
   const [view, setView] = useState(searchParams.get('view') || 'direct')
@@ -111,14 +112,18 @@ export default function Team() {
     <div className="min-h-[100svh] bg-[#f5f7fa] pb-20">
       <ImpersonationBanner />
       <nav className="sticky top-0 z-50 bg-fls-navy px-4 py-4 flex items-center gap-3">
-        <Link to="/" className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center no-underline">
+        <button
+          onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}
+          aria-label="Back"
+          className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center border-0 cursor-pointer"
+        >
           <svg width="18" height="18" fill="none" stroke="white" strokeWidth="2">
             <path d="M15 9H3m0 0l5-5M3 9l5 5" />
           </svg>
-        </Link>
-        <div className="flex-1 text-center text-[16px] font-bold text-white">
+        </button>
+        <Link to="/" className="flex-1 text-center text-[16px] font-bold text-white no-underline">
           My Team
-        </div>
+        </Link>
         <div className="w-8" />
       </nav>
 

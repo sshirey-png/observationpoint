@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import Nav from '../components/Nav'
+import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 
 /**
@@ -17,6 +17,7 @@ const EXAMPLES = [
 ]
 
 export default function Insights() {
+  const navigate = useNavigate()
   const [question, setQuestion] = useState('')
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -43,8 +44,18 @@ export default function Insights() {
   }
 
   return (
-    <div className="pb-10">
-      <Nav title="Ask ObservationPoint" />
+    <div className="pb-10 min-h-[100svh] bg-[#f5f7fa]">
+      <nav style={{ background: '#002f60', padding: '14px 16px', textAlign: 'center', position: 'relative' }}>
+        <button
+          onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}
+          aria-label="Back"
+          style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 20, fontWeight: 700, cursor: 'pointer', borderRadius: 8, background: 'rgba(255,255,255,.08)', border: 'none', fontFamily: 'inherit' }}
+        >←</button>
+        <Link to="/" style={{ display: 'inline-block', textDecoration: 'none' }}>
+          <div style={{ fontSize: 17, fontWeight: 800, color: '#fff', cursor: 'pointer' }}>Observation<span style={{ color: '#e47727' }}>Point</span></div>
+        </Link>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,.6)', marginTop: 2 }}>Ask a question</div>
+      </nav>
 
       <div className="px-4 pt-4">
         {/* Search bar */}

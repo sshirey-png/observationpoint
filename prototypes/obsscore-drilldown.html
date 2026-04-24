@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Obs Score Drill-Down</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased}
+.mock-banner{background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;text-align:center;padding:6px 12px;letter-spacing:.05em}
+.nav{background:#002f60;padding:10px 12px;display:flex;align-items:center;gap:10px}
+.back{color:#fff;font-size:22px;font-weight:700;text-decoration:none;padding:4px 8px;cursor:pointer}
+.nav-t{flex:1}
+.nav-title{font-size:14px;font-weight:700;color:#fff}
+.nav-sub{font-size:11px;color:rgba(255,255,255,.65);margin-top:1px}
+.hero{background:linear-gradient(135deg,#002f60,#003b7a);padding:16px 16px 18px;color:#fff}
+.hero-inner{max-width:720px;margin:0 auto;display:flex;align-items:center;gap:14px}
+.hero-big-num{font-size:42px;font-weight:900;line-height:1;color:#fff}
+.hero-big-num .unit{font-size:20px;color:#e47727}
+.hero-sub{font-size:12px;color:rgba(255,255,255,.8);margin-top:4px}
+.hero-dims{flex:1;display:flex;flex-direction:column;gap:4px}
+.hero-dim{display:flex;align-items:center;gap:6px;font-size:11px}
+.hero-dim .n{width:56px;color:rgba(255,255,255,.7);font-weight:700}
+.hero-dim .b{flex:1;height:4px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden}
+.hero-dim .b i{display:block;height:100%;background:#e47727;border-radius:2px}
+.hero-dim .v{width:24px;text-align:right;font-weight:700;color:#fff}
+
+.filter{background:#fff;border-bottom:1px solid #e5e7eb;padding:10px 12px;position:sticky;top:0;z-index:10}
+.filter-inner{max-width:720px;margin:0 auto}
+.tabs{display:flex;gap:6px;margin-bottom:8px}
+.tab{flex:1;padding:10px 8px;border-radius:10px;border:1.5px solid #e5e7eb;background:#fff;font-size:12px;font-weight:700;color:#6b7280;cursor:pointer;text-align:center}
+.tab.on.red{background:#fee2e2;border-color:#fca5a5;color:#991b1b}
+.tab.on.green{background:#dcfce7;border-color:#86efac;color:#166534}
+.tab.on.navy{background:#dbeafe;border-color:#93c5fd;color:#1e40af}
+.tab .num{display:block;font-size:18px;font-weight:800;line-height:1;margin-bottom:2px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{padding:6px 12px;border-radius:14px;border:1px solid #e5e7eb;background:#fff;font-size:11px;font-weight:700;color:#6b7280;cursor:pointer;white-space:nowrap}
+.chip.on{background:#002f60;color:#fff;border-color:#002f60}
+
+.content{max-width:720px;margin:0 auto;padding:10px 12px 80px}
+.list-head{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;padding:10px 4px 6px}
+.row{background:#fff;border-radius:12px;padding:12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+.row:hover{background:#fafbfc}
+.avatar{width:36px;height:36px;border-radius:50%;background:#002f60;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.avatar.red{background:#dc2626}
+.avatar.yellow{background:#eab308}
+.avatar.green{background:#22c55e}
+.row-body{flex:1;min-width:0}
+.row-name{font-size:13px;font-weight:700;color:#111827}
+.row-meta{font-size:11px;color:#6b7280;margin-top:2px}
+.row-score{text-align:right;flex-shrink:0}
+.row-score .s{font-size:18px;font-weight:800;color:#002f60;line-height:1}
+.row-score .l{font-size:10px;color:#9ca3af;margin-top:2px}
+.row-chev{color:#9ca3af;font-size:16px;font-weight:700;margin-left:2px}
+.trend{font-size:10px;font-weight:700;margin-left:4px}
+.trend.up{color:#16a34a}
+.trend.down{color:#dc2626}
+.trend.flat{color:#9ca3af}
+</style></head><body>
+
+<div class="mock-banner" style="background:#d1fae5;color:#065f46">REAL DATA · 2025-26 BigQuery scores · live query results</div>
+
+<nav class="nav">
+  <a class="back" href="network-landing-v3.html">←</a>
+  <div class="nav-t">
+    <div class="nav-title">Observation Score</div>
+    <div class="nav-sub">2026-27</div>
+  </div>
+</nav>
+
+<div style="background:#fff;padding:10px 12px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:center;gap:8px">
+  <button class="cycle-btn on" style="padding:7px 18px;border-radius:18px;font-size:11px;font-weight:700;border:1.5px solid #002f60;background:#002f60;color:#fff;cursor:pointer;flex:1;max-width:110px">Cycle 1</button>
+  <button class="cycle-btn" style="padding:7px 18px;border-radius:18px;font-size:11px;font-weight:700;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;cursor:pointer;flex:1;max-width:110px">Cycle 2</button>
+  <button class="cycle-btn" style="padding:7px 18px;border-radius:18px;font-size:11px;font-weight:700;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;cursor:pointer;flex:1;max-width:110px">Cycle 3</button>
+</div>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div>
+      <div class="hero-big-num">3.07<span class="unit">/5</span></div>
+      <div class="hero-sub">128 teachers scored · 2,587 dim-scores</div>
+    </div>
+    <div class="hero-dims">
+      <div class="hero-dim"><span class="n">On Task</span><div class="b"><i style="width:67%"></i></div><span class="v">3.34</span></div>
+      <div class="hero-dim"><span class="n">CoL</span><div class="b"><i style="width:60%"></i></div><span class="v">2.99</span></div>
+      <div class="hero-dim"><span class="n">Content</span><div class="b"><i style="width:60%"></i></div><span class="v">2.99</span></div>
+      <div class="hero-dim"><span class="n">Cog Eng</span><div class="b"><i style="width:56%"></i></div><span class="v">2.79</span></div>
+      <div class="hero-dim"><span class="n">Demo</span><div class="b"><i style="width:55%"></i></div><span class="v">2.76</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="filter">
+  <div class="filter-inner">
+    <div class="tabs">
+      <button class="tab on red"><span class="num">30</span>Below 3.0</button>
+      <button class="tab"><span class="num">75</span>3.0 – 4.0</button>
+      <button class="tab"><span class="num">23</span>Above 4.0</button>
+    </div>
+    <div class="chips">
+      <button class="chip on">All schools</button>
+      <button class="chip">Langston Hughes</button>
+      <button class="chip">Wheatley</button>
+      <button class="chip">Ashe</button>
+      <button class="chip">Green</button>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+
+<div class="list-head">Below 3.0 · 30 teachers · sorted by score · from BigQuery</div>
+
+<div class="row" onclick="location.href='staff-v3-coaching.html'">
+  <div class="avatar red">JC</div>
+  <div class="row-body"><div class="row-name">Jeffrey Cappell</div><div class="row-meta">Wheatley · Lower School · 14 dim-scores</div></div>
+  <div class="row-score"><div class="s">1.79</div><div class="l">obs avg</div></div>
+  <div class="row-chev">›</div>
+</div>
+<div class="row" onclick="location.href='staff-v3-coaching.html'">
+  <div class="avatar red">AR</div>
+  <div class="row-body"><div class="row-name">Angelica Robinson</div><div class="row-meta">Wheatley · 7th · 13 dim-scores</div></div>
+  <div class="row-score"><div class="s">1.92</div><div class="l">obs avg</div></div>
+  <div class="row-chev">›</div>
+</div>
+<div class="row" onclick="location.href='staff-v3-coaching.html'">
+  <div class="avatar red">BC</div>
+  <div class="row-body"><div class="row-name">Brandie Cole</div><div class="row-meta">Wheatley · 7&8 · 10 dim-scores</div></div>
+  <div class="row-score"><div class="s">2.10</div><div class="l">obs avg</div></div>
+  <div class="row-chev">›</div>
+</div>
+<div class="row" onclick="location.href='staff-v3-coaching.html'">
+  <div class="avatar red">KB</div>
+  <div class="row-body"><div class="row-name">Keshia Burks</div><div class="row-meta">Wheatley · 5&7 · 9 dim-scores</div></div>
+  <div class="row-score"><div class="s">2.11</div><div class="l">obs avg</div></div>
+  <div class="row-chev">›</div>
+</div>
+<div class="row" onclick="location.href='staff-v3-coaching.html'">
+  <div class="avatar red">LH</div>
+  <div class="row-body"><div class="row-name">Laval Hughes</div><div class="row-meta">Wheatley · Middle School · 16 dim-scores</div></div>
+  <div class="row-score"><div class="s">2.12</div><div class="l">obs avg</div></div>
+  <div class="row-chev">›</div>
+</div>
+<div class="row" onclick="location.href='staff-v3-coaching.html'">
+  <div class="avatar red">FR</div>
+  <div class="row-body"><div class="row-name">Farley Richard</div><div class="row-meta">Wheatley · 6&7 · 9 dim-scores</div></div>
+  <div class="row-score"><div class="s">2.22</div><div class="l">obs avg</div></div>
+  <div class="row-chev">›</div>
+</div>
+<div class="row" onclick="location.href='staff-v3-coaching.html'">
+  <div class="avatar red">MP</div>
+  <div class="row-body"><div class="row-name">Michaelee Price</div><div class="row-meta">Wheatley · 3&4 · 11 dim-scores</div></div>
+  <div class="row-score"><div class="s">2.36</div><div class="l">obs avg</div></div>
+  <div class="row-chev">›</div>
+</div>
+<div class="row" onclick="location.href='staff-v3-coaching.html'">
+  <div class="avatar red">SC</div>
+  <div class="row-body"><div class="row-name">Simone Clair</div><div class="row-meta">Wheatley · 6th · 21 dim-scores</div></div>
+  <div class="row-score"><div class="s">2.43</div><div class="l">obs avg</div></div>
+  <div class="row-chev">›</div>
+</div>
+
+<div style="text-align:center;padding:12px;font-size:11px;color:#9ca3af">22 more · scroll to see all</div>
+
+<div style="margin-top:16px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:10px 12px;font-size:11px;color:#9a3412;line-height:1.4">
+  <b style="color:#e47727">Note:</b> 59 of 187 teachers don't yet have 3+ dimension scores (not shown here — surface separately as "Not yet observed enough"). Scores here are averages from BigQuery <code>observationpoint.scores</code> for 2025-26 published observations.
+</div>
+
+</div>
+
+<script>
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', e => {
+  const btn = e.currentTarget
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('on','red','green','navy'))
+  btn.classList.add('on')
+  const txt = btn.textContent
+  if(txt.includes('Below')) btn.classList.add('red')
+  else if(txt.includes('Above')) btn.classList.add('green')
+  else btn.classList.add('navy')
+}))
+document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', e => {
+  document.querySelectorAll('.chip').forEach(x => x.classList.remove('on'))
+  e.target.classList.add('on')
+}))
+</script>
+
+</body></html>

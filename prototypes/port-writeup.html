@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Port · Write-Up · ObservationPoint</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased;padding-bottom:110px}
+.banner{background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;text-align:center;padding:6px 12px;letter-spacing:.05em}
+.port-banner{background:#dcfce7;color:#166534;font-size:11px;font-weight:700;text-align:center;padding:6px 12px}
+.nav{background:#002f60;padding:14px 16px;text-align:center;position:relative}
+.nav-back{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:700;border-radius:8px;background:rgba(255,255,255,.08)}
+.nav-title{font-size:17px;font-weight:800;color:#fff}
+.nav-title span{color:#e47727}
+.nav-sub{font-size:12px;color:rgba(255,255,255,.6);margin-top:2px}
+.nav-badge{display:inline-block;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;margin-left:6px}
+.status-strip{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:#9ca3af;padding:6px 12px;background:#f5f7fa}
+.wrap{padding:14px;max-width:720px;margin:0 auto}
+.subject{position:relative;background:linear-gradient(135deg,#002f60,#003b7a);border-radius:14px;padding:14px;margin-bottom:12px;color:#fff;display:flex;align-items:center;gap:12px;box-shadow:0 3px 10px rgba(0,47,96,.2)}
+.subject-av{width:48px;height:48px;border-radius:50%;background:#e47727;color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;flex-shrink:0}
+.subject-name{font-size:16px;font-weight:800;line-height:1.2}
+.subject-meta{font-size:11px;color:rgba(255,255,255,.75);margin-top:3px}
+.subject-meta .badge{display:inline-block;background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;margin-left:6px}
+.subject-change{position:absolute;top:10px;right:12px;font-size:11px;color:rgba(255,255,255,.85);background:rgba(255,255,255,.1);padding:4px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.2);font-weight:600}
+.warning{background:#fef2f2;border-left:4px solid #dc2626;border-radius:0 10px 10px 0;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#991b1b;line-height:1.5}
+.section-title{font-size:15px;font-weight:800;color:#111827;margin:18px 4px 4px}
+.section-sub{font-size:11px;color:#6b7280;margin:0 4px 10px}
+.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:12px}
+.card-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-top:10px;margin-bottom:6px}
+.req{color:#dc2626}
+textarea{width:100%;min-height:80px;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:inherit;color:#111827;resize:vertical;line-height:1.5}
+input[type=date]{width:100%;padding:11px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;color:#111827;background:#fff}
+select{width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;color:#111827;background:#fff;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%239ca3af'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.checks{display:flex;flex-wrap:wrap;gap:6px}
+.check{display:flex;align-items:center;gap:6px;padding:8px 12px;background:#f5f7fa;border-radius:8px;font-size:13px;cursor:pointer}
+.check input{width:16px;height:16px;accent-color:#dc2626}
+.submit-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;padding:10px 14px;padding-bottom:max(14px,env(safe-area-inset-bottom));z-index:50;display:flex;gap:6px}
+.sbtn{flex:1;padding:13px 8px;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.sbtn.draft{background:#f3f4f6;color:#4b5563}
+.sbtn.submit{background:#dc2626;color:#fff;flex:1.4}
+.sbtn.submit-send{background:#991b1b;color:#fff;flex:1.4}
+</style>
+</head>
+<body>
+<div class="banner">DESIGN MOCK · Write-Up</div>
+<div class="port-banner">PORT PREVIEW · Write-Up</div>
+<nav class="nav">
+  <div class="nav-back">&larr;</div>
+  <div class="nav-title">Observation<span>Point</span></div>
+  <div class="nav-sub">Marcus Williams &middot; Write-Up<span class="nav-badge">TEST MODE</span></div>
+</nav>
+<div class="status-strip"><span>Auto-save enabled</span><span style="color:#16a34a;font-weight:600">&#10003; Saved 7:37 PM</span></div>
+
+<div class="wrap">
+
+  <div class="subject">
+    <div class="subject-av">MW</div>
+    <div>
+      <div class="subject-name">Marcus Williams</div>
+      <div class="subject-meta">Samuel J. Green &middot; 5th Grade Math<span class="badge">Write-Up</span></div>
+    </div>
+    <div class="subject-change">Change</div>
+  </div>
+
+  <div class="warning">
+    <b>Formal disciplinary document.</b> This Write-Up will be stored in the employee's record.
+  </div>
+
+  <div class="section-title">Employee Write-Up</div>
+  <div class="section-sub">Document the incident, prior discussions, and category.</div>
+
+  <div class="card">
+    <div class="card-label">Date of Incident <span class="req">*</span></div>
+    <input type="date">
+    <div class="card-label">Type <span class="req">*</span></div>
+    <select>
+      <option value="">Select type...</option>
+      <option>Verbal Warning</option>
+      <option selected>Written Warning</option>
+      <option>Final Written Warning</option>
+    </select>
+    <div class="card-label">Category <span class="req">*</span></div>
+    <div class="checks">
+      <label class="check"><input type="checkbox"> Professionalism</label>
+      <label class="check"><input type="checkbox" checked> Performance</label>
+      <label class="check"><input type="checkbox"> Attendance</label>
+      <label class="check"><input type="checkbox"> Policy Violation</label>
+      <label class="check"><input type="checkbox"> Commitment</label>
+    </div>
+    <div class="card-label">Description of Issue <span class="req">*</span></div>
+    <textarea placeholder="Describe the incident or behavior. Include dates, specifics, and context."></textarea>
+    <div class="card-label">Prior Discussions <span class="req">*</span></div>
+    <textarea placeholder="Any prior conversations about this issue. Include dates." style="min-height:60px"></textarea>
+  </div>
+
+  <div class="section-title">Expectations & Consequences</div>
+
+  <div class="card">
+    <div class="card-label">Expectations Going Forward <span class="req">*</span></div>
+    <textarea placeholder="What is expected of the employee going forward? Be specific and measurable."></textarea>
+    <div class="card-label">Consequences if Not Corrected <span class="req">*</span></div>
+    <textarea placeholder="Next steps if behavior continues or expectations are not met." style="min-height:60px"></textarea>
+  </div>
+
+  <div class="section-title">Employee Acknowledgment</div>
+  <div class="section-sub">Typed signature collected via email link after you Submit & Send.</div>
+
+  <div class="card" style="background:#fffbeb;border:1px solid #fde68a">
+    <div style="display:flex;align-items:flex-start;gap:10px">
+      <div style="width:28px;height:28px;border-radius:6px;background:#e47727;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0">&#9993;</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:#92400e">How acknowledgment works</div>
+        <div style="font-size:12px;color:#78350f;line-height:1.6;margin-top:4px">
+          &bull; Submit &amp; Send emails the Write-Up to the employee<br>
+          &bull; Employee clicks a link, reviews the document<br>
+          &bull; Employee types their full name to acknowledge receipt<br>
+          &bull; Timestamp + IP captured; you&rsquo;re notified<br>
+          &bull; If employee refuses, you can mark &ldquo;Refused to sign&rdquo; from the record
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="submit-bar">
+  <button class="sbtn draft">Save draft</button>
+  <button class="sbtn submit">Submit Write-Up</button>
+  <button class="sbtn submit-send">Submit & Send</button>
+</div>
+</body>
+</html>
