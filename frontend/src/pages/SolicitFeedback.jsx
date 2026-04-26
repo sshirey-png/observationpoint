@@ -60,7 +60,7 @@ export default function SolicitFeedback() {
     if (!canSubmit) return
     setSaving(true)
     try {
-      await api.post('/api/touchpoints', {
+      const res = await api.post('/api/touchpoints', {
         form_type: 'solicited_feedback',
         teacher_email: teacher.email,
         school: teacher.school || '',
@@ -76,6 +76,10 @@ export default function SolicitFeedback() {
           flight_risk: flightRisk,
         }),
       })
+      // SF's whole point is asking the teacher a question — always notify.
+      if (res?.id) {
+        try { await api.post(`/api/touchpoints/${res.id}/notify`, {}) } catch (e) {}
+      }
       setDone(true)
     } catch (e) {
       alert('Failed to save: ' + e.message)
@@ -89,7 +93,7 @@ export default function SolicitFeedback() {
         <div style={{ background: '#fff', borderRadius: 18, padding: 28, textAlign: 'center', maxWidth: 360, boxShadow: '0 8px 24px rgba(0,0,0,.1)' }}>
           <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', color: '#2563eb', fontSize: 28, fontWeight: 800 }}>✓</div>
           <div style={{ fontSize: 20, fontWeight: 800, color: '#002f60' }}>Feedback request sent</div>
-          <div style={{ fontSize: 13, color: '#6b7280', marginTop: 6 }}>{teacher?.first_name} will see this in ObservationPoint</div>
+          <div style={{ fontSize: 13, color: '#6b7280', marginTop: 6 }}>Email sent to {teacher?.first_name} with your question. They can reply via email or in person.</div>
           <button
             onClick={() => navigate('/')}
             style={{ marginTop: 18, background: '#002f60', color: '#fff', border: 'none', borderRadius: 12, padding: '12px 24px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
@@ -102,9 +106,6 @@ export default function SolicitFeedback() {
   return (
     <FormShell>
     <div style={{ minHeight: '100svh', background: '#f5f7fa', paddingBottom: 'calc(100px + env(safe-area-inset-bottom))', fontFamily: 'Inter, sans-serif' }}>
-      <div style={{ background: '#fef3c7', color: '#92400e', fontSize: 11, fontWeight: 700, textAlign: 'center', padding: '6px 12px', letterSpacing: '.05em' }}>
-        DESIGN MOCK · Solicit Feedback form
-      </div>
       <nav style={{ background: '#002f60', padding: '14px 16px', textAlign: 'center', position: 'relative' }}>
         <button
           onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}
@@ -115,9 +116,7 @@ export default function SolicitFeedback() {
           <div style={{ fontSize: 17, fontWeight: 800, color: '#fff', cursor: 'pointer' }}>Observation<span style={{ color: '#e47727' }}>Point</span></div>
         </Link>
         <div style={{ fontSize: 12, color: 'rgba(255,255,255,.6)', marginTop: 2 }}>
-          {teacher ? <>{teacher.first_name} {teacher.last_name} · Solicit Feedback</> : 'Solicit Feedback'}
-          <span style={{ display: 'inline-block', background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 10, fontSize: 10, fontWeight: 700, marginLeft: 6 }}>TEST MODE</span>
-        </div>
+          {teacher ? <>{teacher.first_name} {teacher.last_name} · Solicit Feedback</> : 'Solicit Feedback'}</div>
       </nav>
 
       <div style={{ padding: 14, maxWidth: 720, margin: '0 auto' }}>

@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Port Preview · PMAP PreK · ObservationPoint</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased;padding-bottom:140px}
+.banner{background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;text-align:center;padding:6px 12px;letter-spacing:.05em}
+.port-banner{background:#dcfce7;color:#166534;font-size:11px;font-weight:700;text-align:center;padding:6px 12px}
+.nav{background:#002f60;padding:14px 16px;text-align:center;position:relative}
+.nav-back{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:700;border-radius:8px;background:rgba(255,255,255,.08)}
+.nav-title{font-size:17px;font-weight:800;color:#fff}
+.nav-title span{color:#e47727}
+.nav-sub{font-size:12px;color:rgba(255,255,255,.6);margin-top:2px}
+.nav-badge{display:inline-block;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;margin-left:6px}
+.status-strip{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:#9ca3af;padding:6px 12px;background:#f5f7fa}
+.wrap{padding:14px;max-width:720px;margin:0 auto}
+.subject{background:linear-gradient(135deg,#002f60,#003b7a);border-radius:14px;padding:14px;margin-bottom:14px;color:#fff;display:flex;align-items:center;gap:12px;box-shadow:0 3px 10px rgba(0,47,96,.2);position:relative}
+.subject-av{width:48px;height:48px;border-radius:50%;background:#e47727;color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;flex-shrink:0}
+.subject-name{font-size:16px;font-weight:800;line-height:1.2}
+.subject-meta{font-size:11px;color:rgba(255,255,255,.75);margin-top:3px}
+.subject-meta .badge{display:inline-block;background:#dcfce7;color:#059669;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;margin-left:6px}
+.subject-change{position:absolute;top:10px;right:12px;font-size:11px;color:rgba(255,255,255,.7);background:rgba(255,255,255,.08);padding:4px 10px;border-radius:20px;cursor:pointer;border:1px solid rgba(255,255,255,.15);font-weight:600}
+.section-title{font-size:15px;font-weight:800;margin:18px 0 4px;letter-spacing:-.01em}
+.section-sub{font-size:12px;color:#9ca3af;margin-bottom:10px}
+.cycle-title{font-size:16px;font-weight:800;color:#002f60;margin:20px 0 4px}
+.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:12px}
+.card-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-bottom:8px}
+.req{color:#dc2626}
+select{width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;color:#111827;font-family:inherit;background:#fff}
+textarea{width:100%;min-height:70px;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:inherit;color:#111827;resize:vertical;line-height:1.5}
+textarea:focus,select:focus{border-color:#e47727;outline:none}
+input[type="number"],input[type="time"]{width:100%;padding:10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;font-family:inherit;color:#111827;outline:none}
+input:focus{border-color:#e47727}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.track-label{font-size:13px;font-weight:500;margin-bottom:6px}
+.track-row{display:flex;gap:6px;margin-bottom:12px}
+.track-btn{flex:1;padding:12px;border-radius:10px;border:2px solid #e5e7eb;background:#fff;text-align:center;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;color:#9ca3af;transition:all .15s}
+.track-btn.off.sel{background:#ef4444;border-color:#ef4444;color:#fff}
+.track-btn.on.sel{background:#22c55e;border-color:#22c55e;color:#fff}
+.domain-header{font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;margin:16px 0 8px}
+.rub{background:#fff;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);padding:14px;margin-bottom:8px;border-left:4px solid #e5e7eb;transition:border-color .2s}
+.rub-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px}
+.rub-code{font-size:11px;font-weight:700;color:#002f60;background:#002f600a;padding:2px 6px;border-radius:4px}
+.rub-name{font-size:13px;font-weight:600;margin-left:8px;flex:1}
+.scores-pk{display:flex;gap:4px;justify-content:space-between}
+.sc-pk{flex:1;min-width:0;height:40px;border-radius:8px;border:1.5px solid #e5e7eb;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .12s;-webkit-tap-highlight-color:transparent}
+.sc-pk .n{font-size:15px;font-weight:700;color:#9ca3af}
+.sc-pk.sel .n{color:#fff}
+.sc-pk[data-v="1"].sel,.sc-pk[data-v="2"].sel{background:#ef4444;border-color:#ef4444}
+.sc-pk[data-v="3"].sel,.sc-pk[data-v="4"].sel,.sc-pk[data-v="5"].sel{background:#eab308;border-color:#eab308}
+.sc-pk[data-v="6"].sel,.sc-pk[data-v="7"].sel{background:#22c55e;border-color:#22c55e}
+.desc-toggle{font-size:12px;color:#e47727;cursor:pointer;margin-top:8px;font-weight:600}
+.desc-body{display:none;margin-top:8px;padding:10px;background:#f5f7fa;border-radius:8px;font-size:11px;color:#6b7280;line-height:1.7}
+.desc-body.open{display:block}
+.ref-note{font-size:11px;color:#6b7280;background:#f5f7fa;border-radius:8px;padding:8px 10px;margin-bottom:10px;font-style:italic}
+.check-group{display:flex;flex-wrap:wrap;gap:6px}
+.check-label{display:flex;align-items:center;gap:4px;font-size:13px;padding:6px 10px;background:#f5f7fa;border-radius:6px;cursor:pointer}
+.check-label input{width:16px;height:16px}
+.divider{height:1px;background:#e5e7eb;margin:18px 0}
+.submit-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;padding:10px 14px;padding-bottom:max(14px,env(safe-area-inset-bottom));z-index:50;display:flex;gap:6px}
+.submit-inner{display:flex;gap:6px;max-width:720px;margin:0 auto;width:100%}
+.sbtn{flex:1;padding:13px 8px;border:none;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+.sbtn.draft{background:#f3f4f6;color:#4b5563}
+.sbtn.publish{background:#fff;color:#002f60;border:1.5px solid #002f60}
+.sbtn.send{background:#002f60;color:#fff;flex:1.3}
+</style>
+</head>
+<body>
+<div class="banner">DESIGN MOCK &middot; PMAP PreK</div>
+<div class="port-banner">PORT PREVIEW &middot; PMAP PreK</div>
+<nav class="nav">
+  <div class="nav-back">&larr;</div>
+  <div class="nav-title">Observation<span>Point</span></div>
+  <div class="nav-sub">Marie Thibodaux &middot; PMAP &middot; PreK<span class="nav-badge">TEST MODE</span></div>
+</nav>
+<div class="status-strip"><span>Auto-save enabled</span><span style="color:#16a34a;font-weight:600">&#10003; Saved 7:37 PM</span></div>
+
+<div class="wrap">
+
+  <div class="subject">
+    <div class="subject-av">MT</div>
+    <div>
+      <div class="subject-name">Marie Thibodaux</div>
+      <div class="subject-meta">Arthur Ashe Charter &middot; PreK-4<span class="badge">PMAP &middot; PreK</span></div>
+    </div>
+    <div class="subject-change">Change</div>
+  </div>
+
+  <!-- Meeting Checklist -->
+  <div class="section-title">Meeting Checklist</div>
+  <div class="card">
+    <div class="card-label">Has the job description been reviewed? <span class="req">*</span></div>
+    <select><option value="">Choose one...</option><option>Yes</option><option>No</option></select>
+  </div>
+
+  <!-- WIG + Goals -->
+  <div class="section-title">WIG + Annual Goals Review</div>
+  <div class="card">
+    <div class="card-label">WIG + Annual Goals <span class="req">*</span></div>
+    <textarea placeholder="Refer to goals. Note updates or write N/A."></textarea>
+    <div style="margin-top:14px"><div class="track-label">Wildly Important Goal (WIG) <span class="req">*</span></div>
+      <div class="track-row"><div class="track-btn off" onclick="trackSel(this)">Off Track</div><div class="track-btn on" onclick="trackSel(this)">On Track</div></div></div>
+    <div><div class="track-label">Annual Goal 1</div>
+      <div class="track-row"><div class="track-btn off" onclick="trackSel(this)">Off Track</div><div class="track-btn on" onclick="trackSel(this)">On Track</div></div></div>
+    <div><div class="track-label">Annual Goal 2</div>
+      <div class="track-row"><div class="track-btn off" onclick="trackSel(this)">Off Track</div><div class="track-btn on" onclick="trackSel(this)">On Track</div></div></div>
+    <div><div class="track-label">Annual Goal 3</div>
+      <div class="track-row"><div class="track-btn off" onclick="trackSel(this)">Off Track</div><div class="track-btn on" onclick="trackSel(this)">On Track</div></div></div>
+    <div style="margin-top:10px"><div class="card-label">Progress</div>
+      <textarea placeholder="Data to support ratings."></textarea></div>
+  </div>
+
+  <!-- Whirlwind -->
+  <div class="section-title">Whirlwind Work Review</div>
+  <div class="card">
+    <textarea placeholder="List 3-5 most important whirlwind work aspects."></textarea>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ============ CYCLE 1 (full descriptors) ============ -->
+  <div class="cycle-title">Cycle 1: Information</div>
+  <div class="card">
+    <div class="grid2">
+      <div><div class="card-label">Students</div><input type="number" placeholder="0"></div>
+      <div><div class="card-label">Adults</div><input type="number" placeholder="0"></div>
+      <div><div class="card-label">Start Time</div><input type="time"></div>
+      <div><div class="card-label">End Time</div><input type="time"></div>
+    </div>
+    <div style="margin-top:10px"><div class="card-label">Academic Content</div>
+      <div class="check-group">
+        <label class="check-label"><input type="checkbox"> Lit/Lang Arts</label>
+        <label class="check-label"><input type="checkbox"> Math</label>
+        <label class="check-label"><input type="checkbox"> Social Studies</label>
+        <label class="check-label"><input type="checkbox"> Science</label>
+      </div>
+    </div>
+    <div style="margin-top:10px"><div class="card-label">Format</div>
+      <div class="check-group">
+        <label class="check-label"><input type="checkbox"> Routine</label>
+        <label class="check-label"><input type="checkbox"> Meals/Snacks</label>
+        <label class="check-label"><input type="checkbox"> Whole Group</label>
+        <label class="check-label"><input type="checkbox"> Individual</label>
+        <label class="check-label"><input type="checkbox"> Small Groups</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="cycle-title">Cycle 1: CLASS Scoring</div>
+
+  <div class="domain-header">Emotional Support</div>
+
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK1</div><span class="rub-name">Positive Climate</span></div>
+    <div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div>
+    <div class="desc-toggle" onclick="togD(this)">&#9654; View descriptors</div>
+    <div class="desc-body"><strong>Positive Climate</strong>: Reflects the emotional connection between the teacher and students and among students and the warmth, respect, and enjoyment communicated by verbal and nonverbal interactions<br><br><strong>Relationships</strong> (Physical proximity, Shared activities, Peer assistance, Matched affect, Social conversation)<br><span style="color:#ef4444">Low:</span> There are few, if any, indications that the teacher and students enjoy warm, supportive relationships with one another<br><span style="color:#eab308">Mid:</span> There are some indications that the teacher and students enjoy warm, supportive relationships with one another<br><span style="color:#22c55e">High:</span> There are many indications that the teacher and students enjoy warm, supportive relationships with one another<br><br><strong>Positive Affect</strong> (Smiling, Laughter, Enthusiasm)<br><span style="color:#ef4444">Low:</span> There are no or few displays of positive affect by the teacher and/or students<br><span style="color:#eab308">Mid:</span> There are sometimes displays of positive affect by the teacher and/or students<br><span style="color:#22c55e">High:</span> There are frequent displays of positive affect by the teacher and/or students<br><br><strong>Positive Communication</strong> (Verbal affection, Physical affection, Positive expectations)<br><span style="color:#ef4444">Low:</span> There are rarely positive communications, verbal or physical, among teachers and students<br><span style="color:#eab308">Mid:</span> There are sometimes positive communications, verbal or physical, among teachers and students<br><span style="color:#22c55e">High:</span> There are frequently positive communications, verbal or physical, among teachers and students<br><br><strong>Respect</strong> (Eye contact, Warm, calm voice, Respectful language, Cooperation and/or sharing)<br><span style="color:#ef4444">Low:</span> The teacher and students rarely, if ever, demonstrate respect for one another<br><span style="color:#eab308">Mid:</span> The teacher and students sometimes demonstrate respect for one another<br><span style="color:#22c55e">High:</span> The teacher and students consistently demonstrate respect for one another</div>
+  </div>
+
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK2</div><span class="rub-name">Negative Climate</span></div>
+    <div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div>
+    <div class="desc-toggle" onclick="togD(this)">&#9654; View descriptors</div>
+    <div class="desc-body"><strong>Negative Climate</strong>: Reflects the overall level of expressed negativity in the classroom; the frequency, quality, and intensity of teacher and peer negativity are key to this scale<br><br><em>Negative Climate is scaled in the opposite direction. Higher negativity indicates lower quality.</em><br><br><strong>Negative Affect</strong> (Irritability, Anger, Harsh voice, Peer aggression, Disconnected or escalating negativity)<br><span style="color:#ef4444">Low:</span> The teacher and students do not display strong negative affect<br><span style="color:#eab308">Mid:</span> Mild displays of irritability, anger, or negative affect<br><span style="color:#22c55e">High:</span> Consistent irritability, anger, or negative affect<br><br><strong>Punitive Control</strong> (Yelling, Threats, Physical control, Harsh punishment)<br><span style="color:#ef4444">Low:</span> The teacher does not yell or make threats<br><span style="color:#eab308">Mid:</span> Occasional threats or yelling to establish control<br><span style="color:#22c55e">High:</span> Repeated yelling or threats<br><br><strong>Sarcasm/Disrespect</strong> (Sarcastic voice/statement, Teasing, Humiliation)<br><span style="color:#ef4444">Low:</span> Not sarcastic or disrespectful<br><span style="color:#eab308">Mid:</span> Occasionally sarcastic or disrespectful<br><span style="color:#22c55e">High:</span> Repeatedly sarcastic or disrespectful<br><br><strong>Severe Negativity</strong> (Victimization, Bullying, Physical punishment)<br><span style="color:#ef4444">Low:</span> No instances of severe negativity<br><span style="color:#eab308">Mid:</span> No instances of severe negativity<br><span style="color:#22c55e">High:</span> Instances of severe negativity between teacher and students or among the students</div>
+  </div>
+
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK3</div><span class="rub-name">Teacher Sensitivity</span></div>
+    <div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div>
+    <div class="desc-toggle" onclick="togD(this)">&#9654; View descriptors</div>
+    <div class="desc-body"><strong>Teacher Sensitivity</strong>: Encompasses the teacher's awareness of and responsivity to students' academic and emotional needs<br><br><strong>Awareness</strong> (Anticipates problems and plans appropriately, Notices lack of understanding and/or difficulties)<br><span style="color:#ef4444">Low:</span> Consistently fails to be aware of students who need extra support<br><span style="color:#eab308">Mid:</span> Sometimes aware<br><span style="color:#22c55e">High:</span> Consistently aware<br><br><strong>Responsiveness</strong> (Acknowledges emotions, Provides comfort, Individualized support)<br><span style="color:#ef4444">Low:</span> Unresponsive or dismissive; same support to all<br><span style="color:#eab308">Mid:</span> Sometimes responsive<br><span style="color:#22c55e">High:</span> Consistently matches support to needs and abilities<br><br><strong>Addresses Problems</strong> (Helps effectively and timely, Helps resolve problems)<br><span style="color:#ef4444">Low:</span> Ineffective<br><span style="color:#eab308">Mid:</span> Sometimes effective<br><span style="color:#22c55e">High:</span> Consistently effective<br><br><strong>Student Comfort</strong> (Seeks support and guidance, Freely participates, Takes risks)<br><span style="color:#ef4444">Low:</span> Students rarely seek support<br><span style="color:#eab308">Mid:</span> Students sometimes seek support<br><span style="color:#22c55e">High:</span> Students freely seek support and share ideas</div>
+  </div>
+
+  <div class="domain-header">Classroom Organization</div>
+
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK4</div><span class="rub-name">Regard for Student Perspectives</span></div>
+    <div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div>
+    <div class="desc-toggle" onclick="togD(this)">&#9654; View descriptors</div>
+    <div class="desc-body"><strong>Regard for Student Perspectives</strong>: Captures the degree to which interactions place an emphasis on students' interests, motivations, and points of view<br><br><strong>Flexibility and Student Focus</strong> &mdash; <span style="color:#ef4444">Low:</span> rigid, teacher-driven / <span style="color:#eab308">Mid:</span> sometimes follows lead / <span style="color:#22c55e">High:</span> flexible, organizes around interests<br><br><strong>Support for Autonomy and Leadership</strong> &mdash; <span style="color:#ef4444">Low:</span> no support / <span style="color:#eab308">Mid:</span> sometimes / <span style="color:#22c55e">High:</span> consistent support<br><br><strong>Student Expression</strong> &mdash; <span style="color:#ef4444">Low:</span> few opportunities / <span style="color:#eab308">Mid:</span> some periods / <span style="color:#22c55e">High:</span> many opportunities<br><br><strong>Restriction of Movement</strong> &mdash; <span style="color:#ef4444">Low:</span> highly controlling / <span style="color:#eab308">Mid:</span> somewhat controlling / <span style="color:#22c55e">High:</span> freedom of movement</div>
+  </div>
+
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK5</div><span class="rub-name">Behavior Management</span></div>
+    <div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div>
+    <div class="desc-toggle" onclick="togD(this)">&#9654; View descriptors</div>
+    <div class="desc-body"><strong>Behavior Management</strong>: Encompasses the teacher's ability to provide clear behavioral expectations and use effective methods to prevent and redirect misbehavior<br><br><strong>Clear Behavior Expectations</strong> &mdash; <span style="color:#ef4444">Low:</span> absent/unclear / <span style="color:#eab308">Mid:</span> stated but inconsistently enforced / <span style="color:#22c55e">High:</span> clear and consistently enforced<br><br><strong>Proactive</strong> &mdash; <span style="color:#ef4444">Low:</span> reactive / <span style="color:#eab308">Mid:</span> mix / <span style="color:#22c55e">High:</span> consistently proactive<br><br><strong>Redirection of Misbehavior</strong> &mdash; <span style="color:#ef4444">Low:</span> ineffective / <span style="color:#eab308">Mid:</span> some success / <span style="color:#22c55e">High:</span> effective, subtle cues<br><br><strong>Student Behavior</strong> &mdash; <span style="color:#ef4444">Low:</span> frequent misbehavior / <span style="color:#eab308">Mid:</span> periodic / <span style="color:#22c55e">High:</span> few if any instances</div>
+  </div>
+
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK6</div><span class="rub-name">Productivity</span></div>
+    <div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div>
+    <div class="desc-toggle" onclick="togD(this)">&#9654; View descriptors</div>
+    <div class="desc-body"><strong>Productivity</strong>: Considers how well the teacher manages instructional time and routines<br><br><strong>Maximizing Learning Time</strong> &mdash; <span style="color:#ef4444">Low:</span> few activities, excessive time lost / <span style="color:#eab308">Mid:</span> provides activities but some time lost / <span style="color:#22c55e">High:</span> deals efficiently with disruptions<br><br><strong>Routines</strong> &mdash; <span style="color:#ef4444">Low:</span> unclear / <span style="color:#eab308">Mid:</span> some evidence / <span style="color:#22c55e">High:</span> well-oiled machine<br><br><strong>Transitions</strong> &mdash; <span style="color:#ef4444">Low:</span> too long/frequent / <span style="color:#eab308">Mid:</span> sometimes long / <span style="color:#22c55e">High:</span> quick and efficient<br><br><strong>Preparation</strong> &mdash; <span style="color:#ef4444">Low:</span> not prepared / <span style="color:#eab308">Mid:</span> mostly prepared / <span style="color:#22c55e">High:</span> fully prepared</div>
+  </div>
+
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK7</div><span class="rub-name">Instructional Learning Formats</span></div>
+    <div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div>
+    <div class="desc-toggle" onclick="togD(this)">&#9654; View descriptors</div>
+    <div class="desc-body"><strong>Instructional Learning Formats</strong>: Focuses on the ways in which the teacher maximizes students' interest, engagement, and ability to learn<br><br><strong>Effective Facilitation</strong> &mdash; <span style="color:#ef4444">Low:</span> does not actively facilitate / <span style="color:#eab308">Mid:</span> inconsistent / <span style="color:#22c55e">High:</span> actively facilitates engagement<br><br><strong>Variety of Modalities and Materials</strong> &mdash; <span style="color:#ef4444">Low:</span> limited variety / <span style="color:#eab308">Mid:</span> inconsistent / <span style="color:#22c55e">High:</span> uses auditory, visual, movement<br><br><strong>Student Interest</strong> &mdash; <span style="color:#ef4444">Low:</span> not interested / <span style="color:#eab308">Mid:</span> engaged for periods / <span style="color:#22c55e">High:</span> consistently interested<br><br><strong>Clarity of Learning Objectives</strong> &mdash; <span style="color:#ef4444">Low:</span> unsuccessful orienting / <span style="color:#eab308">Mid:</span> somewhat / <span style="color:#22c55e">High:</span> effectively focuses attention</div>
+  </div>
+
+  <div class="domain-header">Instructional Support</div>
+
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK8</div><span class="rub-name">Concept Development</span></div>
+    <div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div>
+    <div class="desc-toggle" onclick="togD(this)">&#9654; View descriptors</div>
+    <div class="desc-body"><strong>Concept Development</strong>: Measures use of instructional discussions and activities to promote higher-order thinking<br><br><strong>Analysis and Reasoning</strong> &mdash; <span style="color:#ef4444">Low:</span> rarely uses / <span style="color:#eab308">Mid:</span> occasionally / <span style="color:#22c55e">High:</span> often<br><br><strong>Creating</strong> (Brainstorming, Planning, Producing) &mdash; <span style="color:#ef4444">Low:</span> rarely / <span style="color:#eab308">Mid:</span> sometimes / <span style="color:#22c55e">High:</span> often<br><br><strong>Integration</strong> &mdash; <span style="color:#ef4444">Low:</span> concepts presented independently / <span style="color:#eab308">Mid:</span> sometimes linked / <span style="color:#22c55e">High:</span> consistently links concepts<br><br><strong>Connections to the Real World</strong> &mdash; <span style="color:#ef4444">Low:</span> does not relate / <span style="color:#eab308">Mid:</span> some attempts / <span style="color:#22c55e">High:</span> consistently relates</div>
+  </div>
+
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK9</div><span class="rub-name">Quality of Feedback</span></div>
+    <div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div>
+    <div class="desc-toggle" onclick="togD(this)">&#9654; View descriptors</div>
+    <div class="desc-body"><strong>Quality of Feedback</strong>: Assesses the degree to which the teacher provides feedback that expands learning<br><br><strong>Scaffolding</strong> &mdash; <span style="color:#ef4444">Low:</span> dismisses responses / <span style="color:#eab308">Mid:</span> occasionally / <span style="color:#22c55e">High:</span> often scaffolds<br><br><strong>Feedback Loops</strong> &mdash; <span style="color:#ef4444">Low:</span> perfunctory / <span style="color:#eab308">Mid:</span> occasional / <span style="color:#22c55e">High:</span> frequent back-and-forth<br><br><strong>Prompting Thought Processes</strong> &mdash; <span style="color:#ef4444">Low:</span> rarely queries / <span style="color:#eab308">Mid:</span> occasionally / <span style="color:#22c55e">High:</span> often prompts<br><br><strong>Providing Information</strong> &mdash; <span style="color:#ef4444">Low:</span> rarely expands / <span style="color:#eab308">Mid:</span> occasionally / <span style="color:#22c55e">High:</span> often expands<br><br><strong>Encouragement and Affirmation</strong> &mdash; <span style="color:#ef4444">Low:</span> rarely encourages / <span style="color:#eab308">Mid:</span> occasional / <span style="color:#22c55e">High:</span> often encourages</div>
+  </div>
+
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK10</div><span class="rub-name">Language Modeling</span></div>
+    <div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div>
+    <div class="desc-toggle" onclick="togD(this)">&#9654; View descriptors</div>
+    <div class="desc-body"><strong>Language Modeling</strong>: Captures the quality and amount of the teacher's use of language-stimulation and language-facilitation techniques<br><br><strong>Frequent Conversation</strong> &mdash; <span style="color:#ef4444">Low:</span> few conversations / <span style="color:#eab308">Mid:</span> limited / <span style="color:#22c55e">High:</span> frequent<br><br><strong>Open-Ended Questions</strong> &mdash; <span style="color:#ef4444">Low:</span> closed-ended / <span style="color:#eab308">Mid:</span> mix / <span style="color:#22c55e">High:</span> many open-ended<br><br><strong>Repetition and Extension</strong> &mdash; <span style="color:#ef4444">Low:</span> rarely / <span style="color:#eab308">Mid:</span> sometimes / <span style="color:#22c55e">High:</span> often<br><br><strong>Self- and Parallel Talk</strong> &mdash; <span style="color:#ef4444">Low:</span> rarely maps / <span style="color:#eab308">Mid:</span> occasionally / <span style="color:#22c55e">High:</span> consistently<br><br><strong>Advanced Language</strong> &mdash; <span style="color:#ef4444">Low:</span> does not use / <span style="color:#eab308">Mid:</span> sometimes / <span style="color:#22c55e">High:</span> often uses advanced language</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ============ CYCLE 2 (compact, no descriptors) ============ -->
+  <div class="cycle-title">Cycle 2: Information</div>
+  <div class="card">
+    <div class="grid2">
+      <div><div class="card-label">Students</div><input type="number" placeholder="0"></div>
+      <div><div class="card-label">Adults</div><input type="number" placeholder="0"></div>
+      <div><div class="card-label">Start Time</div><input type="time"></div>
+      <div><div class="card-label">End Time</div><input type="time"></div>
+    </div>
+    <div style="margin-top:10px"><div class="card-label">Academic Content</div>
+      <div class="check-group">
+        <label class="check-label"><input type="checkbox"> Lit/Lang Arts</label>
+        <label class="check-label"><input type="checkbox"> Math</label>
+        <label class="check-label"><input type="checkbox"> Social Studies</label>
+        <label class="check-label"><input type="checkbox"> Science</label>
+      </div>
+    </div>
+    <div style="margin-top:10px"><div class="card-label">Format</div>
+      <div class="check-group">
+        <label class="check-label"><input type="checkbox"> Routine</label>
+        <label class="check-label"><input type="checkbox"> Meals/Snacks</label>
+        <label class="check-label"><input type="checkbox"> Whole Group</label>
+        <label class="check-label"><input type="checkbox"> Individual</label>
+        <label class="check-label"><input type="checkbox"> Small Groups</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="cycle-title">Cycle 2: CLASS Scoring</div>
+  <div class="ref-note">Descriptors available in Cycle 1 above.</div>
+  <div class="domain-header">Emotional Support</div>
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK1</div><span class="rub-name">Positive Climate</span></div><div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div></div>
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK2</div><span class="rub-name">Negative Climate</span></div><div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div></div>
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK3</div><span class="rub-name">Teacher Sensitivity</span></div><div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div></div>
+  <div class="domain-header">Classroom Organization</div>
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK4</div><span class="rub-name">Regard for Student Perspectives</span></div><div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div></div>
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK5</div><span class="rub-name">Behavior Management</span></div><div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div></div>
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK6</div><span class="rub-name">Productivity</span></div><div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div></div>
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK7</div><span class="rub-name">Instructional Learning Formats</span></div><div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div></div>
+  <div class="domain-header">Instructional Support</div>
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK8</div><span class="rub-name">Concept Development</span></div><div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div></div>
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK9</div><span class="rub-name">Quality of Feedback</span></div><div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div></div>
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK10</div><span class="rub-name">Language Modeling</span></div><div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div></div>
+
+  <div class="divider"></div>
+
+  <!-- ============ CYCLE 3 (compact, no descriptors) ============ -->
+  <div class="cycle-title">Cycle 3: Information</div>
+  <div class="card">
+    <div class="grid2">
+      <div><div class="card-label">Students</div><input type="number" placeholder="0"></div>
+      <div><div class="card-label">Adults</div><input type="number" placeholder="0"></div>
+      <div><div class="card-label">Start Time</div><input type="time"></div>
+      <div><div class="card-label">End Time</div><input type="time"></div>
+    </div>
+    <div style="margin-top:10px"><div class="card-label">Academic Content</div>
+      <div class="check-group">
+        <label class="check-label"><input type="checkbox"> Lit/Lang Arts</label>
+        <label class="check-label"><input type="checkbox"> Math</label>
+        <label class="check-label"><input type="checkbox"> Social Studies</label>
+        <label class="check-label"><input type="checkbox"> Science</label>
+      </div>
+    </div>
+    <div style="margin-top:10px"><div class="card-label">Format</div>
+      <div class="check-group">
+        <label class="check-label"><input type="checkbox"> Routine</label>
+        <label class="check-label"><input type="checkbox"> Meals/Snacks</label>
+        <label class="check-label"><input type="checkbox"> Whole Group</label>
+        <label class="check-label"><input type="checkbox"> Individual</label>
+        <label class="check-label"><input type="checkbox"> Small Groups</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="cycle-title">Cycle 3: CLASS Scoring</div>
+  <div class="ref-note">Descriptors available in Cycle 1 above.</div>
+  <div class="domain-header">Emotional Support</div>
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK1</div><span class="rub-name">Positive Climate</span></div><div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div></div>
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK2</div><span class="rub-name">Negative Climate</span></div><div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div></div>
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK3</div><span class="rub-name">Teacher Sensitivity</span></div><div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div></div>
+  <div class="domain-header">Classroom Organization</div>
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK4</div><span class="rub-name">Regard for Student Perspectives</span></div><div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div></div>
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK5</div><span class="rub-name">Behavior Management</span></div><div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div></div>
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK6</div><span class="rub-name">Productivity</span></div><div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div></div>
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK7</div><span class="rub-name">Instructional Learning Formats</span></div><div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div></div>
+  <div class="domain-header">Instructional Support</div>
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK8</div><span class="rub-name">Concept Development</span></div><div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div></div>
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK9</div><span class="rub-name">Quality of Feedback</span></div><div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div></div>
+  <div class="rub"><div class="rub-top"><div class="rub-code">PK10</div><span class="rub-name">Language Modeling</span></div><div class="scores-pk"><div class="sc-pk" data-v="1" onclick="scPK(this)"><span class="n">1</span></div><div class="sc-pk" data-v="2" onclick="scPK(this)"><span class="n">2</span></div><div class="sc-pk" data-v="3" onclick="scPK(this)"><span class="n">3</span></div><div class="sc-pk" data-v="4" onclick="scPK(this)"><span class="n">4</span></div><div class="sc-pk" data-v="5" onclick="scPK(this)"><span class="n">5</span></div><div class="sc-pk" data-v="6" onclick="scPK(this)"><span class="n">6</span></div><div class="sc-pk" data-v="7" onclick="scPK(this)"><span class="n">7</span></div></div></div>
+
+  <div class="divider"></div>
+
+  <!-- FLS PreK Rubric Review -->
+  <div class="section-title">FLS PreK Rubric Review</div>
+  <div class="card">
+    <div class="card-label">Strength Areas <span class="req">*</span></div>
+    <textarea placeholder="Identify strengths"></textarea>
+    <div style="margin-top:12px"><div class="card-label">Growth Areas <span class="req">*</span></div>
+      <textarea placeholder="Identify growth areas"></textarea></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Commitments -->
+  <div class="section-title">FLS Commitments</div>
+  <div class="card">
+    <div class="card-label">Commitment Strength <span class="req">*</span></div>
+    <textarea placeholder="Identify strengths."></textarea>
+    <div style="margin-top:12px"><div class="card-label">Commitment Growth Area <span class="req">*</span></div>
+      <textarea placeholder="Identify growth areas."></textarea></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Professional Development -->
+  <div class="section-title">Professional Development</div>
+  <div class="card">
+    <div class="card-label">Career Goals <span class="req">*</span></div>
+    <textarea placeholder="Reflect on career goals."></textarea>
+    <div style="margin-top:12px"><div class="card-label">Licenses &amp; Certifications <span class="req">*</span></div>
+      <textarea placeholder="N/A if not applicable."></textarea></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Concerns -->
+  <div class="section-title">Area(s) of Concern</div>
+  <div class="card">
+    <div class="card-label">Area(s) of Concern</div>
+    <div class="check-group">
+      <label class="check-label"><input type="checkbox"> Professionalism</label>
+      <label class="check-label"><input type="checkbox"> Performance</label>
+      <label class="check-label"><input type="checkbox"> Commitment</label>
+      <label class="check-label"><input type="checkbox"> None</label>
+    </div>
+    <div style="margin-top:12px"><div class="card-label">Comments <span class="req">*</span></div>
+      <textarea placeholder="Action steps and indicators of success."></textarea></div>
+  </div>
+
+</div>
+
+<div class="submit-bar">
+  <div class="submit-inner">
+    <button class="sbtn draft">Save draft</button>
+    <button class="sbtn publish">Publish</button>
+    <button class="sbtn send">Publish &amp; Send</button>
+  </div>
+</div>
+
+<script>
+function scPK(el){
+  var c=el.closest('.rub');
+  c.querySelectorAll('.sc-pk').forEach(function(s){s.classList.remove('sel');s.style.background='';s.style.borderColor='';s.querySelector('.n').style.color=''});
+  el.classList.add('sel');
+  var v=parseInt(el.dataset.v);
+  var color=v<=2?'#ef4444':v<=5?'#eab308':'#22c55e';
+  el.style.background=color;el.style.borderColor=color;
+  el.querySelector('.n').style.color='#fff';
+  c.style.borderLeftColor=color;
+}
+function trackSel(el){var r=el.closest('.track-row');r.querySelectorAll('.track-btn').forEach(function(b){b.classList.remove('sel')});el.classList.add('sel')}
+function togD(el){var d=el.nextElementSibling;d.classList.toggle('open');el.innerHTML=d.classList.contains('open')?'&#9660; Hide descriptors':'&#9654; View descriptors'}
+</script>
+</body>
+</html>

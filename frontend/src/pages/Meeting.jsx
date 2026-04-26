@@ -196,6 +196,7 @@ export default function Meeting() {
   }
 
   const input = { width: '100%', padding: '11px 12px', border: '1.5px solid #e5e7eb', borderRadius: 10, fontSize: 14, fontFamily: 'inherit', color: '#111827', background: '#fff', boxSizing: 'border-box' }
+  const dateInput = { ...input, textAlign: 'left', WebkitAppearance: 'none', appearance: 'none', minHeight: 44, display: 'block' }
   const textarea = { width: '100%', minHeight: 70, padding: 12, border: '1.5px solid #e5e7eb', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', color: '#111827', resize: 'vertical' }
   const cardHead = { fontSize: 12, fontWeight: 800, color: '#111827', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 8 }
   const cardLabel = { fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.05em', marginTop: 10, marginBottom: 6 }
@@ -203,9 +204,6 @@ export default function Meeting() {
   return (
     <FormShell>
     <div style={{ minHeight: '100svh', background: '#f5f7fa', paddingBottom: 'calc(100px + env(safe-area-inset-bottom))', fontFamily: 'Inter, sans-serif' }}>
-      <div style={{ background: '#fef3c7', color: '#92400e', fontSize: 11, fontWeight: 700, textAlign: 'center', padding: '6px 12px', letterSpacing: '.05em' }}>
-        DESIGN MOCK · Data Meeting form
-      </div>
       <nav style={{ background: '#002f60', padding: '14px 16px', textAlign: 'center', position: 'relative' }}>
         <button
           onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}
@@ -216,9 +214,7 @@ export default function Meeting() {
           <div style={{ fontSize: 17, fontWeight: 800, color: '#fff', cursor: 'pointer' }}>Observation<span style={{ color: '#e47727' }}>Point</span></div>
         </Link>
         <div style={{ fontSize: 12, color: 'rgba(255,255,255,.6)', marginTop: 2 }}>
-          {teacher ? <>{teacher.first_name} {teacher.last_name} · Data Meeting</> : 'Data Meeting'}
-          <span style={{ display: 'inline-block', background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 10, fontSize: 10, fontWeight: 700, marginLeft: 6 }}>TEST MODE</span>
-        </div>
+          {teacher ? <>{teacher.first_name} {teacher.last_name} · Data Meeting</> : 'Data Meeting'}</div>
       </nav>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 10, color: '#9ca3af', padding: '6px 12px', background: '#f5f7fa' }}>
@@ -275,14 +271,14 @@ export default function Meeting() {
           <textarea value={reteachPlan} onChange={e => setReteachPlan(e.target.value)} placeholder="Plan for reteaching..." style={textarea} />
           <div style={cardLabel}>Reteach Prep</div>
           <textarea value={reteachPrep} onChange={e => setReteachPrep(e.target.value)} placeholder="Preparation for reteach..." style={textarea} />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 14, marginTop: 10 }}>
             <div>
               <div style={{ ...cardLabel, marginTop: 0 }}>Reteach Date</div>
-              <input type="date" value={reteachDate} onChange={e => setReteachDate(e.target.value)} style={input} />
+              <input type="date" value={reteachDate} onChange={e => setReteachDate(e.target.value)} style={dateInput} />
             </div>
             <div>
               <div style={{ ...cardLabel, marginTop: 0 }}>Reteach Mastery</div>
-              <input type="number" value={reteachMastery} onChange={e => setReteachMastery(e.target.value)} placeholder="0" style={input} />
+              <input type="number" value={reteachMastery} onChange={e => setReteachMastery(e.target.value)} placeholder="0" style={dateInput} />
             </div>
           </div>
           <div style={cardLabel}>Reteach Reflection</div>

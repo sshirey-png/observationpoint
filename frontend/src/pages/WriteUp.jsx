@@ -232,6 +232,7 @@ export default function WriteUp() {
   }
 
   const input = { width: '100%', padding: '11px 12px', border: '1.5px solid #e5e7eb', borderRadius: 10, fontSize: 14, fontFamily: 'inherit', color: '#111827', background: '#fff', boxSizing: 'border-box' }
+  const dateInput = { ...input, textAlign: 'left', WebkitAppearance: 'none', appearance: 'none', minHeight: 44, display: 'block' }
   const textarea = { width: '100%', minHeight: 80, padding: 12, border: '1.5px solid #e5e7eb', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', color: '#111827', resize: 'vertical', lineHeight: 1.5 }
   const cardLabel = { fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.05em', marginTop: 10, marginBottom: 6 }
   const sectionTitle = { fontSize: 15, fontWeight: 800, color: '#111827', margin: '18px 4px 4px' }
@@ -240,9 +241,6 @@ export default function WriteUp() {
   return (
     <FormShell>
     <div style={{ minHeight: '100svh', background: '#f5f7fa', paddingBottom: 'calc(100px + env(safe-area-inset-bottom))', fontFamily: 'Inter, sans-serif' }}>
-      <div style={{ background: '#fef3c7', color: '#92400e', fontSize: 11, fontWeight: 700, textAlign: 'center', padding: '6px 12px', letterSpacing: '.05em' }}>
-        DESIGN MOCK · Write-Up
-      </div>
       <nav style={{ background: '#002f60', padding: '14px 16px', textAlign: 'center', position: 'relative' }}>
         <button
           onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}
@@ -253,9 +251,7 @@ export default function WriteUp() {
           <div style={{ fontSize: 17, fontWeight: 800, color: '#fff', cursor: 'pointer' }}>Observation<span style={{ color: '#e47727' }}>Point</span></div>
         </Link>
         <div style={{ fontSize: 12, color: 'rgba(255,255,255,.6)', marginTop: 2 }}>
-          {teacher ? <>{teacher.first_name} {teacher.last_name} · Write-Up</> : 'Write-Up'}
-          <span style={{ display: 'inline-block', background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 10, fontSize: 10, fontWeight: 700, marginLeft: 6 }}>TEST MODE</span>
-        </div>
+          {teacher ? <>{teacher.first_name} {teacher.last_name} · Write-Up</> : 'Write-Up'}</div>
       </nav>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 10, color: '#9ca3af', padding: '6px 12px', background: '#f5f7fa' }}>
@@ -294,7 +290,7 @@ export default function WriteUp() {
 
         <div style={{ background: '#fff', borderRadius: 14, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,.05)', marginBottom: 12 }}>
           <div style={cardLabel}>Date of Incident <span style={{ color: '#dc2626' }}>*</span></div>
-          <input type="date" value={incidentDate} onChange={e => setIncidentDate(e.target.value)} style={input} />
+          <input type="date" value={incidentDate} onChange={e => setIncidentDate(e.target.value)} style={dateInput} />
           <div style={cardLabel}>Type <span style={{ color: '#dc2626' }}>*</span></div>
           <select value={warningType} onChange={e => setWarningType(e.target.value)} style={input}>
             <option value="">Select type...</option>
@@ -339,8 +335,7 @@ export default function WriteUp() {
                 • Submit &amp; Send emails the Write-Up to the employee<br />
                 • Employee clicks a link, reviews the document<br />
                 • Employee types their full name to acknowledge receipt<br />
-                • Timestamp + IP captured; you're notified<br />
-                • If employee refuses, mark "Refused to sign" from the record
+                • Timestamp + IP captured; you're notified
               </div>
             </div>
           </div>

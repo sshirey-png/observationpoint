@@ -166,10 +166,13 @@ def get_accessible_emails(conn, email, job_title):
 
 
 def check_access(user, target_email):
-    """Check if user can view a specific staff member."""
+    """Check if user can view a specific staff member.
+    Self is always allowed — every staff member can view their own profile."""
     if not user:
         return False
     if user.get('is_admin'):
+        return True
+    if user.get('email', '').lower() == (target_email or '').lower():
         return True
     accessible = user.get('accessible_emails', [])
     return target_email.lower() in accessible

@@ -293,9 +293,6 @@ export default function SelfReflection() {
   return (
     <FormShell>
     <div style={{ minHeight: '100svh', background: '#f5f7fa', paddingBottom: 'calc(100px + env(safe-area-inset-bottom))', fontFamily: 'Inter, sans-serif' }}>
-      <div style={{ background: '#fef3c7', color: '#92400e', fontSize: 11, fontWeight: 700, textAlign: 'center', padding: '6px 12px', letterSpacing: '.05em' }}>
-        DESIGN MOCK · Self-Reflection form
-      </div>
       <nav style={{ background: '#002f60', padding: '14px 16px', textAlign: 'center', position: 'relative' }}>
         <button
           onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}
@@ -306,9 +303,7 @@ export default function SelfReflection() {
           <div style={{ fontSize: 17, fontWeight: 800, color: '#fff', cursor: 'pointer' }}>Observation<span style={{ color: '#e47727' }}>Point</span></div>
         </Link>
         <div style={{ fontSize: 12, color: 'rgba(255,255,255,.6)', marginTop: 2 }}>
-          Self-Reflection — {roleLabel}
-          <span style={{ display: 'inline-block', background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 10, fontSize: 10, fontWeight: 700, marginLeft: 6 }}>TEST MODE</span>
-        </div>
+          Self-Reflection — {roleLabel}</div>
       </nav>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 10, color: '#9ca3af', padding: '6px 12px', background: '#f5f7fa' }}>

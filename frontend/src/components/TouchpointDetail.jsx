@@ -28,9 +28,10 @@ const FORM_LABELS = {
   meeting_quick_meeting: 'Coaching Meeting',
   'meeting_data_meeting_(relay)': 'Data Meeting (Relay)',
   write_up: 'Employee Write-Up',
-  iap: 'Improvement Action Plan',
+  iap: 'Performance Improvement Plan',
+  performance_improvement_plan: 'Performance Improvement Plan',
   celebrate: 'Celebrate',
-  solicited_feedback: 'Solicited Feedback',
+  solicited_feedback: 'Solicit Feedback',
 }
 
 const SCORE_COLORS = { 1: '#ef4444', 2: '#f97316', 3: '#eab308', 4: '#22c55e', 5: '#0ea5e9' }

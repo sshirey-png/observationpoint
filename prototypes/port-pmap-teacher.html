@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Port Preview · PMAP Teacher · ObservationPoint</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased;padding-bottom:140px}
+.banner{background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;text-align:center;padding:6px 12px;letter-spacing:.05em}
+.port-banner{background:#dcfce7;color:#166534;font-size:11px;font-weight:700;text-align:center;padding:6px 12px}
+.nav{background:#002f60;padding:14px 16px;text-align:center;position:relative}
+.nav-back{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:700;border-radius:8px;background:rgba(255,255,255,.08)}
+.nav-title{font-size:17px;font-weight:800;color:#fff}
+.nav-title span{color:#e47727}
+.nav-sub{font-size:12px;color:rgba(255,255,255,.6);margin-top:2px}
+.nav-badge{display:inline-block;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;margin-left:6px}
+.status-strip{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:#9ca3af;padding:6px 12px;background:#f5f7fa}
+.wrap{padding:14px;max-width:720px;margin:0 auto}
+.subject{background:linear-gradient(135deg,#002f60,#003b7a);border-radius:14px;padding:14px;margin-bottom:14px;color:#fff;display:flex;align-items:center;gap:12px;box-shadow:0 3px 10px rgba(0,47,96,.2);position:relative}
+.subject-av{width:48px;height:48px;border-radius:50%;background:#e47727;color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;flex-shrink:0}
+.subject-name{font-size:16px;font-weight:800;line-height:1.2}
+.subject-meta{font-size:11px;color:rgba(255,255,255,.75);margin-top:3px}
+.subject-meta .badge{display:inline-block;background:#dcfce7;color:#059669;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;margin-left:6px}
+.subject-change{position:absolute;top:10px;right:12px;font-size:11px;color:rgba(255,255,255,.7);background:rgba(255,255,255,.08);padding:4px 10px;border-radius:20px;cursor:pointer;border:1px solid rgba(255,255,255,.15);font-weight:600}
+.section-title{font-size:15px;font-weight:800;margin:18px 0 4px;letter-spacing:-.01em}
+.section-sub{font-size:12px;color:#9ca3af;margin-bottom:10px}
+.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:12px}
+.card-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-bottom:8px}
+.req{color:#dc2626}
+select{width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;color:#111827;font-family:inherit;background:#fff}
+textarea{width:100%;min-height:70px;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:inherit;color:#111827;resize:vertical;line-height:1.5}
+textarea:focus,select:focus{border-color:#e47727;outline:none}
+.track-label{font-size:13px;font-weight:500;margin-bottom:6px}
+.track-row{display:flex;gap:6px;margin-bottom:12px}
+.track-btn{flex:1;padding:12px;border-radius:10px;border:2px solid #e5e7eb;background:#fff;text-align:center;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;color:#9ca3af;transition:all .15s}
+.track-btn.off.sel{background:#ef4444;border-color:#ef4444;color:#fff}
+.track-btn.on.sel{background:#22c55e;border-color:#22c55e;color:#fff}
+.rub{background:#fff;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);padding:16px;margin-bottom:10px;border-left:4px solid #e5e7eb;transition:border-color .2s}
+.rub-code{font-size:11px;font-weight:700;color:#002f60;background:#002f600a;padding:2px 6px;border-radius:4px;display:inline-block;margin-bottom:6px}
+.rub-req{font-size:10px;color:#dc2626;font-weight:600;float:right}
+.rub-q{font-size:14px;font-weight:500;line-height:1.5;margin-bottom:12px}
+.prior-scores{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-bottom:8px;font-size:11px}
+.prior-label{color:#9ca3af;font-weight:600}
+.prior-chip{font-weight:700;padding:1px 6px;border-radius:4px;background:#f5f7fa}
+.prior-arrow{color:#d1d5db;font-size:10px}
+.scores{display:flex;gap:6px}
+.sc{flex:1;padding:14px 4px;border-radius:10px;border:2px solid #e5e7eb;background:#fff;text-align:center;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.sc .n{font-size:18px;font-weight:700;color:#9ca3af;display:block}
+.sc .l{font-size:8px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.03em}
+.sc.sel .n,.sc.sel .l{color:#fff}
+.desc-toggle{font-size:12px;color:#e47727;cursor:pointer;margin-top:10px;font-weight:600}
+.desc-body{display:none;margin-top:8px;padding:10px;background:#f5f7fa;border-radius:8px;font-size:12px;color:#6b7280;line-height:1.6}
+.desc-body.open{display:block}
+.check-group{display:flex;flex-wrap:wrap;gap:6px}
+.check-label{display:flex;align-items:center;gap:4px;font-size:13px;padding:8px 12px;background:#f5f7fa;border-radius:8px;cursor:pointer}
+.check-label input{width:16px;height:16px}
+.divider{height:1px;background:#e5e7eb;margin:18px 0}
+.submit-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;padding:10px 14px;padding-bottom:max(14px,env(safe-area-inset-bottom));z-index:50;display:flex;gap:6px}
+.submit-inner{display:flex;gap:6px;max-width:720px;margin:0 auto;width:100%}
+.sbtn{flex:1;padding:13px 8px;border:none;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+.sbtn.draft{background:#f3f4f6;color:#4b5563}
+.sbtn.publish{background:#fff;color:#002f60;border:1.5px solid #002f60}
+.sbtn.send{background:#002f60;color:#fff;flex:1.3}
+</style>
+</head>
+<body>
+<div class="banner">DESIGN MOCK &middot; PMAP Teacher</div>
+<div class="port-banner">PORT PREVIEW &middot; PMAP Teacher</div>
+<nav class="nav">
+  <div class="nav-back">&larr;</div>
+  <div class="nav-title">Observation<span>Point</span></div>
+  <div class="nav-sub">Marcus Williams &middot; PMAP &middot; Teacher<span class="nav-badge">TEST MODE</span></div>
+</nav>
+<div class="status-strip"><span>Auto-save enabled</span><span style="color:#16a34a;font-weight:600">&#10003; Saved 7:37 PM</span></div>
+
+<div class="wrap">
+
+  <div class="subject">
+    <div class="subject-av">MW</div>
+    <div>
+      <div class="subject-name">Marcus Williams</div>
+      <div class="subject-meta">Samuel J. Green &middot; 5th Grade Math<span class="badge">PMAP &middot; Teacher</span></div>
+    </div>
+    <div class="subject-change">Change</div>
+  </div>
+
+  <!-- Meeting Checklist -->
+  <div class="section-title">Meeting Checklist</div>
+  <div class="card">
+    <div class="card-label">Has the job description been reviewed? <span class="req">*</span></div>
+    <select><option value="">Choose one...</option><option>Yes</option><option>No</option></select>
+  </div>
+
+  <!-- WIG + Goals -->
+  <div class="section-title">WIG + Annual Goals Review</div>
+  <div class="card">
+    <div class="card-label">WIG + Annual Goals <span class="req">*</span></div>
+    <textarea placeholder='Refer to the goals. Note any updates or changes, or write "N/A" if unchanged.'></textarea>
+    <div style="margin-top:14px"><div class="track-label">Wildly Important Goal (WIG) <span class="req">*</span></div>
+      <div class="track-row"><div class="track-btn off" onclick="trackSel(this)">Off Track</div><div class="track-btn on" onclick="trackSel(this)">On Track</div></div></div>
+    <div><div class="track-label">Annual Goal 1 (AG1)</div>
+      <div class="track-row"><div class="track-btn off" onclick="trackSel(this)">Off Track</div><div class="track-btn on" onclick="trackSel(this)">On Track</div></div></div>
+    <div><div class="track-label">Annual Goal 2 (AG2)</div>
+      <div class="track-row"><div class="track-btn off" onclick="trackSel(this)">Off Track</div><div class="track-btn on" onclick="trackSel(this)">On Track</div></div></div>
+    <div><div class="track-label">Annual Goal 3 (AG3)</div>
+      <div class="track-row"><div class="track-btn off" onclick="trackSel(this)">Off Track</div><div class="track-btn on" onclick="trackSel(this)">On Track</div></div></div>
+    <div style="margin-top:10px"><div class="card-label">Progress Toward Goal</div>
+      <textarea placeholder="Please provide data to support your ratings above."></textarea></div>
+  </div>
+
+  <!-- Whirlwind -->
+  <div class="section-title">Whirlwind Work Review</div>
+  <div class="section-sub">Other responsibilities not defined by your WIG or Annual Goals.</div>
+  <div class="card">
+    <div class="card-label">Whirlwind Workstream List</div>
+    <textarea placeholder="List the 3-5 most important aspects of whirlwind work and how those responsibilities are handled effectively."></textarea>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- FLS Teacher Rubric -->
+  <div class="section-title">FLS Teacher Rubric</div>
+  <div class="section-sub">Score each area. Prior PMAP scores shown for reference.</div>
+
+  <div class="rub"><div class="rub-req">Required</div><div class="rub-code">T1</div>
+    <div class="prior-scores"><span class="prior-label">Prior:</span> <span class="prior-chip" style="color:#eab308">PMAP1 '25: 3</span> <span class="prior-arrow">&rarr;</span> <span class="prior-chip" style="color:#22c55e">PMAP2 '25: 4</span> <span class="prior-arrow">&rarr;</span> <span class="prior-chip" style="color:#22c55e">PMAP1 '26: 4</span></div>
+    <div class="rub-q">On Task &mdash; Are all students engaged from start to finish?</div>
+    <div class="scores"><div class="sc" data-v="1" onclick="score(this)"><span class="n">1</span><span class="l">NI</span></div><div class="sc" data-v="2" onclick="score(this)"><span class="n">2</span><span class="l">Emrg</span></div><div class="sc" data-v="3" onclick="score(this)"><span class="n">3</span><span class="l">Dev</span></div><div class="sc" data-v="4" onclick="score(this)"><span class="n">4</span><span class="l">Prof</span></div><div class="sc" data-v="5" onclick="score(this)"><span class="n">5</span><span class="l">Exm</span></div></div>
+    <div class="desc-toggle" onclick="togD(this)">&#9654; Descriptors</div>
+    <div class="desc-body"><strong>1 &mdash; Needs Improvement:</strong> Very few or no students complete instructional tasks, volunteer responses and/or ask appropriate questions. Students do not execute transitions, routines and procedures in an orderly manner. Students are left without work for a significant portion of the class period.<br><br><strong>2 &mdash; Emerging:</strong> Some students complete instructional tasks. Students execute transitions only some of the time and/or require substantial direction. Students are idle for one or two minutes at a time.<br><br><strong>3 &mdash; Developing:</strong> Most students complete instructional tasks and demonstrate understanding of expectations. Transitions mostly orderly, may require some direction. Students idle for short periods (&lt;1 min).<br><br><strong>4 &mdash; Proficient:</strong> All or almost all students complete tasks and follow expectations. Transitions orderly with minimal direction. Quick pace from start to finish. Students who finish early engage in meaningful learning.<br><br><strong>5 &mdash; Exemplary:</strong> Level 4 met + students self-direct routines requiring no direction. Students hold each other accountable for behavioral expectations.</div>
+  </div>
+
+  <div class="rub"><div class="rub-req">Required</div><div class="rub-code">T2</div>
+    <div class="prior-scores"><span class="prior-label">Prior:</span> <span class="prior-chip" style="color:#f97316">PMAP1 '25: 2</span> <span class="prior-arrow">&rarr;</span> <span class="prior-chip" style="color:#eab308">PMAP2 '25: 3</span> <span class="prior-arrow">&rarr;</span> <span class="prior-chip" style="color:#eab308">PMAP1 '26: 3</span></div>
+    <div class="rub-q">Community of Learners &mdash; Joyful and supportive community?</div>
+    <div class="scores"><div class="sc" data-v="1" onclick="score(this)"><span class="n">1</span><span class="l">NI</span></div><div class="sc" data-v="2" onclick="score(this)"><span class="n">2</span><span class="l">Emrg</span></div><div class="sc" data-v="3" onclick="score(this)"><span class="n">3</span><span class="l">Dev</span></div><div class="sc" data-v="4" onclick="score(this)"><span class="n">4</span><span class="l">Prof</span></div><div class="sc" data-v="5" onclick="score(this)"><span class="n">5</span><span class="l">Exm</span></div></div>
+    <div class="desc-toggle" onclick="togD(this)">&#9654; Descriptors</div>
+    <div class="desc-body"><strong>1 &mdash; Needs Improvement:</strong> Few students use kind words &amp; actions and show empathy. Few respond to consequences calmly. Classroom norms minimally evident. Teacher rarely incorporates Kagan. Negative interactions.<br><br><strong>2 &mdash; Emerging:</strong> Some students use kind words. Some respond calmly. Norms partially evident. Teacher sometimes incorporates Kagan. Neutral interactions.<br><br><strong>3 &mdash; Developing:</strong> Most students use kind words and empathy. Most respond calmly. Norms mostly evident. Teacher almost always incorporates Kagan. Positive, teacher-driven interactions.<br><br><strong>4 &mdash; Proficient:</strong> All students use kind words, respond calmly, share positive communication and celebrations. Norms evident through student interaction. Teacher always incorporates Kagan with gambits. Positive, student-driven interactions.<br><br><strong>5 &mdash; Exemplary:</strong> Level 4 met + students exhibit strong problem solving skills. Students participate in Kagan at an exemplary level.</div>
+  </div>
+
+  <div class="rub"><div class="rub-req">Required</div><div class="rub-code">T3</div>
+    <div class="prior-scores"><span class="prior-label">Prior:</span> <span class="prior-chip" style="color:#eab308">PMAP1 '25: 3</span> <span class="prior-arrow">&rarr;</span> <span class="prior-chip" style="color:#eab308">PMAP2 '25: 3</span> <span class="prior-arrow">&rarr;</span> <span class="prior-chip" style="color:#22c55e">PMAP1 '26: 4</span></div>
+    <div class="rub-q">Essential Content &mdash; Content aligned to standards?</div>
+    <div class="scores"><div class="sc" data-v="1" onclick="score(this)"><span class="n">1</span><span class="l">NI</span></div><div class="sc" data-v="2" onclick="score(this)"><span class="n">2</span><span class="l">Emrg</span></div><div class="sc" data-v="3" onclick="score(this)"><span class="n">3</span><span class="l">Dev</span></div><div class="sc" data-v="4" onclick="score(this)"><span class="n">4</span><span class="l">Prof</span></div><div class="sc" data-v="5" onclick="score(this)"><span class="n">5</span><span class="l">Exm</span></div></div>
+    <div class="desc-toggle" onclick="togD(this)">&#9654; Descriptors</div>
+    <div class="desc-body"><strong>1 &mdash; Needs Improvement:</strong> Lesson does not focus on grade-level standards. Most activities not aligned to learning goals. Materials not appropriately demanding. Few lessons drive towards a meaning driven question.<br><br><strong>2 &mdash; Emerging:</strong> Lesson partially focuses on standards. Only some activities aligned. Some materials not demanding enough. Some lessons meaning-driven.<br><br><strong>3 &mdash; Developing:</strong> Lesson focuses on grade-level standards. Most activities aligned and move toward mastery. Most materials appropriately demanding. Most lessons meaning-driven.<br><br><strong>4 &mdash; Proficient:</strong> All activities aligned, well-sequenced, build on each other. All materials high-quality and appropriately demanding. All lessons drive towards a meaning driven question.<br><br><strong>5 &mdash; Exemplary:</strong> Level 4 met + students make connections across disciplines. Students independently connect content to real-world situations.</div>
+  </div>
+
+  <div class="rub"><div class="rub-req">Required</div><div class="rub-code">T4</div>
+    <div class="prior-scores"><span class="prior-label">Prior:</span> <span class="prior-chip" style="color:#f97316">PMAP1 '25: 2</span> <span class="prior-arrow">&rarr;</span> <span class="prior-chip" style="color:#eab308">PMAP2 '25: 3</span> <span class="prior-arrow">&rarr;</span> <span class="prior-chip" style="color:#eab308">PMAP1 '26: 3</span></div>
+    <div class="rub-q">Cognitive Engagement &mdash; Students doing the thinking?</div>
+    <div class="scores"><div class="sc" data-v="1" onclick="score(this)"><span class="n">1</span><span class="l">NI</span></div><div class="sc" data-v="2" onclick="score(this)"><span class="n">2</span><span class="l">Emrg</span></div><div class="sc" data-v="3" onclick="score(this)"><span class="n">3</span><span class="l">Dev</span></div><div class="sc" data-v="4" onclick="score(this)"><span class="n">4</span><span class="l">Prof</span></div><div class="sc" data-v="5" onclick="score(this)"><span class="n">5</span><span class="l">Exm</span></div></div>
+    <div class="desc-toggle" onclick="togD(this)">&#9654; Descriptors</div>
+    <div class="desc-body"><strong>1 &mdash; Needs Improvement:</strong> Very few provide meaningful evidence to support thinking. Teacher completes all cognitive work. Students respond negatively to peers. Discussion/writing &lt;35% of lesson.<br><br><strong>2 &mdash; Emerging:</strong> Some provide evidence. Teacher or very few students complete most cognitive work. Students don't respond to peers. Discussion/writing 35-40%.<br><br><strong>3 &mdash; Developing:</strong> Most provide evidence. Students complete appropriate cognitive work. Students respond to peers and provide feedback. Discussion/writing &ge;50%.<br><br><strong>4 &mdash; Proficient:</strong> All or almost all provide evidence. Students build on peers' thinking. Routinely provide constructive feedback. All try hard even when challenging. Discussion/writing &gt;50%.<br><br><strong>5 &mdash; Exemplary:</strong> Level 4 met + students make inferences, draw conclusions, solve problems multiple ways. Students show enthusiasm for advanced content.</div>
+  </div>
+
+  <div class="rub"><div class="rub-req">Required</div><div class="rub-code">T5</div>
+    <div class="prior-scores"><span class="prior-label">Prior:</span> <span class="prior-chip" style="color:#eab308">PMAP1 '25: 3</span> <span class="prior-arrow">&rarr;</span> <span class="prior-chip" style="color:#eab308">PMAP2 '25: 3</span> <span class="prior-arrow">&rarr;</span> <span class="prior-chip" style="color:#22c55e">PMAP1 '26: 4</span></div>
+    <div class="rub-q">Demonstration of Learning &mdash; Students demonstrate learning?</div>
+    <div class="scores"><div class="sc" data-v="1" onclick="score(this)"><span class="n">1</span><span class="l">NI</span></div><div class="sc" data-v="2" onclick="score(this)"><span class="n">2</span><span class="l">Emrg</span></div><div class="sc" data-v="3" onclick="score(this)"><span class="n">3</span><span class="l">Dev</span></div><div class="sc" data-v="4" onclick="score(this)"><span class="n">4</span><span class="l">Prof</span></div><div class="sc" data-v="5" onclick="score(this)"><span class="n">5</span><span class="l">Exm</span></div></div>
+    <div class="desc-toggle" onclick="togD(this)">&#9654; Descriptors</div>
+    <div class="desc-body"><strong>1 &mdash; Needs Improvement:</strong> Assessments do not yield data on progress. Very few opportunities for academic writing. Very few demonstrate understanding. Most not on track.<br><br><strong>2 &mdash; Emerging:</strong> Assessments only partially allow teacher to assess progress. Few writing opportunities. Some demonstrate understanding. Some on track.<br><br><strong>3 &mdash; Developing:</strong> Assessments yield data on progress. Some writing opportunities. Most demonstrate understanding. Most on track.<br><br><strong>4 &mdash; Proficient:</strong> Assessments pinpoint where understanding breaks down. Extensive writing opportunities. All demonstrate understanding. All or almost all on track.<br><br><strong>5 &mdash; Exemplary:</strong> Level 4 met + students self-assess objective achievement and provide feedback to teacher. Students monitor own progress and seek additional practice.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Additional Comments</div>
+    <textarea placeholder="Any additional notes or context here."></textarea>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Rubric Review -->
+  <div class="section-title">FLS Teacher Rubric Review</div>
+  <div class="section-sub">Provide input on strength and growth areas based on the rubric.</div>
+  <div class="card">
+    <div class="card-label">Strength Areas <span class="req">*</span></div>
+    <textarea placeholder="Identify strengths and provide rationale"></textarea>
+    <div style="margin-top:12px"><div class="card-label">Growth Areas <span class="req">*</span></div>
+      <textarea placeholder="Identify areas for growth and provide rationale"></textarea></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Commitments -->
+  <div class="section-title">FLS Commitments</div>
+  <div class="card">
+    <div class="card-label">FLS Commitment Strength <span class="req">*</span></div>
+    <textarea placeholder="Identify strengths and provide supporting rationale."></textarea>
+    <div style="margin-top:12px"><div class="card-label">FLS Commitment Growth Area <span class="req">*</span></div>
+      <textarea placeholder="Identify growth areas and provide supporting rationale."></textarea></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Career -->
+  <div class="section-title">Professional Development &amp; Career Growth</div>
+  <div class="card">
+    <div class="card-label">Career Goals <span class="req">*</span></div>
+    <textarea placeholder="Reflect on long-term career goals and identify skills, experiences, or opportunities that would help close the gap."></textarea>
+    <div style="margin-top:12px"><div class="card-label">Licenses, Certifications, and Trainings <span class="req">*</span></div>
+      <textarea placeholder="Discuss progress towards required licenses, certifications, and trainings. Write N/A if not applicable."></textarea></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Concerns -->
+  <div class="section-title">Area(s) of Concern</div>
+  <div class="section-sub">Indicate if there is an issue that could lead to an IAP or corrective action.</div>
+  <div class="card">
+    <div class="card-label">Area(s) of Concern</div>
+    <div class="check-group">
+      <label class="check-label"><input type="checkbox"> Professionalism</label>
+      <label class="check-label"><input type="checkbox"> Performance</label>
+      <label class="check-label"><input type="checkbox"> Commitment</label>
+      <label class="check-label"><input type="checkbox"> None</label>
+    </div>
+    <div style="margin-top:12px"><div class="card-label">Area of Concern Comments <span class="req">*</span></div>
+      <textarea placeholder="Include any action steps and non-negotiable indicators of success."></textarea></div>
+  </div>
+
+</div>
+
+<div class="submit-bar">
+  <div class="submit-inner">
+    <button class="sbtn draft">Save draft</button>
+    <button class="sbtn publish">Publish</button>
+    <button class="sbtn send">Publish &amp; Send</button>
+  </div>
+</div>
+
+<script>
+function score(el){
+  var card=el.closest('.rub');
+  card.querySelectorAll('.sc').forEach(function(s){s.classList.remove('sel');s.style.background='';s.style.borderColor='';s.querySelectorAll('.n,.l').forEach(function(t){t.style.color=''})});
+  el.classList.add('sel');
+  var v=el.dataset.v;
+  var c={1:'#ef4444',2:'#f97316',3:'#eab308',4:'#22c55e',5:'#0ea5e9'};
+  el.style.background=c[v];el.style.borderColor=c[v];
+  el.querySelectorAll('.n,.l').forEach(function(t){t.style.color='#fff'});
+  card.style.borderLeftColor=c[v];
+}
+function trackSel(el){var r=el.closest('.track-row');r.querySelectorAll('.track-btn').forEach(function(b){b.classList.remove('sel')});el.classList.add('sel')}
+function togD(el){var d=el.nextElementSibling;d.classList.toggle('open');el.innerHTML=d.classList.contains('open')?'&#9660; Hide descriptors':'&#9654; Descriptors'}
+</script>
+</body>
+</html>

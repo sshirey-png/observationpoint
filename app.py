@@ -57,11 +57,119 @@ def _run_migrations():
               ADD COLUMN IF NOT EXISTS refused_at TIMESTAMPTZ,
               ADD COLUMN IF NOT EXISTS notified_at TIMESTAMPTZ
         """)
+        # Goals — allow goal_type values like 'WIG' / 'AG1' / 'AG2' / 'AG3';
+        # add status flow (draft -> submitted -> approved) + approver + submitter
+        cur.execute("""
+            ALTER TABLE goals
+              ADD COLUMN IF NOT EXISTS submitted_by TEXT,
+              ADD COLUMN IF NOT EXISTS submitted_at TIMESTAMPTZ,
+              ADD COLUMN IF NOT EXISTS approved_by TEXT,
+              ADD COLUMN IF NOT EXISTS approved_at TIMESTAMPTZ
+        """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS recommended_goals (
+              id SERIAL PRIMARY KEY,
+              school_year TEXT NOT NULL,
+              role TEXT NOT NULL,
+              goal_type TEXT NOT NULL,
+              goal_text TEXT NOT NULL,
+              imported_at TIMESTAMPTZ DEFAULT NOW(),
+              UNIQUE (school_year, role, goal_type)
+            )
+        """)
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_recg_role_year ON recommended_goals(role, school_year)")
+        # Seed a few example rows if the table is empty — Scott can replace
+        # once the Google Sheet sync is live.
+        cur.execute("SELECT COUNT(*) FROM recommended_goals")
+        if cur.fetchone()[0] == 0:
+            seed = [
+                ('2026-2027', 'PK Teacher', 'WIG', '80% of students meet end-of-year CLASS benchmarks.'),
+                ('2026-2027', 'PK Teacher', 'AG1', 'Attend 3 PreK coaching cycles per semester.'),
+                ('2026-2027', 'PK Teacher', 'AG2', 'Lead one family engagement event per quarter.'),
+                ('2026-2027', 'PK Teacher', 'AG3', 'Maintain attendance tracker with <5% gap.'),
+                ('2026-2027', 'K-2 Teacher', 'WIG', '75% of students on-grade or advancing in reading by EOY.'),
+                ('2026-2027', 'K-2 Teacher', 'AG1', 'Implement daily guided reading groups with data tracking.'),
+                ('2026-2027', 'K-2 Teacher', 'AG2', 'Build classroom library aligned to student levels.'),
+                ('2026-2027', 'K-2 Teacher', 'AG3', 'Attend biweekly data meetings with full prep.'),
+                ('2026-2027', '3-8 ELA Teacher', 'WIG', '70% of students meet or exceed grade-level ELA standards.'),
+                ('2026-2027', '3-8 ELA Teacher', 'AG1', 'Run 3 writing units to completion with rubric-scored exemplars.'),
+                ('2026-2027', '3-8 ELA Teacher', 'AG2', 'Lead one PLC discussion per quarter.'),
+                ('2026-2027', '3-8 ELA Teacher', 'AG3', 'Maintain gradebook current within 5 school days.'),
+                ('2026-2027', 'Leader', 'WIG', 'School meets academic achievement targets on state/FLS measures.'),
+                ('2026-2027', 'Leader', 'AG1', 'Complete a full PMAP cycle with every direct report on time.'),
+                ('2026-2027', 'Leader', 'AG2', 'Retention of high-performing teachers >= 85%.'),
+                ('2026-2027', 'Leader', 'AG3', 'Conduct 4 family engagement events across the year.'),
+                ('2026-2027', 'Network', 'WIG', 'Department strategy delivers on annual FLS network priorities.'),
+                ('2026-2027', 'Network', 'AG1', 'Quarterly review of department goals with CPO.'),
+                ('2026-2027', 'Network', 'AG2', 'Launch one cross-functional initiative per semester.'),
+                ('2026-2027', 'Network', 'AG3', 'Produce a public-facing KPI dashboard for board review.'),
+                ('2026-2027', 'Support', 'WIG', 'Department service level meets or exceeds FLS standards.'),
+                ('2026-2027', 'Support', 'AG1', 'Close assigned tickets within SLA 90% of the time.'),
+                ('2026-2027', 'Support', 'AG2', 'Complete required annual compliance trainings.'),
+                ('2026-2027', 'Support', 'AG3', 'Submit monthly progress report to supervisor.'),
+            ]
+            cur.executemany(
+                "INSERT INTO recommended_goals (school_year, role, goal_type, goal_text) VALUES (%s, %s, %s, %s) ON CONFLICT DO NOTHING",
+                seed,
+            )
+            log.info(f"Seeded {len(seed)} recommended_goals rows")
         conn.commit()
         conn.close()
-        log.info("Startup migration: acknowledgment columns ensured on touchpoints")
+        log.info("Startup migration: acknowledgment + recommended_goals ensured")
     except Exception as e:
         log.error(f"Startup migration failed: {e}")
+
+
+# ------------------------------------------------------------------
+# Resolve a staff record to the recommended_goals.role bucket.
+# Keeps the sheet's granular "Role" mapping in one Python function so
+# we can iterate without changing data.
+# ------------------------------------------------------------------
+def resolve_recommended_role(staff):
+    if not staff:
+        return None
+    title = (staff.get('job_title') or '').lower()
+    grade = (staff.get('grade_level') or '').strip()
+    subject = (staff.get('subject') or '').strip().lower()
+    job_function = (staff.get('job_function') or '').lower()
+
+    # Specific teacher role markers first
+    if 'prek' in title or 'pre-k' in title or 'pre k' in title or grade.lower() == 'prek':
+        return 'PK Teacher'
+    if 'ell' in title:
+        return 'ELL Teacher'
+    if 'esy' in title:
+        return 'ESY Teacher'
+    if 'sped' in title or 'special ed' in title:
+        if 'resource' in subject: return 'SPED Teacher (Resource)'
+        if 'discovery' in subject: return 'SPED Teacher (Discovery)'
+        return 'SPED Teacher (Resource)'  # default bucket when subject is unclear
+    # Enrichment by subject
+    if subject in {'art', 'music', 'pe', 'dance', 'discovery', 'computer', 'media', 'garden', 'kitchen', 'life skills'}:
+        return 'Enrichment Teacher'
+
+    # Grade-banded general teachers
+    try:
+        grade_int = int(grade) if grade.isdigit() else None
+    except Exception:
+        grade_int = None
+    if grade_int is not None:
+        if 0 <= grade_int <= 2:
+            return 'K-2 Teacher'
+        if 3 <= grade_int <= 8:
+            if 'ela' in subject or 'english' in subject or 'reading' in subject: return '3-8 ELA Teacher'
+            if 'math' in subject: return '3-8 Math Teacher'
+            if 'science' in subject: return '3-8 Science Teacher'
+            if 'social' in subject or subject == 'ss' or 'history' in subject: return '3-8 SS Teacher'
+
+    # Fallbacks by job_function
+    if job_function == 'leadership' or 'principal' in title or 'director' in title:
+        return 'Leader'
+    if job_function == 'network':
+        return 'Network'
+    if job_function in ('support', 'operations'):
+        return 'Support'
+    return 'Teacher'  # last-resort bucket
 
 try:
     _run_migrations()
@@ -1748,7 +1856,7 @@ def _send_email(to_email, subject, html_body, cc_emails=None):
 def _fundamentals_email_html(teacher, observer, tp_row, action_steps, skills_text):
     """FLS-standard email template for a Fundamentals observation notification."""
     teacher_first = (teacher.get('first_name') or teacher.get('email', '').split('@')[0]).strip()
-    observer_name = f"{observer.get('first_name', '')} {observer.get('last_name', '')}".strip() or observer.get('email', '')
+    observer_name = (observer.get('name') or '').strip() or f"{observer.get('first_name','')} {observer.get('last_name','')}".strip() or observer.get('email','')
     observed_at = tp_row.get('observed_at')
     obs_date = observed_at.strftime('%B %-d, %Y') if observed_at else ''
     scores = tp_row.get('scores') or {}
@@ -1803,7 +1911,7 @@ def _fundamentals_email_html(teacher, observer, tp_row, action_steps, skills_tex
 def _celebrate_email_html(teacher, observer, tp_row, commitments, personal_note):
     """FLS-standard celebration email — orange gradient hero, quote card, commitments, CTA."""
     teacher_first = (teacher.get('first_name') or teacher.get('email', '').split('@')[0]).strip()
-    observer_name = f"{observer.get('first_name', '')} {observer.get('last_name', '')}".strip() or observer.get('email', '')
+    observer_name = (observer.get('name') or '').strip() or f"{observer.get('first_name','')} {observer.get('last_name','')}".strip() or observer.get('email','')
     note_text = (tp_row.get('notes') or '').strip()
 
     commitments_html = ''
@@ -1854,10 +1962,47 @@ def _celebrate_email_html(teacher, observer, tp_row, commitments, personal_note)
 </body></html>'''
 
 
+def _generic_touchpoint_email_html(form_label, teacher, observer, tp_row):
+    """Generic email for any non-celebrate, non-HR-doc, non-fundamentals touchpoint.
+    Used for observations, PMAPs, meetings, SR, QF, SF."""
+    teacher_first = (teacher.get('first_name') or teacher.get('email', '').split('@')[0]).strip()
+    observer_name = (observer.get('name') or '').strip() or observer.get('email', '')
+    notes_text = (tp_row.get('notes') or '').strip()
+    app_url = 'https://observationpoint-965913991496.us-central1.run.app'
+    notes_block = ''
+    if notes_text:
+        notes_block = f'''
+        <div style="background:#fff;border-radius:10px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:18px">
+          <div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:8px">Notes</div>
+          <div style="font-size:14px;color:#111827;line-height:1.6;white-space:pre-wrap">{notes_text}</div>
+        </div>'''
+    return f'''<!DOCTYPE html>
+<html><body style="margin:0;padding:0;background:#f8f9fa;font-family:'Open Sans',Arial,sans-serif">
+  <div style="background:#002f60;padding:28px 22px;text-align:center">
+    <div style="color:rgba(255,255,255,.85);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em">{form_label}</div>
+    <h1 style="margin:6px 0 0;color:#fff;font-size:22px;font-weight:800">From {observer_name}</h1>
+  </div>
+  <div style="padding:24px 22px;max-width:600px;margin:0 auto">
+    <div style="font-size:16px;color:#111827;margin:0 0 18px;font-weight:600">Hi {teacher_first},</div>
+    <div style="font-size:14px;color:#374151;line-height:1.6;margin-bottom:18px">
+      You have a new <b>{form_label.lower()}</b> from {observer_name}. View the full record in ObservationPoint.
+    </div>
+    {notes_block}
+    <div style="text-align:center;margin:24px 0">
+      <a href="{app_url}/app/staff/{teacher.get("email","")}" style="display:inline-block;background:#e47727;color:#fff;padding:14px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px">View in ObservationPoint</a>
+    </div>
+    <div style="font-size:12px;color:#6b7280;text-align:center;margin-top:18px">Questions? Contact talent@firstlineschools.org</div>
+  </div>
+  <div style="background:#002f60;padding:14px;text-align:center">
+    <div style="color:rgba(255,255,255,.85);font-size:12px;font-weight:700">FirstLine Schools</div>
+  </div>
+</body></html>'''
+
+
 def _hr_doc_email_html(doc_label, teacher, observer, tp_row, ack_url, summary_bullets):
     """Email for a formal HR doc (PIP / Write-Up). Red accents, ack CTA."""
     teacher_first = (teacher.get('first_name') or teacher.get('email', '').split('@')[0]).strip()
-    observer_name = f"{observer.get('first_name', '')} {observer.get('last_name', '')}".strip() or observer.get('email', '')
+    observer_name = (observer.get('name') or '').strip() or f"{observer.get('first_name','')} {observer.get('last_name','')}".strip() or observer.get('email','')
     bullets_html = ''.join(
         f'<li style="margin-bottom:6px"><b style="color:#111827">{b.get("label","")}:</b> <span style="color:#374151">{b.get("value","")}</span></li>'
         for b in summary_bullets if b.get('value')
@@ -1931,7 +2076,29 @@ def api_notify_teacher(tp_id):
             fb = {}
 
         form_type = tp.get('form_type', '')
-        observer_name = f"{observer.get('first_name', '')} {observer.get('last_name', '')}".strip() or observer.get('email', '')
+        observer_name = (observer.get('name') or '').strip() or f"{observer.get('first_name','')} {observer.get('last_name','')}".strip() or observer.get('email','')
+
+        # Map form_type → human-readable label for subject + email body
+        FORM_LABELS = {
+            'observation_teacher': 'Teacher Observation',
+            'observation_prek': 'PreK Observation',
+            'observation_fundamentals': 'Fundamentals Observation',
+            'pmap_teacher': 'PMAP — Teacher',
+            'pmap_prek': 'PMAP — PreK',
+            'pmap_leader': 'PMAP — Leader',
+            'pmap_network': 'PMAP — Network',
+            'pmap_support': 'PMAP — Support',
+            'self_reflection_teacher': 'Self-Reflection',
+            'self_reflection_prek': 'Self-Reflection (PreK)',
+            'self_reflection_leader': 'Self-Reflection (Leader)',
+            'self_reflection_network': 'Self-Reflection (Network)',
+            'self_reflection_support': 'Self-Reflection (Support)',
+            'meeting_data_meeting_(relay)': 'Data Meeting',
+            'meeting_quick_meeting': 'Quick Meeting',
+            'quick_feedback': 'Quick Feedback',
+            'solicited_feedback': 'Feedback Request',
+        }
+        form_label = FORM_LABELS.get(form_type, form_type.replace('_', ' ').title())
 
         if form_type == 'celebrate':
             commitments = fb.get('commitments') or []
@@ -1966,12 +2133,16 @@ def api_notify_teacher(tp_id):
                 ]
             html = _hr_doc_email_html(doc_label, teacher, observer, tp_dict, ack_url, summary_bullets)
             subject = f'Action required: {doc_label} from {observer_name}'
-        else:
+        elif form_type == 'observation_fundamentals':
             cur.execute("""SELECT body_text FROM assignments
                            WHERE observation_grow_id::text = %s AND type = 'actionStep'""", (str(tp_id),))
             action_steps = [{'cat': '', 'action': r['body_text']} for r in cur.fetchall()]
             html = _fundamentals_email_html(teacher, observer, tp_dict, action_steps, tp.get('notes', '') or '')
             subject = f'New Fundamentals observation from {observer_name}'
+        else:
+            # Generic touchpoint email — observation, PMAP, meeting, SR, QF, SF
+            html = _generic_touchpoint_email_html(form_label, teacher, observer, tp_dict)
+            subject = f'New {form_label} from {observer_name}'
 
         # SAFETY: test-mode submissions NEVER reach the actual teacher.
         # Email goes only to the observer (tester) so real teachers aren't confused.
@@ -1990,6 +2161,51 @@ def api_notify_teacher(tp_id):
         return jsonify({'error': 'email send failed'}), 500
     finally:
         conn.close()
+
+
+# ------------------------------------------------------------------
+# Tester feedback — small endpoint for the in-app FeedbackButton
+# ------------------------------------------------------------------
+@app.route('/api/feedback', methods=['POST'])
+@require_auth
+def api_feedback():
+    user = get_current_user()
+    data = request.get_json() or {}
+    subject = (data.get('subject') or '(no subject)').strip()[:200]
+    body_text = (data.get('body') or '').strip()
+    page_url = (data.get('url') or '').strip()
+    user_agent = (data.get('user_agent') or '').strip()[:300]
+    user_email = user['email'] if user else DEV_USER_EMAIL
+    user_name = (user.get('name') if user else '') or user_email
+
+    html = f'''<!DOCTYPE html>
+<html><body style="margin:0;padding:0;background:#f5f7fa;font-family:'Open Sans',Arial,sans-serif">
+  <div style="background:#002f60;padding:18px 22px">
+    <div style="color:rgba(255,255,255,.8);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em">ObservationPoint · Tester Feedback</div>
+    <div style="color:#fff;font-size:18px;font-weight:800;margin-top:4px">{subject}</div>
+  </div>
+  <div style="padding:22px;max-width:600px;margin:0 auto">
+    <div style="background:#fff;border-radius:10px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+      <div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:6px">From</div>
+      <div style="font-size:14px;color:#111827;margin-bottom:14px">{user_name} &lt;{user_email}&gt;</div>
+      <div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:6px">Page</div>
+      <div style="font-size:12px;color:#374151;margin-bottom:14px;word-break:break-all"><a href="{page_url}" style="color:#e47727">{page_url}</a></div>
+      <div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:6px">Message</div>
+      <div style="font-size:14px;color:#111827;line-height:1.6;white-space:pre-wrap">{body_text or '(no message)'}</div>
+      <div style="font-size:10px;color:#9ca3af;margin-top:18px;border-top:1px solid #f3f4f6;padding-top:10px">{user_agent}</div>
+    </div>
+  </div>
+</body></html>'''
+
+    recipients = ['sshirey@firstlineschools.org', 'talent@firstlineschools.org']
+    ok = False
+    for rcpt in recipients:
+        try:
+            if _send_email(rcpt, f'[OP Feedback] {subject}', html):
+                ok = True
+        except Exception as e:
+            log.error(f'feedback email to {rcpt} failed: {e}')
+    return jsonify({'sent': ok})
 
 
 # ------------------------------------------------------------------
@@ -2083,13 +2299,50 @@ def api_ack_submit(token):
                 acknowledgment_ip = %s,
                 acknowledgment_ua = %s
             WHERE acknowledgment_token = %s AND acknowledgment_at IS NULL
-            RETURNING id, teacher_email, observer_email, form_type
+            RETURNING id, teacher_email, observer_email, form_type, is_test
         """, (typed_name, ip, ua, token))
         row = cur.fetchone()
         if not row:
             return jsonify({'error': 'invalid or already acknowledged'}), 400
         conn.commit()
         from datetime import datetime as _dt
+
+        # Notify the supervisor (observer_email) that the employee acknowledged.
+        try:
+            doc_label = 'Write-Up' if row['form_type'] == 'write_up' else 'Performance Improvement Plan'
+            ack_at_str = _dt.now().strftime('%B %d, %Y at %I:%M %p')
+            html = f'''<!DOCTYPE html>
+<html><body style="margin:0;padding:0;background:#f8f9fa;font-family:'Open Sans',Arial,sans-serif">
+  <div style="background:#22c55e;padding:24px 22px;text-align:center">
+    <div style="color:rgba(255,255,255,.9);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em">Acknowledgment Received</div>
+    <div style="color:#fff;font-size:20px;font-weight:800;margin-top:6px">{doc_label}</div>
+  </div>
+  <div style="padding:24px 22px;max-width:600px;margin:0 auto">
+    <div style="background:#fff;border-radius:10px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+      <div style="font-size:14px;color:#374151;line-height:1.6;margin-bottom:14px">
+        <b>{row["teacher_email"]}</b> acknowledged receipt of the {doc_label.lower()} you filed.
+      </div>
+      <div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:4px">Signed by</div>
+      <div style="font-size:14px;color:#111827;margin-bottom:12px">{typed_name}</div>
+      <div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:4px">Timestamp</div>
+      <div style="font-size:14px;color:#111827;margin-bottom:12px">{ack_at_str}</div>
+      <div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:4px">IP address</div>
+      <div style="font-size:13px;color:#374151;font-family:monospace">{ip}</div>
+    </div>
+    <div style="font-size:12px;color:#6b7280;margin-top:14px;line-height:1.5">Acknowledgment confirms receipt only — it does not imply agreement with the document's content.</div>
+  </div>
+  <div style="background:#002f60;padding:14px;text-align:center">
+    <div style="color:rgba(255,255,255,.85);font-size:11px;font-weight:700">FirstLine Schools</div>
+  </div>
+</body></html>'''
+            subject_line = f'[Acknowledged] {row["teacher_email"]} signed the {doc_label}'
+            recipient = row['observer_email']
+            if row.get('is_test'):
+                subject_line = '[TEST] ' + subject_line
+            _send_email(recipient, subject_line, html)
+        except Exception as e:
+            log.error(f'supervisor ack notify failed: {e}')
+
         return jsonify({'acknowledged': True, 'at': _dt.now().isoformat()})
     except Exception as e:
         log.error(f"ack submit failed: {e}")
@@ -2114,6 +2367,181 @@ def api_abandon_touchpoint(tp_id):
         return jsonify({'error': str(e)}), 404
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+# ------------------------------------------------------------------
+# Goals — per-teacher annual goals (WIG + AG1/AG2/AG3)
+# ------------------------------------------------------------------
+
+def _fetch_staff_by_email(email):
+    if not email:
+        return None
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("SELECT email, first_name, last_name, job_title, job_function, school, grade_level, subject, supervisor_email FROM staff WHERE LOWER(email)=LOWER(%s)", (email,))
+        return cur.fetchone()
+    finally:
+        conn.close()
+
+
+@app.route('/api/goals/library')
+@require_auth
+def api_goals_library():
+    """Return recommended goals for a given role + school_year.
+    If no role is given, derives it from the teacher_email param."""
+    role = (request.args.get('role') or '').strip()
+    school_year = (request.args.get('school_year') or CURRENT_SCHOOL_YEAR).strip()
+    teacher_email = (request.args.get('teacher_email') or '').strip()
+    if not role and teacher_email:
+        staff = _fetch_staff_by_email(teacher_email)
+        role = resolve_recommended_role(staff) or ''
+    if not role:
+        return jsonify({'role': None, 'recommendations': []})
+
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            SELECT goal_type, goal_text FROM recommended_goals
+            WHERE school_year = %s AND role = %s
+            ORDER BY CASE goal_type WHEN 'WIG' THEN 0 WHEN 'AG1' THEN 1 WHEN 'AG2' THEN 2 WHEN 'AG3' THEN 3 ELSE 9 END
+        """, (school_year, role))
+        recs = [dict(r) for r in cur.fetchall()]
+        return jsonify({'role': role, 'school_year': school_year, 'recommendations': recs})
+    finally:
+        conn.close()
+
+
+@app.route('/api/goals/for-teacher')
+@require_auth
+def api_goals_for_teacher():
+    """Return the current goals (any status) for a teacher + school_year."""
+    teacher_email = (request.args.get('teacher_email') or '').strip()
+    school_year = (request.args.get('school_year') or CURRENT_SCHOOL_YEAR).strip()
+    if not teacher_email:
+        return jsonify({'error': 'teacher_email required'}), 400
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            SELECT * FROM goals
+            WHERE LOWER(teacher_email)=LOWER(%s) AND school_year=%s
+            ORDER BY CASE goal_type WHEN 'WIG' THEN 0 WHEN 'AG1' THEN 1 WHEN 'AG2' THEN 2 WHEN 'AG3' THEN 3 ELSE 9 END
+        """, (teacher_email, school_year))
+        goals = [dict(r) for r in cur.fetchall()]
+        return jsonify({'teacher_email': teacher_email, 'school_year': school_year, 'goals': goals})
+    finally:
+        conn.close()
+
+
+@app.route('/api/goals', methods=['POST'])
+@require_auth
+@require_no_impersonation
+def api_save_goals():
+    """Upsert one or more goals for a teacher. Body:
+        { teacher_email, school_year, status, goals: [{goal_type, goal_text}, ...] }
+    status = 'draft' | 'submitted' (caller decides intent).
+    Permission: subject themselves, their supervisor, or an admin."""
+    user = get_current_user()
+    current_email = user['email'] if user else DEV_USER_EMAIL
+    data = request.get_json() or {}
+    teacher_email = (data.get('teacher_email') or '').strip().lower()
+    school_year = (data.get('school_year') or CURRENT_SCHOOL_YEAR).strip()
+    new_status = (data.get('status') or 'draft').strip()
+    goals = data.get('goals') or []
+    if not teacher_email:
+        return jsonify({'error': 'teacher_email required'}), 400
+
+    subject_staff = _fetch_staff_by_email(teacher_email)
+    if not subject_staff:
+        return jsonify({'error': 'subject not found'}), 404
+
+    # Permission: self, supervisor, or admin
+    is_self = teacher_email == current_email.lower()
+    is_admin = bool(user and user.get('is_admin'))
+    is_supervisor = bool(subject_staff.get('supervisor_email') and
+                         subject_staff['supervisor_email'].lower() == current_email.lower())
+    if not (is_self or is_supervisor or is_admin):
+        return jsonify({'authorized': False, 'error': 'not authorized to edit these goals'})
+
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        saved = []
+        submitted_ts = None
+        if new_status == 'submitted':
+            from datetime import datetime as _dt
+            submitted_ts = _dt.now()
+        for g in goals:
+            gt = (g.get('goal_type') or '').strip()
+            gtext = (g.get('goal_text') or '').strip()
+            if gt not in ('WIG', 'AG1', 'AG2', 'AG3'):
+                continue
+            # Upsert by (teacher_email, school_year, goal_type)
+            cur.execute("""
+                SELECT id, status, approved_at FROM goals
+                WHERE LOWER(teacher_email)=%s AND school_year=%s AND goal_type=%s
+            """, (teacher_email, school_year, gt))
+            existing = cur.fetchone()
+            if existing:
+                # Preserve approved state unless caller explicitly changes status
+                preserve_status = existing['status'] == 'approved' and new_status == 'draft'
+                final_status = existing['status'] if preserve_status else new_status
+                cur.execute("""
+                    UPDATE goals SET goal_text=%s, status=%s, updated_at=NOW(),
+                        submitted_by = COALESCE(%s, submitted_by),
+                        submitted_at = COALESCE(%s, submitted_at)
+                    WHERE id=%s RETURNING *
+                """, (gtext, final_status, current_email if new_status == 'submitted' else None,
+                      submitted_ts, existing['id']))
+            else:
+                cur.execute("""
+                    INSERT INTO goals (teacher_email, school_year, goal_type, goal_text, status, submitted_by, submitted_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    RETURNING *
+                """, (teacher_email, school_year, gt, gtext, new_status,
+                      current_email if new_status == 'submitted' else None, submitted_ts))
+            saved.append(dict(cur.fetchone()))
+        conn.commit()
+        return jsonify({'saved': saved})
+    except Exception as e:
+        log.error(f"save goals failed: {e}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
+@app.route('/api/goals/<goal_id>/approve', methods=['POST'])
+@require_auth
+@require_no_impersonation
+def api_goals_approve(goal_id):
+    """Approve a single goal. Only supervisor of the subject, or admin."""
+    user = get_current_user()
+    current_email = user['email'] if user else DEV_USER_EMAIL
+    is_admin = bool(user and user.get('is_admin'))
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("SELECT * FROM goals WHERE id=%s", (goal_id,))
+        g = cur.fetchone()
+        if not g:
+            return jsonify({'error': 'not found'}), 404
+        subject_staff = _fetch_staff_by_email(g['teacher_email'])
+        is_supervisor = bool(subject_staff and subject_staff.get('supervisor_email') and
+                             subject_staff['supervisor_email'].lower() == current_email.lower())
+        if not (is_supervisor or is_admin):
+            return jsonify({'authorized': False, 'error': 'only the subject\'s supervisor or an admin can approve'})
+        cur.execute("""
+            UPDATE goals
+            SET status='approved', approved_by=%s, approved_at=NOW(), updated_at=NOW()
+            WHERE id=%s RETURNING *
+        """, (current_email, goal_id))
+        row = cur.fetchone()
+        conn.commit()
+        return jsonify({'approved': True, 'goal': dict(row)})
+    finally:
+        conn.close()
 
 
 @app.route('/api/touchpoints', methods=['POST'])
@@ -2210,7 +2638,7 @@ TABLE touchpoints (aliased as t):
   - teacher_email TEXT  (who the touchpoint is ABOUT — join: t.teacher_email = s.email)
   - observer_email TEXT  (who CREATED it — also FK to staff.email)
   - school TEXT
-  - school_year TEXT  (format '2025-2026'; current year is '2025-2026')
+  - school_year TEXT  (format '2025-2026'; current year is '2026-2027')
   - observed_at TIMESTAMPTZ
   - status TEXT  (values: 'published', 'draft' — almost always filter to published)
   - notes TEXT
@@ -2270,7 +2698,7 @@ FROM touchpoints t
 JOIN staff s ON t.observer_email = s.email
 WHERE s.first_name ILIKE 'Charlotte%' AND s.last_name ILIKE 'Steele%'
   AND t.form_type LIKE 'observation_%'
-  AND t.school_year = '2025-2026'
+  AND t.school_year = '2026-2027'
   AND t.status = 'published';
 
 Q: "How many meetings has Ida had this year?"
@@ -2279,7 +2707,7 @@ FROM touchpoints t
 JOIN staff s ON t.teacher_email = s.email
 WHERE s.first_name ILIKE 'Ida%'
   AND t.form_type LIKE 'meeting_%'
-  AND t.school_year = '2025-2026'
+  AND t.school_year = '2026-2027'
   AND t.status = 'published'
 GROUP BY s.first_name, s.last_name, s.email;
 
@@ -2288,7 +2716,7 @@ SELECT DISTINCT s.first_name, s.last_name, s.email, s.school, COUNT(t.id) AS men
 FROM touchpoints t
 JOIN staff s ON t.teacher_email = s.email
 WHERE t.feedback ILIKE '%cold call%'
-  AND t.school_year = '2025-2026'
+  AND t.school_year = '2026-2027'
   AND t.status = 'published'
 GROUP BY s.first_name, s.last_name, s.email, s.school
 ORDER BY mentions DESC
@@ -2298,7 +2726,7 @@ Q: "Top observers this year"
 SELECT s.first_name, s.last_name, s.email, COUNT(*) AS touchpoints
 FROM touchpoints t
 JOIN staff s ON t.observer_email = s.email
-WHERE t.school_year = '2025-2026' AND t.status = 'published'
+WHERE t.school_year = '2026-2027' AND t.status = 'published'
 GROUP BY s.first_name, s.last_name, s.email
 ORDER BY touchpoints DESC LIMIT 20;
 
@@ -2318,7 +2746,7 @@ Q: "Average scores by school this year"
 SELECT t.school, sc.dimension_code, ROUND(AVG(sc.score)::numeric, 2) AS avg_score
 FROM touchpoints t
 JOIN scores sc ON sc.touchpoint_id = t.id
-WHERE t.school_year = '2025-2026' AND t.status = 'published'
+WHERE t.school_year = '2026-2027' AND t.status = 'published'
   AND sc.dimension_code IN ('T1','T2','T3','T4','T5')
 GROUP BY t.school, sc.dimension_code
 ORDER BY t.school, sc.dimension_code;
@@ -2328,13 +2756,20 @@ Q: "Which school has the most energetic feedback?"
 SELECT t.school, COUNT(*) AS mentions
 FROM touchpoints t
 WHERE (t.feedback ILIKE '%energy%' OR t.feedback ILIKE '%engaging%' OR t.feedback ILIKE '%enthusias%')
-  AND t.school_year = '2025-2026' AND t.status = 'published'
+  AND t.school_year = '2026-2027' AND t.status = 'published'
 GROUP BY t.school ORDER BY mentions DESC;
 """
 
 @app.route('/api/insights', methods=['POST'])
 @require_auth
 def api_insights():
+    # Scope gate: AI Insights generates SQL against the full DB. Until we
+    # auto-inject WHERE-clauses to scope by accessible_emails, restrict to
+    # admins only — otherwise any teacher could query anyone's PMAP scores.
+    user = get_current_user()
+    if user and not user.get('is_admin') and not DEV_MODE:
+        return jsonify({'authorized': False,
+                        'error': 'Insights is currently in admin preview. Coming soon for everyone.'})
     data = request.get_json()
     question = (data.get('question') or '').strip()
     if not question:

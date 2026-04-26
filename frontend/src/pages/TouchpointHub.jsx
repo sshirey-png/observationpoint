@@ -21,7 +21,7 @@ const FORM_LABELS = {
   pmap_support: { label: 'PMAP', color: '#059669', bg: '#dcfce7', route: '/app/pmap' },
   self_reflection_teacher: { label: 'Self-Refl', color: '#7c3aed', bg: '#ede9fe', route: '/app/self-reflection' },
   self_reflection_leader: { label: 'Self-Refl', color: '#7c3aed', bg: '#ede9fe', route: '/app/self-reflection' },
-  solicited_feedback: { label: 'Solicited', color: '#2563eb', bg: '#dbeafe', route: '/app/solicit' },
+  solicited_feedback: { label: 'Solicit', color: '#2563eb', bg: '#dbeafe', route: '/app/solicit' },
   performance_improvement_plan: { label: 'PIP', color: '#dc2626', bg: '#fee2e2', route: '/app/pip' },
   iap: { label: 'PIP', color: '#dc2626', bg: '#fee2e2', route: '/app/pip' },
   write_up: { label: 'Write-Up', color: '#dc2626', bg: '#fee2e2', route: '/app/write-up' },
@@ -142,10 +142,18 @@ export default function TouchpointHub() {
           <Card to="/app/observe" icon="👁" iconBg="#dbeafe" title="Observation" sub="Classroom visit · auto PreK" />
           <Card to="/app/fundamentals" icon="⏱" iconBg="#fef3c7" title="Fundamentals" sub="5-min On Task %" />
           <Card to="/app/meeting" icon="💬" iconBg="#f0fdf4" title="Data Meeting" sub="Relay DDI" />
+          <Card to="/app/quick-meeting" icon="🗓" iconBg="#e0e7ff" title="Quick Meeting" sub="Multi-participant · notes" />
           <Card to="/app/feedback" icon="⚡" iconBg="#fef3c7" title="Quick Feedback" sub="Informal note" />
           <Card to="/app/celebrate" icon="🎉" iconBg="#dcfce7" title="Celebrate / Praise" sub="Recognize a win" />
-          <Card to="/app/solicit" icon="🙌" iconBg="#dbeafe" title="Solicited Feedback" sub="Ask for input" />
+          <Card to="/app/solicit" icon="🙌" iconBg="#dbeafe" title="Solicit Feedback" sub="Ask for input" />
         </div>
+
+        {/* Annual Goals — set once per year, pulls into PMAP/SR */}
+        <Section label="Annual Goals" count="1 WIG + 3 AGs" open={true}>
+          <div className="grid grid-cols-1 gap-2.5">
+            <Card to="/app/goals" icon="🎯" iconBg="#dbeafe" title="Set Annual Goals" sub="Pick from recommended by role · supervisor approves" />
+          </div>
+        </Section>
 
         {/* Evaluations — role-aware auto-select */}
         <Section label="Evaluations" count="auto · 5 variants">

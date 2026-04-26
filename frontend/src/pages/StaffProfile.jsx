@@ -30,7 +30,7 @@ const FORM_LABEL = {
   meeting_data: 'Data Meeting',
   meeting_quick_meeting: 'Meeting',
   'meeting_data_meeting_(relay)': 'Data Meeting',
-  solicited_feedback: 'Solicited Feedback',
+  solicited_feedback: 'Solicit Feedback',
   write_up: 'Write-Up',
   performance_improvement_plan: 'PIP',
   iap: 'PIP',
@@ -468,7 +468,7 @@ const TYPE_BADGE = {
   self_reflection_support:{ label: 'Self-Refl',   bg: '#ede9fe', color: '#6d28d9' },
   quick_feedback:         { label: 'Quick FB',    bg: '#fef3c7', color: '#b45309' },
   celebrate:              { label: 'Celebrate',   bg: '#d1fae5', color: '#059669' },
-  solicited_feedback:     { label: 'Solicited',   bg: '#dbeafe', color: '#2563eb' },
+  solicited_feedback:     { label: 'Solicit',     bg: '#dbeafe', color: '#2563eb' },
   meeting_quick_meeting:  { label: 'Meeting',     bg: '#f0fdf4', color: '#16a34a' },
   'meeting_data_meeting_(relay)': { label: 'Data Mtg', bg: '#f0fdf4', color: '#16a34a' },
 }

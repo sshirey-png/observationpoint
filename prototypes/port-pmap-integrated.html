@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>PMAP × Goals Integration · ObservationPoint</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased;padding-bottom:110px}
+.banner{background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;text-align:center;padding:6px 12px;letter-spacing:.05em}
+.port-banner{background:#dcfce7;color:#166534;font-size:11px;font-weight:700;text-align:center;padding:6px 12px}
+.nav{background:#002f60;padding:14px 16px;text-align:center;position:relative}
+.nav-title{font-size:17px;font-weight:800;color:#fff}
+.nav-title span{color:#e47727}
+.nav-sub{font-size:12px;color:rgba(255,255,255,.6);margin-top:2px}
+.nav-badge{display:inline-block;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;margin-left:6px}
+.wrap{padding:14px;max-width:720px;margin:0 auto}
+.subject{position:relative;background:linear-gradient(135deg,#002f60,#003b7a);border-radius:14px;padding:14px;margin-bottom:12px;color:#fff;display:flex;align-items:center;gap:12px;box-shadow:0 3px 10px rgba(0,47,96,.2)}
+.subject-av{width:48px;height:48px;border-radius:50%;background:#e47727;color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;flex-shrink:0}
+.subject-name{font-size:16px;font-weight:800;line-height:1.2}
+.subject-meta{font-size:11px;color:rgba(255,255,255,.75);margin-top:3px}
+.subject-meta .badge{display:inline-block;background:#dcfce7;color:#059669;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;margin-left:6px}
+.section-title{font-size:15px;font-weight:800;color:#111827;margin:18px 4px 4px}
+.section-sub{font-size:11px;color:#6b7280;margin:0 4px 10px}
+.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:12px}
+.card-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-bottom:6px}
+.req{color:#dc2626}
+textarea{width:100%;min-height:70px;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:inherit;color:#111827;resize:vertical;line-height:1.5}
+.goal-card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:10px;border-left:4px solid #002f60}
+.goal-card.wig{border-left-color:#e47727}
+.goal-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.goal-tag{font-size:10px;font-weight:800;color:#fff;background:#002f60;padding:2px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:.05em}
+.goal-tag.wig{background:#e47727}
+.goal-from{font-size:10px;color:#9ca3af;flex:1;text-align:right}
+.goal-text{font-size:13px;color:#111827;line-height:1.55;margin-bottom:10px}
+.goal-status-row{display:flex;gap:6px}
+.tbtn{flex:1;padding:10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:12px;font-weight:700;background:#fff;color:#9ca3af;cursor:pointer;font-family:inherit}
+.tbtn.off.on{background:#f59e0b;color:#fff;border-color:#f59e0b}
+.tbtn.on.on{background:#22c55e;color:#fff;border-color:#22c55e}
+.tbtn.na.on{background:#9ca3af;color:#fff;border-color:#9ca3af}
+.goal-edit{color:#e47727;font-size:11px;font-weight:700;text-decoration:underline;cursor:pointer}
+.empty-state{background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:14px;margin-bottom:12px;font-size:13px;color:#991b1b}
+.empty-state a{color:#dc2626;font-weight:700;text-decoration:underline}
+.note-banner{background:#eff6ff;border-left:4px solid #2563eb;border-radius:0 10px 10px 0;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#1e40af;line-height:1.5}
+.submit-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;padding:10px 14px;padding-bottom:max(14px,env(safe-area-inset-bottom));z-index:50;display:flex;gap:6px}
+.sbtn{flex:1;padding:13px 8px;border:none;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+.sbtn.draft{background:#f3f4f6;color:#4b5563}
+.sbtn.publish{background:#fff;color:#002f60;border:1.5px solid #002f60}
+.sbtn.send{background:#002f60;color:#fff;flex:1.3}
+</style>
+</head>
+<body>
+<div class="banner">DESIGN MOCK · PMAP Teacher</div>
+<div class="port-banner">INTEGRATION PREVIEW · WIG + Annual Goals auto-pulled from Goals table</div>
+<nav class="nav">
+  <div class="nav-title">Observation<span>Point</span></div>
+  <div class="nav-sub">Neil Williams · PMAP<span class="nav-badge">TEST MODE</span></div>
+</nav>
+
+<div class="wrap">
+  <div class="subject">
+    <div class="subject-av">NW</div>
+    <div>
+      <div class="subject-name">Neil Williams</div>
+      <div class="subject-meta">FirstLine Network · Director of Operations<span class="badge">PMAP</span></div>
+    </div>
+  </div>
+
+  <div class="note-banner">
+    <b>What changed:</b> WIG and Annual Goals are no longer free-text — they pull from the Goals table for this teacher's school year. Supervisor only fills On/Off Track + Progress notes. Goal text is read-only here; if it needs to change, edit in <b>/app/goals</b>.
+  </div>
+
+  <!-- Meeting Checklist (unchanged from current PMAP mock) -->
+  <div class="section-title">Meeting Checklist</div>
+  <div class="card">
+    <div class="card-label">Has the job description been reviewed? <span class="req">*</span></div>
+    <select style="width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;background:#fff">
+      <option>Choose one...</option><option>Yes</option><option>No</option>
+    </select>
+  </div>
+
+  <!-- WIG + Annual Goals — INTEGRATED VERSION -->
+  <div class="section-title">WIG + Annual Goals Review</div>
+  <div class="section-sub">Pulled from Goals · 2025-2026 · 4 of 4 active</div>
+
+  <!-- WIG card -->
+  <div class="goal-card wig">
+    <div class="goal-head">
+      <span class="goal-tag wig">WIG</span>
+      <span class="goal-from">From Goals · approved 03-27-2026</span>
+      <a class="goal-edit">Edit</a>
+    </div>
+    <div class="goal-text">By the End of the Year 75% of School Operations Managers (SOMs) demonstrate growth in strategic leadership competencies from PMAP 1 to PMAP 2, averaging a score of 3 or above on (insert specific competency).</div>
+    <div class="card-label" style="margin-top:6px">Status this cycle <span class="req">*</span></div>
+    <div class="goal-status-row">
+      <div class="tbtn off">Off Track</div>
+      <div class="tbtn on on">On Track</div>
+    </div>
+  </div>
+
+  <!-- AG1 -->
+  <div class="goal-card">
+    <div class="goal-head">
+      <span class="goal-tag">AG 1</span>
+      <span class="goal-from">From Goals · approved 03-27-2026</span>
+      <a class="goal-edit">Edit</a>
+    </div>
+    <div class="goal-text">All Facility OS Tickets are addressed and closed within (x) business days of being opened based on their assigned priority level by June 30, 2026: Low Priority remain at 3 days or less; Normal within 5; High within 1.</div>
+    <div class="card-label" style="margin-top:6px">Status this cycle</div>
+    <div class="goal-status-row">
+      <div class="tbtn off on">Off Track</div>
+      <div class="tbtn on">On Track</div>
+    </div>
+  </div>
+
+  <!-- AG2 -->
+  <div class="goal-card">
+    <div class="goal-head">
+      <span class="goal-tag">AG 2</span>
+      <span class="goal-from">From Goals · approved 03-27-2026</span>
+      <a class="goal-edit">Edit</a>
+    </div>
+    <div class="goal-text">All Schools will be at &ge; 95% of new students enrolled by drop date after round 1 (Spring 2026).</div>
+    <div class="card-label" style="margin-top:6px">Status this cycle</div>
+    <div class="goal-status-row">
+      <div class="tbtn off">Off Track</div>
+      <div class="tbtn on on">On Track</div>
+    </div>
+  </div>
+
+  <!-- AG3 -->
+  <div class="goal-card">
+    <div class="goal-head">
+      <span class="goal-tag">AG 3</span>
+      <span class="goal-from">From Goals · approved 03-27-2026</span>
+      <a class="goal-edit">Edit</a>
+    </div>
+    <div class="goal-text">Increase transportation on time percentage from 83% to 95% by fall break 2025 and maintain throughout the year.</div>
+    <div class="card-label" style="margin-top:6px">Status this cycle</div>
+    <div class="goal-status-row">
+      <div class="tbtn off">Off Track</div>
+      <div class="tbtn on">On Track</div>
+    </div>
+  </div>
+
+  <!-- Progress narrative — supervisor still fills this -->
+  <div class="card">
+    <div class="card-label">Progress Toward Goal <span class="req">*</span></div>
+    <div style="font-size:11px;color:#6b7280;margin-bottom:8px">Free-form narrative from the supervisor — data and context behind the On/Off Track ratings above.</div>
+    <textarea placeholder="Provide data and context to support your status ratings above."></textarea>
+  </div>
+
+  <!-- What if no goals exist? Empty-state demo -->
+  <div class="section-title">What it looks like when goals haven't been set yet</div>
+  <div class="empty-state">
+    <b>No goals on file for 2025-2026.</b> Goals must be set before this PMAP can be completed. <a href="#">Set goals for this teacher →</a>
+  </div>
+
+  <!-- Whirlwind etc. continue below — abbreviated -->
+  <div class="section-title">Whirlwind Work Review</div>
+  <div class="card" style="opacity:.4"><div style="font-size:11px;color:#9ca3af;text-align:center">[ section unchanged · abbreviated ]</div></div>
+
+  <div class="section-title">FLS Teacher Rubric (T1-T5)</div>
+  <div class="card" style="opacity:.4"><div style="font-size:11px;color:#9ca3af;text-align:center">[ rubric cards unchanged · abbreviated ]</div></div>
+
+  <div class="section-title">Rubric Review · Commitments · Career · Concerns</div>
+  <div class="card" style="opacity:.4"><div style="font-size:11px;color:#9ca3af;text-align:center">[ remaining sections unchanged · abbreviated ]</div></div>
+
+</div>
+
+<div class="submit-bar">
+  <button class="sbtn draft">Save draft</button>
+  <button class="sbtn publish">Publish</button>
+  <button class="sbtn send">Publish & Send</button>
+</div>
+</body>
+</html>

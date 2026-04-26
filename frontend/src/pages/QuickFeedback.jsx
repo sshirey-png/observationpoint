@@ -23,7 +23,7 @@ export default function QuickFeedback() {
     if (!teacher || !note.trim()) return
     setSaving(true)
     try {
-      await api.post('/api/touchpoints', {
+      const res = await api.post('/api/touchpoints', {
         form_type: 'quick_feedback',
         teacher_email: teacher.email,
         school: teacher.school || '',
@@ -34,6 +34,11 @@ export default function QuickFeedback() {
         notes: note,
         feedback: JSON.stringify({ shared }),
       })
+      // If user chose Share, fire the notify endpoint so the teacher actually
+      // gets an email. Private = save to dashboard only, no notify.
+      if (shared && res?.id) {
+        try { await api.post(`/api/touchpoints/${res.id}/notify`, {}) } catch (e) {}
+      }
       setDone(true)
     } catch (e) {
       alert('Failed to save: ' + e.message)
@@ -48,7 +53,7 @@ export default function QuickFeedback() {
           <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', color: '#059669', fontSize: 28, fontWeight: 800 }}>✓</div>
           <div style={{ fontSize: 20, fontWeight: 800, color: '#002f60' }}>Feedback sent</div>
           <div style={{ fontSize: 13, color: '#6b7280', marginTop: 6 }}>
-            {shared ? `${teacher?.first_name} has been notified` : 'Saved as private note'}
+            {shared ? `Email sent to ${teacher?.first_name}` : 'Saved on your dashboard (private — not sent)'}
           </div>
           <button
             onClick={() => navigate('/')}
@@ -62,9 +67,6 @@ export default function QuickFeedback() {
   return (
     <FormShell>
     <div style={{ minHeight: '100svh', background: '#f5f7fa', paddingBottom: 'calc(100px + env(safe-area-inset-bottom))', fontFamily: 'Inter, sans-serif' }}>
-      <div style={{ background: '#fef3c7', color: '#92400e', fontSize: 11, fontWeight: 700, textAlign: 'center', padding: '6px 12px', letterSpacing: '.05em' }}>
-        DESIGN MOCK · Quick Feedback form
-      </div>
       <nav style={{ background: '#002f60', padding: '14px 16px', textAlign: 'center', position: 'relative' }}>
         <button
           onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}
@@ -75,9 +77,7 @@ export default function QuickFeedback() {
           <div style={{ fontSize: 17, fontWeight: 800, color: '#fff', cursor: 'pointer' }}>Observation<span style={{ color: '#e47727' }}>Point</span></div>
         </Link>
         <div style={{ fontSize: 12, color: 'rgba(255,255,255,.6)', marginTop: 2 }}>
-          {teacher ? <>{teacher.first_name} {teacher.last_name} · Quick Feedback</> : 'Quick Feedback'}
-          <span style={{ display: 'inline-block', background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 10, fontSize: 10, fontWeight: 700, marginLeft: 6 }}>TEST MODE</span>
-        </div>
+          {teacher ? <>{teacher.first_name} {teacher.last_name} · Quick Feedback</> : 'Quick Feedback'}</div>
       </nav>
 
       <div style={{ padding: 14, maxWidth: 720, margin: '0 auto' }}>

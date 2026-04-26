@@ -18,6 +18,9 @@ import TouchpointHub from './pages/TouchpointHub'
 import PIP from './pages/PIP'
 import WriteUp from './pages/WriteUp'
 import Acknowledge from './pages/Acknowledge'
+import Goals from './pages/Goals'
+import QuickMeeting from './pages/QuickMeeting'
+import FeedbackButton from './components/FeedbackButton'
 
 /**
  * App — the root component. React Router handles navigation.
@@ -29,6 +32,7 @@ import Acknowledge from './pages/Acknowledge'
 export default function App() {
   return (
     <BrowserRouter>
+      <FeedbackButton />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/app" element={<Home />} />
@@ -43,6 +47,8 @@ export default function App() {
         <Route path="/app/self-reflection" element={<SelfReflection />} />
         <Route path="/app/pip" element={<PIP />} />
         <Route path="/app/write-up" element={<WriteUp />} />
+        <Route path="/app/goals" element={<Goals />} />
+        <Route path="/app/quick-meeting" element={<QuickMeeting />} />
         {/* Public acknowledgment page — no auth */}
         <Route path="/acknowledge/:token" element={<Acknowledge />} />
         <Route path="/acknowledge" element={<Acknowledge />} />

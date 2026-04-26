@@ -28,7 +28,7 @@ export default function PIP() {
   const [teacher, setTeacher] = useState(null)
   const [concerns, setConcerns] = useState([])
   const [descriptionOfConcern, setDescriptionOfConcern] = useState('')
-  const [priorConversations, setPriorConversations] = useState('')
+  const [priorDiscussions, setPriorDiscussions] = useState('')
   const [actionSteps, setActionSteps] = useState('')
   const [indicatorsOfSuccess, setIndicatorsOfSuccess] = useState('')
   const [supportProvided, setSupportProvided] = useState('')
@@ -65,7 +65,7 @@ export default function PIP() {
         })()
         if (Array.isArray(fb.concerns)) setConcerns(fb.concerns)
         if (fb.description_of_concern) setDescriptionOfConcern(fb.description_of_concern)
-        if (fb.prior_conversations) setPriorConversations(fb.prior_conversations)
+        if (fb.prior_discussions) setPriorDiscussions(fb.prior_discussions)
         if (fb.action_steps) setActionSteps(fb.action_steps)
         if (fb.indicators_of_success) setIndicatorsOfSuccess(fb.indicators_of_success)
         if (fb.support_provided) setSupportProvided(fb.support_provided)
@@ -86,7 +86,7 @@ export default function PIP() {
     saveTimerRef.current = setTimeout(() => autoSave(), 2000)
     return () => clearTimeout(saveTimerRef.current)
     // eslint-disable-next-line
-  }, [teacher, concerns, descriptionOfConcern, priorConversations, actionSteps, indicatorsOfSuccess, supportProvided, startDate, reviewDate, consequences])
+  }, [teacher, concerns, descriptionOfConcern, priorDiscussions, actionSteps, indicatorsOfSuccess, supportProvided, startDate, reviewDate, consequences])
 
   function buildBody(status, isPublished) {
     return {
@@ -101,7 +101,7 @@ export default function PIP() {
       feedback: JSON.stringify({
         concerns,
         description_of_concern: descriptionOfConcern,
-        prior_conversations: priorConversations,
+        prior_discussions: priorDiscussions,
         action_steps: actionSteps,
         indicators_of_success: indicatorsOfSuccess,
         support_provided: supportProvided,
@@ -138,7 +138,7 @@ export default function PIP() {
   const requiredFilled = (
     concerns.length > 0 &&
     descriptionOfConcern.trim() &&
-    priorConversations.trim() &&
+    priorDiscussions.trim() &&
     actionSteps.trim() &&
     indicatorsOfSuccess.trim() &&
     startDate &&
@@ -193,7 +193,7 @@ export default function PIP() {
     try {
       await api.del(`/api/touchpoints/${draftId}`)
       setDraftId(null); setResumedDraft(false)
-      setConcerns([]); setDescriptionOfConcern(''); setPriorConversations('')
+      setConcerns([]); setDescriptionOfConcern(''); setPriorDiscussions('')
       setActionSteps(''); setIndicatorsOfSuccess(''); setSupportProvided('')
       setStartDate(''); setReviewDate(''); setConsequences('')
       setSaveStatus('idle')
@@ -245,6 +245,7 @@ export default function PIP() {
   }
 
   const input = { width: '100%', padding: '11px 12px', border: '1.5px solid #e5e7eb', borderRadius: 10, fontSize: 14, fontFamily: 'inherit', color: '#111827', background: '#fff', boxSizing: 'border-box' }
+  const dateInput = { ...input, textAlign: 'left', WebkitAppearance: 'none', appearance: 'none', minHeight: 44, display: 'block' }
   const textarea = { width: '100%', minHeight: 80, padding: 12, border: '1.5px solid #e5e7eb', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', color: '#111827', resize: 'vertical', lineHeight: 1.5 }
   const cardLabel = { fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.05em', marginTop: 10, marginBottom: 6 }
   const sectionTitle = { fontSize: 15, fontWeight: 800, color: '#111827', margin: '18px 4px 4px' }
@@ -253,9 +254,6 @@ export default function PIP() {
   return (
     <FormShell>
     <div style={{ minHeight: '100svh', background: '#f5f7fa', paddingBottom: 'calc(100px + env(safe-area-inset-bottom))', fontFamily: 'Inter, sans-serif' }}>
-      <div style={{ background: '#fef3c7', color: '#92400e', fontSize: 11, fontWeight: 700, textAlign: 'center', padding: '6px 12px', letterSpacing: '.05em' }}>
-        DESIGN MOCK · Performance Improvement Plan
-      </div>
       <nav style={{ background: '#002f60', padding: '14px 16px', textAlign: 'center', position: 'relative' }}>
         <button
           onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}
@@ -266,9 +264,7 @@ export default function PIP() {
           <div style={{ fontSize: 17, fontWeight: 800, color: '#fff', cursor: 'pointer' }}>Observation<span style={{ color: '#e47727' }}>Point</span></div>
         </Link>
         <div style={{ fontSize: 12, color: 'rgba(255,255,255,.6)', marginTop: 2 }}>
-          {teacher ? <>{teacher.first_name} {teacher.last_name} · PIP</> : 'Performance Improvement Plan'}
-          <span style={{ display: 'inline-block', background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 10, fontSize: 10, fontWeight: 700, marginLeft: 6 }}>TEST MODE</span>
-        </div>
+          {teacher ? <>{teacher.first_name} {teacher.last_name} · PIP</> : 'Performance Improvement Plan'}</div>
       </nav>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 10, color: '#9ca3af', padding: '6px 12px', background: '#f5f7fa' }}>
@@ -324,7 +320,7 @@ export default function PIP() {
           <div style={cardLabel}>Description of Concern <span style={{ color: '#dc2626' }}>*</span></div>
           <textarea value={descriptionOfConcern} onChange={e => setDescriptionOfConcern(e.target.value)} placeholder="Describe the specific performance or behavioral concern. Include dates, examples, and context." style={textarea} />
           <div style={cardLabel}>Prior Conversations & Support <span style={{ color: '#dc2626' }}>*</span></div>
-          <textarea value={priorConversations} onChange={e => setPriorConversations(e.target.value)} placeholder="What prior conversations, coaching, or support has been provided? Include dates." style={textarea} />
+          <textarea value={priorDiscussions} onChange={e => setPriorDiscussions(e.target.value)} placeholder="What prior conversations, coaching, or support has been provided? Include dates." style={textarea} />
         </div>
 
         <div style={sectionTitle}>Improvement Plan</div>
@@ -338,14 +334,14 @@ export default function PIP() {
           <div style={cardLabel}>Support to be Provided</div>
           <textarea value={supportProvided} onChange={e => setSupportProvided(e.target.value)} placeholder="What support, resources, or coaching will the supervisor provide?" style={{ ...textarea, minHeight: 60 }} />
           <div style={cardLabel}>Timeline <span style={{ color: '#dc2626' }}>*</span></div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 14 }}>
             <div>
               <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 4 }}>Start Date</div>
-              <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={input} />
+              <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={dateInput} />
             </div>
             <div>
               <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 4 }}>Review Date</div>
-              <input type="date" value={reviewDate} onChange={e => setReviewDate(e.target.value)} style={input} />
+              <input type="date" value={reviewDate} onChange={e => setReviewDate(e.target.value)} style={dateInput} />
             </div>
           </div>
           <div style={cardLabel}>Consequences if Not Corrected <span style={{ color: '#dc2626' }}>*</span></div>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Mock · Teacher Home · ObservationPoint</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;color:#111827;-webkit-font-smoothing:antialiased;padding-bottom:80px}
+.port-banner{background:#dcfce7;color:#166534;font-size:11px;font-weight:700;text-align:center;padding:6px 12px}
+.nav{background:#002f60;padding:14px 16px;text-align:center}
+.nav-title{font-size:17px;font-weight:800;color:#fff}
+.nav-title span{color:#e47727}
+.nav-sub{font-size:12px;color:rgba(255,255,255,.6);margin-top:2px}
+.hero{background:linear-gradient(135deg,#002f60,#003b7a);color:#fff;padding:18px 16px}
+.hero-greeting{font-size:14px;color:rgba(255,255,255,.85);font-weight:600}
+.hero-name{font-size:24px;font-weight:800;margin-top:4px}
+.hero-meta{font-size:12px;color:rgba(255,255,255,.7);margin-top:4px}
+.wrap{padding:14px;max-width:720px;margin:0 auto}
+.section-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;margin:18px 4px 8px}
+.section-title b{color:#002f60}
+.todo-card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:10px;display:flex;align-items:center;gap:12px;border-left:4px solid #e47727}
+.todo-card.done{border-left-color:#22c55e;opacity:.65}
+.todo-icon{width:38px;height:38px;border-radius:10px;background:#fff7ed;color:#e47727;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;flex-shrink:0}
+.todo-card.done .todo-icon{background:#dcfce7;color:#22c55e}
+.todo-text{flex:1}
+.todo-title{font-size:13px;font-weight:700;color:#111827}
+.todo-sub{font-size:11px;color:#6b7280;margin-top:2px}
+.todo-cta{font-size:11px;font-weight:700;color:#e47727;text-decoration:none;flex-shrink:0}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.stat-card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);text-align:center}
+.stat-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af}
+.stat-num{font-size:24px;font-weight:800;color:#002f60;margin-top:2px;line-height:1}
+.stat-sub{font-size:11px;color:#6b7280;margin-top:4px}
+.activity-item{background:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:8px;display:flex;align-items:center;gap:12px}
+.activity-tag{font-size:9px;font-weight:800;color:#fff;padding:2px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:.05em;flex-shrink:0}
+.t-obs{background:#2563eb}.t-pmap{background:#16a34a}.t-cel{background:#e47727}.t-fund{background:#b45309}
+.activity-text{flex:1;font-size:12px;color:#374151;line-height:1.4}
+.activity-text b{color:#111827}
+.activity-meta{font-size:10px;color:#9ca3af;margin-top:2px}
+.shoutout-card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:10px;border-left:4px solid #e47727}
+.shoutout-from{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.shoutout-av{width:32px;height:32px;border-radius:50%;background:#e47727;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.shoutout-name{font-size:13px;font-weight:700;color:#111827}
+.shoutout-when{font-size:10px;color:#9ca3af}
+.shoutout-text{font-size:13px;color:#374151;line-height:1.5;font-style:italic}
+.send-shoutout{background:linear-gradient(135deg,#e47727,#f59e0b);color:#fff;border:none;border-radius:12px;padding:14px;width:100%;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px}
+.bottomnav{position:fixed;bottom:0;left:0;right:0;height:64px;background:#fff;border-top:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-around;padding-bottom:max(0px,env(safe-area-inset-bottom))}
+.bn{flex:1;text-align:center;font-size:10px;color:#9ca3af;font-weight:600}
+.bn-icon{display:block;font-size:20px;margin-bottom:2px}
+.bn.active{color:#002f60}
+.bn.active .bn-icon{color:#e47727}
+.empty{text-align:center;color:#9ca3af;font-size:11px;padding:8px 0}
+.compare-callout{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px 12px;font-size:11px;color:#1e40af;margin:14px 4px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="port-banner">MOCK · Teacher Home (non-supervisor view) — Yours to do · About you · Shoutouts</div>
+<nav class="nav">
+  <div class="nav-title">Observation<span>Point</span></div>
+  <div class="nav-sub">Marie Thibodaux &middot; PreK Teacher</div>
+</nav>
+
+<div class="hero">
+  <div class="hero-greeting">Good morning,</div>
+  <div class="hero-name">Marie</div>
+  <div class="hero-meta">Arthur Ashe Charter School · Pre-K Lead</div>
+</div>
+
+<div class="wrap">
+
+  <div class="compare-callout">
+    <b>What changed:</b> No "My Team" tile, no Network kick-out, no full TouchpointHub. The whole experience is tuned for someone who's a SUBJECT of touchpoints (not a SUPERVISOR who fills them).
+  </div>
+
+  <!-- YOURS TO DO -->
+  <div class="section-title"><b>Yours to do</b> — 3 items</div>
+
+  <div class="todo-card">
+    <div class="todo-icon">📝</div>
+    <div class="todo-text">
+      <div class="todo-title">Cycle 2 Self-Reflection due Apr 30</div>
+      <div class="todo-sub">5 days left · 6 sections, ~10 min</div>
+    </div>
+    <a href="#" class="todo-cta">Start →</a>
+  </div>
+
+  <div class="todo-card done">
+    <div class="todo-icon">🎯</div>
+    <div class="todo-text">
+      <div class="todo-title">Annual Goals set for 26-27</div>
+      <div class="todo-sub">All 4 approved by Mike Toussaint on Apr 12</div>
+    </div>
+    <a href="#" class="todo-cta">View →</a>
+  </div>
+
+  <div class="todo-card">
+    <div class="todo-icon">✓</div>
+    <div class="todo-text">
+      <div class="todo-title">2 action steps to update</div>
+      <div class="todo-sub">"Use MVP Directions" · "Narrate the Positive X3" — assigned by Sylvia after Apr 18 obs</div>
+    </div>
+    <a href="#" class="todo-cta">Update →</a>
+  </div>
+
+  <!-- ABOUT YOU -->
+  <div class="section-title"><b>About you</b> — this year</div>
+
+  <div class="about-grid">
+    <div class="stat-card">
+      <div class="stat-tag">Observations</div>
+      <div class="stat-num">7</div>
+      <div class="stat-sub">avg score 4.1</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-tag">Celebrations</div>
+      <div class="stat-num">5</div>
+      <div class="stat-sub">target 3+ ✓</div>
+    </div>
+  </div>
+
+  <div class="section-title">Recent activity about you</div>
+
+  <div class="activity-item">
+    <span class="activity-tag t-cel">Celeb</span>
+    <div class="activity-text">
+      <b>Mike Toussaint</b> celebrated you for "running the smoothest Do-It-Again I've seen this quarter."
+      <div class="activity-meta">Apr 22 · linked to "We Show Results"</div>
+    </div>
+  </div>
+
+  <div class="activity-item">
+    <span class="activity-tag t-obs">Obs</span>
+    <div class="activity-text">
+      <b>Sylvia McDowell</b> · Teacher Observation · score 4.0 avg
+      <div class="activity-meta">Apr 18 · 2 action steps assigned</div>
+    </div>
+  </div>
+
+  <div class="activity-item">
+    <span class="activity-tag t-pmap">PMAP</span>
+    <div class="activity-text">
+      <b>PMAP Cycle 1</b> approved · WIG: On Track · AG1/AG2/AG3: On/On/Off
+      <div class="activity-meta">Apr 1 · approved by Mike Toussaint</div>
+    </div>
+  </div>
+
+  <div class="activity-item">
+    <span class="activity-tag t-fund">Fund</span>
+    <div class="activity-text">
+      <b>Fundamentals</b> · 92% avg on-task · qualifies toward mastery
+      <div class="activity-meta">Apr 14 · 3 of 5 qualifying obs</div>
+    </div>
+  </div>
+
+  <!-- SHOUTOUTS -->
+  <div class="section-title"><b>Shoutouts</b> — peer recognition (not in dashboards)</div>
+
+  <button class="send-shoutout">🎉 Send a shoutout to a colleague</button>
+
+  <div class="shoutout-card">
+    <div class="shoutout-from">
+      <div class="shoutout-av">CB</div>
+      <div style="flex:1">
+        <div class="shoutout-name">From Collette Brannon</div>
+        <div class="shoutout-when">2 days ago</div>
+      </div>
+    </div>
+    <div class="shoutout-text">"Marie covered my class last-minute when my kid was sick. Saved my morning. Thank you 💜"</div>
+  </div>
+
+  <div class="shoutout-card">
+    <div class="shoutout-from">
+      <div class="shoutout-av">RD</div>
+      <div style="flex:1">
+        <div class="shoutout-name">From Ronique Darby</div>
+        <div class="shoutout-when">last week</div>
+      </div>
+    </div>
+    <div class="shoutout-text">"Loved the parent-teacher template you shared at PD. Stealing it 😄"</div>
+  </div>
+
+  <div class="section-title">Shoutouts you sent</div>
+
+  <div class="shoutout-card" style="border-left-color:#9ca3af">
+    <div class="shoutout-from">
+      <div class="shoutout-av" style="background:#9ca3af">JL</div>
+      <div style="flex:1">
+        <div class="shoutout-name">To Jordan Lombas</div>
+        <div class="shoutout-when">Apr 20</div>
+      </div>
+    </div>
+    <div class="shoutout-text">"Your gentle redirect with the kindergarten group during the fire drill was masterful."</div>
+  </div>
+
+</div>
+
+<div class="bottomnav">
+  <div class="bn active"><span class="bn-icon">⌂</span>Home</div>
+  <div class="bn"><span class="bn-icon">📋</span>Goals</div>
+  <div class="bn"><span class="bn-icon">📝</span>Reflect</div>
+  <div class="bn"><span class="bn-icon">🎉</span>Shoutout</div>
+  <div class="bn"><span class="bn-icon">✦</span>Ask</div>
+</div>
+</body>
+</html>

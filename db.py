@@ -39,7 +39,7 @@ def search_staff(query, accessible_emails=None, limit=15):
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         if accessible_emails is not None:
             cur.execute("""
-                SELECT email, first_name, last_name, job_title, school, job_function
+                SELECT email, first_name, last_name, job_title, school, job_function, supervisor_email
                 FROM staff WHERE is_active
                 AND email = ANY(%s)
                 AND (LOWER(first_name || ' ' || last_name) LIKE LOWER(%s)
@@ -48,7 +48,7 @@ def search_staff(query, accessible_emails=None, limit=15):
             """, (accessible_emails, f'%{query}%', f'%{query}%', limit))
         else:
             cur.execute("""
-                SELECT email, first_name, last_name, job_title, school, job_function
+                SELECT email, first_name, last_name, job_title, school, job_function, supervisor_email
                 FROM staff WHERE is_active
                 AND (LOWER(first_name || ' ' || last_name) LIKE LOWER(%s)
                      OR LOWER(email) LIKE LOWER(%s))
