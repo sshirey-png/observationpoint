@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import BottomNav from '../components/BottomNav'
-import AIPanel from '../components/AIPanel'
 import ImpersonationBanner from '../components/ImpersonationBanner'
 import GlobalSearch from '../components/GlobalSearch'
 import { api } from '../lib/api'
@@ -38,6 +37,7 @@ export default function Team() {
   const [filterFn, setFilterFn] = useState('all')
   const [loading, setLoading] = useState(true)
   const [aiOpen, setAiOpen] = useState(false)
+  const [stepSummary, setStepSummary] = useState({ stale_count: 0, locked_in_recent: [] })
 
   function changeView(v) {
     setView(v)
@@ -58,13 +58,41 @@ export default function Team() {
 
   useEffect(() => { load(view) }, [view])
 
+  // Load action-step summary for WAL bullets — only relevant for the supervisor's
+  // own direct reports, so we ignore the view toggle here.
+  useEffect(() => {
+    api.get('/api/my-team/action-step-summary')
+      .then(r => setStepSummary(r || { stale_count: 0, locked_in_recent: [] }))
+      .catch(() => {})
+  }, [])
+
   // Stats
   const totalTPs = staff.reduce((sum, s) => sum + (s.touchpoint_count || 0), 0)
   const avg = staff.length ? (totalTPs / staff.length).toFixed(1) : '—'
 
-  // "Worth a look today" — derived from staff data
+  // "Worth a look today" — derived from staff data + action-step summary
   const walItems = (() => {
     const items = []
+
+    // Recognition opportunity — someone just locked in an action step
+    const lockedIn = stepSummary?.locked_in_recent?.[0]
+    if (lockedIn) {
+      items.push({
+        icon: '🙏', iconBg: '#fbbe82',
+        text: <><b>{lockedIn.teacher_name}</b> just locked in an action step — recognize?</>,
+        to: `/app/celebrate?teacher=${encodeURIComponent(lockedIn.teacher_email)}`,
+      })
+    }
+
+    // Stale action steps — surface the count
+    if (stepSummary?.stale_count > 0) {
+      items.push({
+        icon: '⚠', iconBg: '#dc2626',
+        text: <><b>{stepSummary.stale_count} stale action step{stepSummary.stale_count === 1 ? '' : 's'}</b> across your team — no progress 30+ days</>,
+        to: null,
+      })
+    }
+
     // biggest touchpoint count (rough proxy for "active teacher")
     const top = [...staff].sort((a, b) => (b.touchpoint_count || 0) - (a.touchpoint_count || 0))[0]
     if (top && top.touchpoint_count > 0) {
@@ -95,7 +123,7 @@ export default function Team() {
         to: null,
       })
     }
-    return items.slice(0, 3)
+    return items.slice(0, 4)
   })()
 
   // Job function filter options from data
@@ -282,8 +310,7 @@ export default function Team() {
         </div>
       </div>
 
-      <BottomNav active="team" onAskClick={() => setAiOpen(true)} aiOpen={aiOpen} />
-      <AIPanel open={aiOpen} onClose={() => setAiOpen(false)} context="team" subject={`${staff.length} teachers`} />
+      <BottomNav active="team" />
     </div>
   )
 }

@@ -5,20 +5,28 @@ import FormShell from '../components/FormShell'
 import { api } from '../lib/api'
 
 /**
- * Celebrate — praise / recognition form.
- * V3 family pattern (matches Fundamentals): draft paradigm + 3-button submit.
- * Tags dropped (redundant with FLS Commitments); Share-with dropped (Publish/Send handles it).
+ * Recognize — one form, three types (Celebration / Shoutout / Gratitude).
+ * Type and FLS Commitment both required. Wall-only — no visibility toggles.
+ * Supervisor → staff always counts in dashboards (auto via is_peer_recognition).
  */
 
+// FLS Commitments — full canonical list (We Work Together appears twice
+// per fls_commitments.json: listening + honesty/respect).
 const COMMITMENTS = [
-  'We Keep Learning',
-  'We Work Together',
-  'We are Helpful',
-  'We are the Safekeepers',
-  'We Share Joy',
-  'We Show Results',
+  { num: 1, theme: 'We Keep Learning', personal: 'I commit to my own and others\' development.' },
+  { num: 2, theme: 'We Work Together', personal: 'I commit to listening and understanding.' },
+  { num: 3, theme: 'We Work Together', personal: 'I commit to speaking with honesty and respect.' },
+  { num: 4, theme: 'We are Helpful', personal: 'I commit to doing what it takes to serve others.' },
+  { num: 5, theme: 'We are the Safekeepers of our Community', personal: 'I commit to keeping myself and others safe in mind, body, and spirit.' },
+  { num: 6, theme: 'We Share Joy', personal: 'I commit to bringing my personal joy to our work.' },
+  { num: 7, theme: 'We Show Results', personal: 'I commit to holding myself and others accountable.' },
 ]
-const RECOGNITION_OPTIONS = ['Newsletter', 'This Week at FirstLine (TWAF)', 'Huddle Shout Out', 'Other']
+
+const TYPES = [
+  { id: 'celebration', emoji: '🎉', label: 'Celebration', sub: 'A win achieved' },
+  { id: 'shoutout',    emoji: '👏', label: 'Shoutout',    sub: 'Saw something cool' },
+  { id: 'gratitude',   emoji: '🙏', label: 'Gratitude',   sub: 'Thanks for…' },
+]
 
 export default function Celebrate() {
   const navigate = useNavigate()
@@ -26,10 +34,9 @@ export default function Celebrate() {
   const teacherParam = searchParams.get('teacher')
 
   const [teacher, setTeacher] = useState(null)
+  const [type, setType] = useState(null)
   const [note, setNote] = useState('')
-  const [commitments, setCommitments] = useState([])
-  const [recognition, setRecognition] = useState({})
-  const [personalNote, setPersonalNote] = useState('')
+  const [commitmentNum, setCommitmentNum] = useState(null)
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
 
@@ -43,7 +50,6 @@ export default function Celebrate() {
 
   useEffect(() => () => clearTimeout(saveTimerRef.current), [])
 
-  // Resume existing draft when teacher selected
   useEffect(() => {
     if (!teacher) return
     hydratingRef.current = true
@@ -60,9 +66,8 @@ export default function Celebrate() {
           try { return existing.feedback ? JSON.parse(existing.feedback) : {} } catch { return {} }
         })()
         if (existing.notes) setNote(existing.notes)
-        if (Array.isArray(fb.commitments)) setCommitments(fb.commitments)
-        if (fb.recognition && typeof fb.recognition === 'object') setRecognition(fb.recognition)
-        if (fb.personal_note) setPersonalNote(fb.personal_note)
+        if (fb.recognition_type) setType(fb.recognition_type)
+        if (fb.commitment_num) setCommitmentNum(fb.commitment_num)
       } catch (e) {
         // 404 expected when no draft — silent
       } finally {
@@ -73,17 +78,16 @@ export default function Celebrate() {
     return () => { cancelled = true }
   }, [teacher])
 
-  // Debounced auto-save
   useEffect(() => {
     if (!teacher) return
     if (hydratingRef.current) return
     if (done) return
-    if (!note.trim() && commitments.length === 0 && !personalNote && Object.keys(recognition).length === 0) return
+    if (!note.trim() && !type && !commitmentNum) return
     clearTimeout(saveTimerRef.current)
     saveTimerRef.current = setTimeout(() => autoSave(), 2000)
     return () => clearTimeout(saveTimerRef.current)
     // eslint-disable-next-line
-  }, [teacher, note, commitments, recognition, personalNote])
+  }, [teacher, type, note, commitmentNum])
 
   async function autoSave() {
     if (!teacher) return
@@ -104,6 +108,7 @@ export default function Celebrate() {
   }
 
   function buildBody(status, isPublished) {
+    const commitment = COMMITMENTS.find(c => c.num === commitmentNum)
     return {
       form_type: 'celebrate',
       teacher_email: teacher.email,
@@ -114,23 +119,22 @@ export default function Celebrate() {
       is_published: isPublished,
       notes: note,
       feedback: JSON.stringify({
-        commitments,
-        recognition,
-        personal_note: personalNote,
+        recognition_type: type || 'celebration',
+        commitment_num: commitmentNum,
+        commitment_theme: commitment?.theme || '',
+        commitment_personal: commitment?.personal || '',
       }),
     }
   }
 
+  const formValid = !!(teacher && type && note.trim() && commitmentNum)
+
   async function submit(mode) {
-    // mode: 'draft' | 'publish' | 'publish_and_send'
-    if (!teacher || !note.trim()) return
+    if (!formValid) return
     clearTimeout(saveTimerRef.current)
     setSaving(true)
     const asDraft = mode === 'draft'
-    const body = buildBody(
-      asDraft ? 'draft' : 'published',
-      !asDraft,
-    )
+    const body = buildBody(asDraft ? 'draft' : 'published', !asDraft)
 
     try {
       let finalId = draftId
@@ -149,7 +153,7 @@ export default function Celebrate() {
           try {
             await api.post(`/api/touchpoints/${finalId}/notify`, {})
           } catch (e) {
-            alert('Celebration published, but email to teacher failed: ' + e.message)
+            alert('Recognition published, but email failed: ' + e.message)
           }
         }
         setDone(true)
@@ -166,30 +170,21 @@ export default function Celebrate() {
     try {
       await api.del(`/api/touchpoints/${draftId}`)
       setDraftId(null); setResumedDraft(false)
-      setNote(''); setCommitments([]); setRecognition({}); setPersonalNote('')
+      setNote(''); setType(null); setCommitmentNum(null)
       setSaveStatus('idle')
     } catch (e) {
       alert('Abandon failed: ' + e.message)
     }
   }
 
-  function toggleCommitment(c) {
-    setCommitments((prev) => prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c])
-  }
-  function toggleRecognition(opt) {
-    setRecognition((prev) => {
-      const next = { ...prev }
-      if (next[opt] !== undefined) { delete next[opt] } else { next[opt] = '' }
-      return next
-    })
-  }
+  const selectedType = TYPES.find(t => t.id === type)
 
   if (done) {
     return (
       <div style={{ minHeight: '100svh', background: '#f5f7fa', padding: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, sans-serif' }}>
         <div style={{ background: '#fff', borderRadius: 18, padding: 28, textAlign: 'center', maxWidth: 360, boxShadow: '0 8px 24px rgba(0,0,0,.1)' }}>
-          <div style={{ fontSize: 48, marginBottom: 10 }}>🎉</div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: '#002f60' }}>Celebration captured</div>
+          <div style={{ fontSize: 48, marginBottom: 10 }}>{selectedType?.emoji || '🎉'}</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: '#002f60' }}>{selectedType?.label || 'Recognition'} sent</div>
           <div style={{ fontSize: 13, color: '#6b7280', marginTop: 6 }}>{teacher?.first_name} {teacher?.last_name}</div>
           <button
             onClick={() => navigate(teacher ? `/app/staff/${teacher.email}` : '/')}
@@ -213,7 +208,7 @@ export default function Celebrate() {
           <div style={{ fontSize: 17, fontWeight: 800, color: '#fff', cursor: 'pointer' }}>Observation<span style={{ color: '#e47727' }}>Point</span></div>
         </Link>
         <div style={{ fontSize: 12, color: 'rgba(255,255,255,.6)', marginTop: 2 }}>
-          new Celebration</div>
+          Recognize a colleague</div>
       </nav>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 10, color: '#9ca3af', padding: '6px 12px', background: '#f5f7fa' }}>
@@ -238,95 +233,92 @@ export default function Celebrate() {
           selected={teacher}
           onSelect={setTeacher}
           initialEmail={teacherParam}
-          roleLabel="Celebration"
-          pickerLabel="Who are you celebrating?"
+          roleLabel="Recognition"
+          pickerLabel="Who are you recognizing?"
         />
 
-        {/* What are you celebrating? */}
+        {/* Type — required, no default */}
         <div style={{ background: '#fff', borderRadius: 14, padding: 14, boxShadow: '0 1px 3px rgba(0,0,0,.05)', marginBottom: 10 }}>
-          <div style={{ fontSize: 11, fontWeight: 800, color: '#111827', textTransform: 'uppercase', letterSpacing: '.05em' }}>What are you celebrating?</div>
-          <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4, marginBottom: 10 }}>Be specific — this goes directly to the teacher.</div>
+          <div style={{ fontSize: 11, fontWeight: 800, color: '#111827', textTransform: 'uppercase', letterSpacing: '.05em' }}>Type <span style={{ color: '#dc2626', fontWeight: 700, fontSize: 10, textTransform: 'none', letterSpacing: 0, marginLeft: 4 }}>required — pick one</span></div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginTop: 10 }}>
+            {TYPES.map(t => {
+              const on = type === t.id
+              const onColors = {
+                celebration: { border: '#e47727', bg: '#fff7ed', text: '#9a3412' },
+                shoutout:    { border: '#fbbf24', bg: '#fef3c7', text: '#78350f' },
+                gratitude:   { border: '#22c55e', bg: '#dcfce7', text: '#166534' },
+              }[t.id]
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setType(t.id)}
+                  type="button"
+                  style={{
+                    padding: '12px 6px', borderRadius: 12, textAlign: 'center', cursor: 'pointer', fontFamily: 'inherit',
+                    border: `2px solid ${on ? onColors.border : '#e5e7eb'}`,
+                    background: on ? onColors.bg : '#fff',
+                  }}
+                >
+                  <div style={{ fontSize: 22 }}>{t.emoji}</div>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: on ? onColors.text : '#111827', marginTop: 2 }}>{t.label}</div>
+                  <div style={{ fontSize: 9, color: '#9ca3af', marginTop: 1 }}>{t.sub}</div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* What did you see? */}
+        <div style={{ background: '#fff', borderRadius: 14, padding: 14, boxShadow: '0 1px 3px rgba(0,0,0,.05)', marginBottom: 10 }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: '#111827', textTransform: 'uppercase', letterSpacing: '.05em' }}>What you want them to know</div>
+          <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4, marginBottom: 10 }}>Be specific — name a behavior, not a vibe. This is the first thing they'll read.</div>
           <textarea
             value={note} onChange={(e) => setNote(e.target.value)}
-            placeholder="What did you see? What made it land?"
-            style={{ width: '100%', minHeight: 88, padding: 12, border: '1.5px solid #e5e7eb', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', color: '#111827' }}
+            placeholder={
+              type === 'gratitude' ? `Hey ${teacher?.first_name || 'there'} — thanks for...` :
+              type === 'shoutout'  ? `${teacher?.first_name || 'There'} — saw you do something cool...` :
+              `${teacher?.first_name || 'There'} — what you accomplished was...`
+            }
+            style={{ width: '100%', minHeight: 96, padding: 12, border: '1.5px solid #e5e7eb', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', color: '#111827' }}
           />
         </div>
 
-        {/* FLS Commitments */}
+        {/* FLS Commitment — required */}
         <div style={{ background: '#fff', borderRadius: 14, padding: 14, boxShadow: '0 1px 3px rgba(0,0,0,.05)', marginBottom: 10 }}>
-          <div style={{ fontSize: 11, fontWeight: 800, color: '#111827', textTransform: 'uppercase', letterSpacing: '.05em' }}>Linked FLS Commitment (optional)</div>
-          <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4, marginBottom: 8 }}>Pick one or more that this celebration reflects.</div>
-          {COMMITMENTS.map((c) => {
-            const on = commitments.includes(c)
-            return (
-              <div
-                key={c}
-                onClick={() => toggleCommitment(c)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8,
-                  cursor: 'pointer', fontSize: 13,
-                  background: on ? '#fff7ed' : 'transparent',
-                  color: on ? '#e47727' : '#374151',
-                  fontWeight: on ? 700 : 400,
-                }}
-              >
-                <div style={{
-                  width: 14, height: 14, borderRadius: '50%', flexShrink: 0,
-                  border: `2px solid ${on ? '#e47727' : '#d1d5db'}`,
-                  background: on ? '#e47727' : 'transparent',
-                }} />
-                {c}
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Public Recognition */}
-        <div style={{ background: '#fff', borderRadius: 14, padding: 14, boxShadow: '0 1px 3px rgba(0,0,0,.05)', marginBottom: 10 }}>
-          <div style={{ fontSize: 11, fontWeight: 800, color: '#111827', textTransform: 'uppercase', letterSpacing: '.05em' }}>Public Recognition</div>
-          <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4, marginBottom: 10 }}>Track where this shout-out was shared publicly.</div>
-          {RECOGNITION_OPTIONS.map((opt) => (
-            <div key={opt}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0', fontSize: 13, color: '#374151', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={recognition[opt] !== undefined}
-                  onChange={() => toggleRecognition(opt)}
-                  style={{ width: 16, height: 16, accentColor: '#002f60' }}
-                />
-                {opt}
-              </label>
-              {recognition[opt] !== undefined && (
-                <div style={{ marginTop: 4, marginLeft: 26 }}>
-                  <input
-                    type="text"
-                    value={recognition[opt]}
-                    onChange={(e) => setRecognition({ ...recognition, [opt]: e.target.value })}
-                    placeholder={opt === 'Other' ? 'Where and why?' : 'Add context...'}
-                    style={{ width: '100%', padding: '7px 10px', border: '1.5px solid #e5e7eb', borderRadius: 8, fontSize: 12, fontFamily: 'inherit' }}
-                  />
+          <div style={{ fontSize: 11, fontWeight: 800, color: '#111827', textTransform: 'uppercase', letterSpacing: '.05em' }}>FLS Commitment <span style={{ color: '#dc2626', fontWeight: 700, fontSize: 10, textTransform: 'none', letterSpacing: 0, marginLeft: 4 }}>required — every recognition ties back</span></div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10 }}>
+            {COMMITMENTS.map((c) => {
+              const on = commitmentNum === c.num
+              return (
+                <div
+                  key={c.num}
+                  onClick={() => setCommitmentNum(c.num)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, cursor: 'pointer',
+                    border: `1.5px solid ${on ? '#002f60' : '#e5e7eb'}`,
+                    background: on ? '#eff6ff' : '#fff',
+                  }}
+                >
+                  <div style={{
+                    width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
+                    background: on ? '#002f60' : '#f3f4f6',
+                    color: on ? '#fff' : '#6b7280',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 11, fontWeight: 800,
+                  }}>{c.num}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: on ? '#002f60' : '#111827' }}>{c.theme}</div>
+                    <div style={{ fontSize: 10, color: '#6b7280', marginTop: 1, lineHeight: 1.35 }}>{c.personal}</div>
+                  </div>
+                  {on && (
+                    <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#002f60', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0 }}>✓</div>
+                  )}
                 </div>
-              )}
-            </div>
-          ))}
+              )
+            })}
+          </div>
         </div>
 
-        {/* Personal note (green accent, optional) */}
-        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 14, padding: 14, marginBottom: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-            <div style={{ width: 32, height: 32, borderRadius: 8, background: '#22c55e', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, flexShrink: 0 }}>✉</div>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#15803d' }}>Send a personal note (optional)</div>
-              <div style={{ fontSize: 10, color: '#6b7280' }}>Private message that lands in {teacher?.first_name || 'teacher'}'s inbox</div>
-            </div>
-          </div>
-          <textarea
-            value={personalNote} onChange={(e) => setPersonalNote(e.target.value)}
-            placeholder={`Hey ${teacher?.first_name || 'there'} — just wanted you to know...`}
-            style={{ width: '100%', minHeight: 70, padding: 10, border: '1.5px solid #bbf7d0', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', color: '#111827' }}
-          />
-        </div>
       </div>
 
       {/* Sticky 3-button bar */}
@@ -335,13 +327,13 @@ export default function Celebrate() {
           <button onClick={() => submit('draft')} disabled={saving || !teacher}
             style={{ flex: 1, padding: '13px 8px', border: 'none', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', background: '#f3f4f6', color: '#4b5563', opacity: (saving || !teacher) ? 0.5 : 1 }}
           >Save draft</button>
-          <button onClick={() => submit('publish')} disabled={saving || !teacher || !note.trim()}
-            title="Record celebration on dashboards · teacher NOT emailed"
-            style={{ flex: 1, padding: '13px 8px', border: '1.5px solid #002f60', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', background: '#fff', color: '#002f60', opacity: (saving || !teacher || !note.trim()) ? 0.5 : 1 }}
+          <button onClick={() => submit('publish')} disabled={saving || !formValid}
+            title="Record on dashboards · subject NOT emailed"
+            style={{ flex: 1, padding: '13px 8px', border: '1.5px solid #002f60', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', background: '#fff', color: '#002f60', opacity: (saving || !formValid) ? 0.5 : 1 }}
           >{saving ? '…' : 'Publish'}</button>
-          <button onClick={() => submit('publish_and_send')} disabled={saving || !teacher || !note.trim()}
-            title="Publish AND email teacher the personal note"
-            style={{ flex: 1.3, padding: '13px 8px', border: 'none', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', background: '#002f60', color: '#fff', opacity: (saving || !teacher || !note.trim()) ? 0.5 : 1 }}
+          <button onClick={() => submit('publish_and_send')} disabled={saving || !formValid}
+            title="Publish AND email subject"
+            style={{ flex: 1.3, padding: '13px 8px', border: 'none', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', background: '#002f60', color: '#fff', opacity: (saving || !formValid) ? 0.5 : 1 }}
           >{saving ? 'Saving…' : 'Publish & Send'}</button>
         </div>
       </div>

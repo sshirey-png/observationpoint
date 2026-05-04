@@ -1,0 +1,57 @@
+{
+  "_doc": "Canonical 24-25 Grow PMAP section labels by measurement_id. Source: Albert PMAP 2024.pdf (Triana 11/11/24, [ARCHIVE] PMAP: Teacher (2021)) cross-referenced with raw JSON observationScores ordering. Used by /api/touchpoint/<id>/full-detail to label sections in the modal + PDF download.",
+  "performance_review": {
+    "_group_uuid": "79edf699",
+    "_label": "Teacher Performance Review",
+    "5594734ec038df0300b95f76": "Student Results / Achievement Goal Progress",
+    "611ebfc8baa30e00103f1e56": "Greatest Area of Strength",
+    "611ebfcffa2b8f001023b997": "Greatest Area of Growth",
+    "5594739f1646870300385ea9": "What will the teacher do to improve growth area",
+    "559473bb561fbf0300983612": "What will the coach do to help teacher improve",
+    "57c9d35c4d18ff03002cb46e": "Long-term Career Plans",
+    "5b587e3deae9b300114e0252": "Area of Concern"
+  },
+  "rubric_5pt_narrative": {
+    "_group_uuid": "aaa4da77",
+    "_label": "Leader's Rubric Scores For Teacher (5pt)",
+    "_score_mid": "57abb6719734...",
+    "5fbc26a8719fee0011e952ef": "T1",
+    "5fbc273f55c3300011944e66": "T2",
+    "5fbc2776a564cc0011216054": "T3",
+    "5fbc27b2ca0c350011917b66": "T4",
+    "5fbc27d5905e420011882c1d": "T5"
+  },
+  "compass_4pt": {
+    "_group_uuid": "d6b18348",
+    "_label": "Compass Scores For Teacher (4pt — for state reporting)",
+    "611ebe119d9370001027c4ee": "C1 (On-Task)",
+    "611ebe65cfe5ac001119f8c3": "C2 (Community of Learners)",
+    "611ebe7bcfe5ac001119f919": "C3 (Essential Content)",
+    "611ebe949ed56700116e73f3": "C4 (Cognitive Engagement)",
+    "611ebeb79ed56700116e7417": "C5 (Demonstration of Learning)"
+  },
+  "professionalism": {
+    "_group_uuid": "8b31c3de",
+    "_label": "Professionalism",
+    "_scale": "1=Below Expectations, 2=Meets Expectations, 3=Exceeds Expectations",
+    "53f37f93ff8eb90200416a65": "P.1 Partners with parents and/or colleagues through frequent communication and spirit of collaboration",
+    "53f37ff6ff8eb90200416a6a": "P.2 Conduct and appearance",
+    "56abe1670c19210700d5400d": "P.3 Attendance",
+    "56abe1670c19210700d54011": "P.4 Timeliness to school/office, duty, and meetings",
+    "56abe1670c19210700d54019": "P.5 Proactively and productively solves problems and has conversations that lead to improvements",
+    "56abe1670c19210700d5401d": "P.6 Quality, on-time work products",
+    "56abe1670c19210700d5402d": "P.7 Duty Vigilance and Consistency"
+  },
+  "values": {
+    "_group_uuid": "32eaec18",
+    "_label": "Values",
+    "_scale": "1=Below Expectations, 2=Meets Expectations, 3=Exceeds Expectations",
+    "_note": "PDF labels values as generic 'LV.1 Value 1' through 'LV.1 Value 6'. Actual FLS value names not in archive form text.",
+    "56abe185b739e20700ee05e3": "LV.1 Value 1",
+    "56abe185b739e20700ee05e7": "LV.1 Value 2",
+    "56abe185b739e20700ee05eb": "LV.1 Value 3",
+    "56abe185b739e20700ee05fe": "LV.1 Value 4",
+    "56abe185b739e20700ee0619": "LV.1 Value 5",
+    "5d436f2c3cc94b0018cb1300": "LV.1 Value 6"
+  }
+}

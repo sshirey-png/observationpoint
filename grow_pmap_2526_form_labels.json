@@ -1,0 +1,67 @@
+{
+  "_doc": "25-26 PMAP Teacher form section labels by measurement_id. Source: Desktop/Grow/Forms/PMAP Teacher.pdf cross-referenced with Triana Albert's 3/17/26 PMAP rendered as Albert Test 3.pdf. Used by /api/touchpoint/<id>/full-detail to build the pmap_2526 section.",
+
+  "narrative": {
+    "_doc": "feedback_json.narrative measurement_id → form field key + label",
+    "6838c3a4c0ff9c0011caa7f3": ["wig_ag_text", "WIG + Annual Goals", "Refer to the goals. (No need to re-enter them.) Note any updates or changes to goals here, or write \"N/A\" if they remain the same."],
+    "682e2d8a7a2265001156c4fd": ["progress_toward_goal", "Progress Toward Goal", "Please provide data to support your ratings above. You may also provide additional context/evidence."],
+    "682e2dc777065d0011a09cd5": ["whirlwind_workstreams", "Whirlwind Workstream List", "List the 3-5 most important aspects of whirlwind work and how those responsibilities are handled effectively."],
+    "683db74f3461b80010e40a86": ["tr_strength", "TR. Strength Areas", "Identify strengths and provide rationale."],
+    "683db827ba008c001164bfc0": ["tr_growth", "TR. Growth Areas", "Identify areas for growth and provide rationale."],
+    "65821f11ef62af00112fada5": ["commit_strength", "CS. FLS Commitment Strength", "Identify strengths and provide supporting rationale."],
+    "65821f1579fdf40011e9c2d1": ["commit_growth", "CGA. FLS Commitment Growth Area", "Identify growth areas and provide supporting rationale."],
+    "6838c2ce4884da0011f7a877": ["career_goals", "LD. Career Goals", "Reflect on long-term career goals and identify skills, experiences, or opportunities that would help close the gap."],
+    "69023c4e02052186e4280912": ["licenses", "LC. Licenses, Certifications, and Trainings", "List any progress towards required licenses, certifications, and trainings. Write N/A if not applicable."],
+    "683db614664e970011fbc441": ["concern_comments", "AC. Area of Concern Comments", "Please provide any additional notes or context around areas of concern."],
+    "_sr_only_doc": "Self-Reflection-specific narrative mids:",
+    "59d27a52528f3300126cdd35": ["licenses_sr", "LC. Licenses, Certifications, and Trainings", "List any progress towards required licenses, certifications, and trainings. Write N/A if not applicable."],
+    "683e7265d7a1db00114b7d8e": ["sr_additional_comments", "Self Reflection: Additional Comments", "Please use this space below to provide any further reflections, context, or information you believe is relevant to your performance or professional experience this year."],
+    "_leader_only_doc": "Leader-PMAP-specific narrative mids:",
+    "677bf2dfa38fb70012e94a75": ["pls_strength", "PLS. Personal Leadership Strength", "Identify strengths and provide rationale."],
+    "677bf3071f5c0100114d0847": ["plga_growth", "PLGA. Personal Leadership Growth Area", "Identify growth areas and provide rationale."]
+  },
+
+  "scores": {
+    "_doc": "scores_v2 measurement_id → on/off-track field key + label (1=Off Track, 2=On Track)",
+    "682e2c59affbc10011668086": ["wig_track", "WIG track"],
+    "682e2d212fa26f00117595e7": ["ag1_track", "AG1 track"],
+    "6838c2d7cd3be50011b335b8": ["ag2_track", "AG2 track"],
+    "682e2d59bd0f260011564096": ["ag3_track", "AG3 track"]
+  },
+
+  "checkboxes": {
+    "_doc": "feedback_json.checkboxes_selected measurement_id → field key + label",
+    "682e2b991ce9770011bb644a": ["mc_job_desc_reviewed", "MC. Has the job description been reviewed?"],
+    "6838c3a904ed4f001112ed26": ["ac_concerns", "AC. Area(s) of Concern"]
+  },
+
+  "section_order": [
+    {"key": "meeting_checklist", "label": "Meeting Checklist", "fields": [{"key": "mc_job_desc_reviewed", "kind": "checkbox"}]},
+    {"key": "wig_ag_review", "label": "WIG + Annual Goals Review", "fields": [
+      {"key": "wig_ag_text", "kind": "narrative"},
+      {"key": "goal_cards_with_tracks", "kind": "goals_with_tracks"},
+      {"key": "progress_toward_goal", "kind": "narrative"}
+    ]},
+    {"key": "whirlwind", "label": "Whirlwind Work Review (Other Workstreams)", "fields": [
+      {"key": "whirlwind_workstreams", "kind": "narrative"}
+    ]},
+    {"key": "fls_rubric", "label": "FLS Teacher Rubric", "fields": [
+      {"key": "rubric_5pt", "kind": "rubric_5pt"},
+      {"key": "additional_comments", "kind": "narrative", "label": "Additional Comments", "placeholder": "Please provide any additional notes or context here."},
+      {"key": "tr_strength", "kind": "narrative"},
+      {"key": "tr_growth", "kind": "narrative"}
+    ]},
+    {"key": "commitments", "label": "Commitments", "fields": [
+      {"key": "commit_strength", "kind": "narrative"},
+      {"key": "commit_growth", "kind": "narrative"}
+    ]},
+    {"key": "pro_dev", "label": "Professional Development & Career Growth", "fields": [
+      {"key": "career_goals", "kind": "narrative"},
+      {"key": "licenses", "kind": "narrative"}
+    ]},
+    {"key": "concern", "label": "Area(s) of Concern", "fields": [
+      {"key": "ac_concerns", "kind": "checkbox"},
+      {"key": "concern_comments", "kind": "narrative"}
+    ]}
+  ]
+}

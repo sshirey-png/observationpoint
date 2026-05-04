@@ -1,0 +1,73 @@
+# .gcloudignore — what NOT to ship to Cloud Run via gcloud run deploy --source
+#
+# When this file exists, gcloud uses these rules INSTEAD of .gitignore.
+# We deliberately include grow_narrative_cache.json (91MB) so the running
+# service can read it on startup. Raw 475MB JSON dump and dev artifacts are
+# excluded.
+
+# Python build artifacts
+__pycache__/
+*.pyc
+*.pyo
+
+# Frontend build inputs (we ship the built dist/, not the source modules)
+frontend/node_modules/
+
+# Large dev-only data files NOT needed at runtime
+grow_observations_complete_raw.json
+grow_all_observations.json
+grow_goals_pull.json
+prototypes/teacher_history.json
+
+# Logs + env
+*.log
+.env
+
+# Git internals
+.git/
+.gitignore
+
+# Editor / IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Local dev scripts not needed in container
+build_examples.py
+build_mock_2526*.py
+build_narrative_cache.py
+clean_assignment_html.py
+verify_grow_imports.py
+audit_missing_grow_records.py
+reconcile_grow_imports.py
+reconcile_observations.py
+import_grow_complete_from_disk.py
+import_grow_goals.py
+explore_grow_goals.py
+backfill_former_staff.py
+dedup_touchpoints.py
+build_accuracy_report.py
+generate_demo_data.py
+migrate_grow_year.py
+migrate_goals_2025_2026.py
+migrate_meetings_2025_2026.py
+migrate_quick_feedback_2025_2026.py
+pull_grow_assignments.py
+pull_grow_complete.py
+pull_grow_meetings.py
+sync_from_bigquery.py
+setup_postgres.py
+_*.py
+
+# Markdown briefs / planning docs
+AUDIT.md
+DATA_PLAN.md
+MORNING_BRIEF.md
+MORNING_PLAN.md
+
+# Stray files from past local work
+400
+WARNING
+_action_step_metrics.json
+_accuracy_data.json
+_category_year_data.json

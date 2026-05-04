@@ -21,6 +21,8 @@ import Acknowledge from './pages/Acknowledge'
 import Goals from './pages/Goals'
 import QuickMeeting from './pages/QuickMeeting'
 import FeedbackButton from './components/FeedbackButton'
+import MeRedirect from './pages/MeRedirect'
+import ActionStepsPage from './pages/ActionStepsPage'
 
 /**
  * App — the root component. React Router handles navigation.
@@ -53,6 +55,8 @@ export default function App() {
         <Route path="/acknowledge/:token" element={<Acknowledge />} />
         <Route path="/acknowledge" element={<Acknowledge />} />
         <Route path="/app/team" element={<Team />} />
+        <Route path="/app/me" element={<MeRedirect />} />
+        <Route path="/app/me/action-steps" element={<ActionStepsPage />} />
         <Route path="/app/touchpoint" element={<TouchpointHub />} />
         <Route path="/app/staff/:email" element={<StaffProfile />} />
         <Route path="/app/insights" element={<Insights />} />

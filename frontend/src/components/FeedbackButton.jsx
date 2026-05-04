@@ -4,7 +4,7 @@ import { api } from '../lib/api'
 /**
  * FeedbackButton — small floating "Report issue" link in the corner of every
  * page. Mounted once in App.jsx outside <Routes>. Sends to /api/feedback
- * which emails Scott + talent@.
+ * which emails talent@firstlineschools.org.
  */
 export default function FeedbackButton() {
   const [open, setOpen] = useState(false)
@@ -61,7 +61,7 @@ export default function FeedbackButton() {
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
             <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#dcfce7', color: '#059669', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 800, marginBottom: 10 }}>✓</div>
             <div style={{ fontSize: 16, fontWeight: 700, color: '#002f60' }}>Sent — thanks</div>
-            <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>Scott will see this shortly.</div>
+            <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>The Talent team will see this shortly.</div>
           </div>
         ) : (
           <>
@@ -90,7 +90,7 @@ export default function FeedbackButton() {
               </button>
               <button onClick={send} disabled={sending || (!subject.trim() && !body.trim())}
                 style={{ flex: 1.4, padding: '11px', border: 'none', borderRadius: 10, background: '#002f60', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: (sending || (!subject.trim() && !body.trim())) ? 0.5 : 1 }}>
-                {sending ? 'Sending…' : 'Send to Scott'}
+                {sending ? 'Sending…' : 'Send to Talent'}
               </button>
             </div>
           </>

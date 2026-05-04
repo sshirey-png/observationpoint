@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import SubjectBlock from '../components/SubjectBlock'
+import PriorEvalBanner from '../components/PriorEvalBanner'
 import FormShell from '../components/FormShell'
 import { api } from '../lib/api'
 import { TEACHER_RUBRIC, LEADER_RUBRIC } from '../lib/rubric-descriptors'
@@ -26,7 +27,9 @@ import RubricCard from '../components/RubricCard'
  *   - SubjectBlock for picking the teacher (no separate hero card)
  */
 
-const SCHOOL_YEAR_FOR_GOALS = '2026-2027'
+// Goals lookup year — must match Goals.jsx SCHOOL_YEAR (currently 2025-2026
+// for imported Grow data). Will flip to 2026-2027 at July 1 launch.
+const SCHOOL_YEAR_FOR_GOALS = '2025-2026'
 
 const CARD = {
   background: '#fff',
@@ -781,6 +784,11 @@ export default function PMAP() {
 
           {teacher && (
             <>
+
+              <PriorEvalBanner
+                teacherEmail={teacher.email}
+                teacherName={`${teacher.first_name || ''} ${teacher.last_name || ''}`.trim()}
+              />
 
               {/* 1. Meeting Checklist */}
               <div style={SECTION_TITLE}>Meeting Checklist</div>

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import FormShell from '../components/FormShell'
 import RubricCard from '../components/RubricCard'
+import PriorEvalBanner from '../components/PriorEvalBanner'
 import { api } from '../lib/api'
 import { TEACHER_RUBRIC, LEADER_RUBRIC } from '../lib/rubric-descriptors'
 
@@ -333,6 +334,8 @@ export default function SelfReflection() {
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,.75)', marginTop: 2 }}>{user.school || '—'}</div>
           </div>
         </div>
+
+        <PriorEvalBanner teacherEmail={user.email} teacherName={displayName} />
 
         {/* Rubric (conditional) */}
         {showRubric && (

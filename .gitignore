@@ -1,8 +1,24 @@
 __pycache__/
 *.pyc
 grow_all_observations.json
+grow_observations_complete_raw.json
+grow_narrative_cache.json
+grow_goals_pull.json
 prototypes/teacher_history.json
 *.log
 .env
 frontend/node_modules/
 frontend/dist/
+
+# Stray local-only files
+400
+WARNING
+_action_step_metrics.json
+_accuracy_data.json
+_category_year_data.json
+
+# Local build/inventory scripts (not part of the deployed app)
+build_examples.py
+build_mock_2526*.py
+build_narrative_cache.py
+_*.py

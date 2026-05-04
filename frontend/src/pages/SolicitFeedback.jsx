@@ -152,7 +152,7 @@ export default function SolicitFeedback() {
             <textarea
               value={customQuestion}
               onChange={(e) => setCustomQuestion(e.target.value)}
-              placeholder="Type your question for the teacher..."
+              placeholder="Type your question..."
               autoFocus
               style={{ width: '100%', minHeight: 70, padding: 12, border: '1.5px solid #e5e7eb', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', color: '#111827', resize: 'vertical', marginTop: 8 }}
             />
@@ -161,11 +161,11 @@ export default function SolicitFeedback() {
 
         <div style={{ background: '#fff', borderRadius: 14, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,.05)', marginBottom: 12 }}>
           <div style={{ fontSize: 12, fontWeight: 800, color: '#111827', textTransform: 'uppercase', letterSpacing: '.05em' }}>Additional Context (optional)</div>
-          <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4, marginBottom: 10 }}>Background the teacher will see alongside the question.</div>
+          <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4, marginBottom: 10 }}>Background they'll see alongside the question.</div>
           <textarea
             value={context}
             onChange={(e) => setContext(e.target.value)}
-            placeholder="Any background or context for the teacher..."
+            placeholder="Any background or context..."
             style={{ width: '100%', minHeight: 70, padding: 12, border: '1.5px solid #e5e7eb', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', color: '#111827', resize: 'vertical' }}
           />
         </div>

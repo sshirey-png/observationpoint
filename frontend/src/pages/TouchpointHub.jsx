@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import BottomNav from '../components/BottomNav'
-import AIPanel from '../components/AIPanel'
 import ImpersonationBanner from '../components/ImpersonationBanner'
 import GlobalSearch from '../components/GlobalSearch'
 import { api } from '../lib/api'
@@ -134,7 +133,7 @@ export default function TouchpointHub() {
 
       <div className="px-4 pb-4 max-w-[600px] mx-auto">
         <div className="text-[22px] font-extrabold tracking-tight mt-4 mb-1">Log a Touchpoint</div>
-        <div className="text-sm text-gray-500 mb-5">Pick a form · you'll select the teacher on the next screen</div>
+        <div className="text-sm text-gray-500 mb-5">Pick a form to start</div>
 
         {/* TouchPoints — 7 cards */}
         <div className="text-[11px] font-bold uppercase tracking-[.06em] text-gray-400 mt-5 mb-2.5">TouchPoints</div>
@@ -144,16 +143,10 @@ export default function TouchpointHub() {
           <Card to="/app/meeting" icon="💬" iconBg="#f0fdf4" title="Data Meeting" sub="Relay DDI" />
           <Card to="/app/quick-meeting" icon="🗓" iconBg="#e0e7ff" title="Quick Meeting" sub="Multi-participant · notes" />
           <Card to="/app/feedback" icon="⚡" iconBg="#fef3c7" title="Quick Feedback" sub="Informal note" />
-          <Card to="/app/celebrate" icon="🎉" iconBg="#dcfce7" title="Celebrate / Praise" sub="Recognize a win" />
+          <Card to="/app/celebrate" icon="🎉" iconBg="#dcfce7" title="Recognize" sub="Celebrate · Shoutout · Gratitude" />
           <Card to="/app/solicit" icon="🙌" iconBg="#dbeafe" title="Solicit Feedback" sub="Ask for input" />
+          <Card to="/app/goals" icon="🎯" iconBg="#fef3c7" title="Goals" sub="Set, edit, review" />
         </div>
-
-        {/* Annual Goals — set once per year, pulls into PMAP/SR */}
-        <Section label="Annual Goals" count="1 WIG + 3 AGs" open={true}>
-          <div className="grid grid-cols-1 gap-2.5">
-            <Card to="/app/goals" icon="🎯" iconBg="#dbeafe" title="Set Annual Goals" sub="Pick from recommended by role · supervisor approves" />
-          </div>
-        </Section>
 
         {/* Evaluations — role-aware auto-select */}
         <Section label="Evaluations" count="auto · 5 variants">
@@ -188,8 +181,7 @@ export default function TouchpointHub() {
         {/* Recent TouchPoints removed per Scott — keep TouchpointHub focused on the form picker. */}
       </div>
 
-      <BottomNav active="touchpoint" onAskClick={() => setAiOpen(true)} aiOpen={aiOpen} />
-      <AIPanel open={aiOpen} onClose={() => setAiOpen(false)} context="touchpoint" />
+      <BottomNav active="touchpoint" />
     </div>
   )
 }

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import BottomNav from '../components/BottomNav'
-import AIPanel from '../components/AIPanel'
 import LogTouchpointModal from '../components/LogTouchpointModal'
 import TouchpointDetail from '../components/TouchpointDetail'
 import ImpersonationBanner from '../components/ImpersonationBanner'
@@ -322,6 +321,7 @@ function ObservationsView({ touchpoints, onOpenDetail, staffEmail }) {
 /** Small per-dimension trend card. Shows latest value as the hero number,
  * delta vs prior year as ↑/↓, and a tiny SVG sparkline of all available years. */
 function PMAPDimSparkline({ code, name, points }) {
+  // points: [{ date, year, value }] — one entry per individual PMAP record (not yearly averages).
   if (!points || points.length === 0) return null
   const latest = points[points.length - 1]
   const prior = points.length > 1 ? points[points.length - 2] : null
@@ -330,12 +330,18 @@ function PMAPDimSparkline({ code, name, points }) {
   // SVG path
   const W = 120, H = 36, P = 4
   const xs = points.map((_, i) => points.length === 1 ? W / 2 : P + (i * (W - P * 2)) / (points.length - 1))
-  const ys = points.map(p => P + ((5 - p.value) * (H - P * 2)) / 4)  // 1-5 scale
+  const ys = points.map(p => P + ((5 - p.value) * (H - P * 2)) / 4)
   const path = xs.map((x, i) => `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${ys[i].toFixed(1)}`).join(' ')
 
   const valueColor = latest.value >= 4 ? '#059669' : latest.value >= 3 ? '#e47727' : '#dc2626'
   const trendColor = delta == null ? '#9ca3af' : delta > 0 ? '#059669' : delta < 0 ? '#dc2626' : '#9ca3af'
   const trendArrow = delta == null ? '·' : delta > 0 ? '↑' : delta < 0 ? '↓' : '·'
+
+  const fmt = (d) => {
+    if (!d) return ''
+    const dt = new Date(d)
+    return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })
+  }
 
   return (
     <div className="bg-white rounded-xl p-3 shadow-sm">
@@ -346,39 +352,42 @@ function PMAPDimSparkline({ code, name, points }) {
         </div>
       </div>
       <div className="flex items-end justify-between gap-2">
-        <div className="text-2xl font-extrabold leading-none" style={{ color: valueColor }}>{latest.value.toFixed(1)}</div>
+        <div>
+          <div className="text-2xl font-extrabold leading-none" style={{ color: valueColor }}>{latest.value.toFixed(1)}</div>
+          <div className="text-[9px] text-gray-500 mt-0.5">most recent</div>
+        </div>
         <svg viewBox={`0 0 ${W} ${H}`} className="w-[120px] h-[36px]" preserveAspectRatio="none">
-          {/* baseline at 3.0 */}
           <line x1={P} x2={W - P} y1={P + ((5 - 3) * (H - P * 2)) / 4} y2={P + ((5 - 3) * (H - P * 2)) / 4}
                 stroke="#f3f4f6" strokeWidth="1" />
           {points.length > 1 && (
             <path d={path} fill="none" stroke={valueColor} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
           )}
-          {points.map((_, i) => (
-            <circle key={i} cx={xs[i]} cy={ys[i]} r="2.5" fill={valueColor} />
+          {points.map((p, i) => (
+            <circle key={i} cx={xs[i]} cy={ys[i]} r="3" fill={valueColor}>
+              <title>{`${p.value.toFixed(1)} · ${fmt(p.date)}`}</title>
+            </circle>
           ))}
         </svg>
       </div>
-      <div className="flex justify-between text-[9px] text-gray-400 mt-0.5">
-        <span>{points[0].year.slice(2)}</span>
-        <span>{latest.year.slice(2)}</span>
+      <div className="text-right text-[9px] text-gray-400 mt-1">
+        {points.length} PMAP{points.length === 1 ? '' : 's'}
       </div>
     </div>
   )
 }
 
 function PMAPView({ touchpoints, pmap_by_year, school_years, onOpenDetail, staffEmail }) {
-  const pmaps = touchpoints.filter(t => t.form_type.startsWith('pmap_'))
-  const years = (school_years || []).slice().sort()
+  // Last 3 PMAPs regardless of year — show the most recent 3 individual PMAPs.
+  const allPmaps = touchpoints
+    .filter(t => t.form_type.startsWith('pmap_'))
+    .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))  // most recent first
+  const pmaps = allPmaps.slice(0, 3).reverse() // take last 3, then reverse to chronological for the chart
 
-  // Derive dimension codes from the actual PMAP data. Leader PMAPs use
-  // L1-L5, teacher PMAPs T1-T5, PreK PK1-PK10. Data tells us which.
+  // Dimension codes from the actual PMAP records (leaders use L1-L5, teachers T1-T5, PreK PK1-PK10).
   const dimCodes = (() => {
     const seen = new Set()
-    for (const yr of Object.keys(pmap_by_year || {})) {
-      for (const code of Object.keys(pmap_by_year[yr] || {})) {
-        seen.add(code)
-      }
+    for (const p of pmaps) {
+      for (const code of Object.keys(p.scores || {})) seen.add(code)
     }
     return [...seen].sort((a, b) => {
       const pa = a.replace(/\d+/, '')
@@ -388,11 +397,12 @@ function PMAPView({ touchpoints, pmap_by_year, school_years, onOpenDetail, staff
     })
   })()
 
-  // Build per-dimension series across years (only years with data for that dim)
+  // Per-dimension series — one point per individual PMAP (not yearly averages).
+  // Each point: { date, year, value } so the sparkline shows actual PMAPs (mid-year + end-year cycles).
   const dimSeries = dimCodes.map(code => {
-    const points = years
-      .map(yr => ({ year: yr, value: pmap_by_year?.[yr]?.[code] }))
-      .filter(p => p.value != null)
+    const points = pmaps
+      .filter(p => p.scores?.[code] != null)
+      .map(p => ({ date: p.date, year: p.school_year, value: p.scores[code] }))
     return { code, name: DIM_SHORT[code] || code, points }
   }).filter(d => d.points.length > 0)
 
@@ -412,12 +422,12 @@ function PMAPView({ touchpoints, pmap_by_year, school_years, onOpenDetail, staff
       )}
 
       <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mt-4 mb-2">
-        PMAPs on record · {pmaps.length}
+        Last {pmaps.length} PMAP{pmaps.length === 1 ? '' : 's'}
       </div>
       {pmaps.length === 0 ? (
         <Empty msg="No PMAPs on record." />
       ) : (
-        pmaps.map(tp => (
+        [...pmaps].reverse().map(tp => (
           <RecordCard key={tp.id} tp={tp} staffEmail={staffEmail} onClick={() => onOpenDetail(tp)} />
         ))
       )}
@@ -475,7 +485,13 @@ const TYPE_BADGE = {
 
 /** Latest PMAP card: dimension chips + strength/growth snippet if present. */
 function LatestPMAPCard({ touchpoints, onOpenDetail }) {
-  const pmaps = touchpoints.filter(t => t.form_type.startsWith('pmap_'))
+  // Exclude test records and any post-current-year drafts so a test PMAP doesn't
+  // override real Grow PMAPs in the "Latest" display.
+  const pmaps = touchpoints.filter(t =>
+    t.form_type.startsWith('pmap_')
+    && !t.is_test
+    && t.school_year && t.school_year <= '2025-2026'
+  )
   const latest = pmaps[0]
   if (!latest) {
     return (
@@ -531,6 +547,8 @@ function SnapshotView({ touchpoints, onOpenDetail, staffEmail, currentSY, onShow
   // Current-year filter
   const thisYear = touchpoints.filter(t => t.school_year === currentSY)
   const sorted = [...thisYear].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
+  const [showAllCurrent, setShowAllCurrent] = useState(false)
+  const visible = showAllCurrent ? sorted : sorted.slice(0, 3)
 
   // At-a-glance values
   const obsCount = thisYear.filter(t => t.form_type.startsWith('observation_')).length
@@ -544,13 +562,13 @@ function SnapshotView({ touchpoints, onOpenDetail, staffEmail, currentSY, onShow
   const avgScore = latestObsDims.length > 0
     ? (latestObsDims.reduce((a, b) => a + b, 0) / latestObsDims.length).toFixed(1)
     : '—'
-  const latestAny = sorted[0] || touchpoints[0]
-  const daysSinceLast = latestAny?.date ? Math.floor((new Date() - new Date(latestAny.date)) / (1000 * 60 * 60 * 24)) : null
+  // Days since last OBSERVATION specifically (not any touchpoint).
+  const daysSinceLastObs = latestObs?.date ? Math.floor((new Date() - new Date(latestObs.date)) / (1000 * 60 * 60 * 24)) : null
 
   return (
     <div>
-      {/* 4 KPI tiles */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4 mb-4">
+      {/* 3 KPI tiles — Obs YTD · Latest avg · Last Obs */}
+      <div className="grid grid-cols-3 gap-2 mt-4 mb-4">
         <div className="bg-white rounded-xl p-3.5 text-center shadow-sm">
           <div className="text-2xl font-extrabold text-fls-navy">{obsCount}</div>
           <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">Obs this year</div>
@@ -561,29 +579,27 @@ function SnapshotView({ touchpoints, onOpenDetail, staffEmail, currentSY, onShow
         </div>
         <div className="bg-white rounded-xl p-3.5 text-center shadow-sm">
           <div className="text-2xl font-extrabold text-fls-navy">
-            {daysSinceLast != null ? `${daysSinceLast}d` : '—'}
+            {daysSinceLastObs != null ? `${daysSinceLastObs}d` : '—'}
           </div>
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">Since last</div>
-        </div>
-        <div className="bg-white rounded-xl p-3.5 text-center shadow-sm">
-          <div className="text-2xl font-extrabold text-fls-navy">
-            {assignmentsSummary ? `${assignmentsSummary.done}/${assignmentsSummary.total}` : '—'}
-          </div>
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">Action steps</div>
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">Last Obs</div>
         </div>
       </div>
 
       {/* Latest PMAP (any year — always useful context) */}
       <LatestPMAPCard touchpoints={touchpoints} onOpenDetail={onOpenDetail} />
 
-      {/* Recent activity feed — current year only */}
-      <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mt-4 mb-2">
-        Recent activity · {currentSY} · {sorted.length} record{sorted.length === 1 ? '' : 's'}
-      </div>
-      {sorted.length === 0 ? (
-        <Empty msg="No activity this year yet." />
-      ) : (
-        sorted.slice(0, 10).map(tp => {
+      {/* Recent Touchpoints — expand once for top 3, expand again for all current year inline */}
+      <details className="bg-white rounded-xl shadow-sm mt-3 mb-2 overflow-hidden">
+        <summary className="cursor-pointer p-3 text-[11px] font-bold uppercase tracking-wider text-gray-700 select-none flex items-center justify-between">
+          <span>Recent Touchpoints · {showAllCurrent ? sorted.length : Math.min(3, sorted.length)} of {sorted.length} this year</span>
+          <span className="text-gray-400">›</span>
+        </summary>
+        <div className="px-3 pb-3">
+          {sorted.length === 0 ? (
+            <div className="text-[12px] text-gray-500 text-center py-2">No activity this year yet.</div>
+          ) : (
+            <>
+              {visible.map(tp => {
           const badge = TYPE_BADGE[tp.form_type] || { label: tp.form_type, bg: '#f3f4f6', color: '#4b5563' }
           const isSelf = staffEmail && tp.observer_email && tp.observer_email.toLowerCase() === staffEmail.toLowerCase()
           const isReflection = tp.form_type.startsWith('self_reflection_')
@@ -615,17 +631,28 @@ function SnapshotView({ touchpoints, onOpenDetail, staffEmail, currentSY, onShow
               </div>
             </Tag>
           )
-        })
-      )}
-
-      <div className="mt-6 pt-4 border-t border-gray-200 flex justify-center">
-        <button
-          onClick={onShowPast}
-          className="text-sm text-fls-orange font-semibold inline-flex items-center gap-1 bg-transparent border-0 cursor-pointer font-[inherit]"
-        >
-          View past years →
-        </button>
-      </div>
+        })}
+            </>
+          )}
+        </div>
+        {sorted.length > 3 && !showAllCurrent && (
+          <div className="px-3 pb-3 pt-1 border-t border-gray-100">
+            <button onClick={(e) => { e.stopPropagation(); setShowAllCurrent(true) }} className="w-full text-[11px] text-fls-orange font-bold py-1.5 bg-transparent border-0 cursor-pointer font-[inherit]">
+              Show all {sorted.length} current year ↓
+            </button>
+          </div>
+        )}
+        {showAllCurrent && (
+          <div className="px-3 pb-3 pt-1 border-t border-gray-100">
+            <button onClick={(e) => { e.stopPropagation(); setShowAllCurrent(false) }} className="w-full text-[11px] text-gray-500 font-semibold py-1.5 bg-transparent border-0 cursor-pointer font-[inherit]">
+              Collapse to recent 3 ↑
+            </button>
+          </div>
+        )}
+      </details>
+      <button onClick={onShowPast} className="w-full mt-2 px-3 py-2.5 rounded-[10px] bg-white border border-gray-200 text-fls-navy text-[12px] font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1">
+        📈 View last 3 PMAPs →
+      </button>
     </div>
   )
 }
@@ -805,15 +832,241 @@ function GoalsView({ email }) {
   )
 }
 
+/**
+ * YourTodos — the "Yours to do" card stack shown at the top of self's StaffProfile.
+ * Reads /api/me/todos and renders one row per outstanding item (SR / Goals / Action Steps).
+ * If everything is done, shows the all-caught-up empty state.
+ */
+function YourTodos({ todos }) {
+  const sr = todos.self_reflection
+  const goals = todos.goals
+  const srPending = sr && !sr.completed
+  const goalsPending = goals && !goals.all_approved
+  const nothing = !srPending && !goalsPending
+
+  const Row = ({ to, icon, title, sub }) => (
+    <Link
+      to={to}
+      className="flex items-center gap-3 bg-white rounded-xl p-3.5 shadow-sm mb-2 border-l-4 border-orange-500 no-underline text-inherit active:scale-[.99] transition-transform"
+    >
+      <div className="w-9 h-9 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center text-base font-extrabold shrink-0">{icon}</div>
+      <div className="flex-1 min-w-0">
+        <div className="text-[13px] font-bold text-gray-900">{title}</div>
+        <div className="text-[11px] text-gray-500 mt-0.5">{sub}</div>
+      </div>
+      <div className="text-orange-500 text-base font-bold shrink-0">→</div>
+    </Link>
+  )
+
+  return (
+    <div className="mt-3 mb-4">
+      <div className="text-[11px] font-bold uppercase tracking-[.06em] text-gray-400 mb-2">Yours to do</div>
+      {srPending && (
+        <Row to="/app/self-reflection" icon="📝" title="Complete your Self-Reflection" sub="Due this cycle" />
+      )}
+      {goalsPending && (
+        <Row
+          to="/app/goals"
+          icon="🎯"
+          title={goals.any_set === 0 ? 'Set your goals' : 'Submit your goals for approval'}
+          sub={`${goals.approved_count || 0} of 4 approved`}
+        />
+      )}
+      {nothing && (
+        <div className="bg-green-50 border border-green-200 rounded-xl p-3.5 text-center">
+          <div className="text-[13px] font-bold text-green-800">All caught up ✨</div>
+          <div className="text-[11px] text-green-700 mt-0.5">Nothing pending right now.</div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * ActionStepsSection — always visible on StaffProfile.
+ * Self viewer: "Request Review" button per active step.
+ * Supervisor/admin: "Mark Mastered" / "Edit" / "Delete" + "Assign new" CTA.
+ */
+function ActionStepsSection({ email, isSelf, navigate }) {
+  const [items, setItems] = useState(null)
+  const [busy, setBusy] = useState(null)
+  const [editingId, setEditingId] = useState(null)
+  const [editText, setEditText] = useState('')
+
+  const reload = () => {
+    api.get(`/api/staff/${encodeURIComponent(email)}/assignments`)
+      .then(rows => setItems(Array.isArray(rows)
+        ? rows.filter(r => r.type === 'actionStep' && r.school_year === '2025-2026')
+        : []))
+      .catch(() => setItems([]))
+  }
+  useEffect(() => { reload() }, [email])
+
+  if (items == null) return <div className="text-center text-gray-400 text-sm py-6">Loading action steps…</div>
+  const active = items.filter(x => (x.progress_pct || 0) < 100)
+  const mastered = items.filter(x => x.progress_pct === 100)
+
+  async function markMastered(id) {
+    setBusy(id)
+    try {
+      await api.post(`/api/me/action-steps/${id}/progress`, { progress_pct: 100 })
+      reload()
+    } catch (e) { alert('Could not mark mastered: ' + (e.message || e)) }
+    setBusy(null)
+  }
+  async function deleteStep(id) {
+    if (!confirm('Delete this action step? This cannot be undone.')) return
+    setBusy(id)
+    try {
+      await api.del(`/api/action-steps/${id}`)
+      reload()
+    } catch (e) { alert('Could not delete: ' + (e.message || e)) }
+    setBusy(null)
+  }
+  async function saveEdit(id) {
+    if (!editText.trim()) return
+    setBusy(id)
+    try {
+      await api.put(`/api/action-steps/${id}`, { body_text: editText.trim() })
+      setEditingId(null); setEditText('')
+      reload()
+    } catch (e) { alert('Could not save: ' + (e.message || e)) }
+    setBusy(null)
+  }
+  async function requestReview(id) {
+    setBusy(id)
+    try {
+      await api.post(`/api/me/action-steps/${id}/request-review`, { note: '' })
+      alert('Review request sent to your supervisor.')
+    } catch (e) { alert('Could not send: ' + (e.message || e)) }
+    setBusy(null)
+  }
+
+  function StepCard({ a, archived }) {
+    const isEditing = editingId === a.id
+    const stateChip = archived
+      ? <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">Mastered ✓</span>
+      : (a.progress_pct > 0
+        ? <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded bg-orange-50 text-orange-700">In Progress</span>
+        : <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded bg-yellow-50 text-yellow-800">Not Mastered</span>)
+    const dt = a.created_at ? new Date(a.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''
+    return (
+      <div className={`bg-white rounded-xl p-3.5 shadow-sm mb-2 border-l-[3px] ${archived ? 'border-emerald-500 opacity-75' : 'border-orange-500'}`}>
+        {isEditing ? (
+          <div>
+            <textarea value={editText} onChange={e => setEditText(e.target.value)} className="w-full text-[13px] p-2 border border-gray-300 rounded" rows={3} />
+            <div className="flex gap-2 mt-2">
+              <button disabled={busy === a.id} onClick={() => saveEdit(a.id)} className="px-3 py-1.5 rounded bg-fls-navy text-white text-xs font-bold border-0 cursor-pointer">Save</button>
+              <button onClick={() => { setEditingId(null); setEditText('') }} className="px-3 py-1.5 rounded bg-white border border-gray-300 text-xs font-bold cursor-pointer">Cancel</button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="text-[13px] font-semibold text-gray-900 leading-snug">{a.body}</div>
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
+              {stateChip}
+              {dt && <span className="text-[10px] text-gray-500">· assigned {dt}</span>}
+              {a.creator_email && <span className="text-[10px] text-gray-500">· by {a.creator_email.split('@')[0]}</span>}
+            </div>
+            {!archived && (
+              <div className="flex gap-1.5 mt-2.5">
+                {isSelf ? (
+                  <button disabled={busy === a.id} onClick={() => requestReview(a.id)} className="px-2.5 py-1 rounded bg-fls-navy text-white text-[10px] font-bold border-0 cursor-pointer">Request Review</button>
+                ) : (
+                  <>
+                    <button disabled={busy === a.id} onClick={() => markMastered(a.id)} className="px-2.5 py-1 rounded bg-green-600 text-white text-[10px] font-bold border-0 cursor-pointer">Mark Mastered</button>
+                    <button onClick={() => { setEditingId(a.id); setEditText(a.body || '') }} className="px-2.5 py-1 rounded bg-white border border-gray-300 text-[10px] font-bold cursor-pointer">Edit</button>
+                    <button disabled={busy === a.id} onClick={() => deleteStep(a.id)} className="px-2.5 py-1 rounded bg-white border border-gray-300 text-red-600 text-[10px] font-bold cursor-pointer">Delete</button>
+                  </>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="mt-2 mb-4">
+      <div className="text-[11px] font-bold uppercase tracking-[.06em] text-gray-400 mb-2 flex items-center justify-between">
+        <span>{isSelf ? 'Your Action Steps' : 'Active Action Steps'}</span>
+        <span className="text-[10px] font-normal text-gray-400 normal-case tracking-normal">{active.length} active · {mastered.length} mastered</span>
+      </div>
+      {active.length === 0 && mastered.length === 0 && (
+        <div className="bg-gray-50 rounded-xl p-3.5 text-center text-[12px] text-gray-500">No action steps yet.</div>
+      )}
+      {active.map(a => <StepCard key={a.id} a={a} archived={false} />)}
+      {mastered.length > 0 && (
+        <details className="bg-white rounded-xl shadow-sm mb-2 overflow-hidden">
+          <summary className="cursor-pointer p-3 text-[11px] font-bold text-gray-600 select-none">Mastered ({mastered.length}) ›</summary>
+          <div className="px-3 pb-3">
+            {mastered.map(a => <StepCard key={a.id} a={a} archived={true} />)}
+          </div>
+        </details>
+      )}
+      {!isSelf && (
+        <button
+          onClick={() => navigate(`/app/observe?teacher=${encodeURIComponent(email)}`)}
+          className="w-full mt-1 px-3 py-2.5 rounded-[10px] bg-fls-navy text-white text-xs font-bold cursor-pointer border-0 font-[inherit]"
+        >+ Assign new action step</button>
+      )}
+    </div>
+  )
+}
+
+/**
+ * DisciplineSection — collapsible. Always renders. Shows PIP / Write-Up / IAP records.
+ * Backend-side RBAC determines whether records are returned for this viewer.
+ */
+function DisciplineSection({ touchpoints, onOpenDetail }) {
+  const HR_TYPES = new Set(['performance_improvement_plan', 'iap', 'write_up'])
+  // Current year only — don't hang HR records over people's heads forever.
+  const records = touchpoints.filter(t => HR_TYPES.has(t.form_type) && t.school_year === '2025-2026').sort((a,b) => new Date(b.date || 0) - new Date(a.date || 0))
+  const labelFor = (ft) => ft === 'write_up' ? 'Write-Up' : ft === 'iap' ? 'PIP (legacy)' : 'PIP'
+
+  return (
+    <details className="bg-red-50 border border-red-200 rounded-xl mb-2 overflow-hidden">
+      <summary className="cursor-pointer p-3 text-[12px] font-bold text-red-800 select-none flex items-center justify-between">
+        <span>⚠️ Discipline · {records.length} record{records.length === 1 ? '' : 's'}</span>
+        <span className="text-[10px] text-red-700">›</span>
+      </summary>
+      <div className="px-3 pb-3 pt-1">
+        {records.length === 0 ? (
+          <div className="text-[11px] text-red-700 text-center py-2">No PIPs, Write-Ups, or IAPs on record.</div>
+        ) : (
+          records.map(r => (
+            <button
+              key={r.id}
+              onClick={() => onOpenDetail(r)}
+              className="block w-full text-left bg-white border border-red-100 rounded-lg p-2.5 mb-2 last:mb-0 cursor-pointer font-[inherit] hover:bg-red-50"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-[12px] font-bold text-red-900">{labelFor(r.form_type)}</div>
+                  <div className="text-[10px] text-red-700 mt-0.5">{formatDate(r.date)}{r.observer_email ? ` · by ${r.observer_email.split('@')[0]}` : ''}</div>
+                  {r.acknowledgment_at && <div className="text-[9px] text-emerald-700 mt-0.5">Acknowledged {new Date(r.acknowledgment_at).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})}</div>}
+                </div>
+                <div className="text-red-700 text-sm font-bold">›</div>
+              </div>
+            </button>
+          ))
+        )}
+      </div>
+    </details>
+  )
+}
+
 export default function StaffProfile() {
   const navigate = useNavigate()
   const { email: rawEmail } = useParams()
   const email = decodeURIComponent(rawEmail || '')
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [viewMode, setViewMode] = useState('snapshot')  // 'snapshot' | 'past'
-  const [category, setCategory] = useState('recent')
+  const [viewMode, setViewMode] = useState('snapshot')  // 'snapshot' | 'past' (PMAP YoY)
   const [assignSummary, setAssignSummary] = useState(null)
+  const [currentUser, setCurrentUser] = useState(null)
+  const [todos, setTodos] = useState(null)
 
   useEffect(() => {
     let cancelled = false
@@ -825,8 +1078,28 @@ export default function StaffProfile() {
       }).catch(() => {})
     return () => { cancelled = true }
   }, [email])
+
+  useEffect(() => {
+    let cancelled = false
+    api.get('/api/auth/status').then(r => {
+      if (!cancelled) setCurrentUser(r?.user || null)
+    }).catch(() => {})
+    return () => { cancelled = true }
+  }, [])
+
+  const isSelf = !!(currentUser?.email && email && currentUser.email.toLowerCase() === email.toLowerCase())
+
+  useEffect(() => {
+    if (!isSelf) { setTodos(null); return }
+    let cancelled = false
+    api.get('/api/me/todos').then(r => {
+      if (!cancelled) setTodos(r || {})
+    }).catch(() => { if (!cancelled) setTodos({}) })
+    return () => { cancelled = true }
+  }, [isSelf])
   const [aiOpen, setAiOpen] = useState(false)
   const [logOpen, setLogOpen] = useState(false)
+  const [exportOpen, setExportOpen] = useState(false)
   const [detail, setDetail] = useState(null)
 
   useEffect(() => {
@@ -850,8 +1123,9 @@ export default function StaffProfile() {
   // Filter out drafts + dedup effectively-identical records (a pattern we see
   // with reimported Grow data — same date, same observer, same scores, new ID).
   const touchpoints = dedupTouchpoints(
-    (data?.touchpoints || []).filter(t => t.status !== 'draft')
+    (data?.touchpoints || []).filter(t => t.status !== 'draft' && !t.is_test)
   )
+  const currentSY = data?.current_school_year || '2025-2026'
 
   return (
     <div className="min-h-[100svh] bg-[#f5f7fa] pb-20">
@@ -884,17 +1158,60 @@ export default function StaffProfile() {
             </div>
           </div>
         </div>
-        <button
-          onClick={() => setLogOpen(true)}
-          className="mt-3.5 px-3.5 py-2.5 rounded-[10px] bg-fls-navy text-white border-0 text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 shadow-md font-[inherit]"
-        >
-          <span style={{ color: '#fbbe82' }}>+</span> Log a touchpoint
-        </button>
+        <div className="mt-3.5 flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => setLogOpen(true)}
+            className="px-3.5 py-2.5 rounded-[10px] bg-fls-navy text-white border-0 text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 shadow-md font-[inherit]"
+          >
+            <span style={{ color: '#fbbe82' }}>+</span> Log a touchpoint
+          </button>
+          <button
+            onClick={() => setExportOpen(true)}
+            className="px-3.5 py-2.5 rounded-[10px] bg-white text-fls-navy border-[1.5px] border-fls-navy text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 font-[inherit]"
+            title="Download CSV of all touchpoints — for HR / accountability"
+          >
+            ↓ Export
+          </button>
+        </div>
       </div>
+
+      {exportOpen && (
+        <div
+          onClick={() => setExportOpen(false)}
+          className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center"
+        >
+          <div onClick={e => e.stopPropagation()} className="bg-white rounded-t-2xl sm:rounded-2xl p-5 w-full sm:max-w-sm">
+            <div className="text-base font-extrabold mb-1">Export touchpoints</div>
+            <div className="text-xs text-gray-500 mb-3">CSV download of {staff.name || email}'s published touchpoints. For HR records, supervisor accountability, or year-end review.</div>
+            {(() => {
+              const years = (data?.school_years || []).slice().sort().reverse()
+              return (
+                <>
+                  <button
+                    onClick={() => { window.location.href = `/api/staff/${encodeURIComponent(email)}/touchpoints/export.csv`; setExportOpen(false) }}
+                    className="w-full px-3 py-3 rounded-[10px] bg-fls-navy text-white border-0 text-xs font-bold cursor-pointer mb-2 font-[inherit]"
+                  >Download all years</button>
+                  {years.map(y => (
+                    <button
+                      key={y}
+                      onClick={() => { window.location.href = `/api/staff/${encodeURIComponent(email)}/touchpoints/export.csv?school_year=${encodeURIComponent(y)}`; setExportOpen(false) }}
+                      className="w-full px-3 py-2.5 rounded-[10px] bg-gray-100 text-gray-800 border-0 text-xs font-semibold cursor-pointer mb-1.5 font-[inherit]"
+                    >Download {y}</button>
+                  ))}
+                  <button
+                    onClick={() => setExportOpen(false)}
+                    className="w-full px-3 py-2 mt-2 text-xs text-gray-500 border-0 bg-transparent cursor-pointer font-[inherit]"
+                  >Cancel</button>
+                </>
+              )
+            })()}
+          </div>
+        </div>
+      )}
 
       {viewMode === 'past' && (
         <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 flex items-center justify-between">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-yellow-800">Past years · all records</div>
+          <div className="text-[11px] font-bold uppercase tracking-wider text-yellow-800">Last 3 PMAPs · trend</div>
           <button
             onClick={() => setViewMode('snapshot')}
             className="text-xs text-yellow-800 font-semibold bg-transparent border-0 cursor-pointer font-[inherit]"
@@ -902,27 +1219,16 @@ export default function StaffProfile() {
         </div>
       )}
 
-      {viewMode === 'past' && (
-        <div className="sticky top-[50px] z-40 bg-white border-b border-gray-200 px-3 py-2.5 flex gap-1.5 overflow-x-auto">
-          {CATEGORIES.map(cat => (
-            <button
-              key={cat.key}
-              onClick={() => setCategory(cat.key)}
-              className={`px-3.5 py-1.5 rounded-[18px] text-xs font-bold whitespace-nowrap border-[1.5px] transition-colors ${
-                category === cat.key
-                  ? 'bg-fls-navy text-white border-fls-navy'
-                  : 'bg-gray-50 text-gray-500 border-transparent'
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
-      )}
 
       <div className="px-4 pt-2 pb-6 max-w-[760px] mx-auto">
         {loading && <div className="text-center text-gray-400 text-sm py-10">Loading profile…</div>}
         {!loading && !data && <Empty msg="Could not load this staff profile. Check access or try again." />}
+        {!loading && data && viewMode === 'snapshot' && isSelf && todos && (
+          <YourTodos todos={todos} />
+        )}
+        {!loading && data && viewMode === 'snapshot' && (
+          <ActionStepsSection email={email} isSelf={isSelf} navigate={navigate} />
+        )}
         {!loading && data && viewMode === 'snapshot' && (
           <SnapshotView
             touchpoints={touchpoints}
@@ -933,23 +1239,24 @@ export default function StaffProfile() {
             onShowPast={() => setViewMode('past')}
           />
         )}
+        {!loading && data && viewMode === 'snapshot' && (
+          <DisciplineSection touchpoints={touchpoints} onOpenDetail={setDetail} />
+        )}
+        {!loading && data && viewMode === 'snapshot' && isSelf && (
+          <Link
+            to="/app/celebrate"
+            className="block w-full text-center px-4 py-4 mt-6 rounded-2xl text-white text-sm font-bold no-underline shadow-md active:scale-[.98] transition-transform"
+            style={{ background: 'linear-gradient(135deg,#e47727,#c2410c)' }}
+          >
+            🎉 Recognize a colleague
+          </Link>
+        )}
         {!loading && data && viewMode === 'past' && (
-          <>
-            {category === 'recent'       && <RecentView touchpoints={touchpoints} onOpenDetail={setDetail} staffEmail={email} />}
-            {category === 'fundamentals' && <FundamentalsView touchpoints={touchpoints} onOpenDetail={setDetail} staffEmail={email} />}
-            {category === 'observations' && <ObservationsView touchpoints={touchpoints} onOpenDetail={setDetail} staffEmail={email} />}
-            {category === 'pmap'         && <PMAPView touchpoints={touchpoints} pmap_by_year={data.pmap_by_year} school_years={data.school_years} onOpenDetail={setDetail} staffEmail={email} />}
-            {category === 'goals'        && <GoalsView email={email} />}
-            {category === 'reflection'   && <SimpleListView touchpoints={touchpoints} matcher={t => t.form_type.startsWith('self_reflection_')} emptyMsg="No self-reflections on record." onOpenDetail={setDetail} staffEmail={email} />}
-            {category === 'feedback'     && <SimpleListView touchpoints={touchpoints} matcher={t => t.form_type === 'quick_feedback'} emptyMsg="No quick feedback on record." onOpenDetail={setDetail} staffEmail={email} />}
-            {category === 'celebrate'    && <SimpleListView touchpoints={touchpoints} matcher={t => t.form_type === 'celebrate' || t.form_type === 'celebration'} emptyMsg="No celebrations on record." onOpenDetail={setDetail} staffEmail={email} />}
-            {category === 'meetings'     && <SimpleListView touchpoints={touchpoints} matcher={t => t.form_type === 'meeting' || t.form_type === 'meeting_data' || t.form_type.startsWith('meeting')} emptyMsg="No meetings on record." onOpenDetail={setDetail} staffEmail={email} />}
-          </>
+          <PMAPView touchpoints={touchpoints} pmap_by_year={data.pmap_by_year} school_years={data.school_years} onOpenDetail={setDetail} staffEmail={email} />
         )}
       </div>
 
-      <BottomNav active="team" onAskClick={() => setAiOpen(true)} aiOpen={aiOpen} />
-      <AIPanel open={aiOpen} onClose={() => setAiOpen(false)} context="profile" subject={staff.name || email} />
+      <BottomNav active="team" />
       <LogTouchpointModal
         open={logOpen}
         onClose={() => setLogOpen(false)}

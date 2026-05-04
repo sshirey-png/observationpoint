@@ -301,7 +301,7 @@ export default function Meeting() {
             style={{ flex: 1, padding: '13px 8px', border: '1.5px solid #002f60', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', background: '#fff', color: '#002f60', opacity: (saving || !teacher) ? 0.5 : 1 }}
           >{saving ? '…' : 'Publish'}</button>
           <button onClick={() => submit('publish_and_send')} disabled={saving || !teacher}
-            title={!teacher ? 'Pick a teacher first' : 'Publish AND email the teacher now'}
+            title={!teacher ? 'Pick a person first' : 'Publish AND email them now'}
             style={{ flex: 1.3, padding: '13px 8px', border: 'none', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', background: '#002f60', color: '#fff', opacity: (saving || !teacher) ? 0.5 : 1 }}
           >{saving ? 'Saving…' : 'Publish & Send'}</button>
         </div>

@@ -135,34 +135,39 @@ def is_admin_user(user):
 def get_accessible_emails(conn, email, job_title):
     """
     Get all staff emails the user can access.
-    Admins see everyone. Others see their recursive downline.
+    Admins see everyone. Others see their recursive downline + self
+    (so self-actions like viewing their own goals/profile work).
     """
     if is_admin_title(job_title):
         cur = conn.cursor()
         cur.execute("SELECT email FROM staff WHERE is_active")
         return [r[0] for r in cur.fetchall()]
 
-    # Check if this user is a supervisor
+    # Always include self
+    own = (email or '').lower()
+    accessible = {own} if own else set()
+
+    # Add recursive downline for supervisors
     cur = conn.cursor()
     cur.execute("SELECT COUNT(*) FROM staff WHERE supervisor_email = %s AND is_active", (email,))
-    if cur.fetchone()[0] == 0:
-        return []  # Not a supervisor, no team
+    if cur.fetchone()[0] > 0:
+        cur.execute("""
+            WITH RECURSIVE downline AS (
+                SELECT email FROM staff
+                WHERE supervisor_email = %s AND is_active
 
-    # Recursive CTE: walk downline by supervisor_email
-    cur.execute("""
-        WITH RECURSIVE downline AS (
-            SELECT email FROM staff
-            WHERE supervisor_email = %s AND is_active
+                UNION ALL
 
-            UNION ALL
+                SELECT s.email FROM staff s
+                INNER JOIN downline d ON s.supervisor_email = d.email
+                WHERE s.is_active
+            )
+            SELECT DISTINCT email FROM downline
+        """, (email,))
+        for r in cur.fetchall():
+            accessible.add(r[0])
 
-            SELECT s.email FROM staff s
-            INNER JOIN downline d ON s.supervisor_email = d.email
-            WHERE s.is_active
-        )
-        SELECT DISTINCT email FROM downline
-    """, (email,))
-    return [r[0] for r in cur.fetchall()]
+    return list(accessible)
 
 
 def check_access(user, target_email):
@@ -179,7 +184,11 @@ def check_access(user, target_email):
 
 
 def is_supervisor(user):
-    """Check if user has any direct reports."""
+    """Check if user has any direct reports (accessible emails beyond their own)."""
     if not user:
         return False
-    return user.get('is_admin', False) or len(user.get('accessible_emails', [])) > 0
+    if user.get('is_admin', False):
+        return True
+    own = (user.get('email') or '').lower()
+    accessible = user.get('accessible_emails', [])
+    return any((e or '').lower() != own for e in accessible)

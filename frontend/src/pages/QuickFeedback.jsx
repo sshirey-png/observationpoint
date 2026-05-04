@@ -95,14 +95,14 @@ export default function QuickFeedback() {
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Quick observation or feedback for the teacher..."
+            placeholder="Quick observation or feedback..."
             autoFocus
             style={{ width: '100%', minHeight: 100, padding: 12, border: '1.5px solid #e5e7eb', borderRadius: 10, fontSize: 14, fontFamily: 'inherit', color: '#111827', resize: 'vertical' }}
           />
         </div>
 
         <div style={{ background: '#fff', borderRadius: 14, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,.05)', marginBottom: 12 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: '#111827', textTransform: 'uppercase', letterSpacing: '.05em' }}>Share with teacher?</div>
+          <div style={{ fontSize: 12, fontWeight: 800, color: '#111827', textTransform: 'uppercase', letterSpacing: '.05em' }}>Share with this person?</div>
           <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4, marginBottom: 10 }}>Share sends a notification. Private keeps it on your dashboard only.</div>
           <div style={{ display: 'flex', gap: 8 }}>
             {[

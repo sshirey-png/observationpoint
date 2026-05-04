@@ -1,23 +1,34 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { api } from '../lib/api'
 
 /**
- * BottomNav — persistent 5-button global navigation.
- * Home · Team · Touchpoint · Network · Ask.
- * Ask doesn't navigate — it triggers the inline AI panel via onAskClick.
- *
- * Usage:
- *   <BottomNav active="team" onAskClick={() => setAiOpen(true)} />
- *
- * Every page that shows this nav should add bottom padding (pb-20 or more)
- * so content isn't hidden behind the nav.
+ * BottomNav — global navigation.
+ * Supervisors/admins: Home · Team · Touchpoint · Network · Self.
+ * Non-supervisors: Home · Touchpoint · Network (Team + Self hidden).
  */
-export default function BottomNav({ active, onAskClick, aiOpen = false }) {
-  const items = [
-    { key: 'home',       to: '/',               icon: '🏠', label: 'Home' },
-    { key: 'team',       to: '/app/team',       icon: '👥', label: 'Team' },
-    { key: 'touchpoint', to: '/app/touchpoint', icon: '+',  label: 'Touchpoint' },
-    { key: 'network',    to: '/app/network',    icon: '📊', label: 'Network' },
-  ]
+export default function BottomNav({ active }) {
+  const [user, setUser] = useState(null)
+
+  useEffect(() => {
+    api.get('/api/auth/status').then(r => setUser(r?.user || null)).catch(() => {})
+  }, [])
+
+  const isSupervisorOrAdmin = !!(user && (user.is_admin || user.is_supervisor))
+
+  const items = isSupervisorOrAdmin
+    ? [
+        { key: 'home',       to: '/',               icon: '🏠', label: 'Home' },
+        { key: 'team',       to: '/app/team',       icon: '👥', label: 'Team' },
+        { key: 'touchpoint', to: '/app/touchpoint', icon: '+',  label: 'Touchpoint' },
+        { key: 'network',    to: '/app/network',    icon: '📊', label: 'Network' },
+        { key: 'self',       to: '/app/me',         icon: '👤', label: 'Self' },
+      ]
+    : [
+        { key: 'home',       to: '/',               icon: '🏠', label: 'Home' },
+        { key: 'touchpoint', to: '/app/touchpoint', icon: '+',  label: 'Touchpoint' },
+        { key: 'network',    to: '/app/network',    icon: '📊', label: 'Network' },
+      ]
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 flex px-2 pt-2 pb-2.5 gap-0.5 shadow-[0_-2px_10px_rgba(0,0,0,.05)]">
@@ -33,17 +44,6 @@ export default function BottomNav({ active, onAskClick, aiOpen = false }) {
           <div className="text-[10px] font-bold tracking-tight">{it.label}</div>
         </Link>
       ))}
-      <button
-        onClick={onAskClick}
-        className={`flex-1 flex flex-col items-center gap-0.5 py-1.5 rounded-xl font-[inherit] border-0 bg-transparent cursor-pointer ${
-          aiOpen ? 'text-fls-orange' : 'text-gray-400'
-        }`}
-      >
-        <div className={`w-6 h-6 flex items-center justify-center text-base font-extrabold ${
-          aiOpen ? 'text-fls-orange' : 'text-[#fbbe82]'
-        }`}>✦</div>
-        <div className="text-[10px] font-bold tracking-tight">Ask</div>
-      </button>
     </nav>
   )
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import AIPanel from '../components/AIPanel'
 import ImpersonationBanner from '../components/ImpersonationBanner'
 import ImpersonationPicker from '../components/ImpersonationPicker'
@@ -62,19 +62,28 @@ export default function Home() {
   const [adminOpen, setAdminOpen] = useState(false)
   const [firstName, setFirstName] = useState('')
   const [teamCount, setTeamCount] = useState(null)
+  const [user, setUser] = useState(null)
+  const [authLoaded, setAuthLoaded] = useState(false)
   const { isAdmin } = useImpersonation()
 
   useEffect(() => {
     api.get('/api/auth/status').then(r => {
       const u = r?.user
+      setUser(u || null)
+      setAuthLoaded(true)
       if (u?.name) setFirstName(u.name.split(' ')[0])
       else if (u?.email) setFirstName(u.email.split('@')[0].split('.')[0].replace(/^\w/, c => c.toUpperCase()))
-    }).catch(() => {})
+    }).catch(() => setAuthLoaded(true))
     api.get('/api/my-team?view=direct').then(r => {
       const count = Array.isArray(r) ? r.length : (r?.staff?.length || 0)
       setTeamCount(count)
     }).catch(() => {})
   }, [])
+
+  // Non-supervisor non-admin → their StaffProfile is their home (no separate Home)
+  if (authLoaded && user && !user.is_admin && !user.is_supervisor) {
+    return <Navigate to={`/app/staff/${user.email}`} replace />
+  }
 
   return (
     <div className="min-h-[100svh] bg-[#f5f7fa]">
@@ -118,13 +127,12 @@ export default function Home() {
             iconBg="rgba(255,255,255,.15)"
           />
           <BigButton
-            onClick={() => setAiOpen(true)}
-            icon="✦"
-            title="Ask"
-            sub="AI insights · scoped to you"
-            gradient="linear-gradient(135deg,#1e293b 0%,#334155 100%)"
-            iconBg="rgba(251,190,130,.22)"
-            iconColor="#fbbe82"
+            to="/app/me"
+            icon="👤"
+            title="Self"
+            sub="My profile"
+            gradient="linear-gradient(135deg,#475569 0%,#64748b 100%)"
+            iconBg="rgba(255,255,255,.15)"
           />
         </div>
 
@@ -142,7 +150,6 @@ export default function Home() {
         </div>
       </div>
 
-      <AIPanel open={aiOpen} onClose={() => setAiOpen(false)} context="home" />
       <ImpersonationPicker open={adminOpen} onClose={() => setAdminOpen(false)} />
     </div>
   )

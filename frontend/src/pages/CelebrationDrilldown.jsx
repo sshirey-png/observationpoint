@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import BottomNav from '../components/BottomNav'
-import AIPanel from '../components/AIPanel'
 import ImpersonationBanner from '../components/ImpersonationBanner'
 import { api } from '../lib/api'
 
@@ -226,8 +225,7 @@ export default function CelebrationDrilldown() {
         )}
       </div>
 
-      <BottomNav active="network" onAskClick={() => setAiOpen(true)} aiOpen={aiOpen} />
-      <AIPanel open={aiOpen} onClose={() => setAiOpen(false)} context="network" />
+      <BottomNav active="network" />
     </div>
   )
 }

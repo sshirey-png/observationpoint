@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import SubjectBlock from '../components/SubjectBlock'
 import FormShell from '../components/FormShell'
 import RubricCard from '../components/RubricCard'
-import RecordingBar from '../components/RecordingBar'
 import ActionSteps from '../components/ActionSteps'
 import ObservePreKForm from '../components/ObservePreKForm'
 import { api } from '../lib/api'
@@ -39,7 +38,6 @@ export default function Observe() {
   const [doItPractice, setDoItPractice] = useState('')
   const [actionStep, setActionStep] = useState(null)
   const [customStep, setCustomStep] = useState('')
-  const [aiEnabled, setAiEnabled] = useState(true)
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
 
@@ -285,11 +283,6 @@ export default function Observe() {
         {/* Teacher form — standard (non-PreK) rubric flow */}
         {!prek && (
           <>
-            {/* Recording bar */}
-            <div style={{ marginBottom: 10 }}>
-              <RecordingBar onToggleAI={setAiEnabled} />
-            </div>
-
             {/* Observation Notes */}
             <div style={{ background: '#fff', borderRadius: 14, padding: 14, boxShadow: '0 1px 3px rgba(0,0,0,.05)', marginBottom: 10 }}>
               <div style={{ fontSize: 11, fontWeight: 800, color: '#111827', textTransform: 'uppercase', letterSpacing: '.05em' }}>Observation Notes</div>

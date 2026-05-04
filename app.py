@@ -7,6 +7,7 @@ import logging
 import smtplib
 import psycopg2
 import psycopg2.extras
+from datetime import timedelta
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from flask import Flask, session, redirect, request, jsonify, send_from_directory
@@ -36,6 +37,12 @@ log = logging.getLogger(__name__)
 app = Flask(__name__, static_folder='prototypes', static_url_path='/static')
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 app.secret_key = SECRET_KEY
+app.config.update(
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+    PERMANENT_SESSION_LIFETIME=timedelta(days=30),
+)
 CORS(app)
 init_oauth(app)
 
@@ -55,7 +62,8 @@ def _run_migrations():
               ADD COLUMN IF NOT EXISTS acknowledgment_ip TEXT,
               ADD COLUMN IF NOT EXISTS acknowledgment_ua TEXT,
               ADD COLUMN IF NOT EXISTS refused_at TIMESTAMPTZ,
-              ADD COLUMN IF NOT EXISTS notified_at TIMESTAMPTZ
+              ADD COLUMN IF NOT EXISTS notified_at TIMESTAMPTZ,
+              ADD COLUMN IF NOT EXISTS is_peer_recognition BOOLEAN DEFAULT FALSE
         """)
         # Goals — allow goal_type values like 'WIG' / 'AG1' / 'AG2' / 'AG3';
         # add status flow (draft -> submitted -> approved) + approver + submitter
@@ -113,9 +121,34 @@ def _run_migrations():
                 seed,
             )
             log.info(f"Seeded {len(seed)} recommended_goals rows")
+
+        # Uploads — polymorphic file attachments table.
+        # parent_type: 'touchpoint' | 'goal' | 'assignment' | 'acknowledgment'
+        # bucket: 'short' (90-day) | 'exemplar' (indefinite) | 'hr-locked' (7-year)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS uploads (
+              id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+              parent_type TEXT NOT NULL,
+              parent_id TEXT NOT NULL,
+              bucket TEXT NOT NULL,
+              gcs_path TEXT NOT NULL,
+              filename TEXT NOT NULL,
+              mime_type TEXT NOT NULL,
+              size_bytes BIGINT NOT NULL,
+              uploaded_by TEXT NOT NULL,
+              uploaded_at TIMESTAMPTZ DEFAULT NOW(),
+              delete_at TIMESTAMPTZ,
+              promoted_to TEXT,
+              promoted_at TIMESTAMPTZ,
+              archived_at TIMESTAMPTZ
+            )
+        """)
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_uploads_parent ON uploads(parent_type, parent_id)")
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_uploads_user ON uploads(uploaded_by)")
+
         conn.commit()
         conn.close()
-        log.info("Startup migration: acknowledgment + recommended_goals ensured")
+        log.info("Startup migration: acknowledgment + recommended_goals + uploads ensured")
     except Exception as e:
         log.error(f"Startup migration failed: {e}")
 
@@ -178,6 +211,56 @@ except Exception:
 
 
 # ------------------------------------------------------------------
+# PMAP archive form section labels + narrative cache
+# Loaded once at startup; used by /api/touchpoint/<id>/full-detail
+# ------------------------------------------------------------------
+PMAP_SECTION_LABELS = {}
+PMAP_2526_LABELS = {}
+GROW_NARRATIVE_CACHE = {}
+GROW_MEASUREMENT_MAP = {}  # mid → dim_code (for live UNK_*_5pt remap)
+GROW_MID_CYCLE_MAP = {}  # mid → cycle int (1, 2, 3) for PreK CLASS rubric remap
+try:
+    _here = os.path.dirname(os.path.abspath(__file__))
+    _labels_path = os.path.join(_here, 'grow_pmap_section_labels.json')
+    if os.path.exists(_labels_path):
+        with open(_labels_path, encoding='utf-8') as _f:
+            PMAP_SECTION_LABELS = json.load(_f)
+        log.info(f'Loaded 24-25 PMAP section labels: {len(PMAP_SECTION_LABELS)} sections')
+    _labels_2526_path = os.path.join(_here, 'grow_pmap_2526_form_labels.json')
+    if os.path.exists(_labels_2526_path):
+        with open(_labels_2526_path, encoding='utf-8') as _f:
+            PMAP_2526_LABELS = json.load(_f)
+        log.info(f'Loaded 25-26 PMAP form labels: {len((PMAP_2526_LABELS.get("narrative") or {}))} narrative + {len((PMAP_2526_LABELS.get("scores") or {}))} score fields')
+    _cache_path = os.path.join(_here, 'grow_narrative_cache.json')
+    if os.path.exists(_cache_path):
+        with open(_cache_path, encoding='utf-8') as _f:
+            GROW_NARRATIVE_CACHE = json.load(_f)
+        log.info(f'Loaded Grow narrative cache: {len(GROW_NARRATIVE_CACHE):,} records')
+    # Build flat measurement_id → dim_code map from the rubric definitions.
+    # Used to live-remap UNK_*_5pt scores when the original scores_v2 backfill
+    # didn't have a particular L3/L4/L5 mid in the map.
+    _mmap_path = os.path.join(_here, 'grow_measurement_map.json')
+    if os.path.exists(_mmap_path):
+        with open(_mmap_path, encoding='utf-8') as _f:
+            _raw_mmap = json.load(_f)
+        for _rkey, _dims in _raw_mmap.items():
+            if not isinstance(_dims, dict): continue
+            _cyc = None
+            if 'cycle1' in _rkey: _cyc = 1
+            elif 'cycle2' in _rkey: _cyc = 2
+            elif 'cycle3' in _rkey: _cyc = 3
+            for _dim_code, _info in _dims.items():
+                if not isinstance(_info, dict): continue
+                for _mid in (_info.get('ids') or []):
+                    GROW_MEASUREMENT_MAP[_mid] = _dim_code
+                    if _cyc:
+                        GROW_MID_CYCLE_MAP[_mid] = _cyc
+        log.info(f'Loaded measurement_id map: {len(GROW_MEASUREMENT_MAP):,} ids ({len(GROW_MID_CYCLE_MAP):,} with cycle)')
+except Exception as _e:
+    log.warning(f'Could not load PMAP form references: {_e}')
+
+
+# ------------------------------------------------------------------
 # HR doc gate — only Leadership, Network, or admins may file PIP / Write-Up
 # ------------------------------------------------------------------
 HR_DOC_FORM_TYPES = ('performance_improvement_plan', 'iap', 'write_up')
@@ -197,13 +280,19 @@ def _can_file_hr_doc(user):
 
 @app.route('/login')
 def login():
+    session.permanent = True
     redirect_uri = request.url_root.rstrip('/') + '/auth/callback'
     return oauth.google.authorize_redirect(redirect_uri)
 
 
 @app.route('/auth/callback')
 def auth_callback():
-    token = oauth.google.authorize_access_token()
+    try:
+        token = oauth.google.authorize_access_token()
+    except Exception as e:
+        log.warning(f"OAuth callback failed ({type(e).__name__}: {e}). Restarting login flow.")
+        session.clear()
+        return redirect('/login')
     userinfo = token.get('userinfo', {})
     email = userinfo.get('email', '').lower()
 
@@ -1535,6 +1624,76 @@ def api_my_team():
     return jsonify(db.get_my_team(accessible, school_year=sy, direct_only_email=direct_email))
 
 
+@app.route('/api/my-team/action-step-summary')
+@require_auth
+def api_my_team_action_step_summary():
+    """Surface action-step state for the current user's direct reports.
+    Returns: stale_count (open + no progress 30+d) and locked_in_recent
+    (steps marked 100% in last 14 days, for the recognition opportunity bullet)."""
+    user = get_current_user()
+    if DEV_MODE:
+        email = DEV_USER_EMAIL
+        conn = db.get_conn()
+        accessible = get_accessible_emails(conn, email, 'Chief People Officer')
+        conn.close()
+    else:
+        email = user['email'] if user else ''
+        # For action-step summary, scope to direct reports — accessible is too broad
+        conn = db.get_conn()
+        try:
+            cur = conn.cursor()
+            cur.execute("SELECT email FROM staff WHERE LOWER(supervisor_email) = LOWER(%s) AND is_active", (email,))
+            accessible = [r[0] for r in cur.fetchall()]
+        finally:
+            conn.close()
+
+    if not accessible:
+        return jsonify({'stale_count': 0, 'locked_in_recent': []})
+
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        # Stale: open action steps for direct reports with no progress in 30+ days
+        cur.execute("""
+            SELECT COUNT(*) AS n
+            FROM action_steps
+            WHERE LOWER(teacher_email) = ANY(%s)
+              AND type = 'actionStep'
+              AND (is_test IS NULL OR is_test = false)
+              AND (progress_pct IS NULL OR progress_pct < 100)
+              AND (progress_date IS NULL OR progress_date < NOW() - INTERVAL '30 days')
+              AND created_at > NOW() - INTERVAL '180 days'
+        """, ([e.lower() for e in accessible],))
+        stale_count = cur.fetchone()['n']
+
+        # Locked in recent: 100% in last 14 days, with teacher name
+        cur.execute("""
+            SELECT a.body_text, a.teacher_email, a.progress_date,
+                   s.first_name, s.last_name
+            FROM action_steps a
+            LEFT JOIN staff s ON LOWER(s.email) = LOWER(a.teacher_email)
+            WHERE LOWER(a.teacher_email) = ANY(%s)
+              AND a.type = 'actionStep'
+              AND (a.is_test IS NULL OR a.is_test = false)
+              AND a.progress_pct = 100
+              AND a.progress_date > NOW() - INTERVAL '14 days'
+            ORDER BY a.progress_date DESC
+            LIMIT 5
+        """, ([e.lower() for e in accessible],))
+        locked_in = [
+            {
+                'teacher_name': f"{r['first_name'] or ''} {r['last_name'] or ''}".strip() or r['teacher_email'],
+                'teacher_email': r['teacher_email'],
+                'step_text': r['body_text'],
+                'locked_at': r['progress_date'].isoformat() if r['progress_date'] else None,
+            }
+            for r in cur.fetchall()
+        ]
+        return jsonify({'stale_count': stale_count, 'locked_in_recent': locked_in})
+    finally:
+        conn.close()
+
+
 # ------------------------------------------------------------------
 # API: Staff Profile
 # ------------------------------------------------------------------
@@ -1589,8 +1748,9 @@ def api_staff_assignments(email):
         cur.execute("""
             SELECT id, type, body_text, progress_pct, progress_date, progress_justification,
                    creator_email, observation_grow_id, created_at, school_year
-            FROM assignments
+            FROM action_steps
             WHERE LOWER(teacher_email) = %s
+              AND (is_test IS NULL OR is_test = false)
             ORDER BY created_at DESC
         """, (email.lower(),))
         rows = cur.fetchall()
@@ -1705,7 +1865,7 @@ def api_network_assignments_summary():
                    COUNT(*) FILTER (WHERE progress_pct > 0 AND progress_pct < 100) AS in_progress,
                    COUNT(*) FILTER (WHERE progress_pct = 0) AS not_started,
                    COUNT(DISTINCT teacher_email) AS unique_teachers
-            FROM assignments
+            FROM action_steps
             WHERE school_year = %s
             GROUP BY type ORDER BY total DESC
         """, (sy,))
@@ -1717,7 +1877,7 @@ def api_network_assignments_summary():
                    COUNT(*) AS total,
                    COUNT(*) FILTER (WHERE a.progress_pct = 100) AS completed,
                    COUNT(DISTINCT a.teacher_email) AS teachers_with_assignment
-            FROM assignments a
+            FROM action_steps a
             JOIN staff s ON LOWER(s.email) = LOWER(a.teacher_email)
             WHERE a.school_year = %s
               AND s.school != '' AND s.school != 'FirstLine Network'
@@ -1748,6 +1908,464 @@ def api_staff_profile(email):
 
 
 # ------------------------------------------------------------------
+# /api/touchpoint/<id>/full-detail
+# Server-assembled PMAP detail for the click-into-modal view.
+# Pulls from scores_v2 (5pt FLS rubric + 4pt Compass + Professionalism + Values
+# kept distinct via measurement_group), narrative textBoxes from the in-memory
+# Grow narrative cache, and goals from the goals table for the school_year.
+# Layout branches by form_type + school_year on the frontend.
+# ------------------------------------------------------------------
+@app.route('/api/touchpoint/<tp_id>/full-detail')
+@require_auth
+def api_touchpoint_full_detail(tp_id):
+    user = get_current_user()
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            SELECT t.id, t.form_type, t.school_year, t.school, t.observed_at,
+                   t.observer_email, t.teacher_email, t.status, t.is_test,
+                   t.notes, t.feedback, t.feedback_json, t.grow_id,
+                   TRIM(CONCAT(obs.first_name, ' ', obs.last_name)) AS observer_name,
+                   TRIM(CONCAT(tch.first_name, ' ', tch.last_name)) AS teacher_name
+              FROM touchpoints t
+              LEFT JOIN staff obs ON LOWER(obs.email) = LOWER(t.observer_email)
+              LEFT JOIN staff tch ON LOWER(tch.email) = LOWER(t.teacher_email)
+             WHERE t.id = %s
+        """, (tp_id,))
+        tp = cur.fetchone()
+        if not tp:
+            return jsonify({'error': 'Not found'}), 404
+
+        # Auth gate — same rule as staff profile (admin / supervisor chain / self)
+        if not DEV_MODE and not check_access(user, tp['teacher_email']):
+            return jsonify({'authorized': False, 'error': 'Access denied'}), 200
+
+        # 1. Scores from scores_v2, grouped by (measurement_group, dim_code, mid, cycle).
+        # The cycle column is critical for PreK records where each PK1-PK10 dim
+        # is observed 3 times (one per CLASS cycle). Group keeps cycles distinct.
+        cur.execute("""
+            SELECT measurement_group, dimension_code, measurement_id, cycle,
+                   ROUND(AVG(score)::numeric, 2)::float AS score,
+                   COUNT(*) AS n_rows
+              FROM scores_v2
+             WHERE touchpoint_id = %s
+             GROUP BY measurement_group, dimension_code, measurement_id, cycle
+             ORDER BY measurement_group, dimension_code, cycle
+        """, (tp_id,))
+        scores_rows = cur.fetchall()
+
+        # 2. Narrative textBoxes from in-memory cache (keyed by grow_id).
+        narrative_entries = GROW_NARRATIVE_CACHE.get(tp.get('grow_id') or '', [])
+
+        # 3. Goals for this teacher + school_year (PMAP evaluates progress toward goals).
+        goals = []
+        if tp['form_type'].startswith('pmap_') and tp['school_year']:
+            cur.execute("""
+                SELECT id, goal_type, goal_text, status, approved_at, created_at
+                  FROM goals
+                 WHERE LOWER(teacher_email) = LOWER(%s) AND school_year = %s
+                 ORDER BY CASE goal_type WHEN 'WIG' THEN 0 WHEN 'AG1' THEN 1
+                                         WHEN 'AG2' THEN 2 WHEN 'AG3' THEN 3 ELSE 9 END
+            """, (tp['teacher_email'], tp['school_year']))
+            for g in cur.fetchall():
+                goals.append({
+                    'id': str(g['id']),
+                    'goal_type': g['goal_type'],
+                    'goal_text': g['goal_text'] or '',
+                    'status': g['status'] or '',
+                })
+
+        # 4. Apply section-labels mapping. Each scores row + narrative entry gets
+        # placed in one of: performance_review / rubric_5pt / compass_4pt /
+        # professionalism / values / unknown.
+        sections = {
+            'performance_review': {'label': 'Teacher Performance Review',  'entries': []},
+            'rubric_5pt':         {'label': "Leader's Rubric Scores For Teacher (5pt)",     'dims': []},
+            'compass_4pt':        {'label': 'Compass Scores For Teacher (4pt — for state reporting)', 'dims': []},
+            'professionalism':    {'label': 'Professionalism', 'entries': []},
+            'values':             {'label': 'Values',          'entries': []},
+            'unmapped':           {'label': 'Unmapped (legacy or unrecognized)', 'entries': []},
+        }
+
+        # Build lookups for narrative-prompt mid → dim (for 5pt rubric per-dim narrative).
+        rubric_5pt_narrative_map = {k: v for k, v in (PMAP_SECTION_LABELS.get('rubric_5pt_narrative') or {}).items() if not k.startswith('_')}
+        perf_review_map  = {k: v for k, v in (PMAP_SECTION_LABELS.get('performance_review') or {}).items() if not k.startswith('_')}
+        compass_map      = {k: v for k, v in (PMAP_SECTION_LABELS.get('compass_4pt') or {}).items() if not k.startswith('_')}
+        professional_map = {k: v for k, v in (PMAP_SECTION_LABELS.get('professionalism') or {}).items() if not k.startswith('_')}
+        values_map       = {k: v for k, v in (PMAP_SECTION_LABELS.get('values') or {}).items() if not k.startswith('_')}
+
+        # 4a. Performance Review narrative (no scores, just textBox content).
+        for n in narrative_entries:
+            mid = n.get('mid') or ''
+            label = perf_review_map.get(mid)
+            if label:
+                sections['performance_review']['entries'].append({
+                    'label': label,
+                    'html': n.get('html') or '',
+                })
+
+        # 4b. 5pt Rubric — pair score (1 per dim) + per-dim narrative.
+        # The score's dim_code already has a _5pt suffix; strip it for display.
+        # Live-remap UNK_*_5pt rows by looking up the measurement_id in
+        # GROW_MEASUREMENT_MAP — handles dim codes added to the map AFTER the
+        # scores_v2 backfill ran.
+        rubric_scores = {}
+        for sr in scores_rows:
+            dc = sr['dimension_code'] or ''
+            if not dc.endswith('_5pt'):
+                continue
+            dim_code = dc[:-4]
+            if dim_code.startswith('UNK_'):
+                # Try live remap by measurement_id
+                remapped = GROW_MEASUREMENT_MAP.get(sr['measurement_id'])
+                if remapped:
+                    dim_code = remapped
+            rubric_scores[dim_code] = sr['score']
+
+        # 4b-prek. PreK 7pt CLASS rubric — 3 cycles × PK1-PK10. Need cycle-
+        # specific score retention since each cycle is observed separately.
+        # cycle_scores: {1: {PK1: 5.0, ...}, 2: {...}, 3: {...}}
+        cycle_scores = {1: {}, 2: {}, 3: {}}
+        for sr in scores_rows:
+            dc = sr['dimension_code'] or ''
+            if not dc.endswith('_max7'):
+                continue
+            dim_code = dc[:-5]  # strip '_max7'
+            cyc = sr.get('cycle')
+            mid = sr['measurement_id']
+            # If dim_code is UNK_*, try live-remap via measurement_id.
+            # Also derive cycle from the map's rubric_key (cycle1/cycle2/cycle3)
+            # since the original backfill couldn't determine cycle for UNK rows.
+            if dim_code.startswith('UNK_'):
+                remapped = GROW_MEASUREMENT_MAP.get(mid)
+                if remapped:
+                    dim_code = remapped
+                if cyc is None:
+                    cyc = GROW_MID_CYCLE_MAP.get(mid)
+            if cyc and cyc in (1, 2, 3) and not dim_code.startswith('UNK_'):
+                cycle_scores[cyc][dim_code] = sr['score']
+        rubric_narrative = {}
+        for n in narrative_entries:
+            mid = n.get('mid') or ''
+            dim = rubric_5pt_narrative_map.get(mid)
+            if dim:
+                rubric_narrative[dim] = n.get('html') or ''
+        for dim in ['T1', 'T2', 'T3', 'T4', 'T5', 'L1', 'L2', 'L3', 'L4', 'L5']:
+            if dim in rubric_scores or dim in rubric_narrative:
+                sections['rubric_5pt']['dims'].append({
+                    'dim': dim,
+                    'score': rubric_scores.get(dim),
+                    'narrative_html': rubric_narrative.get(dim, ''),
+                })
+
+        # 4c. 4pt Compass — score-only.
+        compass_scores = {}
+        for sr in scores_rows:
+            dc = sr['dimension_code'] or ''
+            if dc.endswith('_4pt'):
+                compass_scores[dc[:-4]] = (sr['score'], sr['measurement_id'])
+        for dim, (sc, mid) in compass_scores.items():
+            sections['compass_4pt']['dims'].append({
+                'dim': dim,
+                'label': compass_map.get(mid, dim),
+                'score': sc,
+            })
+
+        # 4d. Professionalism + Values — labeled scores, 1-3 scale.
+        for sr in scores_rows:
+            mid = sr['measurement_id'] or ''
+            if mid in professional_map:
+                sections['professionalism']['entries'].append({
+                    'label': professional_map[mid],
+                    'score': sr['score'],
+                })
+            elif mid in values_map:
+                sections['values']['entries'].append({
+                    'label': values_map[mid],
+                    'score': sr['score'],
+                })
+
+        # 4e. Anything that didn't get placed — surface for transparency.
+        placed_mids = set(perf_review_map) | set(rubric_5pt_narrative_map) | set(compass_map) | set(professional_map) | set(values_map)
+        # Score-side: also tolerate the 5pt rubric score-mid pattern (we use measurement_group, not mid, for rubric scores).
+        for sr in scores_rows:
+            mid = sr['measurement_id'] or ''
+            dc = sr['dimension_code'] or ''
+            if dc.endswith('_5pt') or dc.endswith('_4pt'):
+                continue  # already placed via group/dim
+            if mid in placed_mids:
+                continue  # already placed
+            sections['unmapped']['entries'].append({
+                'mid': mid,
+                'measurement_group': str(sr['measurement_group']) if sr['measurement_group'] else None,
+                'dim_code_raw': dc,
+                'score': sr['score'],
+            })
+
+        # 5b. 25-26 archive form (Grow imports from 25-26 use same form template
+        # for all teachers). Assemble fields by mid using grow_pmap_2526_form_labels.json.
+        pmap_2526 = None
+        narr_25_map = {k: v for k, v in (PMAP_2526_LABELS.get('narrative') or {}).items() if not k.startswith('_')}
+        score_25_map = {k: v for k, v in (PMAP_2526_LABELS.get('scores') or {}).items() if not k.startswith('_')}
+        chk_25_map = {k: v for k, v in (PMAP_2526_LABELS.get('checkboxes') or {}).items() if not k.startswith('_')}
+
+        narrative_by_mid_25 = {n.get('mid'): n.get('html') for n in narrative_entries}
+        score_by_mid_25 = {sr['measurement_id']: sr['score'] for sr in scores_rows}
+        checkbox_by_mid_25 = {}
+        # checkboxes are stored in feedback_json.checkboxes_selected
+        try:
+            fbj = tp.get('feedback_json') or {}
+            if isinstance(fbj, str):
+                fbj = json.loads(fbj)
+            for c in (fbj.get('checkboxes_selected') or []):
+                checkbox_by_mid_25[c.get('measurement')] = c.get('selected')
+        except Exception:
+            pass
+
+        # Detect: does this record look like a 25-26 form? (has any 25-26 narrative mid)
+        has_2526_mids = any(m in narr_25_map for m in narrative_by_mid_25.keys())
+        is_pmap_or_sr = (tp['form_type'].startswith('pmap_') or tp['form_type'].startswith('self_reflection_'))
+        if has_2526_mids and is_pmap_or_sr:
+            fields = {}
+            for mid, (key, label, placeholder) in narr_25_map.items():
+                fields[key] = {
+                    'label': label,
+                    'placeholder': placeholder,
+                    'kind': 'narrative',
+                    'html': narrative_by_mid_25.get(mid, ''),
+                }
+            for mid, (key, label) in score_25_map.items():
+                fields[key] = {
+                    'label': label,
+                    'kind': 'track',
+                    'score': score_by_mid_25.get(mid),
+                }
+            for mid, (key, label) in chk_25_map.items():
+                fields[key] = {
+                    'label': label,
+                    'kind': 'checkbox',
+                    'selected': checkbox_by_mid_25.get(mid, ''),
+                }
+            # PreK gets 3-cycle CLASS data: PK1-PK10 dims with 1-7 score per cycle.
+            prek_cycles = None
+            if tp['form_type'] in ('pmap_prek', 'self_reflection_prek'):
+                pk_dim_names = {
+                    'PK1': 'Positive Climate (PC)',
+                    'PK2': 'Negative Climate (NC)',
+                    'PK3': 'Teacher Sensitivity (TS)',
+                    'PK4': 'Regard for Student Perspectives (RSP)',
+                    'PK5': 'Behavior Management (BM)',
+                    'PK6': 'Productivity (PD)',
+                    'PK7': 'Instructional Learning Formats (ILF)',
+                    'PK8': 'Concept Development (CD)',
+                    'PK9': 'Quality of Feedback (QF)',
+                    'PK10': 'Language Modeling (LM)',
+                }
+                prek_cycles = []
+                for cyc in [1, 2, 3]:
+                    dims = []
+                    for dim_key in ['PK1','PK2','PK3','PK4','PK5','PK6','PK7','PK8','PK9','PK10']:
+                        sc = cycle_scores.get(cyc, {}).get(dim_key)
+                        dims.append({'dim': dim_key, 'name': pk_dim_names.get(dim_key, dim_key), 'score': sc})
+                    prek_cycles.append({'cycle': cyc, 'dims': dims})
+
+            pmap_2526 = {
+                'fields': fields,
+                'section_order': PMAP_2526_LABELS.get('section_order', []),
+                'rubric_5pt_dims': sections['rubric_5pt']['dims'],
+                'prek_cycles': prek_cycles,
+                'goals': goals,
+            }
+
+        # 5. Native OP feedback JSON (25-26+ records use the OP PMAP form which
+        # stores structured fields directly: jobDescReviewed, wig_track, ag1_track,
+        # whirlwind, strength_areas, growth_areas, personal_leadership_*,
+        # commit_*, career_goals, licenses, concerns, concern_comments, etc.)
+        # Try parsing both `feedback` (where the form posts) and `feedback_json`.
+        op_feedback = None
+        for src in [tp.get('feedback'), tp.get('feedback_json')]:
+            if not src: continue
+            if isinstance(src, dict):
+                op_feedback = src; break
+            try:
+                parsed = json.loads(src) if isinstance(src, str) else None
+                if isinstance(parsed, dict):
+                    op_feedback = parsed; break
+            except Exception:
+                pass
+
+        observed_at = tp['observed_at']
+        return jsonify({
+            'id': str(tp['id']),
+            'form_type': tp['form_type'],
+            'school_year': tp['school_year'],
+            'school': tp['school'] or '',
+            'observed_at': observed_at.isoformat() if observed_at else None,
+            'date': observed_at.strftime('%Y-%m-%d') if observed_at else None,
+            'observer_email': tp['observer_email'] or '',
+            'observer_name': tp['observer_name'] or '',
+            'teacher_email': tp['teacher_email'] or '',
+            'teacher_name': tp['teacher_name'] or '',
+            'status': tp['status'] or '',
+            'is_test': bool(tp['is_test']),
+            'grow_id': tp['grow_id'],
+            'sections': sections,
+            'goals': goals,
+            'op_feedback': op_feedback,
+            'pmap_2526': pmap_2526,
+        })
+    finally:
+        conn.close()
+
+
+# ------------------------------------------------------------------
+# /api/staff/<email>/last-evaluation
+# Returns the most recent PUBLISHED PMAP + most recent published SR for the
+# subject email. Used by PMAP.jsx + SelfReflection.jsx to render a banner
+# prompting the user to review prior context before completing a new form.
+# Returns null fields when none exists yet.
+# ------------------------------------------------------------------
+@app.route('/api/staff/<email>/last-evaluation')
+@require_auth
+def api_staff_last_evaluation(email):
+    user = get_current_user()
+    if not DEV_MODE and not check_access(user, email):
+        return jsonify({'authorized': False}), 200
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        out = {'email': email}
+        for kind, pattern in [('pmap', 'pmap_%'), ('sr', 'self_reflection_%')]:
+            cur.execute("""
+                SELECT t.id, t.form_type, t.school_year, t.observed_at,
+                       t.observer_email,
+                       (SELECT first_name||' '||last_name FROM staff WHERE LOWER(email)=LOWER(t.observer_email)) AS observer_name
+                  FROM touchpoints t
+                 WHERE LOWER(t.teacher_email) = LOWER(%s)
+                   AND t.form_type LIKE %s
+                   AND t.status = 'published'
+                   AND COALESCE(t.is_test, false) = false
+                 ORDER BY t.observed_at DESC LIMIT 1
+            """, (email, pattern))
+            r = cur.fetchone()
+            if r:
+                out[kind] = {
+                    'id': str(r['id']),
+                    'form_type': r['form_type'],
+                    'school_year': r['school_year'],
+                    'date': r['observed_at'].strftime('%Y-%m-%d') if r['observed_at'] else None,
+                    'observer_email': r['observer_email'] or '',
+                    'observer_name': (r['observer_name'] or '').strip(),
+                }
+            else:
+                out[kind] = None
+        return jsonify(out)
+    finally:
+        conn.close()
+
+
+@app.route('/api/staff/<email>/touchpoints/export.csv')
+@require_auth
+def api_staff_touchpoints_export(email):
+    """Export all touchpoints for a teacher as CSV. Used by HR + supervisors
+    for accountability + prior-year record retrieval. Honors check_access
+    (admins see everyone, supervisors see their chain, self always allowed)."""
+    user = get_current_user()
+    if not DEV_MODE and not check_access(user, email):
+        return jsonify({'error': 'Access denied'}), 403
+
+    school_year = request.args.get('school_year', '').strip()  # blank = all years
+
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        if school_year and school_year.lower() != 'all':
+            cur.execute("""
+                SELECT t.id, t.form_type, t.school_year, t.status, t.observed_at,
+                       t.observer_email, t.teacher_email, t.school, t.notes,
+                       t.is_peer_recognition, t.is_test, t.locked_in,
+                       (SELECT first_name || ' ' || last_name FROM staff WHERE LOWER(email)=LOWER(t.observer_email)) AS observer_name,
+                       (SELECT first_name || ' ' || last_name FROM staff WHERE LOWER(email)=LOWER(t.teacher_email)) AS teacher_name
+                FROM touchpoints t
+                WHERE LOWER(t.teacher_email)=LOWER(%s) AND t.school_year=%s
+                  AND t.status='published'
+                ORDER BY t.observed_at DESC
+            """, (email, school_year))
+        else:
+            cur.execute("""
+                SELECT t.id, t.form_type, t.school_year, t.status, t.observed_at,
+                       t.observer_email, t.teacher_email, t.school, t.notes,
+                       t.is_peer_recognition, t.is_test, t.locked_in,
+                       (SELECT first_name || ' ' || last_name FROM staff WHERE LOWER(email)=LOWER(t.observer_email)) AS observer_name,
+                       (SELECT first_name || ' ' || last_name FROM staff WHERE LOWER(email)=LOWER(t.teacher_email)) AS teacher_name
+                FROM touchpoints t
+                WHERE LOWER(t.teacher_email)=LOWER(%s)
+                  AND t.status='published'
+                ORDER BY t.school_year DESC, t.observed_at DESC
+            """, (email,))
+        rows = cur.fetchall()
+
+        # Pull scores per touchpoint and bundle into a single column.
+        # Avg multi-row scores per (touchpoint, dim) — covers PreK 3-cycle
+        # and 24-25 rubric+compass collisions.
+        tp_ids = [str(r['id']) for r in rows]
+        scores_by_tp = {}
+        if tp_ids:
+            cur.execute("""
+                SELECT touchpoint_id, dimension_code,
+                       ROUND(AVG(score)::numeric, 2)::float AS score
+                FROM scores
+                WHERE touchpoint_id = ANY(%s::uuid[])
+                GROUP BY touchpoint_id, dimension_code
+            """, (tp_ids,))
+            for s in cur.fetchall():
+                scores_by_tp.setdefault(s['touchpoint_id'], []).append(
+                    f"{s['dimension_code']}={s['score']}"
+                )
+
+        import csv, io
+        buf = io.StringIO()
+        writer = csv.writer(buf)
+        writer.writerow([
+            'date', 'form_type', 'school_year', 'school',
+            'observer', 'observer_email', 'teacher', 'teacher_email',
+            'notes', 'scores',
+            'is_peer_recognition', 'is_test', 'locked_in', 'touchpoint_id',
+        ])
+        for r in rows:
+            writer.writerow([
+                r['observed_at'].strftime('%Y-%m-%d') if r['observed_at'] else '',
+                r['form_type'] or '',
+                r['school_year'] or '',
+                r['school'] or '',
+                (r['observer_name'] or '').strip() or '',
+                r['observer_email'] or '',
+                (r['teacher_name'] or '').strip() or '',
+                r['teacher_email'] or '',
+                (r['notes'] or '').replace('\n', ' / ').replace('\r', ''),
+                ' '.join(scores_by_tp.get(r['id'], [])),
+                r['is_peer_recognition'] if r['is_peer_recognition'] is not None else '',
+                r['is_test'] if r['is_test'] is not None else '',
+                r['locked_in'] if r['locked_in'] is not None else '',
+                str(r['id']),
+            ])
+        csv_bytes = buf.getvalue()
+
+        # Build a sensible filename
+        teacher_slug = email.replace('@', '_at_').replace('.', '_')
+        year_part = school_year if (school_year and school_year.lower() != 'all') else 'all-years'
+        filename = f"touchpoints_{teacher_slug}_{year_part}.csv"
+
+        return csv_bytes, 200, {
+            'Content-Type': 'text/csv; charset=utf-8',
+            'Content-Disposition': f'attachment; filename="{filename}"',
+        }
+    finally:
+        conn.close()
+
+
+# ------------------------------------------------------------------
 # API: Network Dashboard
 # ------------------------------------------------------------------
 
@@ -1758,7 +2376,12 @@ def api_network():
     if not DEV_MODE and not is_supervisor(user):
         return jsonify({'error': 'Access denied'}), 403
     sy = request.args.get('school_year', CURRENT_SCHOOL_YEAR)
-    return jsonify(db.get_network_dashboard(school_year=sy))
+    cycle = request.args.get('cycle')
+    try:
+        cycle = int(cycle) if cycle else None
+    except ValueError:
+        cycle = None
+    return jsonify(db.get_network_dashboard(school_year=sy, cycle=cycle))
 
 
 # ------------------------------------------------------------------
@@ -2103,8 +2726,18 @@ def api_notify_teacher(tp_id):
         if form_type == 'celebrate':
             commitments = fb.get('commitments') or []
             personal_note = fb.get('personal_note') or ''
+            # Recognition v2 — type-specific subject line
+            rtype = (fb.get('recognition_type') or 'celebration').lower()
+            type_meta = {
+                'celebration': ('🎉', 'Celebration'),
+                'shoutout':    ('👏', 'Shoutout'),
+                'gratitude':   ('🙏', 'Gratitude'),
+            }.get(rtype, ('🎉', 'Celebration'))
+            # If commitment_theme provided (v2), pass as single-item commitments list
+            if fb.get('commitment_theme') and not commitments:
+                commitments = [fb.get('commitment_theme')]
             html = _celebrate_email_html(teacher, observer, tp_dict, commitments, personal_note)
-            subject = f"You've been celebrated by {observer_name}"
+            subject = f"{type_meta[0]} {type_meta[1]} from {observer_name}"
         elif form_type in ('performance_improvement_plan', 'iap', 'write_up'):
             # Generate an ack token if missing
             ack_token = tp.get('acknowledgment_token')
@@ -2134,7 +2767,7 @@ def api_notify_teacher(tp_id):
             html = _hr_doc_email_html(doc_label, teacher, observer, tp_dict, ack_url, summary_bullets)
             subject = f'Action required: {doc_label} from {observer_name}'
         elif form_type == 'observation_fundamentals':
-            cur.execute("""SELECT body_text FROM assignments
+            cur.execute("""SELECT body_text FROM action_steps
                            WHERE observation_grow_id::text = %s AND type = 'actionStep'""", (str(tp_id),))
             action_steps = [{'cat': '', 'action': r['body_text']} for r in cur.fetchall()]
             html = _fundamentals_email_html(teacher, observer, tp_dict, action_steps, tp.get('notes', '') or '')
@@ -2197,14 +2830,11 @@ def api_feedback():
   </div>
 </body></html>'''
 
-    recipients = ['sshirey@firstlineschools.org', 'talent@firstlineschools.org']
-    ok = False
-    for rcpt in recipients:
-        try:
-            if _send_email(rcpt, f'[OP Feedback] {subject}', html):
-                ok = True
-        except Exception as e:
-            log.error(f'feedback email to {rcpt} failed: {e}')
+    try:
+        ok = _send_email('talent@firstlineschools.org', f'[OP Feedback] {subject}', html)
+    except Exception as e:
+        log.error(f'feedback email failed: {e}')
+        ok = False
     return jsonify({'sent': ok})
 
 
@@ -2504,12 +3134,83 @@ def api_save_goals():
                       current_email if new_status == 'submitted' else None, submitted_ts))
             saved.append(dict(cur.fetchone()))
         conn.commit()
+
+        # Notify supervisor when status='submitted'. Test-mode routing:
+        # email goes to the saver instead so real supervisors aren't pinged
+        # during pre-launch testing. Subject prefixed [TEST].
+        if new_status == 'submitted' and saved:
+            try:
+                _notify_supervisor_goals_submitted(
+                    teacher_staff=subject_staff,
+                    saver_email=current_email,
+                    saved_goals=saved,
+                    school_year=school_year,
+                )
+            except Exception as e:
+                log.error(f"goals submit notify failed: {e}")
+
         return jsonify({'saved': saved})
     except Exception as e:
         log.error(f"save goals failed: {e}")
         return jsonify({'error': str(e)}), 500
     finally:
         conn.close()
+
+
+def _notify_supervisor_goals_submitted(teacher_staff, saver_email, saved_goals, school_year):
+    """Email the teacher's supervisor when a goal is submitted/edited for review.
+    Pre-launch test mode: route to saver instead of supervisor, prefix [TEST]."""
+    supervisor_email = (teacher_staff.get('supervisor_email') or '').strip()
+    if not supervisor_email:
+        return
+    teacher_name = f"{teacher_staff.get('first_name','')} {teacher_staff.get('last_name','')}".strip()
+    teacher_email_addr = teacher_staff.get('email','')
+
+    # Build the goal list for the email body
+    rows = ''.join(
+        f'<tr><td style="padding:6px 10px;border:1px solid #e5e7eb;font-weight:700;color:#002f60;width:60px">{g["goal_type"]}</td>'
+        f'<td style="padding:6px 10px;border:1px solid #e5e7eb;color:#374151">{(g.get("goal_text") or "")}</td></tr>'
+        for g in saved_goals
+    )
+
+    app_url = 'https://observationpoint-965913991496.us-central1.run.app'
+    deep_link = f'{app_url}/app/goals?teacher={teacher_email_addr}'
+
+    n = len(saved_goals)
+    is_edit = any(g.get('approved_at') for g in saved_goals)  # had approval before, being re-submitted
+    headline = f"{teacher_name} edited an approved goal — re-approval needed" if is_edit else f"{teacher_name} submitted goals for your review"
+
+    html = f"""
+    <html><body style="margin:0;padding:0;font-family:'Open Sans',Arial,sans-serif;background:#f8f9fa">
+      <div style="max-width:560px;margin:0 auto;background:#fff">
+        <div style="background:#002f60;color:#fff;padding:18px 20px">
+          <h1 style="margin:0;font-size:20px">{headline}</h1>
+          <div style="font-size:12px;opacity:.8;margin-top:4px">School year {school_year}</div>
+        </div>
+        <div style="padding:20px">
+          <p style="margin:0 0 12px;font-size:14px;color:#374151">Hi,</p>
+          <p style="margin:0 0 16px;font-size:14px;color:#374151">{teacher_name} {'edited' if is_edit else 'submitted'} {n} goal{'s' if n != 1 else ''} that need{'s' if n == 1 else ''} your review.</p>
+          <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:18px">{rows}</table>
+          <a href="{deep_link}" style="display:inline-block;background:#e47727;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700;font-size:14px">Review and approve →</a>
+          <p style="margin:18px 0 0;font-size:11px;color:#6b7280">Or visit ObservationPoint and find {teacher_name} in your team.</p>
+        </div>
+        <div style="background:#f8f9fa;padding:14px 20px;font-size:11px;color:#6b7280">
+          Questions? Contact <a href="mailto:talent@firstlineschools.org" style="color:#002f60">talent@firstlineschools.org</a>
+        </div>
+        <div style="background:#002f60;color:rgba(255,255,255,.7);padding:10px;text-align:center;font-size:10px">FirstLine Schools — Education For Life</div>
+      </div>
+    </body></html>
+    """
+
+    # Test-mode routing — pre-launch: send to the saver, not the real supervisor
+    test_mode = True  # flip to False at launch
+    if test_mode:
+        recipient = saver_email
+        subject = f"[TEST · would go to {supervisor_email}] {headline}"
+    else:
+        recipient = supervisor_email
+        subject = headline
+    _send_email(recipient, subject, html)
 
 
 @app.route('/api/goals/<goal_id>/approve', methods=['POST'])
@@ -2544,6 +3245,465 @@ def api_goals_approve(goal_id):
         conn.close()
 
 
+# ------------------------------------------------------------------
+# Teacher Home — endpoints scoped to "me" (the current user as the SUBJECT)
+# ------------------------------------------------------------------
+
+@app.route('/api/me/todos')
+@require_auth
+def api_me_todos():
+    """Return the teacher's outstanding todos: pending self-reflection,
+    missing/draft goals, current open action steps."""
+    user = get_current_user()
+    me_email = user['email'] if user else DEV_USER_EMAIL
+    school_year = (request.args.get('school_year') or '2025-2026').strip()
+
+    todos = {
+        'self_reflection': None,
+        'goals': None,
+        'action_steps': [],
+    }
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        # Self-reflection: any published self_reflection_* for this year?
+        cur.execute("""
+            SELECT id, form_type, observed_at FROM touchpoints
+            WHERE LOWER(teacher_email)=LOWER(%s)
+              AND school_year=%s
+              AND status='published'
+              AND form_type LIKE 'self_reflection%%'
+              AND (is_test IS NULL OR is_test = false)
+            ORDER BY observed_at DESC LIMIT 1
+        """, (me_email, school_year))
+        sr = cur.fetchone()
+        todos['self_reflection'] = {
+            'completed': bool(sr),
+            'last_at': sr['observed_at'].isoformat() if sr and sr.get('observed_at') else None,
+        }
+
+        # Goals: count by status
+        cur.execute("""
+            SELECT status, COUNT(*) AS n FROM goals
+            WHERE LOWER(teacher_email)=LOWER(%s) AND school_year=%s
+            GROUP BY status
+        """, (me_email, school_year))
+        status_counts = {r['status']: r['n'] for r in cur.fetchall()}
+        approved = status_counts.get('approved', 0)
+        any_set = sum(status_counts.values())
+        todos['goals'] = {
+            'all_approved': approved >= 4,
+            'approved_count': approved,
+            'any_set': any_set,
+        }
+
+        # Open action steps assigned to me, current school year only
+        cur.execute("""
+            SELECT id, body_text, creator_email, observation_grow_id, created_at, progress_pct
+            FROM action_steps
+            WHERE LOWER(teacher_email)=LOWER(%s)
+              AND type='actionStep'
+              AND (progress_pct IS NULL OR progress_pct < 100)
+              AND school_year=%s
+              AND (is_test IS NULL OR is_test = false)
+            ORDER BY created_at DESC LIMIT 10
+        """, (me_email, school_year))
+        todos['action_steps'] = [
+            {
+                'id': str(r['id']),
+                'text': r['body_text'],
+                'assigned_by': r.get('creator_email'),
+                'observation_id': str(r['observation_grow_id']) if r.get('observation_grow_id') else None,
+                'assigned_at': r['created_at'].isoformat() if r.get('created_at') else None,
+                'progress_pct': r.get('progress_pct'),
+            }
+            for r in cur.fetchall()
+        ]
+        return jsonify(todos)
+    finally:
+        conn.close()
+
+
+@app.route('/api/me/action-steps')
+@require_auth
+def api_me_action_steps():
+    """Open action steps assigned to the current user, scoped to a school year.
+    Defaults to 2025-2026 (current operating year). Pass ?school_year=all to override."""
+    user = get_current_user()
+    me_email = user['email'] if user else DEV_USER_EMAIL
+    school_year = (request.args.get('school_year') or '2025-2026').strip()
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        if school_year.lower() == 'all':
+            cur.execute("""
+                SELECT a.id, a.body_text, a.created_at, a.observation_grow_id,
+                       a.progress_pct, a.progress_date, a.progress_justification,
+                       a.creator_email, a.school_year,
+                       ag.first_name AS assigner_first, ag.last_name AS assigner_last
+                FROM action_steps a
+                LEFT JOIN staff ag ON LOWER(ag.email) = LOWER(a.creator_email)
+                WHERE LOWER(a.teacher_email) = LOWER(%s)
+                  AND a.type = 'actionStep'
+                  AND (a.is_test IS NULL OR a.is_test = false)
+                  AND (a.progress_pct IS NULL OR a.progress_pct < 100)
+                ORDER BY a.created_at DESC
+            """, (me_email,))
+        else:
+            cur.execute("""
+                SELECT a.id, a.body_text, a.created_at, a.observation_grow_id,
+                       a.progress_pct, a.progress_date, a.progress_justification,
+                       a.creator_email, a.school_year,
+                       ag.first_name AS assigner_first, ag.last_name AS assigner_last
+                FROM action_steps a
+                LEFT JOIN staff ag ON LOWER(ag.email) = LOWER(a.creator_email)
+                WHERE LOWER(a.teacher_email) = LOWER(%s)
+                  AND a.type = 'actionStep'
+                  AND (a.is_test IS NULL OR a.is_test = false)
+                  AND (a.progress_pct IS NULL OR a.progress_pct < 100)
+                  AND a.school_year = %s
+                ORDER BY a.created_at DESC
+            """, (me_email, school_year))
+        steps = [
+            {
+                'id': str(r['id']),
+                'text': r['body_text'],
+                'assigned_at': r['created_at'].isoformat() if r.get('created_at') else None,
+                'observation_id': str(r['observation_grow_id']) if r.get('observation_grow_id') else None,
+                'progress_pct': r.get('progress_pct') or 0,
+                'progress_date': r['progress_date'].isoformat() if r.get('progress_date') else None,
+                'reflection': r.get('progress_justification') or '',
+                'assigned_by_name': f"{r.get('assigner_first','')} {r.get('assigner_last','')}".strip() or r.get('creator_email', ''),
+                'assigned_by_email': r.get('creator_email', ''),
+            }
+            for r in cur.fetchall()
+        ]
+        return jsonify({'action_steps': steps})
+    finally:
+        conn.close()
+
+
+@app.route('/api/me/action-steps/<step_id>/progress', methods=['POST'])
+@require_auth
+@require_no_impersonation
+def api_me_action_step_progress(step_id):
+    """Update self-reported progress on an action step. Only the assignee."""
+    user = get_current_user()
+    me_email = user['email'] if user else DEV_USER_EMAIL
+    body = request.get_json() or {}
+    pct = body.get('progress_pct')
+    reflection = (body.get('reflection') or '').strip()
+    if pct is not None:
+        try:
+            pct = int(pct)
+            if pct < 0 or pct > 100:
+                return jsonify({'error': 'progress_pct must be 0-100'}), 400
+        except (ValueError, TypeError):
+            return jsonify({'error': 'invalid progress_pct'}), 400
+
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        # Permission: only the supervisor (creator) or admin can update progress.
+        # Teachers self-report via /request-review (sends a note to the supervisor).
+        cur.execute(
+            "SELECT teacher_email, creator_email FROM action_steps WHERE id = %s",
+            (step_id,),
+        )
+        row = cur.fetchone()
+        if not row:
+            return jsonify({'error': 'not found'}), 404
+        is_admin = bool(user and user.get('is_admin'))
+        is_creator = (row['creator_email'] or '').lower() == me_email.lower()
+        if not (is_admin or is_creator):
+            return jsonify({'authorized': False, 'error': 'only the supervisor who assigned this step can update its progress'})
+
+        cur.execute("""
+            UPDATE action_steps
+            SET progress_pct = COALESCE(%s, progress_pct),
+                progress_justification = COALESCE(%s, progress_justification),
+                progress_date = NOW(),
+                last_modified = NOW()
+            WHERE id = %s
+            RETURNING id, progress_pct, progress_date, progress_justification
+        """, (pct, reflection if reflection else None, step_id))
+        updated = cur.fetchone()
+        conn.commit()
+        return jsonify({
+            'id': str(updated['id']),
+            'progress_pct': updated.get('progress_pct'),
+            'progress_date': updated['progress_date'].isoformat() if updated.get('progress_date') else None,
+            'reflection': updated.get('progress_justification') or '',
+        })
+    finally:
+        conn.close()
+
+
+@app.route('/api/action-steps/<step_id>', methods=['PUT', 'DELETE'])
+@require_auth
+@require_no_impersonation
+def api_action_step_edit_or_delete(step_id):
+    """Edit body_text or delete an action step. Auth: creator (supervisor) or admin."""
+    user = get_current_user()
+    me_email = (user.get('email') if user else DEV_USER_EMAIL).lower()
+    is_admin = bool(user and user.get('is_admin'))
+
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("SELECT teacher_email, creator_email FROM action_steps WHERE id = %s", (step_id,))
+        row = cur.fetchone()
+        if not row:
+            return jsonify({'error': 'not found'}), 404
+        is_creator = (row['creator_email'] or '').lower() == me_email
+        if not (is_admin or is_creator):
+            return jsonify({'authorized': False, 'error': 'only the supervisor who assigned this step or an admin can modify it'})
+
+        if request.method == 'DELETE':
+            cur.execute("DELETE FROM action_steps WHERE id = %s", (step_id,))
+            conn.commit()
+            return jsonify({'deleted': True, 'id': step_id})
+
+        # PUT: edit body_text
+        body = request.get_json() or {}
+        new_text = (body.get('body_text') or '').strip()
+        if not new_text:
+            return jsonify({'error': 'body_text required'}), 400
+        cur.execute("""
+            UPDATE action_steps
+            SET body_text = %s, last_modified = NOW()
+            WHERE id = %s
+            RETURNING id, body_text, last_modified
+        """, (new_text, step_id))
+        updated = cur.fetchone()
+        conn.commit()
+        return jsonify({
+            'id': str(updated['id']),
+            'body_text': updated['body_text'],
+            'last_modified': updated['last_modified'].isoformat() if updated.get('last_modified') else None,
+        })
+    finally:
+        conn.close()
+
+
+@app.route('/api/me/action-steps/<step_id>/request-review', methods=['POST'])
+@require_auth
+@require_no_impersonation
+def api_me_action_step_request_review(step_id):
+    """Teacher (assignee) sends a note to the supervisor (creator) asking them
+    to come take a look. Supervisor decides whether to bump progress."""
+    user = get_current_user()
+    me_email = user['email'] if user else DEV_USER_EMAIL
+    body = request.get_json() or {}
+    note = (body.get('note') or '').strip()
+
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            SELECT a.id, a.body_text, a.creator_email, a.teacher_email, a.observation_grow_id,
+                   t.first_name AS teacher_first, t.last_name AS teacher_last,
+                   c.first_name AS creator_first, c.last_name AS creator_last
+            FROM action_steps a
+            LEFT JOIN staff t ON LOWER(t.email) = LOWER(a.teacher_email)
+            LEFT JOIN staff c ON LOWER(c.email) = LOWER(a.creator_email)
+            WHERE a.id = %s
+        """, (step_id,))
+        step = cur.fetchone()
+        if not step:
+            return jsonify({'error': 'not found'}), 404
+        if (step['teacher_email'] or '').lower() != me_email.lower():
+            return jsonify({'authorized': False, 'error': 'only the assignee can request review'})
+        creator_email = (step['creator_email'] or '').strip()
+        if not creator_email:
+            return jsonify({'error': 'no supervisor on file for this step'}), 400
+
+        teacher_name = f"{step.get('teacher_first','') or ''} {step.get('teacher_last','') or ''}".strip() or me_email
+        creator_name = f"{step.get('creator_first','') or ''} {step.get('creator_last','') or ''}".strip() or creator_email
+        step_text = (step.get('body_text') or '').strip()
+        app_url = 'https://observationpoint-965913991496.us-central1.run.app'
+        deep_link = f"{app_url}/app/staff/{step['teacher_email']}"
+
+        html = f"""
+        <html><body style="margin:0;padding:0;font-family:'Open Sans',Arial,sans-serif;background:#f8f9fa">
+          <div style="max-width:560px;margin:0 auto;background:#fff">
+            <div style="background:#002f60;color:#fff;padding:18px 20px">
+              <h1 style="margin:0;font-size:20px">{teacher_name} is asking for review</h1>
+              <div style="font-size:12px;opacity:.8;margin-top:4px">Action step follow-through</div>
+            </div>
+            <div style="padding:20px">
+              <p style="margin:0 0 12px;font-size:14px;color:#374151">Hi {creator_name.split(' ')[0] if creator_name else 'there'},</p>
+              <p style="margin:0 0 8px;font-size:14px;color:#374151">{teacher_name} has been working on the following action step and is asking for your review:</p>
+              <div style="background:#f9fafb;border-left:3px solid #e47727;padding:10px 14px;margin:10px 0;border-radius:6px;font-size:13px;color:#111827;white-space:pre-wrap">{step_text}</div>
+              {('<p style="margin:14px 0 0;font-size:13px;color:#374151"><b>Their note:</b></p><div style="background:#fff7ed;border:1px solid #fed7aa;padding:10px 14px;border-radius:6px;font-size:13px;color:#9a3412;font-style:italic;margin-top:6px">' + note + '</div>') if note else ''}
+              <a href="{deep_link}" style="display:inline-block;background:#e47727;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700;font-size:14px;margin-top:18px">Open {teacher_name.split(' ')[0]}'s profile →</a>
+            </div>
+            <div style="background:#f8f9fa;padding:14px 20px;font-size:11px;color:#6b7280">Questions? <a href="mailto:talent@firstlineschools.org" style="color:#002f60">talent@firstlineschools.org</a></div>
+            <div style="background:#002f60;color:rgba(255,255,255,.7);padding:10px;text-align:center;font-size:10px">FirstLine Schools — Education For Life</div>
+          </div>
+        </body></html>
+        """
+
+        # Test-mode pre-launch: route to the saver so real supervisors aren't pinged
+        test_mode = True
+        if test_mode:
+            recipient = me_email
+            subject = f"[TEST · would go to {creator_email}] {teacher_name} is asking for review"
+        else:
+            recipient = creator_email
+            subject = f"{teacher_name} is asking for action step review"
+        ok = _send_email(recipient, subject, html)
+        return jsonify({'sent': bool(ok)})
+    finally:
+        conn.close()
+
+
+@app.route('/api/me/activity')
+@require_auth
+def api_me_activity():
+    """Recent touchpoints ABOUT the current user — observations, PMAPs,
+    formal celebrations, fundamentals, meetings. Excludes peer shoutouts
+    (those go to /api/me/shoutouts)."""
+    user = get_current_user()
+    me_email = user['email'] if user else DEV_USER_EMAIL
+    school_year = (request.args.get('school_year') or '2025-2026').strip()
+    limit = int(request.args.get('limit', 12))
+
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            SELECT t.id, t.form_type, t.observed_at, t.notes, t.observer_email, t.is_peer_recognition,
+                   o.first_name AS observer_first, o.last_name AS observer_last
+            FROM touchpoints t
+            LEFT JOIN staff o ON LOWER(o.email)=LOWER(t.observer_email)
+            WHERE LOWER(t.teacher_email)=LOWER(%s)
+              AND t.school_year=%s
+              AND t.status='published'
+              AND COALESCE(t.is_peer_recognition, FALSE) = FALSE
+            ORDER BY t.observed_at DESC
+            LIMIT %s
+        """, (me_email, school_year, limit))
+        rows = cur.fetchall()
+
+        # Quick stats: observation count + avg, celebration count
+        cur.execute("""
+            SELECT COUNT(*) AS n FROM touchpoints
+            WHERE LOWER(teacher_email)=LOWER(%s) AND school_year=%s
+              AND status='published' AND form_type LIKE 'observation%%'
+        """, (me_email, school_year))
+        obs_count = cur.fetchone()['n']
+
+        cur.execute("""
+            SELECT AVG(sc.score)::numeric(4,2) AS avg
+            FROM scores sc
+            JOIN touchpoints t ON sc.touchpoint_id = t.id
+            WHERE LOWER(t.teacher_email)=LOWER(%s) AND t.school_year=%s
+              AND t.status='published' AND t.form_type LIKE 'observation%%'
+              AND sc.dimension_code IN ('T1','T2','T3','T4','T5')
+        """, (me_email, school_year))
+        avg_row = cur.fetchone()
+        obs_avg = float(avg_row['avg']) if avg_row and avg_row.get('avg') else None
+
+        cur.execute("""
+            SELECT COUNT(*) AS n FROM touchpoints
+            WHERE LOWER(teacher_email)=LOWER(%s) AND school_year=%s
+              AND status='published' AND form_type='celebrate'
+              AND COALESCE(is_peer_recognition, FALSE) = FALSE
+        """, (me_email, school_year))
+        formal_celeb_count = cur.fetchone()['n']
+
+        return jsonify({
+            'school_year': school_year,
+            'stats': {
+                'observations': obs_count,
+                'observation_avg': obs_avg,
+                'formal_celebrations': formal_celeb_count,
+            },
+            'activity': [
+                {
+                    'id': str(r['id']),
+                    'form_type': r['form_type'],
+                    'observed_at': r['observed_at'].isoformat() if r.get('observed_at') else None,
+                    'notes': (r.get('notes') or '')[:240],
+                    'observer_name': f"{r.get('observer_first','')} {r.get('observer_last','')}".strip() or r.get('observer_email',''),
+                }
+                for r in rows
+            ],
+        })
+    finally:
+        conn.close()
+
+
+@app.route('/api/me/shoutouts')
+@require_auth
+def api_me_shoutouts():
+    """Peer celebrations sent + received by the current user. These do NOT
+    show up on supervisor dashboards."""
+    user = get_current_user()
+    me_email = user['email'] if user else DEV_USER_EMAIL
+    school_year = (request.args.get('school_year') or '2025-2026').strip()
+    limit = int(request.args.get('limit', 20))
+
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        # Received (subject = me, peer flag set, observer != me)
+        cur.execute("""
+            SELECT t.id, t.notes, t.observed_at, t.observer_email,
+                   o.first_name AS f, o.last_name AS l
+            FROM touchpoints t
+            LEFT JOIN staff o ON LOWER(o.email)=LOWER(t.observer_email)
+            WHERE LOWER(t.teacher_email)=LOWER(%s)
+              AND LOWER(t.observer_email) != LOWER(%s)
+              AND t.school_year=%s
+              AND t.form_type='celebrate'
+              AND t.status='published'
+              AND COALESCE(t.is_peer_recognition, FALSE) = TRUE
+            ORDER BY t.observed_at DESC LIMIT %s
+        """, (me_email, me_email, school_year, limit))
+        received = [
+            {
+                'id': str(r['id']),
+                'notes': r.get('notes') or '',
+                'at': r['observed_at'].isoformat() if r.get('observed_at') else None,
+                'from_name': f"{r.get('f','')} {r.get('l','')}".strip() or r.get('observer_email',''),
+                'from_email': r.get('observer_email', ''),
+            }
+            for r in cur.fetchall()
+        ]
+
+        # Sent (observer = me, peer flag set, subject != me)
+        cur.execute("""
+            SELECT t.id, t.notes, t.observed_at, t.teacher_email,
+                   s.first_name AS f, s.last_name AS l
+            FROM touchpoints t
+            LEFT JOIN staff s ON LOWER(s.email)=LOWER(t.teacher_email)
+            WHERE LOWER(t.observer_email)=LOWER(%s)
+              AND LOWER(t.teacher_email) != LOWER(%s)
+              AND t.school_year=%s
+              AND t.form_type='celebrate'
+              AND t.status='published'
+              AND COALESCE(t.is_peer_recognition, FALSE) = TRUE
+            ORDER BY t.observed_at DESC LIMIT %s
+        """, (me_email, me_email, school_year, limit))
+        sent = [
+            {
+                'id': str(r['id']),
+                'notes': r.get('notes') or '',
+                'at': r['observed_at'].isoformat() if r.get('observed_at') else None,
+                'to_name': f"{r.get('f','')} {r.get('l','')}".strip() or r.get('teacher_email',''),
+                'to_email': r.get('teacher_email', ''),
+            }
+            for r in cur.fetchall()
+        ]
+        return jsonify({'received': received, 'sent': sent})
+    finally:
+        conn.close()
+
+
 @app.route('/api/touchpoints', methods=['POST'])
 @require_auth
 @require_no_impersonation
@@ -2560,6 +3720,35 @@ def api_save_touchpoint():
     # Fall back to CURRENT_SCHOOL_YEAR if not provided
     if not data.get('school_year'):
         data['school_year'] = CURRENT_SCHOOL_YEAR
+
+    # Auto-classify celebrations as peer (shoutout) vs formal at submit time.
+    # Formal: observer is the subject's supervisor OR an admin. Counts in
+    # supervisor dashboards.
+    # Peer: anyone else celebrating anyone. Lives on Teacher Home shoutouts
+    # wall; does NOT count in formal supervisor dashboards.
+    if data.get('form_type') == 'celebrate' and data.get('teacher_email'):
+        is_peer = True
+        if user and user.get('is_admin'):
+            is_peer = False
+        elif data['observer_email'].lower() == data['teacher_email'].lower():
+            is_peer = True  # self-celebrate is always peer
+        else:
+            try:
+                conn_x = db.get_conn()
+                try:
+                    cur_x = conn_x.cursor()
+                    cur_x.execute(
+                        "SELECT supervisor_email FROM staff WHERE LOWER(email)=LOWER(%s)",
+                        (data['teacher_email'],),
+                    )
+                    row = cur_x.fetchone()
+                    if row and row[0] and row[0].lower() == data['observer_email'].lower():
+                        is_peer = False
+                finally:
+                    conn_x.close()
+            except Exception as e:
+                log.error(f"is_peer lookup failed, defaulting to peer: {e}")
+        data['is_peer_recognition'] = is_peer
 
     # Draft paradigm: if no id and no explicit new-row intent, try reusing an active draft
     # for (observer, teacher, form_type). If one exists, update in place instead of creating.
@@ -2578,7 +3767,7 @@ def api_save_touchpoint():
                         cur = conn.cursor()
                         for s in steps:
                             cur.execute("""
-                                INSERT INTO assignments (type, teacher_email, creator_email,
+                                INSERT INTO action_steps (type, teacher_email, creator_email,
                                     observation_grow_id, body_text, school_year, created_at, last_modified)
                                 VALUES ('actionStep', %s, %s, %s, %s, %s, NOW(), NOW())
                             """, (data['teacher_email'], data['observer_email'], existing['id'],
@@ -2600,7 +3789,7 @@ def api_save_touchpoint():
                 cur = conn.cursor()
                 for s in steps:
                     cur.execute("""
-                        INSERT INTO assignments (type, teacher_email, creator_email,
+                        INSERT INTO action_steps (type, teacher_email, creator_email,
                             observation_grow_id, body_text, school_year, created_at, last_modified)
                         VALUES ('actionStep', %s, %s, %s, %s, %s, NOW(), NOW())
                     """, (data['teacher_email'], data['observer_email'], tp_id,
@@ -2935,6 +4124,276 @@ def api_get_form(form_id):
         return jsonify({'error': 'Not found'}), 404
     with open(path) as f:
         return jsonify(json.load(f))
+
+
+# ------------------------------------------------------------------
+# Document upload — Phase 1 foundation
+# 3 GCS buckets: short (90-day lifecycle) / exemplar / hr-locked (7-year)
+# Direct-to-GCS via signed URLs. Polymorphic uploads table links to any parent.
+# ------------------------------------------------------------------
+
+UPLOAD_BUCKETS = {
+    'short':     'op-uploads-short',
+    'exemplar':  'op-exemplars',
+    'hr-locked': 'op-hr-locked',
+}
+UPLOAD_MAX_BYTES = 100 * 1024 * 1024  # 100 MB per file
+ALLOWED_MIME_PREFIXES = ('image/', 'video/', 'audio/')
+ALLOWED_MIME_EXACT = {
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'text/plain', 'text/csv',
+}
+
+
+def _mime_allowed(mime):
+    m = (mime or '').lower()
+    if any(m.startswith(p) for p in ALLOWED_MIME_PREFIXES):
+        return True
+    return m in ALLOWED_MIME_EXACT
+
+
+def _bucket_for_parent(parent_type, form_type=None):
+    """HR docs (PIP/WriteUp/Acknowledge) lock; everything else short-bucket."""
+    HR_FORM_TYPES = {'performance_improvement_plan', 'iap', 'write_up'}
+    if parent_type == 'acknowledgment':
+        return 'hr-locked'
+    if parent_type == 'touchpoint' and form_type in HR_FORM_TYPES:
+        return 'hr-locked'
+    return 'short'
+
+
+def _gcs_client():
+    from google.cloud import storage
+    return storage.Client(project=PROJECT_ID)
+
+
+def _generate_signed_url(blob, *, method, expiration, content_type=None, response_disposition=None):
+    """Generate a v4 signed URL that works on Cloud Run (no private key locally).
+    Falls back to IAM Sign Blob via the runtime service account."""
+    import google.auth
+    from google.auth.transport import requests as g_requests
+    creds, _ = google.auth.default()
+    if hasattr(creds, 'service_account_email') and (
+        creds.service_account_email == 'default'
+        or not getattr(creds, '_signing_credentials', None)
+    ):
+        creds.refresh(g_requests.Request())
+    sa_email = getattr(creds, 'service_account_email', None) or os.environ.get(
+        'GOOGLE_SERVICE_ACCOUNT', '965913991496-compute@developer.gserviceaccount.com'
+    )
+    kwargs = dict(
+        version='v4',
+        expiration=expiration,
+        method=method,
+        service_account_email=sa_email,
+        access_token=creds.token,
+    )
+    if content_type:
+        kwargs['content_type'] = content_type
+    if response_disposition:
+        kwargs['response_disposition'] = response_disposition
+    return blob.generate_signed_url(**kwargs)
+
+
+@app.route('/api/uploads/sign', methods=['POST'])
+@require_auth
+def api_uploads_sign():
+    """Generate a signed PUT URL for direct-to-GCS upload.
+    Body: { parent_type, parent_id, filename, mime_type, size, form_type? }.
+    Returns: { upload_url, upload_id, gcs_path, bucket, expires_in }."""
+    user = get_current_user()
+    saver_email = user['email'] if user else DEV_USER_EMAIL
+    body = request.get_json() or {}
+    parent_type = (body.get('parent_type') or '').strip()
+    parent_id = (body.get('parent_id') or '').strip()
+    filename = (body.get('filename') or '').strip()
+    mime_type = (body.get('mime_type') or 'application/octet-stream').strip()
+    size = int(body.get('size') or 0)
+    form_type = (body.get('form_type') or '').strip()
+
+    if parent_type not in ('touchpoint', 'goal', 'assignment', 'acknowledgment'):
+        return jsonify({'error': 'invalid parent_type'}), 400
+    if not parent_id or not filename:
+        return jsonify({'error': 'parent_id and filename required'}), 400
+    if size <= 0 or size > UPLOAD_MAX_BYTES:
+        return jsonify({'error': f'size must be 1..{UPLOAD_MAX_BYTES} bytes'}), 400
+    if not _mime_allowed(mime_type):
+        return jsonify({'error': f'mime type {mime_type} not allowed'}), 400
+
+    bucket_key = _bucket_for_parent(parent_type, form_type)
+    bucket_name = UPLOAD_BUCKETS[bucket_key]
+
+    # Path: <year>/<month>/<uuid>__<safe_filename>
+    from datetime import datetime, timedelta
+    import uuid as _uuid, re as _re
+    safe_name = _re.sub(r'[^A-Za-z0-9._-]', '_', filename)[:120]
+    obj_uuid = str(_uuid.uuid4())
+    now = datetime.utcnow()
+    gcs_object = f"{now.year}/{now.month:02d}/{obj_uuid}__{safe_name}"
+
+    # Pre-record in DB so finalize is just a state flip + size verify
+    delete_at = now + timedelta(days=90) if bucket_key == 'short' else None
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO uploads (id, parent_type, parent_id, bucket, gcs_path, filename, mime_type, size_bytes, uploaded_by, delete_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
+        """, (obj_uuid, parent_type, parent_id, bucket_key,
+              f"{bucket_name}/{gcs_object}", filename, mime_type, size, saver_email, delete_at))
+        upload_id = cur.fetchone()[0]
+        conn.commit()
+    finally:
+        conn.close()
+
+    try:
+        client = _gcs_client()
+        bucket = client.bucket(bucket_name)
+        blob = bucket.blob(gcs_object)
+        upload_url = _generate_signed_url(
+            blob, method='PUT', expiration=timedelta(minutes=10), content_type=mime_type,
+        )
+    except Exception as e:
+        log.error(f"signed url generation failed: {e}")
+        return jsonify({'error': 'signed url generation failed'}), 500
+
+    return jsonify({
+        'upload_id': str(upload_id),
+        'upload_url': upload_url,
+        'gcs_path': f"{bucket_name}/{gcs_object}",
+        'bucket': bucket_key,
+        'expires_in': 600,
+        'mime_type': mime_type,
+    })
+
+
+@app.route('/api/uploads/<upload_id>/finalize', methods=['POST'])
+@require_auth
+def api_uploads_finalize(upload_id):
+    """Verify the GCS object exists + record finalize timestamp.
+    Client calls this AFTER the PUT to the signed URL succeeds."""
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("SELECT * FROM uploads WHERE id=%s", (upload_id,))
+        row = cur.fetchone()
+        if not row:
+            return jsonify({'error': 'upload not found'}), 404
+        bucket_name, _, obj_path = row['gcs_path'].partition('/')
+        try:
+            client = _gcs_client()
+            blob = client.bucket(bucket_name).blob(obj_path)
+            if not blob.exists():
+                return jsonify({'error': 'gcs object missing — upload may have failed'}), 400
+        except Exception as e:
+            log.error(f"finalize verify failed: {e}")
+            return jsonify({'error': 'verification failed'}), 500
+        return jsonify({
+            'id': str(row['id']),
+            'parent_type': row['parent_type'],
+            'parent_id': row['parent_id'],
+            'bucket': row['bucket'],
+            'filename': row['filename'],
+            'mime_type': row['mime_type'],
+            'size_bytes': row['size_bytes'],
+        })
+    finally:
+        conn.close()
+
+
+@app.route('/api/uploads')
+@require_auth
+def api_uploads_list():
+    """List uploads for a parent record. ?parent_type=X&parent_id=Y"""
+    parent_type = (request.args.get('parent_type') or '').strip()
+    parent_id = (request.args.get('parent_id') or '').strip()
+    if not parent_type or not parent_id:
+        return jsonify([])
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            SELECT id, filename, mime_type, size_bytes, uploaded_by, uploaded_at,
+                   bucket, delete_at, promoted_to
+            FROM uploads
+            WHERE parent_type=%s AND parent_id=%s AND archived_at IS NULL
+            ORDER BY uploaded_at DESC
+        """, (parent_type, parent_id))
+        rows = cur.fetchall()
+        return jsonify([
+            {
+                'id': str(r['id']),
+                'filename': r['filename'],
+                'mime_type': r['mime_type'],
+                'size_bytes': r['size_bytes'],
+                'uploaded_by': r['uploaded_by'],
+                'uploaded_at': r['uploaded_at'].isoformat() if r['uploaded_at'] else None,
+                'bucket': r['bucket'],
+                'delete_at': r['delete_at'].isoformat() if r['delete_at'] else None,
+                'promoted_to': r['promoted_to'],
+            }
+            for r in rows
+        ])
+    finally:
+        conn.close()
+
+
+@app.route('/api/uploads/<upload_id>/download')
+@require_auth
+def api_uploads_download(upload_id):
+    """Generate a short-lived signed download URL for the file."""
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("SELECT * FROM uploads WHERE id=%s AND archived_at IS NULL", (upload_id,))
+        row = cur.fetchone()
+        if not row:
+            return jsonify({'error': 'not found'}), 404
+        bucket_name, _, obj_path = row['gcs_path'].partition('/')
+        from datetime import timedelta
+        try:
+            client = _gcs_client()
+            blob = client.bucket(bucket_name).blob(obj_path)
+            url = _generate_signed_url(
+                blob, method='GET', expiration=timedelta(minutes=5),
+                response_disposition=f'attachment; filename="{row["filename"]}"',
+            )
+        except Exception as e:
+            log.error(f"download signed url failed: {e}")
+            return jsonify({'error': 'download url failed'}), 500
+        return jsonify({'url': url, 'filename': row['filename'], 'expires_in': 300})
+    finally:
+        conn.close()
+
+
+@app.route('/api/uploads/<upload_id>', methods=['DELETE'])
+@require_auth
+@require_no_impersonation
+def api_uploads_delete(upload_id):
+    """Soft-delete (archived_at). Bucket lifecycle handles hard delete on short bucket;
+    HR-locked + exemplar buckets keep the object until explicit lifecycle change."""
+    user = get_current_user()
+    me = user['email'] if user else DEV_USER_EMAIL
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor()
+        cur.execute("UPDATE uploads SET archived_at=NOW() WHERE id=%s AND uploaded_by=%s", (upload_id, me))
+        if cur.rowcount == 0:
+            # Admin override
+            if user and user.get('is_admin'):
+                cur.execute("UPDATE uploads SET archived_at=NOW() WHERE id=%s", (upload_id,))
+                if cur.rowcount == 0:
+                    return jsonify({'error': 'not found'}), 404
+            else:
+                return jsonify({'error': 'not found or not yours'}), 404
+        conn.commit()
+        return jsonify({'archived': True})
+    finally:
+        conn.close()
 
 
 # ------------------------------------------------------------------

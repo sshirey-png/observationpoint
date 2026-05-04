@@ -24,8 +24,11 @@ const GOAL_SLOTS = [
   { type: 'AG3', label: 'Annual Goal 3', desc: '' },
 ]
 
-const SCHOOL_YEAR = '2026-2027'
-const PRIOR_YEAR = '2025-2026'
+// Show current academic year (2025-2026) as primary so imported approved
+// goals load directly. Carry-over panel shows the year before.
+// Flip to 2026-2027 / 2025-2026 on July 1 launch.
+const SCHOOL_YEAR = '2025-2026'
+const PRIOR_YEAR = '2024-2025'
 
 const STATUS_STYLE = {
   draft:     { label: 'Draft',      bg: '#f3f4f6', color: '#6b7280' },
@@ -46,6 +49,7 @@ export default function Goals() {
   const [saving, setSaving] = useState(false)
   const [justSaved, setJustSaved] = useState(false)
   const [focusType, setFocusType] = useState(null)  // slot to focus after Edit click
+  const [editingTypes, setEditingTypes] = useState(new Set())  // which approved goals user has clicked "Edit" on
 
   useEffect(() => {
     api.get('/api/auth/status').then(r => setUser(r?.user || null)).catch(() => {})
@@ -106,12 +110,22 @@ export default function Goals() {
     if (!teacher) return
     setSaving(true)
     try {
+      // Only send goals that are: (a) being edited (in editingTypes), or (b) not yet approved.
+      // Approved goals NOT being edited stay untouched — don't accidentally downgrade them.
+      const slotsToSend = GOAL_SLOTS
+        .map(s => ({
+          slot: s,
+          text: (goals[s.type]?.goal_text || '').trim(),
+          isEditing: editingTypes.has(s.type),
+          isApproved: goals[s.type]?.status === 'approved',
+        }))
+        .filter(x => x.text && (x.isEditing || !x.isApproved))
+
       const body = {
         teacher_email: teacher.email,
         school_year: SCHOOL_YEAR,
         status: newStatus,
-        goals: GOAL_SLOTS.map(s => ({ goal_type: s.type, goal_text: (goals[s.type]?.goal_text || '').trim() }))
-                         .filter(g => g.goal_text),
+        goals: slotsToSend.map(x => ({ goal_type: x.slot.type, goal_text: x.text })),
       }
       const res = await api.post('/api/goals', body)
       if (res?.authorized === false) {
@@ -121,6 +135,7 @@ export default function Goals() {
       const map = {}
       ;(res?.saved || []).forEach(g => { map[g.goal_type] = g })
       setGoals(prev => ({ ...prev, ...map }))
+      setEditingTypes(new Set())  // collapse editing back to read mode
       setJustSaved(true)
     } catch (e) {
       alert('Save failed: ' + (e?.message || 'unknown error'))
@@ -150,6 +165,7 @@ export default function Goals() {
     user.is_admin ||
     (user.email && user.email.toLowerCase() === (teacher.supervisor_email || '').toLowerCase())
   )
+  const isSelf = !!user && teacher && user.email && user.email.toLowerCase() === teacher.email.toLowerCase()
   const hasPrior = Object.keys(priorGoals).length > 0
   const showCarryOver = hasPrior && !startFresh
 
@@ -183,7 +199,7 @@ export default function Goals() {
           roleLabel="Goals"
         />
 
-        {teacher && hasPrior && (
+        {teacher && hasPrior && !allApproved && (
           <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 10, padding: '10px 12px', marginBottom: 12, fontSize: 12, color: '#1e40af', display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ flex: 1 }}>
               <b>{Object.keys(priorGoals).length} prior-year goal{Object.keys(priorGoals).length === 1 ? '' : 's'}</b> on file from {PRIOR_YEAR}.
@@ -196,6 +212,25 @@ export default function Goals() {
           </div>
         )}
 
+        {/* Render slot cards always — disabled state when no subject picked */}
+        {!teacher && (
+          <>
+            {GOAL_SLOTS.map(slot => (
+              <div key={slot.type} style={{ background: '#fff', borderRadius: 14, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,.05)', marginBottom: 12, borderLeft: '4px solid #e5e7eb', opacity: 0.6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.05em', flex: 1 }}>
+                    {slot.type} · {slot.label}
+                  </div>
+                </div>
+                {slot.desc && <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 8 }}>{slot.desc}</div>}
+                <div style={{ width: '100%', minHeight: 80, padding: 12, border: '1.5px dashed #e5e7eb', borderRadius: 10, fontSize: 13, color: '#9ca3af', background: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  Pick a person above to start
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+
         {teacher && (
           <>
             {GOAL_SLOTS.map(slot => {
@@ -204,7 +239,10 @@ export default function Goals() {
               const statusVis = STATUS_STYLE[status] || STATUS_STYLE.draft
               const isApproved = status === 'approved'
               const prior = priorGoals[slot.type]
-              const showPriorCard = showCarryOver && prior?.goal_text && !(g.goal_text || '').trim()
+              // Only show carry-over when this year's goal is empty AND not approved.
+              // Once a goal is set/approved, the prior-year prompt is just clutter.
+              const showPriorCard = showCarryOver && prior?.goal_text
+                && !isApproved && !(g.goal_text && g.goal_text.trim())
               return (
                 <div key={slot.type} style={{ background: '#fff', borderRadius: 14, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,.05)', marginBottom: 12, borderLeft: `4px solid ${statusVis.color}` }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
@@ -238,14 +276,31 @@ export default function Goals() {
                     </div>
                   )}
 
-                  <textarea
-                    id={`goal-textarea-${slot.type}`}
-                    value={g.goal_text || ''}
-                    onChange={e => setGoalText(slot.type, e.target.value)}
-                    placeholder={`Write your ${slot.label.toLowerCase()}...`}
-                    disabled={isApproved && !isSupervisorOrAdmin}
-                    style={{ width: '100%', minHeight: 80, padding: 12, border: '1.5px solid #e5e7eb', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', color: '#111827', resize: 'vertical', lineHeight: 1.5, background: (isApproved && !isSupervisorOrAdmin) ? '#f9fafb' : '#fff', boxSizing: 'border-box' }}
-                  />
+                  {isApproved && !editingTypes.has(slot.type) ? (
+                    /* Read mode for approved goals — clean paragraph, no textarea */
+                    <div style={{ padding: '10px 12px', background: '#f9fafb', borderRadius: 10, border: '1px solid #e5e7eb' }}>
+                      <div style={{ fontSize: 13, color: '#111827', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+                        {g.goal_text || <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>(no text)</span>}
+                      </div>
+                      {(isSupervisorOrAdmin || isSelf) && (
+                        <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px dashed #e5e7eb', textAlign: 'right' }}>
+                          <button
+                            onClick={() => { setEditingTypes(prev => new Set([...prev, slot.type])); setTimeout(() => document.getElementById(`goal-textarea-${slot.type}`)?.focus(), 50) }}
+                            style={{ background: 'transparent', color: '#e47727', border: 'none', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline', padding: 0 }}
+                          >Edit</button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <textarea
+                      id={`goal-textarea-${slot.type}`}
+                      value={g.goal_text || ''}
+                      onChange={e => setGoalText(slot.type, e.target.value)}
+                      placeholder={`Write your ${slot.label.toLowerCase()}...`}
+                      disabled={isApproved && !isSupervisorOrAdmin}
+                      style={{ width: '100%', minHeight: 80, padding: 12, border: '1.5px solid #e5e7eb', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', color: '#111827', resize: 'vertical', lineHeight: 1.5, background: (isApproved && !isSupervisorOrAdmin) ? '#f9fafb' : '#fff', boxSizing: 'border-box' }}
+                    />
+                  )}
 
                   {status === 'submitted' && isSupervisorOrAdmin && g.id && (
                     <button onClick={() => approveGoal(g.id)}
@@ -266,16 +321,30 @@ export default function Goals() {
         )}
       </div>
 
-      {teacher && (
+      {teacher && !(allApproved && editingTypes.size === 0) && (
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#fff', borderTop: '1px solid #e5e7eb', padding: '10px 14px', paddingBottom: 'max(14px, env(safe-area-inset-bottom))', zIndex: 50 }}>
           <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', gap: 6 }}>
-            <button onClick={() => save('draft')} disabled={saving || !teacher}
-              style={{ flex: 1, padding: '13px 8px', border: 'none', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', background: '#f3f4f6', color: '#4b5563', opacity: (saving || !teacher) ? 0.5 : 1 }}
-            >Save draft</button>
-            <button onClick={() => save('submitted')} disabled={!canSubmit || saving}
-              title={!canSubmit ? 'Fill in all 4 goals before submitting' : 'Submit for supervisor approval'}
-              style={{ flex: 1.4, padding: '13px 8px', border: 'none', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', background: '#002f60', color: '#fff', opacity: (!canSubmit || saving) ? 0.5 : 1 }}
-            >{saving ? 'Saving…' : 'Submit for Approval'}</button>
+            {editingTypes.size > 0 ? (
+              <>
+                <button onClick={() => setEditingTypes(new Set())} disabled={saving}
+                  style={{ flex: 1, padding: '13px 8px', border: 'none', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', background: '#f3f4f6', color: '#4b5563', opacity: saving ? 0.5 : 1 }}
+                >Cancel</button>
+                <button onClick={() => save('submitted')} disabled={saving}
+                  title="Submit edited goal(s) for supervisor re-approval"
+                  style={{ flex: 1.6, padding: '13px 8px', border: 'none', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', background: '#002f60', color: '#fff', opacity: saving ? 0.5 : 1 }}
+                >{saving ? 'Saving…' : 'Submit edit for re-approval'}</button>
+              </>
+            ) : (
+              <>
+                <button onClick={() => save('draft')} disabled={saving || !teacher}
+                  style={{ flex: 1, padding: '13px 8px', border: 'none', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', background: '#f3f4f6', color: '#4b5563', opacity: (saving || !teacher) ? 0.5 : 1 }}
+                >Save draft</button>
+                <button onClick={() => save('submitted')} disabled={!canSubmit || saving}
+                  title={!canSubmit ? 'Fill in all 4 goals before submitting' : 'Submit for supervisor approval'}
+                  style={{ flex: 1.4, padding: '13px 8px', border: 'none', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', background: '#002f60', color: '#fff', opacity: (!canSubmit || saving) ? 0.5 : 1 }}
+                >{saving ? 'Saving…' : 'Submit for Approval'}</button>
+              </>
+            )}
           </div>
         </div>
       )}

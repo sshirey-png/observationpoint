@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import SubjectBlock from '../components/SubjectBlock'
 import FormShell from '../components/FormShell'
+import FileDrop from '../components/FileDrop'
 import { api } from '../lib/api'
 
 /**
@@ -346,6 +347,18 @@ export default function PIP() {
           </div>
           <div style={cardLabel}>Consequences if Not Corrected <span style={{ color: '#dc2626' }}>*</span></div>
           <textarea value={consequences} onChange={e => setConsequences(e.target.value)} placeholder="What will happen if the employee does not meet the indicators of success within the timeline?" style={{ ...textarea, minHeight: 60 }} />
+        </div>
+
+        <div style={sectionTitle}>Supporting Documents <span style={{ color: '#9ca3af', fontWeight: 500, fontSize: 11, textTransform: 'none', letterSpacing: 0 }}>· optional · 🔒 HR-locked, 7-year retention</span></div>
+        <div style={sectionSub}>Attach evidence, prior write-ups, witness statements, or other supporting files. Files are stored in HR-locked storage.</div>
+        <div style={{ background: '#fff', borderRadius: 14, padding: 14, marginBottom: 12 }}>
+          {draftId ? (
+            <FileDrop parentType="touchpoint" parentId={draftId} formType="performance_improvement_plan" />
+          ) : (
+            <div style={{ fontSize: 12, color: '#9ca3af', textAlign: 'center', padding: '14px 8px' }}>
+              Pick a subject and start typing — auto-save will create a draft you can attach files to.
+            </div>
+          )}
         </div>
 
         <div style={sectionTitle}>Employee Acknowledgment</div>

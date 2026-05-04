@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import BottomNav from '../components/BottomNav'
-import AIPanel from '../components/AIPanel'
 import ImpersonationBanner from '../components/ImpersonationBanner'
 import GlobalSearch from '../components/GlobalSearch'
 import { api } from '../lib/api'
@@ -766,7 +765,7 @@ function V3DimBar({ name, avg }) {
   )
 }
 
-function V3FundamentalsHero({ data, onSchool, useMock }) {
+function V3FundamentalsHero({ data, onSchool, useMock, cycle = 1 }) {
   const fm = data?.fundamentals_mastery || {}
   // For 2025-26 view, fall back to realistic mock numbers so testers can envision
   const mastered = useMock ? Math.round((fm.total_teachers || 187) * 0.72) : (fm.mastered ?? 0)
@@ -789,7 +788,7 @@ function V3FundamentalsHero({ data, onSchool, useMock }) {
   ]
   return (
     <div style={V3_HERO_BG}>
-      <div style={V3_HERO_LABEL}>% Mastering Fundamentals · Cycle 1</div>
+      <div style={V3_HERO_LABEL}>% Mastering Fundamentals · Cycle {cycle}</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginTop: 6 }}>
         <V3Donut pct={pct} label={`${pct}%`} />
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -867,7 +866,9 @@ export default function Network() {
     async function go() {
       setLoading(true)
       try {
-        const d = await api.get(`/api/network?school_year=${encodeURIComponent(schoolYear)}`)
+        // Cycle filter only applies to 2026-27 (OP era); Grow data has no cycle
+        const cycleParam = schoolYear === '2026-2027' ? `&cycle=${cycle}` : ''
+        const d = await api.get(`/api/network?school_year=${encodeURIComponent(schoolYear)}${cycleParam}`)
         if (!cancelled) setData(d)
       } catch (e) {
         if (!cancelled) setData(null)
@@ -876,7 +877,7 @@ export default function Network() {
     }
     go()
     return () => { cancelled = true }
-  }, [schoolYear])
+  }, [schoolYear, cycle])
 
   function goToSchool(name) {
     navigate(`/app/network/school/${encodeURIComponent(name)}`)
@@ -967,7 +968,7 @@ export default function Network() {
           <>
             {/* Hero — Fundamentals C1, Obs Score C2/C3 */}
             {showFundamentals
-              ? <V3FundamentalsHero data={data} onSchool={goToSchool} useMock={schoolYear === '2025-2026'} />
+              ? <V3FundamentalsHero data={data} onSchool={goToSchool} useMock={schoolYear === '2025-2026'} cycle={cycle} />
               : <V3ObsScoreHero data={data} onSchool={goToSchool} />}
 
             {/* Stat strip */}
@@ -1008,6 +1009,35 @@ export default function Network() {
                 </div>
               </div>
             </div>
+
+            {/* Action Steps — total + state breakdown. Position above Celebration per the May 2 mock spec.
+                Follow-through % deliberately omitted: today's data only sees "new step created within 48h",
+                not the full picture (continuation/mastery without new step also count). Real follow-through
+                metric returns once OP captures the explicit link between observation → step → next step. */}
+            {(data.kpis?.action_steps_total || 0) > 0 && (
+              <div style={{ background: '#fff', borderRadius: 14, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,.05)', marginBottom: 14 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#111827', textTransform: 'uppercase', letterSpacing: '.05em' }}>Action Steps</div>
+                  <div style={{ fontSize: 11, color: '#6b7280' }}>
+                    <b style={{ color: '#e47727', fontWeight: 800, fontSize: 14 }}>{(data.kpis.action_steps_total || 0).toLocaleString()}</b> total · {data.kpis.action_steps_teachers || 0} teachers
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, paddingTop: 12, borderTop: '1px solid #f3f4f6' }}>
+                  <div style={{ padding: '10px 6px', background: '#ecfdf5', borderRadius: 8, textAlign: 'center' }}>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: '#15803d', lineHeight: 1 }}>{(data.kpis.action_steps_mastered || 0).toLocaleString()}</div>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 5 }}>Mastered</div>
+                  </div>
+                  <div style={{ padding: '10px 6px', background: '#fff7ed', borderRadius: 8, textAlign: 'center' }}>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: '#c2410c', lineHeight: 1 }}>{(data.kpis.action_steps_in_progress || 0).toLocaleString()}</div>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 5 }}>In Progress</div>
+                  </div>
+                  <div style={{ padding: '10px 6px', background: '#f3f4f6', borderRadius: 8, textAlign: 'center' }}>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: '#6b7280', lineHeight: 1 }}>{(data.kpis.action_steps_not_mastered || 0).toLocaleString()}</div>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 5 }}>Not Mastered</div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Celebration Coverage — click to drill down */}
             <div
@@ -1083,8 +1113,7 @@ export default function Network() {
         )}
       </div>
 
-      <BottomNav active="network" onAskClick={() => setAiOpen(true)} aiOpen={aiOpen} />
-      <AIPanel open={aiOpen} onClose={() => setAiOpen(false)} context="network" />
+      <BottomNav active="network" />
     </div>
   )
 }

@@ -93,6 +93,7 @@ def get_my_team(accessible_emails, school_year=None, direct_only_email=None):
                 COUNT(CASE WHEN t.form_type LIKE 'meeting_%%' THEN 1 END) as meeting_count
             FROM staff s
             LEFT JOIN touchpoints t ON t.teacher_email = s.email AND t.school_year = %s
+                                    AND NOT t.is_test AND t.status != 'draft'
             {where}
             GROUP BY s.email, s.first_name, s.last_name, s.job_title, s.school,
                      s.job_function, s.hire_date, s.supervisor_email
@@ -134,16 +135,28 @@ def get_staff_profile(email):
             'is_active': staff_row['is_active'],
         }
 
-        # All touchpoints with optional scores (LEFT JOIN) + observer name lookup
+        # All touchpoints with optional scores (LEFT JOIN) + observer name lookup.
+        # PreK PMAPs (dim_code LIKE 'PK%') use 3 CLASS cycles per dimension — those
+        # rows ARE averaged. Teacher/Leader/etc. PMAPs are NOT averaged: 24-25
+        # records have separate 5pt rubric + 4pt Compass rows that collided on
+        # the same dim code at import; averaging across scales is meaningless.
+        # Until we can re-pull from API to recover section labels, leave non-PreK
+        # multi-row dims as-is (whichever row is iterated last wins below).
         cur.execute("""
             SELECT t.id, t.form_type, t.school, t.school_year, t.observed_at,
-                   t.observer_email, t.status, t.notes, t.feedback,
+                   t.observer_email, t.status, t.is_test, t.notes, t.feedback,
                    t.feedback_json, t.meeting_json, t.scores_json,
                    TRIM(CONCAT(obs.first_name, ' ', obs.last_name)) AS observer_name,
                    sc.dimension_code, sc.score
             FROM touchpoints t
             LEFT JOIN staff obs ON LOWER(obs.email) = LOWER(t.observer_email)
-            LEFT JOIN scores sc ON sc.touchpoint_id = t.id
+            LEFT JOIN (
+                SELECT touchpoint_id, dimension_code,
+                       CASE WHEN dimension_code LIKE 'PK%%' THEN AVG(score)
+                            ELSE MIN(score) END AS score
+                FROM scores
+                GROUP BY touchpoint_id, dimension_code
+            ) sc ON sc.touchpoint_id = t.id
             WHERE t.teacher_email = %s
             ORDER BY t.observed_at DESC, t.id
         """, (email.lower(),))
@@ -160,6 +173,8 @@ def get_staff_profile(email):
                     'date': obs_at.strftime('%Y-%m-%d') if obs_at else None,
                     'observer_email': r['observer_email'] or '',
                     'observer_name': r['observer_name'] or '',
+                    'status': r['status'] or '',
+                    'is_test': bool(r['is_test']),
                     'notes': r['notes'] or '',
                     'feedback_json': r['feedback_json'],
                     'meeting_json': r['meeting_json'],
@@ -170,10 +185,12 @@ def get_staff_profile(email):
 
         touchpoints = sorted(tp_map.values(), key=lambda x: (x.get('date') or '', x['id']), reverse=True)
 
-        # Build pmap_by_year for year-over-year grid
+        # Build pmap_by_year for year-over-year grid (exclude tests + drafts)
         pmap_by_year = defaultdict(lambda: defaultdict(list))
         years_set = set()
         for tp in touchpoints:
+            if tp.get('is_test') or tp.get('status') == 'draft':
+                continue
             years_set.add(tp['school_year'])
             if tp['form_type'].startswith('pmap_') and tp['scores']:
                 for code, s in tp['scores'].items():
@@ -196,13 +213,16 @@ def get_staff_profile(email):
 
 # --- Network Dashboard ---
 
-def get_network_dashboard(school_year=None):
-    """School-level aggregates. No individual teacher data."""
+def get_network_dashboard(school_year=None, cycle=None):
+    """School-level aggregates. No individual teacher data.
+    cycle: optional 1-4 to filter Fundamentals scores by cycle."""
     sy = school_year or CURRENT_SCHOOL_YEAR
     conn = get_conn()
     try:
         cur = conn.cursor()
-        out = {'school_year': sy}
+        out = {'school_year': sy, 'cycle': cycle}
+        cycle_clause = " AND sc.cycle = %s" if cycle else ""
+        cycle_param = (cycle,) if cycle else ()
 
         # KPIs — counts only
         cur.execute("""
@@ -257,6 +277,23 @@ def get_network_dashboard(school_year=None):
             row = cur.fetchone()
             if row: prior_counts = row
 
+        # Action step aggregate counts — total + by-state for the year.
+        # progress_pct = 100 → Mastered; >0 and <100 → In Progress; null/0 → Not Mastered.
+        # Only OP-era records have meaningful state; pre-OP imports show as Not Mastered.
+        cur.execute("""
+            SELECT
+              COUNT(*) AS total,
+              COUNT(DISTINCT teacher_email) AS teachers,
+              SUM(CASE WHEN progress_pct = 100 THEN 1 ELSE 0 END) AS mastered,
+              SUM(CASE WHEN progress_pct > 0 AND progress_pct < 100 THEN 1 ELSE 0 END) AS in_progress,
+              SUM(CASE WHEN progress_pct IS NULL OR progress_pct = 0 THEN 1 ELSE 0 END) AS not_mastered
+            FROM action_steps
+            WHERE school_year = %s
+              AND COALESCE(is_test, false) = false
+              AND type = 'actionStep'
+        """, (sy,))
+        as_row = cur.fetchone() or (0, 0, 0, 0, 0)
+
         out['kpis'] = {
             'observations': obs, 'observations_teachers': obs_t,
             'fundamentals': fund, 'fundamentals_teachers': fund_t,
@@ -267,6 +304,12 @@ def get_network_dashboard(school_year=None):
             'pmap_total': cur_counts[2] or 0,
             'celebrate_total': cur_counts[3] or 0,
             'meeting_total': cur_counts[4] or 0,
+            # Action step counts (total + by-state)
+            'action_steps_total': as_row[0] or 0,
+            'action_steps_teachers': as_row[1] or 0,
+            'action_steps_mastered': as_row[2] or 0,
+            'action_steps_in_progress': as_row[3] or 0,
+            'action_steps_not_mastered': as_row[4] or 0,
             # Prior year for YoY delta
             'prior_year': prior_sy,
             'prior_observations_total': prior_counts[0] or 0,
@@ -278,19 +321,19 @@ def get_network_dashboard(school_year=None):
 
         # Fundamentals — per-school RB pass rate this year + visits + teachers visited.
         # Imported records have only RB scores (0/100). Avg = pass rate.
-        cur.execute("""
+        cur.execute(f"""
             SELECT t.school,
                    COUNT(DISTINCT t.id) AS visits,
                    COUNT(DISTINCT t.teacher_email) AS teachers_visited,
                    ROUND(AVG(sc.score)::numeric, 1)::float AS rb_pct
             FROM touchpoints t
-            LEFT JOIN scores sc ON sc.touchpoint_id = t.id AND sc.dimension_code = 'RB'
+            LEFT JOIN scores sc ON sc.touchpoint_id = t.id AND sc.dimension_code = 'RB'{cycle_clause}
             WHERE t.school_year = %s AND t.form_type = 'observation_fundamentals'
               AND t.school != '' AND t.school IS NOT NULL AND t.school != 'FirstLine Network'
               AND t.status = 'published'
             GROUP BY t.school
             ORDER BY visits DESC
-        """, (sy,))
+        """, cycle_param + (sy,))
         fund_by_school = {}
         for r in cur.fetchall():
             fund_by_school[r[0]] = {'visits': r[1], 'teachers_visited': r[2], 'rb_pct': r[3]}
@@ -359,14 +402,14 @@ def get_network_dashboard(school_year=None):
                  CASE WHEN COUNT(*) > 0
                    THEN ROUND(100.0 * COUNT(*) FILTER (WHERE progress_pct = 100) / COUNT(*))::int
                    ELSE NULL END
-                 FROM assignments a
+                 FROM action_steps a
                  JOIN staff ss ON LOWER(ss.email) = LOWER(a.teacher_email)
                  WHERE ss.school = s.school AND a.school_year = %s AND a.type = 'goal') AS goals_pct,
               (SELECT
                  CASE WHEN COUNT(*) > 0
                    THEN ROUND(100.0 * COUNT(*) FILTER (WHERE progress_pct = 100) / COUNT(*))::int
                    ELSE NULL END
-                 FROM assignments a
+                 FROM action_steps a
                  JOIN staff ss ON LOWER(ss.email) = LOWER(a.teacher_email)
                  WHERE ss.school = s.school AND a.school_year = %s AND a.type = 'actionStep') AS steps_pct
             FROM staff s
@@ -763,8 +806,8 @@ def save_touchpoint(data):
         cur.execute("""
             INSERT INTO touchpoints (id, form_type, teacher_email, observer_email, school,
                 school_year, observed_at, status, is_published, notes, feedback,
-                is_test, locked_in)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                is_test, locked_in, is_peer_recognition)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id
         """, (tp_id, data['form_type'], data['teacher_email'], data['observer_email'],
               data.get('school', ''), data['school_year'],
@@ -772,7 +815,8 @@ def save_touchpoint(data):
               data.get('status', 'published'), data.get('is_published', True),
               data.get('notes', ''), feedback_val,
               bool(data.get('is_test', False)),
-              data.get('locked_in') if data.get('locked_in') is not None else None))
+              data.get('locked_in') if data.get('locked_in') is not None else None,
+              bool(data.get('is_peer_recognition', False))))
         tp_id = cur.fetchone()[0]
         if data.get('scores'):
             for code, score in data['scores'].items():

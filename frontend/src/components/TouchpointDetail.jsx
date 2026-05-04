@@ -1,3 +1,5 @@
+import { useEffect, useState, useRef } from 'react'
+import { api } from '../lib/api'
 import { dimName } from '../lib/dimensions'
 
 /**
@@ -373,10 +375,546 @@ function Section({ label, children }) {
   )
 }
 
+// ---------------------------------------------------------------
+// Archive PMAP view — renders the full 24-25 [ARCHIVE] PMAP form:
+//   1. Teacher Performance Review (7 narrative Qs)
+//   2. Leader's Rubric Scores For Teacher (5pt: T1-T5 score + narrative)
+//   3. Compass Scores For Teacher (4pt: C1-C5 score-only, for state reporting)
+//   4. Professionalism (P.1-P.7 scored 1-3)
+//   5. Values (LV.1 Values 1-6 scored 1-3)
+//   6. Goals (WIG + AG1-3 from goals table for school_year)
+// Print stylesheet flips this to a paper-friendly layout when the user
+// hits Download → Save as PDF in the browser.
+// ---------------------------------------------------------------
+const PMAP_PRINT_CSS = `
+  @media print {
+    /* Page setup */
+    html, body { background: #fff !important; height: auto !important; overflow: visible !important; }
+    @page { size: letter; margin: 0.55in; }
+
+    /* Use display:none on everything that does NOT contain the print root,
+       so non-modal content doesn't reserve vertical space (which was pushing
+       the modal header to the bottom of page 1). :has() lets us target
+       siblings/cousins precisely while keeping the print root's ancestor
+       chain visible. */
+    body :not(:has(.pmap-print-root)):not(.pmap-print-root):not(.pmap-print-root *) {
+      display: none !important;
+    }
+    .pmap-no-print { display: none !important; }
+
+    /* Reset positioning + scrolling on the print root + every ancestor so
+       content flows from the top of page 1 and paginates naturally */
+    html, body, body *:has(.pmap-print-root), .pmap-print-root {
+      position: static !important;
+      max-height: none !important;
+      height: auto !important;
+      overflow: visible !important;
+      transform: none !important;
+    }
+    .pmap-print-root {
+      width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      animation: none !important;
+      inset: auto !important;
+    }
+    .pmap-print-root * { overflow: visible !important; max-height: none !important; }
+
+    /* Allow sections to break across pages (they're often taller than a page);
+       only protect smaller cohesive blocks like the per-dim rubric cards. */
+    .pmap-dim-card { page-break-inside: avoid; break-inside: avoid; }
+    .pmap-narr-block { page-break-inside: avoid; break-inside: avoid; }
+  }
+`
+
+function PMAPScoreChip({ score, scale }) {
+  if (score == null) return <span className="text-gray-400 text-xs italic">No score</span>
+  const max = scale === 4 ? 4 : (scale === 3 ? 3 : 5)
+  const colors5 = { 1: '#ef4444', 2: '#f97316', 3: '#eab308', 4: '#22c55e', 5: '#0ea5e9' }
+  const colors3 = { 1: '#ef4444', 2: '#22c55e', 3: '#0ea5e9' }
+  const idx = Math.max(1, Math.min(max, Math.round(score)))
+  const palette = scale === 3 ? colors3 : colors5
+  const c = palette[idx] || '#6b7280'
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-bold whitespace-nowrap"
+          style={{ background: c + '1f', color: c }}>
+      {score}<span className="opacity-50 font-normal">/{max}</span>
+    </span>
+  )
+}
+
+function ArchivePMAPView({ touchpoint, onClose }) {
+  const tp = touchpoint
+  const [data, setData] = useState(null)
+  const [err, setErr] = useState(null)
+
+  useEffect(() => {
+    let alive = true
+    api.get(`/api/touchpoint/${encodeURIComponent(tp.id)}/full-detail`)
+       .then(d => { if (alive) setData(d) })
+       .catch(e => { if (alive) setErr(String(e)) })
+    return () => { alive = false }
+  }, [tp.id])
+
+  const triggerPrint = () => window.print()
+  const formLabel = FORM_LABELS[tp.form_type] || tp.form_type
+  const dateStr = prettyDate(tp.date)
+
+  // 25-26 archive form: backend returns a `pmap_2526` block when the record
+  // has 25-26 form measurement_ids. Use that if present.
+  const useNative = !!data?.pmap_2526
+
+  return (
+    <>
+      <style>{PMAP_PRINT_CSS}</style>
+      <div className="fixed inset-0 bg-black/45 z-[900] pmap-no-print" onClick={onClose} />
+      <div className="pmap-print-root fixed bottom-0 left-0 right-0 z-[901] bg-white rounded-t-[22px] shadow-[0_-10px_32px_rgba(0,0,0,.22)] max-h-[88dvh] overflow-y-auto">
+        <div className="w-11 h-1 bg-gray-200 rounded-md mx-auto mt-2.5 pmap-no-print" />
+        <div className="px-4 pt-3 pb-8">
+          {/* Header */}
+          <div className="flex items-start justify-between mb-4 pb-3 border-b border-gray-200">
+            <div className="min-w-0">
+              <div className="text-lg font-extrabold text-fls-navy">{formLabel}</div>
+              <div className="text-xs text-gray-600 mt-0.5">
+                {data?.teacher_name || tp.teacher_name || ''} · {dateStr}
+                {tp.school_year ? <> · {tp.school_year}</> : null}
+              </div>
+              <div className="text-xs text-gray-500">
+                Observed by {data?.observer_name || tp.observer_name || tp.observer_email || ''}
+                {tp.school || data?.school ? <> · {tp.school || data.school}</> : null}
+              </div>
+            </div>
+            <div className="flex items-center gap-2 pmap-no-print">
+              <button
+                onClick={triggerPrint}
+                className="px-3 py-1.5 rounded-lg bg-fls-navy text-white text-xs font-bold border-0 cursor-pointer"
+                title="Open browser print → Save as PDF"
+              >↓ Download</button>
+              <button
+                onClick={onClose}
+                aria-label="Close"
+                className="w-9 h-9 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center text-xl border-0 cursor-pointer"
+              >×</button>
+            </div>
+          </div>
+
+          {err && <div className="text-sm text-red-600 mb-3">Could not load full detail: {err}</div>}
+          {!data && !err && <div className="text-sm text-gray-500 italic">Loading…</div>}
+
+          {data && useNative && <NativePMAPSections data={data} tp={tp} />}
+
+          {data && !useNative && (
+            <>
+              {/* 1. Teacher Performance Review */}
+              {(data.sections?.performance_review?.entries?.length || 0) > 0 && (
+                <SectionGroup title={data.sections.performance_review.label}>
+                  {data.sections.performance_review.entries.map((e, i) => (
+                    <div key={i} className="mb-3">
+                      <div className="text-[11px] font-bold uppercase tracking-wide text-fls-navy mb-1">{e.label}</div>
+                      <div className="bg-gray-50 border-l-[3px] border-fls-navy pl-3 pr-3 py-2 rounded text-sm text-gray-800 leading-relaxed"
+                           dangerouslySetInnerHTML={{ __html: e.html }} />
+                    </div>
+                  ))}
+                </SectionGroup>
+              )}
+
+              {/* 2. 5pt FLS Rubric */}
+              {(data.sections?.rubric_5pt?.dims?.length || 0) > 0 && (
+                <SectionGroup title={data.sections.rubric_5pt.label}>
+                  {data.sections.rubric_5pt.dims.map(d => (
+                    <div key={d.dim} className="border border-gray-200 rounded-lg p-3 mb-2 pmap-dim-card">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="font-bold text-sm">{d.dim} · {dimName(d.dim)}</div>
+                        <PMAPScoreChip score={d.score} scale={5} />
+                      </div>
+                      {d.narrative_html ? (
+                        <div className="text-sm text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: d.narrative_html }} />
+                      ) : (
+                        <div className="text-xs text-gray-400 italic">No narrative recorded for this dimension.</div>
+                      )}
+                    </div>
+                  ))}
+                </SectionGroup>
+              )}
+
+              {/* 3. 4pt Compass — score-only, for state reporting */}
+              {(data.sections?.compass_4pt?.dims?.length || 0) > 0 && (
+                <SectionGroup title={data.sections.compass_4pt.label}>
+                  <div className="grid grid-cols-1 gap-1.5">
+                    {data.sections.compass_4pt.dims.map(d => (
+                      <div key={d.dim} className="flex items-center justify-between border border-gray-200 rounded-md px-3 py-2">
+                        <div className="text-sm">{d.label || d.dim}</div>
+                        <PMAPScoreChip score={d.score} scale={4} />
+                      </div>
+                    ))}
+                  </div>
+                </SectionGroup>
+              )}
+
+              {/* 4. Professionalism */}
+              {(data.sections?.professionalism?.entries?.length || 0) > 0 && (
+                <SectionGroup title={data.sections.professionalism.label}>
+                  <div className="text-[11px] text-gray-500 mb-2">1=Below · 2=Meets · 3=Exceeds Expectations</div>
+                  <div className="grid grid-cols-1 gap-1.5">
+                    {data.sections.professionalism.entries.map((e, i) => (
+                      <div key={i} className="flex items-start justify-between gap-3 border border-gray-200 rounded-md px-3 py-2">
+                        <div className="text-sm leading-snug flex-1">{e.label}</div>
+                        <PMAPScoreChip score={e.score} scale={3} />
+                      </div>
+                    ))}
+                  </div>
+                </SectionGroup>
+              )}
+
+              {/* 5. Values */}
+              {(data.sections?.values?.entries?.length || 0) > 0 && (
+                <SectionGroup title={data.sections.values.label}>
+                  <div className="text-[11px] text-gray-500 mb-2">1=Below · 2=Meets · 3=Exceeds Expectations</div>
+                  <div className="grid grid-cols-1 gap-1.5">
+                    {data.sections.values.entries.map((e, i) => (
+                      <div key={i} className="flex items-center justify-between border border-gray-200 rounded-md px-3 py-2">
+                        <div className="text-sm">{e.label}</div>
+                        <PMAPScoreChip score={e.score} scale={3} />
+                      </div>
+                    ))}
+                  </div>
+                </SectionGroup>
+              )}
+
+              {/* 6. Goals */}
+              {(data.goals?.length || 0) > 0 && (
+                <SectionGroup title={`Goals · ${tp.school_year || ''}`}>
+                  {data.goals.map(g => {
+                    const isWig = g.goal_type === 'WIG'
+                    const accent = isWig ? '#e47727' : '#002f60'
+                    return (
+                      <div key={g.id} className="border-l-[3px] pl-3 pr-3 py-2 mb-2 rounded bg-gray-50"
+                           style={{ borderColor: accent }}>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded text-white"
+                                style={{ background: accent }}>{g.goal_type}</span>
+                          {g.status ? (
+                            <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-gray-200 text-gray-700">{g.status}</span>
+                          ) : null}
+                        </div>
+                        <div className="text-sm text-gray-800 leading-snug">{g.goal_text}</div>
+                      </div>
+                    )
+                  })}
+                </SectionGroup>
+              )}
+
+              {/* Unmapped — only show if we have leftover scores; helps Scott see
+                  what sections still need a label mapping. */}
+              {(data.sections?.unmapped?.entries?.length || 0) > 0 && (
+                <SectionGroup title={data.sections.unmapped.label}>
+                  <div className="text-[11px] text-gray-500 mb-2">Score rows not yet mapped to a known section.</div>
+                  {data.sections.unmapped.entries.map((e, i) => (
+                    <div key={i} className="flex items-center justify-between border border-gray-200 rounded-md px-3 py-1.5 mb-1 text-xs text-gray-600">
+                      <div>mid={String(e.mid).slice(0,12)}… · group={String(e.measurement_group || '').slice(0,8)}…</div>
+                      <div className="font-bold">{e.score}</div>
+                    </div>
+                  ))}
+                </SectionGroup>
+              )}
+
+              {/* Provenance footer */}
+              <div className="text-[11px] text-gray-400 mt-4 pt-3 border-t border-gray-100">
+                Touchpoint ID: {data.id}<br />
+                {data.grow_id ? <>Grow ID: {data.grow_id}<br /></> : null}
+                Source: <span className="font-semibold">scores_v2</span> + Grow narrative cache
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </>
+  )
+}
+
+function SectionGroup({ title, children }) {
+  return (
+    <div className="mt-4 pmap-section">
+      <div className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">{title}</div>
+      {children}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------
+// 25-26 archive PMAP layout — mirrors `PMAP Teacher.pdf` form structure:
+//   1. Meeting Checklist
+//   2. WIG + Annual Goals Review (text + per-goal track + Progress Toward Goal)
+//   3. Whirlwind Work Review
+//   4. FLS Teacher Rubric (T1-T5 + Additional Comments + TR Strength/Growth)
+//   5. Commitments (CS Strength + CGA Growth)
+//   6. Professional Development (Career Goals + Licenses)
+//   7. Area(s) of Concern
+// Goals embedded inside Section 2; Action Steps NOT embedded (per Scott's spec).
+// Driven by `data.pmap_2526.fields` assembled server-side.
+// ---------------------------------------------------------------
+function NativePMAPSections({ data, tp }) {
+  const p = data.pmap_2526 || {}
+  const F = p.fields || {}
+  const goals = p.goals || []
+  const dims5 = p.rubric_5pt_dims || []
+
+  // Form-type variants (all share the 25-26 form shell, with differences):
+  //   Teacher (pmap_teacher / self_reflection_teacher):   T1-T5 rubric · TR Strength/Growth · Licenses
+  //   Leader (pmap_leader / self_reflection_leader):       L1-L5 rubric · PLS/PLGA Personal Leadership · NO Licenses
+  //   Network (pmap_network / self_reflection_network):    NO rubric · PLS/PLGA Personal Leadership · NO Licenses
+  //   Support (pmap_support / self_reflection_support):    NO rubric · NO Personal Leadership · NO Licenses (simplest)
+  // SR variants of all four: drop Area of Concern + add Self Reflection: Additional Comments at bottom.
+  const isLeaderForm = tp.form_type === 'pmap_leader' || tp.form_type === 'self_reflection_leader'
+  const isNetworkForm = tp.form_type === 'pmap_network' || tp.form_type === 'self_reflection_network'
+  const isSupportForm = tp.form_type === 'pmap_support' || tp.form_type === 'self_reflection_support'
+  const isPreKForm = tp.form_type === 'pmap_prek' || tp.form_type === 'self_reflection_prek'
+  const isSR = tp.form_type && tp.form_type.startsWith('self_reflection_')
+  const hasPersonalLeadership = isLeaderForm || isNetworkForm  // Support + PreK have none
+  const hasFiveDimRubric = !isNetworkForm && !isSupportForm && !isPreKForm  // PreK uses 7pt CLASS instead
+  const hasPreKCycles = isPreKForm  // 3 CLASS observation cycles
+  const hasRubric = hasFiveDimRubric || hasPreKCycles
+  const hasLicenses = !isLeaderForm && !isNetworkForm && !isSupportForm  // Teacher + PreK + SR variants
+  // Aliases for backward compat with existing callsites
+  const isLeader = isLeaderForm
+  const isNetwork = isNetworkForm
+
+  // Compute section numbers dynamically since variants skip different sections
+  let _n = 4
+  let rubricNum = null
+  let cycleNums = null
+  let prekRubricNum = null
+  if (hasPreKCycles) {
+    cycleNums = [_n++, _n++, _n++]  // Cycle 1, 2, 3 each get their own section
+    prekRubricNum = _n++  // FLS PreK Class Rubric Review (PKS/PKGA)
+  } else if (hasFiveDimRubric) {
+    rubricNum = _n++
+  }
+  const personalLeadershipNum = hasPersonalLeadership ? _n++ : null
+  const commitmentsNum = _n++
+  const proDevNum = _n++
+  const finalNum = _n++  // Concern (PMAP) or Additional Comments (SR)
+
+  const NarrField = ({ k, fallbackEmpty = false, emptyAs = null }) => {
+    const f = F[k]; if (!f) return null
+    const html = f.html || ''
+    const showEmptyAs = !html && emptyAs
+    return (
+      <div className="mb-3 pmap-narr-block">
+        <div className="text-[12px] font-bold text-gray-800 mb-1">{f.label}</div>
+        {f.placeholder && !showEmptyAs && <div className="text-[11px] text-gray-400 italic mb-1">{f.placeholder}</div>}
+        {html ? (
+          <div className="bg-gray-50 border-l-[3px] border-fls-navy pl-3 pr-3 py-2 rounded text-sm text-gray-800 leading-relaxed"
+               dangerouslySetInnerHTML={{ __html: html }} />
+        ) : showEmptyAs ? (
+          <div className="bg-gray-50 border-l-[3px] border-fls-navy pl-3 pr-3 py-2 rounded text-sm text-gray-800">{emptyAs}</div>
+        ) : fallbackEmpty ? (
+          <div className="bg-gray-50 border-l-[3px] border-gray-200 pl-3 pr-3 py-2 rounded text-xs text-gray-400 italic">Empty for this PMAP</div>
+        ) : null}
+      </div>
+    )
+  }
+
+  const TrackChip = ({ score }) => {
+    if (score == null) return <span className="text-xs text-gray-400 italic">No Score</span>
+    const isOn = score >= 2
+    const c = isOn ? '#15803d' : '#b91c1c'
+    const bg = isOn ? '#22c55e1f' : '#ef44441f'
+    return (
+      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold whitespace-nowrap"
+            style={{ background: bg, color: c }}>
+        {isOn ? '2 — On Track' : '1 — Off Track'}
+      </span>
+    )
+  }
+
+  const RubricChip = ({ score }) => {
+    if (score == null) return <span className="text-xs text-gray-400 italic">No Score</span>
+    const palette = { 1: '#ef4444', 2: '#f97316', 3: '#eab308', 4: '#22c55e', 5: '#0ea5e9' }
+    const labels = { 1: 'Needs Improvement', 2: 'Emerging', 3: 'Developing', 4: 'Proficient', 5: 'Exemplary' }
+    const s = Math.round(score); const c = palette[s] || '#6b7280'
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-bold whitespace-nowrap"
+            style={{ background: c + '1f', color: c }}>
+        {score}<span className="opacity-50 font-medium">/5 · {labels[s] || ''}</span>
+      </span>
+    )
+  }
+
+  // 1-7 CLASS rubric chip (PreK only). Low=1-2, Mid=3-5, High=6-7.
+  const ClassChip = ({ score }) => {
+    if (score == null) return <span className="text-xs text-gray-400 italic">No Score</span>
+    const palette = { 1:'#ef4444', 2:'#f97316', 3:'#eab308', 4:'#84cc16', 5:'#22c55e', 6:'#0ea5e9', 7:'#3b82f6' }
+    const labels = { 1:'Low', 2:'Low', 3:'Mid-Low', 4:'Mid', 5:'Mid', 6:'Mid-High', 7:'High' }
+    const s = Math.round(score); const c = palette[s] || '#6b7280'
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-bold whitespace-nowrap"
+            style={{ background: c + '1f', color: c }}>
+        {score}<span className="opacity-50 font-medium">/7 · {labels[s] || ''}</span>
+      </span>
+    )
+  }
+
+  const GoalCardWithTrack = ({ goal }) => {
+    const isWig = goal.goal_type === 'WIG'
+    const accent = isWig ? '#e47727' : '#002f60'
+    const trackKey = { WIG: 'wig_track', AG1: 'ag1_track', AG2: 'ag2_track', AG3: 'ag3_track' }[goal.goal_type]
+    const trackScore = F[trackKey]?.score
+    return (
+      <div className="border-l-[3px] pl-3 pr-3 py-2 mb-2 rounded bg-gray-50 pmap-narr-block" style={{ borderColor: accent }}>
+        <div className="flex items-center justify-between gap-2 mb-1">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded text-white"
+                  style={{ background: accent }}>{goal.goal_type}</span>
+            {goal.status && (
+              <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-gray-200 text-gray-700">{goal.status}</span>
+            )}
+          </div>
+          <TrackChip score={trackScore} />
+        </div>
+        <div className="text-sm text-gray-800 leading-snug">{goal.goal_text}</div>
+      </div>
+    )
+  }
+
+  const CheckboxField = ({ k, emptyAs = null }) => {
+    const f = F[k]; if (!f) return null
+    const value = f.selected || emptyAs
+    return (
+      <div className="text-sm mb-2"><strong>{f.label}</strong> &nbsp; {value || <span className="text-gray-400 italic">Not answered</span>}</div>
+    )
+  }
+
+  return (
+    <>
+      {/* 1. Meeting Checklist */}
+      <SectionGroup title="1. Meeting Checklist">
+        <CheckboxField k="mc_job_desc_reviewed" />
+      </SectionGroup>
+
+      {/* 2. WIG + Annual Goals Review */}
+      <SectionGroup title="2. WIG + Annual Goals Review">
+        <NarrField k="wig_ag_text" />
+        {goals.map(g => <GoalCardWithTrack key={g.id} goal={g} />)}
+        <NarrField k="progress_toward_goal" />
+      </SectionGroup>
+
+      {/* 3. Whirlwind Work Review */}
+      <SectionGroup title="3. Whirlwind Work Review (Other Workstreams)">
+        <NarrField k="whirlwind_workstreams" />
+      </SectionGroup>
+
+      {/* PreK: 3 separate CLASS observation cycle sections, each with PK1-PK10 on 1-7 scale */}
+      {hasPreKCycles && (p.prek_cycles || []).map((cyc, idx) => (
+        <SectionGroup key={cyc.cycle} title={`${cycleNums[idx]}. CLASS Observation Cycle ${cyc.cycle}`}>
+          <div className="text-[11px] text-gray-500 mb-2 italic">FLS PreK CLASS Rubric (1-7 scale)</div>
+          {cyc.dims.map(dimRow => (
+            <div key={dimRow.dim} className="flex items-center justify-between gap-3 border border-gray-200 rounded-lg p-2.5 mb-1.5 pmap-dim-card">
+              <div className="flex-1 min-w-0">
+                <span className="font-bold text-sm text-gray-800">{dimRow.dim}</span>
+                <span className="text-sm text-gray-600"> · {dimRow.name}</span>
+              </div>
+              <ClassChip score={dimRow.score} />
+            </div>
+          ))}
+        </SectionGroup>
+      ))}
+
+      {/* PreK Rubric Review — PKS/PKGA replaces TR for PreK */}
+      {hasPreKCycles && (
+        <SectionGroup title={`${prekRubricNum}. FLS PreK Class Rubric Review`}>
+          <NarrField k="tr_strength" />
+          <NarrField k="tr_growth" />
+        </SectionGroup>
+      )}
+
+      {/* Rubric — Teacher: FLS Teacher Rubric · Leader: Leadership Competencies · Network/Support/PreK: skipped */}
+      {hasFiveDimRubric && (
+      <SectionGroup title={`${rubricNum}. ${isLeader ? 'Firstline Leadership Competencies' : 'FLS Teacher Rubric'}`}>
+        {dims5.map(d => (
+          <div key={d.dim} className="flex items-start justify-between gap-3 border border-gray-200 rounded-lg p-3 mb-2 pmap-dim-card">
+            <div className="flex-1 min-w-0">
+              <div className="font-bold text-sm">{d.dim} · {dimName(d.dim)}</div>
+            </div>
+            <RubricChip score={d.score} />
+          </div>
+        ))}
+        {/* Additional Comments — empty for many records but always shown so structure is clear */}
+        <div className="mt-3">
+          <div className="text-[12px] font-bold text-gray-800 mb-1">Additional Comments</div>
+          <div className="text-[11px] text-gray-400 italic mb-1">Please provide any additional notes or context here.</div>
+          <div className="bg-gray-50 border-l-[3px] border-gray-200 pl-3 pr-3 py-2 rounded text-xs text-gray-400 italic">Empty for this record</div>
+        </div>
+        {/* Teacher + SR show TR Strength/Growth here. Leader doesn't (replaced by Personal Leadership block in Section 5). PreK shows them separately as PKS/PKGA. */}
+        {!hasPersonalLeadership && !hasPreKCycles && (
+          <div className="mt-3">
+            <NarrField k="tr_strength" />
+            <NarrField k="tr_growth" />
+          </div>
+        )}
+      </SectionGroup>
+      )}
+
+      {/* Personal Leadership — Leader + Network show PLS/PLGA. Teacher/SR Teacher show TR above. Support has none. */}
+      {hasPersonalLeadership && (
+        <SectionGroup title={`${personalLeadershipNum}. FLS Personal Leadership`}>
+          <NarrField k="pls_strength" />
+          <NarrField k="plga_growth" />
+        </SectionGroup>
+      )}
+
+      {/* Commitments */}
+      <SectionGroup title={`${commitmentsNum}. Commitments`}>
+        <NarrField k="commit_strength" />
+        <NarrField k="commit_growth" />
+      </SectionGroup>
+
+      {/* Professional Development & Career Growth — Licenses only on Teacher/SR Teacher */}
+      <SectionGroup title={`${proDevNum}. Professional Development & Career Growth`}>
+        <NarrField k="career_goals" />
+        {hasLicenses && (isSR ? <NarrField k="licenses_sr" /> : <NarrField k="licenses" />)}
+      </SectionGroup>
+
+      {/* SR-only Additional Comments at bottom */}
+      {isSR && (
+        <SectionGroup title={`${finalNum}. Additional Comments`}>
+          <NarrField k="sr_additional_comments" />
+        </SectionGroup>
+      )}
+
+      {/* Area of Concern — all PMAPs have it; SR doesn't */}
+      {!isSR && (
+        <SectionGroup title={`${finalNum}. Area(s) of Concern`}>
+          <CheckboxField k="ac_concerns" emptyAs="None" />
+          <NarrField k="concern_comments" emptyAs="None" />
+        </SectionGroup>
+      )}
+
+      {/* Provenance footer */}
+      <div className="text-[11px] text-gray-400 mt-4 pt-3 border-t border-gray-100">
+        Touchpoint ID: {data.id}<br />
+        {data.grow_id ? <>Grow ID: {data.grow_id}<br /></> : null}
+        Source: <span className="font-semibold">scores_v2</span> + Grow narrative cache + 25-26 form labels
+      </div>
+    </>
+  )
+}
+
 export default function TouchpointDetail({ touchpoint, onClose }) {
   if (!touchpoint) return null
 
   const tp = touchpoint
+
+  // Evaluation modal — handles PMAP + Self-Reflection. Branches internally on
+  // school_year (24-25 archive vs 25-26 form) and on form_type within the
+  // NativePMAPSections (Teacher / Leader / SR variants).
+  const isEvalForm = tp.form_type && (tp.form_type.startsWith('pmap_') || tp.form_type.startsWith('self_reflection_'))
+  if (isEvalForm) {
+    return <ArchivePMAPView touchpoint={tp} onClose={onClose} />
+  }
+
   const label = FORM_LABELS[tp.form_type] || tp.form_type
   const scores = tp.scores || {}
   const scoreCodes = Object.keys(scores).sort()
