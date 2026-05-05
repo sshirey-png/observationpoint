@@ -2226,6 +2226,166 @@ def api_touchpoint_full_detail(tp_id):
 # prompting the user to review prior context before completing a new form.
 # Returns null fields when none exists yet.
 # ------------------------------------------------------------------
+# ------------------------------------------------------------------
+# /api/network/drilldown
+# Powers the section drill-down pages reached from Network comparison strips.
+# Returns teacher-level (or step-level) rows for one of:
+#   pmap | sr | action_step | fundamentals
+# Optional ?school=<name> filter scopes to a single school.
+# Output shape: { kind, school, school_year, rows: [...] }
+# Each row has at least { name, email, school } plus kind-specific fields.
+# ------------------------------------------------------------------
+@app.route('/api/network/drilldown')
+@require_auth
+def api_network_drilldown():
+    user = get_current_user()
+    if not DEV_MODE and not is_supervisor(user):
+        return jsonify({'authorized': False, 'error': 'supervisor access only'}), 200
+    kind = (request.args.get('kind') or '').strip().lower()
+    school = (request.args.get('school') or '').strip()
+    sy = (request.args.get('school_year') or CURRENT_SCHOOL_YEAR).strip()
+    if kind not in {'pmap', 'sr', 'action_step', 'fundamentals'}:
+        return jsonify({'error': 'invalid kind'}), 400
+
+    school_clause = " AND s.school = %s" if school else ""
+    school_params = (school,) if school else ()
+
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        rows = []
+
+        if kind in ('pmap', 'sr'):
+            # Teacher list with completion status for the form_type family.
+            form_pattern = 'pmap_%' if kind == 'pmap' else 'self_reflection_%'
+            sql = f"""
+                SELECT s.email, s.first_name, s.last_name, s.school, s.job_title, s.job_function,
+                       (SELECT MAX(t.observed_at)::date FROM touchpoints t
+                          WHERE LOWER(t.teacher_email) = LOWER(s.email)
+                            AND t.school_year = %s AND t.form_type LIKE %s
+                            AND t.status = 'published' AND COALESCE(t.is_test, false) = false) AS last_date,
+                       (SELECT t.observer_email FROM touchpoints t
+                          WHERE LOWER(t.teacher_email) = LOWER(s.email)
+                            AND t.school_year = %s AND t.form_type LIKE %s
+                            AND t.status = 'published' AND COALESCE(t.is_test, false) = false
+                          ORDER BY t.observed_at DESC LIMIT 1) AS last_observer_email,
+                       (SELECT t.id FROM touchpoints t
+                          WHERE LOWER(t.teacher_email) = LOWER(s.email)
+                            AND t.school_year = %s AND t.form_type LIKE %s
+                            AND t.status = 'published' AND COALESCE(t.is_test, false) = false
+                          ORDER BY t.observed_at DESC LIMIT 1) AS last_tp_id
+                  FROM staff s
+                 WHERE s.is_active
+                   AND s.school IS NOT NULL AND s.school <> '' AND s.school <> 'FirstLine Network'
+                   AND s.school <> '(unknown)'
+                   {school_clause}
+                 ORDER BY (CASE WHEN (SELECT COUNT(*) FROM touchpoints t
+                                       WHERE LOWER(t.teacher_email)=LOWER(s.email)
+                                         AND t.school_year=%s AND t.form_type LIKE %s
+                                         AND t.status='published') = 0 THEN 0 ELSE 1 END),
+                          s.school, s.last_name, s.first_name
+            """
+            cur.execute(sql, (sy, form_pattern, sy, form_pattern, sy, form_pattern) + school_params + (sy, form_pattern))
+            for r in cur.fetchall():
+                rows.append({
+                    'email': r['email'],
+                    'name': f"{r['first_name'] or ''} {r['last_name'] or ''}".strip(),
+                    'school': r['school'] or '',
+                    'job_title': r['job_title'] or '',
+                    'job_function': r['job_function'] or '',
+                    'last_date': r['last_date'].strftime('%Y-%m-%d') if r['last_date'] else None,
+                    'last_observer_email': r['last_observer_email'] or '',
+                    'last_tp_id': str(r['last_tp_id']) if r['last_tp_id'] else None,
+                    'completed': r['last_date'] is not None,
+                })
+
+        elif kind == 'action_step':
+            sql = f"""
+                SELECT a.id, a.body_text, a.progress_pct, a.created_at::date AS created_at,
+                       a.progress_date::date AS progress_date,
+                       a.teacher_email, a.creator_email,
+                       s.first_name, s.last_name, s.school, s.job_title,
+                       cs.first_name AS creator_first_name, cs.last_name AS creator_last_name
+                  FROM action_steps a
+                  JOIN staff s ON LOWER(s.email) = LOWER(a.teacher_email)
+                  LEFT JOIN staff cs ON LOWER(cs.email) = LOWER(a.creator_email)
+                 WHERE a.school_year = %s AND a.type = 'actionStep'
+                   AND COALESCE(a.is_test, false) = false
+                   AND s.is_active
+                   AND s.school IS NOT NULL AND s.school <> '' AND s.school <> 'FirstLine Network'
+                   AND s.school <> '(unknown)'
+                   {school_clause}
+                 ORDER BY (CASE WHEN a.progress_pct = 100 THEN 2
+                                WHEN a.progress_pct < 0 THEN 3
+                                ELSE 1 END),
+                          s.school, s.last_name, a.created_at DESC
+            """
+            cur.execute(sql, (sy,) + school_params)
+            for r in cur.fetchall():
+                pct = r['progress_pct']
+                if pct == 100: state = 'Mastered'
+                elif pct is not None and pct < 0: state = 'Not Mastered'
+                else: state = 'In Progress'
+                rows.append({
+                    'id': str(r['id']),
+                    'body_text': r['body_text'] or '',
+                    'state': state,
+                    'progress_pct': pct,
+                    'created_at': r['created_at'].strftime('%Y-%m-%d') if r['created_at'] else None,
+                    'progress_date': r['progress_date'].strftime('%Y-%m-%d') if r['progress_date'] else None,
+                    'teacher_email': r['teacher_email'],
+                    'teacher_name': f"{r['first_name'] or ''} {r['last_name'] or ''}".strip(),
+                    'school': r['school'] or '',
+                    'job_title': r['job_title'] or '',
+                    'creator_email': r['creator_email'] or '',
+                    'creator_name': f"{r['creator_first_name'] or ''} {r['creator_last_name'] or ''}".strip(),
+                })
+
+        elif kind == 'fundamentals':
+            sql = f"""
+                SELECT s.email, s.first_name, s.last_name, s.school, s.job_title,
+                       (SELECT COUNT(DISTINCT t.id) FROM touchpoints t
+                          WHERE LOWER(t.teacher_email) = LOWER(s.email)
+                            AND t.school_year = %s AND t.form_type = 'observation_fundamentals'
+                            AND t.status = 'published' AND COALESCE(t.is_test, false) = false) AS visits,
+                       (SELECT ROUND(AVG(sc.score)::numeric, 0)::int FROM scores sc
+                          JOIN touchpoints t ON t.id = sc.touchpoint_id
+                          WHERE LOWER(t.teacher_email) = LOWER(s.email)
+                            AND t.school_year = %s AND t.form_type = 'observation_fundamentals'
+                            AND sc.dimension_code = 'RB' AND t.status = 'published') AS rb_avg,
+                       (SELECT BOOL_OR(t.locked_in) FROM touchpoints t
+                          WHERE LOWER(t.teacher_email) = LOWER(s.email)
+                            AND t.school_year = %s AND t.form_type = 'observation_fundamentals') AS locked_in
+                  FROM staff s
+                 WHERE s.is_active AND s.job_function = 'Teacher'
+                   AND s.school IS NOT NULL AND s.school <> '' AND s.school <> 'FirstLine Network'
+                   AND s.school <> '(unknown)'
+                   {school_clause}
+                 ORDER BY s.school, s.last_name, s.first_name
+            """
+            cur.execute(sql, (sy, sy, sy) + school_params)
+            for r in cur.fetchall():
+                rows.append({
+                    'email': r['email'],
+                    'name': f"{r['first_name'] or ''} {r['last_name'] or ''}".strip(),
+                    'school': r['school'] or '',
+                    'job_title': r['job_title'] or '',
+                    'visits': r['visits'] or 0,
+                    'rb_avg': r['rb_avg'],
+                    'locked_in': bool(r['locked_in']),
+                })
+
+        return jsonify({
+            'kind': kind,
+            'school': school or None,
+            'school_year': sy,
+            'rows': rows,
+            'total': len(rows),
+        })
+    finally:
+        conn.close()
+
+
 @app.route('/api/staff/<email>/last-evaluation')
 @require_auth
 def api_staff_last_evaluation(email):

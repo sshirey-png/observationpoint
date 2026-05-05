@@ -13,6 +13,7 @@ import StaffProfile from './pages/StaffProfile'
 import Insights from './pages/Insights'
 import Network from './pages/Network'
 import School from './pages/School'
+import NetworkDrilldown from './pages/NetworkDrilldown'
 import CelebrationDrilldown from './pages/CelebrationDrilldown'
 import TouchpointHub from './pages/TouchpointHub'
 import PIP from './pages/PIP'
@@ -62,6 +63,10 @@ export default function App() {
         <Route path="/app/insights" element={<Insights />} />
         <Route path="/app/network" element={<Network />} />
         <Route path="/app/network/school/:name" element={<School />} />
+        <Route path="/app/network/pmap" element={<NetworkDrilldown kindOverride="pmap" />} />
+        <Route path="/app/network/sr" element={<NetworkDrilldown kindOverride="sr" />} />
+        <Route path="/app/network/action-steps" element={<NetworkDrilldown kindOverride="action_step" />} />
+        <Route path="/app/network/fundamentals" element={<NetworkDrilldown kindOverride="fundamentals" />} />
         <Route path="/app/network/celebration" element={<CelebrationDrilldown />} />
       </Routes>
     </BrowserRouter>

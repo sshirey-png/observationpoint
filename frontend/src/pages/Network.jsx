@@ -1012,10 +1012,12 @@ export default function Network() {
 
         {!loading && data && (
           <>
-            {/* Hero — Fundamentals C1, Obs Score C2/C3 */}
+            {/* Hero — Fundamentals C1, Obs Score C2/C3. Footer school cells deep-link
+                into the section-specific drill-down so the hero comparison flows
+                straight into the per-teacher list for that school. */}
             {showFundamentals
-              ? <V3FundamentalsHero data={data} onSchool={goToSchool} useMock={schoolYear === '2025-2026'} cycle={cycle} />
-              : <V3ObsScoreHero data={data} onSchool={goToSchool} />}
+              ? <V3FundamentalsHero data={data} onSchool={(s) => navigate(`/app/network/fundamentals?school=${encodeURIComponent(s)}`)} useMock={schoolYear === '2025-2026'} cycle={cycle} />
+              : <V3ObsScoreHero data={data} onSchool={(s) => navigate(`/app/network/pmap?school=${encodeURIComponent(s)}`)} />}
 
             {/* Stat strip */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 14 }}>
@@ -1043,7 +1045,7 @@ export default function Network() {
                   label="Obs Score · by school"
                   schools={data.schools_compare}
                   valueOf={s => s.pmap_avg ?? '—'}
-                  hrefOf={s => `/app/network/school/${encodeURIComponent(s.school)}`}
+                  hrefOf={s => `/app/network/pmap?school=${encodeURIComponent(s.school)}`}
                   navigate={navigate}
                 />
               </div>
@@ -1076,14 +1078,14 @@ export default function Network() {
                   label="PMAP completion · by school"
                   schools={data.schools_compare}
                   valueOf={s => s.pmap_pct != null ? `${s.pmap_pct}%` : '—'}
-                  hrefOf={s => `/app/network/school/${encodeURIComponent(s.school)}`}
+                  hrefOf={s => `/app/network/pmap?school=${encodeURIComponent(s.school)}`}
                   navigate={navigate}
                 />
                 <SchoolCompareStrip
                   label="Self-Reflection · by school"
                   schools={data.schools_compare}
                   valueOf={s => s.sr_pct != null ? `${s.sr_pct}%` : '—'}
-                  hrefOf={s => `/app/network/school/${encodeURIComponent(s.school)}`}
+                  hrefOf={s => `/app/network/sr?school=${encodeURIComponent(s.school)}`}
                   navigate={navigate}
                 />
               </div>
@@ -1120,7 +1122,7 @@ export default function Network() {
                   label="In Progress · by school"
                   schools={data.schools_compare}
                   valueOf={s => (s.steps_in_progress || 0).toLocaleString()}
-                  hrefOf={s => `/app/network/school/${encodeURIComponent(s.school)}`}
+                  hrefOf={s => `/app/network/action-steps?school=${encodeURIComponent(s.school)}`}
                   navigate={navigate}
                   mutedWhenZero
                 />
