@@ -278,15 +278,17 @@ def get_network_dashboard(school_year=None, cycle=None):
             if row: prior_counts = row
 
         # Action step aggregate counts — total + by-state for the year.
-        # progress_pct = 100 → Mastered; >0 and <100 → In Progress; null/0 → Not Mastered.
-        # Only OP-era records have meaningful state; pre-OP imports show as Not Mastered.
+        # State model matches Grow's 3 tabs:
+        #   Mastered: progress_pct = 100 (supervisor marked complete)
+        #   In Progress: open/active — null, 0, or any value 1..99
+        #   Not Mastered: progress_pct < 0 (supervisor explicitly marked failed; -1 / -10 sentinel values)
         cur.execute("""
             SELECT
               COUNT(*) AS total,
               COUNT(DISTINCT teacher_email) AS teachers,
               SUM(CASE WHEN progress_pct = 100 THEN 1 ELSE 0 END) AS mastered,
-              SUM(CASE WHEN progress_pct > 0 AND progress_pct < 100 THEN 1 ELSE 0 END) AS in_progress,
-              SUM(CASE WHEN progress_pct IS NULL OR progress_pct = 0 THEN 1 ELSE 0 END) AS not_mastered
+              SUM(CASE WHEN progress_pct IS NULL OR (progress_pct >= 0 AND progress_pct < 100) THEN 1 ELSE 0 END) AS in_progress,
+              SUM(CASE WHEN progress_pct < 0 THEN 1 ELSE 0 END) AS not_mastered
             FROM action_steps
             WHERE school_year = %s
               AND COALESCE(is_test, false) = false
@@ -425,6 +427,82 @@ def get_network_dashboard(school_year=None, cycle=None):
                 'goals_pct': r[5], 'steps_pct': r[6],
             })
         out['schools_grid'] = schools_grid
+
+        # Per-school comparison data — feeds the strips on Network.jsx (Pattern B).
+        # All metrics filtered to currently-active staff at that school so the
+        # math stays sane (no >100% completion bugs from departed staff).
+        cur.execute("""
+            SELECT
+              s.school,
+              COUNT(*) FILTER (WHERE s.is_active) AS staff_active,
+              (SELECT COUNT(DISTINCT t.teacher_email)
+                 FROM touchpoints t JOIN staff ss ON LOWER(ss.email) = LOWER(t.teacher_email)
+                WHERE ss.school = s.school AND t.school_year = %s AND ss.is_active
+                  AND t.form_type LIKE 'pmap_%%' AND t.status = 'published'
+                  AND COALESCE(t.is_test, false) = false) AS pmap_done,
+              (SELECT COUNT(DISTINCT t.teacher_email)
+                 FROM touchpoints t JOIN staff ss ON LOWER(ss.email) = LOWER(t.teacher_email)
+                WHERE ss.school = s.school AND t.school_year = %s AND ss.is_active
+                  AND t.form_type LIKE 'self_reflection_%%' AND t.status = 'published'
+                  AND COALESCE(t.is_test, false) = false) AS sr_done,
+              (SELECT ROUND(AVG(sc.score)::numeric, 1)::float
+                 FROM scores sc JOIN touchpoints t ON sc.touchpoint_id = t.id
+                WHERE t.school = s.school AND t.school_year = %s AND t.form_type = 'pmap_teacher'
+                  AND sc.dimension_code IN ('T1','T2','T3','T4','T5')) AS pmap_avg,
+              (SELECT ROUND(AVG(sc.score)::numeric, 0)::int
+                 FROM scores sc JOIN touchpoints t ON sc.touchpoint_id = t.id
+                WHERE t.school = s.school AND t.school_year = %s AND t.form_type = 'observation_fundamentals'
+                  AND sc.dimension_code = 'RB') AS fund_pct,
+              (SELECT COUNT(*)
+                 FROM touchpoints t JOIN staff ss ON LOWER(ss.email) = LOWER(t.teacher_email)
+                WHERE ss.school = s.school AND t.school_year = %s
+                  AND t.form_type = 'celebrate' AND t.status = 'published'
+                  AND COALESCE(t.is_test, false) = false) AS cel_count,
+              (SELECT COUNT(*)
+                 FROM action_steps a JOIN staff ss ON LOWER(ss.email) = LOWER(a.teacher_email)
+                WHERE ss.school = s.school AND a.school_year = %s AND a.type = 'actionStep'
+                  AND COALESCE(a.is_test, false) = false) AS steps_total,
+              (SELECT COUNT(*)
+                 FROM action_steps a JOIN staff ss ON LOWER(ss.email) = LOWER(a.teacher_email)
+                WHERE ss.school = s.school AND a.school_year = %s AND a.type = 'actionStep'
+                  AND COALESCE(a.is_test, false) = false AND a.progress_pct = 100) AS steps_mastered,
+              (SELECT COUNT(*)
+                 FROM action_steps a JOIN staff ss ON LOWER(ss.email) = LOWER(a.teacher_email)
+                WHERE ss.school = s.school AND a.school_year = %s AND a.type = 'actionStep'
+                  AND COALESCE(a.is_test, false) = false
+                  AND (a.progress_pct IS NULL OR (a.progress_pct >= 0 AND a.progress_pct < 100))) AS steps_in_progress,
+              (SELECT COUNT(*)
+                 FROM action_steps a JOIN staff ss ON LOWER(ss.email) = LOWER(a.teacher_email)
+                WHERE ss.school = s.school AND a.school_year = %s AND a.type = 'actionStep'
+                  AND COALESCE(a.is_test, false) = false AND a.progress_pct < 0) AS steps_not_mastered
+            FROM staff s
+            WHERE s.school IS NOT NULL AND s.school <> '' AND s.school <> 'FirstLine Network'
+              AND s.school <> '(unknown)'
+            GROUP BY s.school
+            HAVING COUNT(*) FILTER (WHERE s.is_active) > 0
+            ORDER BY s.school
+        """, (sy, sy, sy, sy, sy, sy, sy, sy, sy))
+        schools_compare = []
+        for r in cur.fetchall():
+            staff = r[1] or 0
+            pmap_done = r[2] or 0
+            sr_done = r[3] or 0
+            schools_compare.append({
+                'school': r[0],
+                'staff_active': staff,
+                'pmap_done': pmap_done,
+                'pmap_pct': round(100 * pmap_done / staff) if staff else None,
+                'sr_done': sr_done,
+                'sr_pct': round(100 * sr_done / staff) if staff else None,
+                'pmap_avg': r[4],
+                'fund_pct': r[5],
+                'cel_count': r[6] or 0,
+                'steps_total': r[7] or 0,
+                'steps_mastered': r[8] or 0,
+                'steps_in_progress': r[9] or 0,
+                'steps_not_mastered': r[10] or 0,
+            })
+        out['schools_compare'] = schools_compare
         # Backward-compat fields the existing UI may still reference:
         out['fundamentals_network_avg_pct'] = network_rb_pct
         out['fundamentals_by_school'] = {

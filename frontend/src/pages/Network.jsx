@@ -27,6 +27,52 @@ function shortSchool(name) {
   return (name || '').replace(' Charter School', '').replace(' Community School', '').replace(' Academy', '')
 }
 
+/**
+ * SchoolCompareStrip — 4-school comparison row used under each Network card.
+ * Each cell shows the metric for one school; tap navigates to a section
+ * drill-down filtered to that school. When the destination page doesn't
+ * exist yet, the cell is non-clickable (no cursor, no tap handler).
+ */
+function SchoolCompareStrip({ label, schools, valueOf, hrefOf, mutedWhenZero = false, navigate }) {
+  if (!schools || schools.length === 0) return null
+  return (
+    <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #f3f4f6' }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 8 }}>
+        {label}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${schools.length}, 1fr)`, gap: 6 }}>
+        {schools.map(s => {
+          const val = valueOf(s)
+          const href = hrefOf ? hrefOf(s) : null
+          const isZero = mutedWhenZero && (val === 0 || val === '0' || val === '0%')
+          return (
+            <button
+              key={s.school}
+              onClick={href ? (e) => { e.stopPropagation(); navigate(href) } : undefined}
+              disabled={!href}
+              style={{
+                padding: '8px 4px', borderRadius: 6, background: '#f9fafb',
+                border: '1px solid #e5e7eb', textAlign: 'center',
+                cursor: href ? 'pointer' : 'default', fontFamily: 'inherit',
+                transition: 'border-color .15s, background .15s',
+              }}
+              onMouseEnter={href ? (e) => { e.currentTarget.style.borderColor = '#002f60'; e.currentTarget.style.background = '#f0f7ff' } : undefined}
+              onMouseLeave={href ? (e) => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.background = '#f9fafb' } : undefined}
+            >
+              <div style={{ fontSize: 9, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.04em' }}>
+                {shortSchool(s.school)}
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: isZero ? '#9ca3af' : '#002f60', marginTop: 4 }}>
+                {val == null || val === '' ? '—' : val}
+              </div>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function scoreClass(s) {
   if (s == null) return ''
   const n = Math.round(s)
@@ -990,6 +1036,19 @@ export default function Network() {
               </div>
             </div>
 
+            {/* Per-school comparison: PMAP rubric avg */}
+            {data.schools_compare?.length > 0 && (
+              <div style={{ background: '#fff', borderRadius: 14, padding: 14, boxShadow: '0 1px 3px rgba(0,0,0,.05)', marginBottom: 14 }}>
+                <SchoolCompareStrip
+                  label="Obs Score · by school"
+                  schools={data.schools_compare}
+                  valueOf={s => s.pmap_avg ?? '—'}
+                  hrefOf={s => `/app/network/school/${encodeURIComponent(s.school)}`}
+                  navigate={navigate}
+                />
+              </div>
+            )}
+
             {/* Completion pair */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
               <div style={{ background: '#fff', borderRadius: 14, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,.05)' }}>
@@ -1010,34 +1069,63 @@ export default function Network() {
               </div>
             </div>
 
-            {/* Action Steps — total + state breakdown. Position above Celebration per the May 2 mock spec.
-                Follow-through % deliberately omitted: today's data only sees "new step created within 48h",
-                not the full picture (continuation/mastery without new step also count). Real follow-through
-                metric returns once OP captures the explicit link between observation → step → next step. */}
-            {(data.kpis?.action_steps_total || 0) > 0 && (
-              <div style={{ background: '#fff', borderRadius: 14, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,.05)', marginBottom: 14 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: '#111827', textTransform: 'uppercase', letterSpacing: '.05em' }}>Action Steps</div>
-                  <div style={{ fontSize: 11, color: '#6b7280' }}>
-                    <b style={{ color: '#e47727', fontWeight: 800, fontSize: 14 }}>{(data.kpis.action_steps_total || 0).toLocaleString()}</b> total · {data.kpis.action_steps_teachers || 0} teachers
-                  </div>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, paddingTop: 12, borderTop: '1px solid #f3f4f6' }}>
-                  <div style={{ padding: '10px 6px', background: '#ecfdf5', borderRadius: 8, textAlign: 'center' }}>
-                    <div style={{ fontSize: 20, fontWeight: 800, color: '#15803d', lineHeight: 1 }}>{(data.kpis.action_steps_mastered || 0).toLocaleString()}</div>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 5 }}>Mastered</div>
-                  </div>
-                  <div style={{ padding: '10px 6px', background: '#fff7ed', borderRadius: 8, textAlign: 'center' }}>
-                    <div style={{ fontSize: 20, fontWeight: 800, color: '#c2410c', lineHeight: 1 }}>{(data.kpis.action_steps_in_progress || 0).toLocaleString()}</div>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 5 }}>In Progress</div>
-                  </div>
-                  <div style={{ padding: '10px 6px', background: '#f3f4f6', borderRadius: 8, textAlign: 'center' }}>
-                    <div style={{ fontSize: 20, fontWeight: 800, color: '#6b7280', lineHeight: 1 }}>{(data.kpis.action_steps_not_mastered || 0).toLocaleString()}</div>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 5 }}>Not Mastered</div>
-                  </div>
-                </div>
+            {/* Per-school comparison: PMAP + SR completion */}
+            {data.schools_compare?.length > 0 && (
+              <div style={{ background: '#fff', borderRadius: 14, padding: 14, boxShadow: '0 1px 3px rgba(0,0,0,.05)', marginBottom: 14 }}>
+                <SchoolCompareStrip
+                  label="PMAP completion · by school"
+                  schools={data.schools_compare}
+                  valueOf={s => s.pmap_pct != null ? `${s.pmap_pct}%` : '—'}
+                  hrefOf={s => `/app/network/school/${encodeURIComponent(s.school)}`}
+                  navigate={navigate}
+                />
+                <SchoolCompareStrip
+                  label="Self-Reflection · by school"
+                  schools={data.schools_compare}
+                  valueOf={s => s.sr_pct != null ? `${s.sr_pct}%` : '—'}
+                  hrefOf={s => `/app/network/school/${encodeURIComponent(s.school)}`}
+                  navigate={navigate}
+                />
               </div>
             )}
+
+            {/* Action Steps — total + state breakdown. Position above Celebration per the May 2 mock spec.
+                Always rendered (including the all-zero empty state for 26-27 pre-launch) so the section
+                communicates "no action steps yet" instead of disappearing. Follow-through % deliberately
+                omitted: today's data only sees "new step created within 48h", not the full picture. Real
+                follow-through metric returns once OP captures the explicit observation → step link. */}
+            <div style={{ background: '#fff', borderRadius: 14, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,.05)', marginBottom: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: '#111827', textTransform: 'uppercase', letterSpacing: '.05em' }}>Action Steps</div>
+                <div style={{ fontSize: 11, color: '#6b7280' }}>
+                  <b style={{ color: '#e47727', fontWeight: 800, fontSize: 14 }}>{(data.kpis?.action_steps_total || 0).toLocaleString()}</b> total · {data.kpis?.action_steps_teachers || 0} teachers
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, paddingTop: 12, borderTop: '1px solid #f3f4f6' }}>
+                <div style={{ padding: '10px 6px', background: '#ecfdf5', borderRadius: 8, textAlign: 'center' }}>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: '#15803d', lineHeight: 1 }}>{(data.kpis?.action_steps_mastered || 0).toLocaleString()}</div>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 5 }}>Mastered</div>
+                </div>
+                <div style={{ padding: '10px 6px', background: '#fff7ed', borderRadius: 8, textAlign: 'center' }}>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: '#c2410c', lineHeight: 1 }}>{(data.kpis?.action_steps_in_progress || 0).toLocaleString()}</div>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 5 }}>In Progress</div>
+                </div>
+                <div style={{ padding: '10px 6px', background: '#f3f4f6', borderRadius: 8, textAlign: 'center' }}>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: '#6b7280', lineHeight: 1 }}>{(data.kpis?.action_steps_not_mastered || 0).toLocaleString()}</div>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 5 }}>Not Mastered</div>
+                </div>
+              </div>
+              {data.schools_compare?.length > 0 && (
+                <SchoolCompareStrip
+                  label="In Progress · by school"
+                  schools={data.schools_compare}
+                  valueOf={s => (s.steps_in_progress || 0).toLocaleString()}
+                  hrefOf={s => `/app/network/school/${encodeURIComponent(s.school)}`}
+                  navigate={navigate}
+                  mutedWhenZero
+                />
+              )}
+            </div>
 
             {/* Celebration Coverage — click to drill down */}
             <div
