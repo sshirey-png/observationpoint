@@ -1071,21 +1071,27 @@ export default function Network() {
               </div>
             </div>
 
-            {/* Per-school comparison: PMAP + SR completion */}
+            {/* Per-school comparison: combined Evaluations (PMAP + SR stacked).
+                One strip → one drill-down page so leaders see both statuses
+                in a single teacher list. */}
             {data.schools_compare?.length > 0 && (
               <div style={{ background: '#fff', borderRadius: 14, padding: 14, boxShadow: '0 1px 3px rgba(0,0,0,.05)', marginBottom: 14 }}>
                 <SchoolCompareStrip
-                  label="PMAP completion · by school"
+                  label="Evaluations · by school"
                   schools={data.schools_compare}
-                  valueOf={s => s.pmap_pct != null ? `${s.pmap_pct}%` : '—'}
-                  hrefOf={s => `/app/network/pmap?school=${encodeURIComponent(s.school)}`}
-                  navigate={navigate}
-                />
-                <SchoolCompareStrip
-                  label="Self-Reflection · by school"
-                  schools={data.schools_compare}
-                  valueOf={s => s.sr_pct != null ? `${s.sr_pct}%` : '—'}
-                  hrefOf={s => `/app/network/sr?school=${encodeURIComponent(s.school)}`}
+                  valueOf={s => (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                      <div style={{ fontSize: 12, fontWeight: 800, color: '#002f60' }}>
+                        <span style={{ fontSize: 8, fontWeight: 700, color: '#6b7280', marginRight: 3, letterSpacing: '.05em' }}>PMAP</span>
+                        {s.pmap_pct != null ? `${s.pmap_pct}%` : '—'}
+                      </div>
+                      <div style={{ fontSize: 12, fontWeight: 800, color: '#e47727' }}>
+                        <span style={{ fontSize: 8, fontWeight: 700, color: '#6b7280', marginRight: 3, letterSpacing: '.05em' }}>SR</span>
+                        {s.sr_pct != null ? `${s.sr_pct}%` : '—'}
+                      </div>
+                    </div>
+                  )}
+                  hrefOf={s => `/app/network/evaluations?school=${encodeURIComponent(s.school)}`}
                   navigate={navigate}
                 />
               </div>
