@@ -3067,6 +3067,7 @@ def api_notify_teacher(tp_id):
             recipient = observer_email
             cc = []
             subject = '[TEST · would go to teacher] ' + subject
+            ok = _send_email(recipient, subject, html, cc_emails=cc)
 
         elif form_type == 'solicited_feedback':
             # Dual email by design:
