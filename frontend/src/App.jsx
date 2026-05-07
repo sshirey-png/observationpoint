@@ -66,6 +66,7 @@ export default function App() {
         <Route path="/app/network/evaluations" element={<NetworkDrilldown kindOverride="evaluations" />} />
         <Route path="/app/network/action-steps" element={<NetworkDrilldown kindOverride="action_step" />} />
         <Route path="/app/network/fundamentals" element={<NetworkDrilldown kindOverride="fundamentals" />} />
+        <Route path="/app/network/observations" element={<NetworkDrilldown kindOverride="observations" />} />
         <Route path="/app/network/celebration" element={<CelebrationDrilldown />} />
       </Routes>
     </BrowserRouter>

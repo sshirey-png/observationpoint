@@ -2244,7 +2244,7 @@ def api_network_drilldown():
     kind = (request.args.get('kind') or '').strip().lower()
     school = (request.args.get('school') or '').strip()
     sy = (request.args.get('school_year') or CURRENT_SCHOOL_YEAR).strip()
-    if kind not in {'pmap', 'sr', 'evaluations', 'action_step', 'fundamentals'}:
+    if kind not in {'pmap', 'sr', 'evaluations', 'action_step', 'fundamentals', 'observations'}:
         return jsonify({'error': 'invalid kind'}), 400
 
     school_clause = " AND s.school = %s" if school else ""
@@ -2380,6 +2380,49 @@ def api_network_drilldown():
                     'mastered': r['mastered'] or 0,
                     'in_progress': r['in_progress'] or 0,
                     'not_mastered': r['not_mastered'] or 0,
+                })
+
+        elif kind == 'observations':
+            # Per-teacher observation rollup. Same scope db.py uses for the
+            # network obs_score: form_type = 'observation_teacher' (PreK CLASS
+            # observations live in the same form_type today).
+            sql = f"""
+                SELECT s.email, s.first_name, s.last_name, s.school, s.job_title, s.job_function,
+                       (SELECT COUNT(DISTINCT t.id) FROM touchpoints t
+                          WHERE LOWER(t.teacher_email)=LOWER(s.email)
+                            AND t.school_year=%s AND t.form_type='observation_teacher'
+                            AND t.status='published' AND COALESCE(t.is_test,false)=false) AS obs_count,
+                       (SELECT MAX(t.observed_at)::date FROM touchpoints t
+                          WHERE LOWER(t.teacher_email)=LOWER(s.email)
+                            AND t.school_year=%s AND t.form_type='observation_teacher'
+                            AND t.status='published' AND COALESCE(t.is_test,false)=false) AS last_obs,
+                       (SELECT ROUND(AVG(sc.score)::numeric, 2)::float FROM scores sc
+                          JOIN touchpoints t ON t.id = sc.touchpoint_id
+                          WHERE LOWER(t.teacher_email)=LOWER(s.email)
+                            AND t.school_year=%s AND t.form_type='observation_teacher'
+                            AND t.status='published') AS avg_score
+                  FROM staff s
+                 WHERE s.is_active
+                   AND s.school IS NOT NULL AND s.school <> '' AND s.school <> 'FirstLine Network'
+                   AND s.school <> '(unknown)'
+                   {school_clause}
+                 ORDER BY (SELECT MAX(t.observed_at)::date FROM touchpoints t
+                           WHERE LOWER(t.teacher_email)=LOWER(s.email)
+                             AND t.school_year=%s AND t.form_type='observation_teacher'
+                             AND t.status='published') DESC NULLS LAST,
+                          s.school, s.last_name, s.first_name
+            """
+            cur.execute(sql, (sy, sy, sy) + school_params + (sy,))
+            for r in cur.fetchall():
+                rows.append({
+                    'email': r['email'],
+                    'name': f"{r['first_name'] or ''} {r['last_name'] or ''}".strip(),
+                    'school': r['school'] or '',
+                    'job_title': r['job_title'] or '',
+                    'job_function': r['job_function'] or '',
+                    'obs_count': r['obs_count'] or 0,
+                    'last_obs': r['last_obs'].strftime('%Y-%m-%d') if r['last_obs'] else None,
+                    'avg_score': r['avg_score'],
                 })
 
         elif kind == 'fundamentals':

@@ -1046,7 +1046,7 @@ export default function Network() {
                 straight into the per-teacher list for that school. */}
             {showFundamentals
               ? <V3FundamentalsHero data={data} onSchool={(s) => navigate(`/app/network/fundamentals?school=${encodeURIComponent(s)}`)} useMock={schoolYear === '2025-2026'} cycle={cycle} />
-              : <V3ObsScoreHero data={data} onSchool={(s) => navigate(`/app/network/pmap?school=${encodeURIComponent(s)}`)} />}
+              : <V3ObsScoreHero data={data} onSchool={(s) => navigate(`/app/network/observations?school=${encodeURIComponent(s)}`)} />}
 
             {/* Stat strip */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 14 }}>
@@ -1074,7 +1074,7 @@ export default function Network() {
                   label="Obs Score · by school"
                   schools={data.schools_compare}
                   valueOf={s => s.pmap_avg ?? '—'}
-                  hrefOf={s => `/app/network/pmap?school=${encodeURIComponent(s.school)}`}
+                  hrefOf={s => `/app/network/observations?school=${encodeURIComponent(s.school)}`}
                   navigate={navigate}
                 />
               </div>

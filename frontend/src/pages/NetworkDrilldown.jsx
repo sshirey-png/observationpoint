@@ -19,6 +19,7 @@ const KIND_TITLES = {
   evaluations: 'Evaluations',
   action_step: 'Action Steps',
   fundamentals: 'Fundamentals',
+  observations: 'Observations',
 }
 
 function shortSchool(name) {
@@ -29,6 +30,16 @@ function pctColor(pct) {
   if (pct == null) return '#9ca3af'
   if (pct >= 90) return '#15803d'
   if (pct >= 70) return '#ca8a04'
+  return '#b91c1c'
+}
+
+// 5-pt FLS rubric: green ≥4, yellow ≥3, red below.
+// (PreK CLASS 7-pt observations live in the same form_type today; we color
+//  generously since 5.8 should still read "green" on a 7-pt scale.)
+function scoreColor(score) {
+  if (score == null) return '#9ca3af'
+  if (score >= 4) return '#15803d'
+  if (score >= 3) return '#ca8a04'
   return '#b91c1c'
 }
 
@@ -157,6 +168,14 @@ export default function NetworkDrilldown({ kindOverride }) {
         { key: 'not_locked', label: 'Not yet' },
       ]
     }
+    if (kind === 'observations') {
+      return [
+        { key: 'all', label: 'All' },
+        { key: 'three_plus', label: '3+ obs' },
+        { key: 'one_two', label: '1-2 obs' },
+        { key: 'none', label: 'None' },
+      ]
+    }
     return []
   }, [kind])
 
@@ -190,6 +209,11 @@ export default function NetworkDrilldown({ kindOverride }) {
         } else if (kind === 'fundamentals') {
           if (statusFilter === 'locked' && !r.locked_in) return false
           if (statusFilter === 'not_locked' && r.locked_in) return false
+        } else if (kind === 'observations') {
+          const c = r.obs_count || 0
+          if (statusFilter === 'three_plus' && c < 3) return false
+          if (statusFilter === 'one_two' && (c < 1 || c > 2)) return false
+          if (statusFilter === 'none' && c !== 0) return false
         }
       }
       return true
@@ -218,6 +242,14 @@ export default function NetworkDrilldown({ kindOverride }) {
       const lockedIn = allRows.filter(r => r.locked_in).length
       const totalVisits = allRows.reduce((sum, r) => sum + (r.visits || 0), 0)
       summary = `${allRows.length} teachers · ${totalVisits} visits · ${lockedIn} locked-in (mastery)`
+    } else if (kind === 'observations') {
+      const total = allRows.reduce((sum, r) => sum + (r.obs_count || 0), 0)
+      const scored = allRows.filter(r => r.avg_score != null)
+      const overall = scored.length > 0
+        ? (scored.reduce((s, r) => s + r.avg_score * (r.obs_count || 1), 0) /
+           scored.reduce((s, r) => s + (r.obs_count || 1), 0)).toFixed(2)
+        : null
+      summary = `${allRows.length} teachers · ${total} observations${overall ? ` · avg score ${overall}` : ''}`
     }
   }
 
@@ -239,6 +271,11 @@ export default function NetworkDrilldown({ kindOverride }) {
     if (kind === 'fundamentals') {
       if (segKey === 'locked') return allRows.filter(r => r.locked_in).length
       if (segKey === 'not_locked') return allRows.filter(r => !r.locked_in).length
+    }
+    if (kind === 'observations') {
+      if (segKey === 'three_plus') return allRows.filter(r => (r.obs_count || 0) >= 3).length
+      if (segKey === 'one_two') return allRows.filter(r => (r.obs_count || 0) >= 1 && (r.obs_count || 0) <= 2).length
+      if (segKey === 'none') return allRows.filter(r => (r.obs_count || 0) === 0).length
     }
     return 0
   }
@@ -386,6 +423,24 @@ export default function NetworkDrilldown({ kindOverride }) {
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
                   <div style={{ fontSize: 16, fontWeight: 800, color: pctColor(r.rb_avg) }}>{r.rb_avg != null ? `${r.rb_avg}%` : '—'}</div>
                   <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2 }}>{r.last_visit ? relTime(r.last_visit) : 'No visits yet'}</div>
+                </div>
+              </button>
+            ))}
+
+            {kind === 'observations' && rows.map(r => (
+              <button key={r.email}
+                onClick={() => navigate(`/app/staff/${encodeURIComponent(r.email)}`)}
+                style={STYLES.rowItem}
+              >
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>{r.name || r.email}</div>
+                  <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>
+                    {shortSchool(r.school)} · {r.job_title} · {r.obs_count || 0} observation{r.obs_count === 1 ? '' : 's'}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: scoreColor(r.avg_score) }}>{r.avg_score != null ? r.avg_score.toFixed(1) : '—'}</div>
+                  <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2 }}>{r.last_obs ? relTime(r.last_obs) : 'No observations yet'}</div>
                 </div>
               </button>
             ))}
