@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import BottomNav from '../components/BottomNav'
 import ImpersonationBanner from '../components/ImpersonationBanner'
 import GlobalSearch from '../components/GlobalSearch'
@@ -901,11 +901,40 @@ function V3ObsScoreHero({ data, onSchool }) {
 
 export default function Network() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [schoolYear, setSchoolYear] = useState(SCHOOL_YEARS[0])
-  const [cycle, setCycle] = useState(1)
+  // School-year and cycle live in the URL so back-navigation from a school
+  // or drill-down lands on the same view the user left.
+  const initialSY = searchParams.get('sy')
+  const initialCycle = parseInt(searchParams.get('cycle') || '1', 10)
+  const [schoolYear, setSchoolYearState] = useState(SCHOOL_YEARS.includes(initialSY) ? initialSY : SCHOOL_YEARS[0])
+  const [cycle, setCycleState] = useState([1,2,3,4].includes(initialCycle) ? initialCycle : 1)
   const [aiOpen, setAiOpen] = useState(false)
+
+  // Wrappers that update both state and URL.
+  const setSchoolYear = (y) => {
+    setSchoolYearState(y)
+    const next = new URLSearchParams(searchParams)
+    next.set('sy', y)
+    setSearchParams(next, { replace: true })
+  }
+  const setCycle = (n) => {
+    setCycleState(n)
+    const next = new URLSearchParams(searchParams)
+    next.set('cycle', String(n))
+    setSearchParams(next, { replace: true })
+  }
+
+  // Sync URL with current state when missing (first load with no params).
+  useEffect(() => {
+    if (!searchParams.get('sy')) {
+      const next = new URLSearchParams(searchParams)
+      next.set('sy', schoolYear)
+      next.set('cycle', String(cycle))
+      setSearchParams(next, { replace: true })
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -1081,13 +1110,13 @@ export default function Network() {
                   schools={data.schools_compare}
                   valueOf={s => (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                      <div style={{ fontSize: 12, fontWeight: 800, color: '#002f60' }}>
-                        <span style={{ fontSize: 8, fontWeight: 700, color: '#6b7280', marginRight: 3, letterSpacing: '.05em' }}>PMAP</span>
-                        {s.pmap_pct != null ? `${s.pmap_pct}%` : '—'}
-                      </div>
                       <div style={{ fontSize: 12, fontWeight: 800, color: '#e47727' }}>
                         <span style={{ fontSize: 8, fontWeight: 700, color: '#6b7280', marginRight: 3, letterSpacing: '.05em' }}>SR</span>
                         {s.sr_pct != null ? `${s.sr_pct}%` : '—'}
+                      </div>
+                      <div style={{ fontSize: 12, fontWeight: 800, color: '#002f60' }}>
+                        <span style={{ fontSize: 8, fontWeight: 700, color: '#6b7280', marginRight: 3, letterSpacing: '.05em' }}>PMAP</span>
+                        {s.pmap_pct != null ? `${s.pmap_pct}%` : '—'}
                       </div>
                     </div>
                   )}

@@ -185,8 +185,8 @@ export default function NetworkDrilldown({ kindOverride }) {
       const pmapPct = Math.round(100 * pmapDone / allRows.length)
       const srPct = Math.round(100 * srDone / allRows.length)
       summary = (
-        <>PMAP <b style={{ color: '#002f60' }}>{pmapPct}%</b> ({pmapDone}/{allRows.length}) ·
-           SR <b style={{ color: '#002f60' }}>{srPct}%</b> ({srDone}/{allRows.length})</>
+        <>SR <b style={{ color: '#002f60' }}>{srPct}%</b> ({srDone}/{allRows.length}) ·
+           PMAP <b style={{ color: '#002f60' }}>{pmapPct}%</b> ({pmapDone}/{allRows.length})</>
       )
     } else if (kind === 'action_step') {
       const m = allRows.filter(r => r.state === 'Mastered').length
@@ -324,8 +324,8 @@ export default function NetworkDrilldown({ kindOverride }) {
                   <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>{shortSchool(r.school)} · {r.job_title}</div>
                 </div>
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
-                  <EvalPill label="PMAP" done={r.pmap_completed} dateStr={r.pmap_date} />
                   <EvalPill label="SR" done={r.sr_completed} dateStr={r.sr_date} />
+                  <EvalPill label="PMAP" done={r.pmap_completed} dateStr={r.pmap_date} />
                 </div>
               </button>
             ))}
