@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import SubjectBlock from '../components/SubjectBlock'
 import FormShell from '../components/FormShell'
 import FileDrop from '../components/FileDrop'
+import SendCopyToggle from '../components/SendCopyToggle'
 import { api } from '../lib/api'
 
 /**
@@ -39,6 +40,7 @@ export default function PIP() {
 
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
+  const [ccSelf, setCcSelf] = useState(false)
 
   const [draftId, setDraftId] = useState(null)
   const [resumedDraft, setResumedDraft] = useState(false)
@@ -109,6 +111,7 @@ export default function PIP() {
         start_date: startDate,
         review_date: reviewDate,
         consequences,
+        cc_self: ccSelf,
       }),
     }
   }
@@ -376,6 +379,14 @@ export default function PIP() {
                 • Timestamp + IP captured; you're notified
               </div>
             </div>
+          </div>
+
+          <div style={{ marginTop: 12 }}>
+            <SendCopyToggle
+              checked={ccSelf}
+              onChange={setCcSelf}
+              help="HR is automatically copied on PIPs."
+            />
           </div>
         </div>
       </div>

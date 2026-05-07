@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import FormShell from '../components/FormShell'
 import RubricCard from '../components/RubricCard'
 import PriorEvalBanner from '../components/PriorEvalBanner'
+import SendCopyToggle from '../components/SendCopyToggle'
 import { api } from '../lib/api'
 import { TEACHER_RUBRIC, LEADER_RUBRIC } from '../lib/rubric-descriptors'
 
@@ -59,6 +60,7 @@ export default function SelfReflection() {
 
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
+  const [ccSelf, setCcSelf] = useState(false)
 
   // Draft paradigm
   const [draftId, setDraftId] = useState(null)
@@ -161,6 +163,7 @@ export default function SelfReflection() {
         commit_growth: commitGrowth,
         career_goals: careerGoals,
         licenses,
+        cc_self: ccSelf,
       }),
     }
   }
@@ -437,6 +440,15 @@ export default function SelfReflection() {
               style={{ width: '100%', minHeight: 70, padding: 10, border: '1.5px solid #e5e7eb', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', resize: 'vertical', color: '#111827' }}
             />
           </div>
+        </div>
+
+        <div style={{ marginTop: 12 }}>
+          <SendCopyToggle
+            checked={ccSelf}
+            onChange={setCcSelf}
+            label="Send myself a copy"
+            help="Goes to your supervisor by default."
+          />
         </div>
 
       </div>

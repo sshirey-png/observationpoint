@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import SubjectBlock from '../components/SubjectBlock'
 import FormShell from '../components/FormShell'
+import SendCopyToggle from '../components/SendCopyToggle'
 import { api } from '../lib/api'
 
 /**
@@ -39,6 +40,7 @@ export default function Celebrate() {
   const [commitmentNum, setCommitmentNum] = useState(null)
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
+  const [ccSelf, setCcSelf] = useState(false)
 
   // Draft paradigm
   const [draftId, setDraftId] = useState(null)
@@ -123,6 +125,7 @@ export default function Celebrate() {
         commitment_num: commitmentNum,
         commitment_theme: commitment?.theme || '',
         commitment_personal: commitment?.personal || '',
+        cc_self: ccSelf,
       }),
     }
   }
@@ -317,6 +320,10 @@ export default function Celebrate() {
               )
             })}
           </div>
+        </div>
+
+        <div style={{ marginTop: 12 }}>
+          <SendCopyToggle checked={ccSelf} onChange={setCcSelf} />
         </div>
 
       </div>

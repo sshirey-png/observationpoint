@@ -5,6 +5,7 @@ import FormShell from '../components/FormShell'
 import RubricCard from '../components/RubricCard'
 import ActionSteps from '../components/ActionSteps'
 import ObservePreKForm from '../components/ObservePreKForm'
+import SendCopyToggle from '../components/SendCopyToggle'
 import { api } from '../lib/api'
 import { TEACHER_RUBRIC } from '../lib/rubric-descriptors'
 
@@ -40,6 +41,7 @@ export default function Observe() {
   const [customStep, setCustomStep] = useState('')
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
+  const [ccSelf, setCcSelf] = useState(false)
 
   // Draft paradigm
   const [draftId, setDraftId] = useState(null)
@@ -127,6 +129,7 @@ export default function Observe() {
         see_it_success: seeItSuccess,
         see_it_growth: seeItGrowth,
         do_it_practice: doItPractice,
+        cc_self: ccSelf,
       }),
       action_step: actionStep ? JSON.stringify(actionStep) : (customStep || null),
     }
@@ -349,6 +352,9 @@ export default function Observe() {
                 customStep={customStep}
                 onCustomChange={setCustomStep}
               />
+            </div>
+            <div style={{ marginTop: 12 }}>
+              <SendCopyToggle checked={ccSelf} onChange={setCcSelf} />
             </div>
           </>
         )}

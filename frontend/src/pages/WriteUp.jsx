@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import SubjectBlock from '../components/SubjectBlock'
 import FormShell from '../components/FormShell'
 import FileDrop from '../components/FileDrop'
+import SendCopyToggle from '../components/SendCopyToggle'
 import { api } from '../lib/api'
 
 /**
@@ -37,6 +38,7 @@ export default function WriteUp() {
 
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
+  const [ccSelf, setCcSelf] = useState(false)
 
   const [draftId, setDraftId] = useState(null)
   const [resumedDraft, setResumedDraft] = useState(false)
@@ -103,6 +105,7 @@ export default function WriteUp() {
         prior_discussions: priorDiscussions,
         expectations,
         consequences,
+        cc_self: ccSelf,
       }),
     }
   }
@@ -351,6 +354,14 @@ export default function WriteUp() {
                 • Timestamp + IP captured; you're notified
               </div>
             </div>
+          </div>
+
+          <div style={{ marginTop: 12 }}>
+            <SendCopyToggle
+              checked={ccSelf}
+              onChange={setCcSelf}
+              help="HR is automatically copied on Write-Ups."
+            />
           </div>
         </div>
       </div>

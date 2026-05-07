@@ -2729,6 +2729,7 @@ SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD', '')
 SMTP_SERVER = 'smtp.gmail.com'
 SMTP_PORT = 587
 TALENT_EMAIL = 'talent@firstlineschools.org'
+HR_EMAIL = 'hr@firstlineschools.org'
 
 
 def _send_email(to_email, subject, html_body, cc_emails=None):
@@ -3057,16 +3058,55 @@ def api_notify_teacher(tp_id):
             html = _generic_touchpoint_email_html(form_label, teacher, observer, tp_dict)
             subject = f'New {form_label} from {observer_name}'
 
-        # SAFETY: test-mode submissions NEVER reach the actual teacher.
-        # Email goes only to the observer (tester) so real teachers aren't confused.
+        # ── Per-form recipient + CC logic ──────────────────────────────
+        # cc_self: opt-in flag from the form's "Send me a copy" checkbox.
+        cc_self = bool(fb.get('cc_self'))
+
         if tp.get('is_test'):
+            # Test-mode safety: never reach real teacher. Always to observer.
             recipient = observer_email
-            subject = '[TEST · would go to teacher] ' + subject
             cc = []
-        else:
+            subject = '[TEST · would go to teacher] ' + subject
+
+        elif form_type == 'solicited_feedback':
+            # Dual email by design:
+            #   - thank-you to the responder (observer_email)
+            #   - summary to the requestor (teacher_email)
+            # No cc_self option (two emails by design covers both parties).
+            requestor_first = (tp.get('teacher_first') or '').strip() or tp['teacher_email']
+            thx_subject = f"Thanks for sharing feedback for {requestor_first}"
+            sum_subject = f"Feedback received from {observer_name}"
+            ok1 = _send_email(observer_email, thx_subject, html)
+            ok2 = _send_email(tp['teacher_email'], sum_subject, html)
+            ok = ok1 and ok2
+            recipient = tp['teacher_email']  # for the response payload below
+            cc = [observer_email]            # for the response payload below
+
+        elif form_type.startswith('self_reflection'):
+            # SR: recipient = SUBMITTER's supervisor (not the submitter themselves).
+            # Submitter can opt-in to receive a self copy.
+            cur.execute("SELECT supervisor_email FROM staff WHERE LOWER(email) = LOWER(%s)", (observer_email,))
+            sup_row = cur.fetchone()
+            sup_email = (sup_row and sup_row.get('supervisor_email')) or TALENT_EMAIL
+            recipient = sup_email
+            cc = [observer_email] if cc_self else []
+            ok = _send_email(recipient, subject, html, cc_emails=cc)
+
+        elif form_type in ('performance_improvement_plan', 'iap', 'write_up'):
+            # PIP / Write-Up: teacher + mandatory hr@ cc. Submitter opt-in.
             recipient = tp['teacher_email']
-            cc = [observer_email]
-        ok = _send_email(recipient, subject, html, cc_emails=cc)
+            cc = [HR_EMAIL]
+            if cc_self and observer_email and observer_email.lower() != tp['teacher_email'].lower():
+                cc.append(observer_email)
+            ok = _send_email(recipient, subject, html, cc_emails=cc)
+
+        else:
+            # Default (Observe, QF, Celebrate, Fundamentals, Meeting, QM, PMAP):
+            # recipient = teacher; submitter opt-in for self-CC.
+            recipient = tp['teacher_email']
+            cc = [observer_email] if (cc_self and observer_email and observer_email.lower() != tp['teacher_email'].lower()) else []
+            ok = _send_email(recipient, subject, html, cc_emails=cc)
+        # ───────────────────────────────────────────────────────────────
         if ok:
             cur.execute("UPDATE touchpoints SET notified_at = NOW() WHERE id = %s", (tp_id,))
             conn.commit()
@@ -3482,15 +3522,18 @@ def _notify_supervisor_goals_submitted(teacher_staff, saver_email, saved_goals, 
     </body></html>
     """
 
-    # Test-mode routing — pre-launch: send to the saver, not the real supervisor
+    # Goals notify both the supervisor (review) AND the teacher (their own copy).
+    # Test-mode routing pre-launch: send only to saver, not the real recipients.
     test_mode = True  # flip to False at launch
     if test_mode:
         recipient = saver_email
-        subject = f"[TEST · would go to {supervisor_email}] {headline}"
+        subject = f"[TEST · would go to {supervisor_email} + {teacher_email_addr}] {headline}"
+        _send_email(recipient, subject, html)
     else:
-        recipient = supervisor_email
-        subject = headline
-    _send_email(recipient, subject, html)
+        # Post-launch: supervisor as primary recipient; teacher CC'd so both parties have a record.
+        # Don't double-send if supervisor IS the teacher (rare).
+        cc = [teacher_email_addr] if (teacher_email_addr and teacher_email_addr.lower() != supervisor_email.lower()) else []
+        _send_email(supervisor_email, headline, html, cc_emails=cc)
 
 
 @app.route('/api/goals/<goal_id>/approve', methods=['POST'])

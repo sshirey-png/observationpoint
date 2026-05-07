@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import SubjectBlock from '../components/SubjectBlock'
 import FormShell from '../components/FormShell'
+import SendCopyToggle from '../components/SendCopyToggle'
 import { api } from '../lib/api'
 
 /**
@@ -16,6 +17,7 @@ export default function QuickFeedback() {
   const [teacher, setTeacher] = useState(null)
   const [note, setNote] = useState('')
   const [shared, setShared] = useState(true)
+  const [ccSelf, setCcSelf] = useState(false)
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
 
@@ -32,7 +34,7 @@ export default function QuickFeedback() {
         status: 'published',
         is_published: true,
         notes: note,
-        feedback: JSON.stringify({ shared }),
+        feedback: JSON.stringify({ shared, cc_self: ccSelf }),
       })
       // If user chose Share, fire the notify endpoint so the teacher actually
       // gets an email. Private = save to dashboard only, no notify.
@@ -120,6 +122,12 @@ export default function QuickFeedback() {
             })}
           </div>
         </div>
+
+        {shared && (
+          <div style={{ marginBottom: 12 }}>
+            <SendCopyToggle checked={ccSelf} onChange={setCcSelf} />
+          </div>
+        )}
       </div>
 
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#fff', borderTop: '1px solid #e5e7eb', padding: '10px 14px', paddingBottom: 'max(14px, env(safe-area-inset-bottom))', zIndex: 50 }}>

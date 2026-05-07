@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import SubjectBlock from '../components/SubjectBlock'
 import FormShell from '../components/FormShell'
+import SendCopyToggle from '../components/SendCopyToggle'
 import { api } from '../lib/api'
 
 /**
@@ -31,6 +32,7 @@ export default function Meeting() {
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
+  const [ccSelf, setCcSelf] = useState(false)
 
   // Draft paradigm
   const [draftId, setDraftId] = useState(null)
@@ -107,6 +109,7 @@ export default function Meeting() {
         reteach_date: reteachDate,
         reteach_mastery: reteachMastery,
         reteach_reflection: reteachReflection,
+        cc_self: ccSelf,
       }),
     }
   }
@@ -288,6 +291,10 @@ export default function Meeting() {
         <div style={{ background: '#fff', borderRadius: 14, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,.05)', marginBottom: 12 }}>
           <div style={cardHead}>Notes</div>
           <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Additional notes..." style={textarea} />
+        </div>
+
+        <div style={{ marginBottom: 12 }}>
+          <SendCopyToggle checked={ccSelf} onChange={setCcSelf} />
         </div>
       </div>
 

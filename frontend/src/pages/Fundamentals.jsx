@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import SubjectBlock from '../components/SubjectBlock'
 import FormShell from '../components/FormShell'
+import SendCopyToggle from '../components/SendCopyToggle'
 import { api } from '../lib/api'
 
 /**
@@ -138,6 +139,7 @@ export default function Fundamentals() {
   const [customStep, setCustomStep] = useState('')
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
+  const [ccSelf, setCcSelf] = useState(false)
   const intervalRef = useRef(null)
   // Draft paradigm state
   const [draftId, setDraftId] = useState(null)
@@ -245,7 +247,7 @@ export default function Fundamentals() {
       is_published: false,
       scores,
       notes: skills,
-      feedback: JSON.stringify({ class_size: total, qualifies, avg_pct: avgPct, custom_step: customStep || null }),
+      feedback: JSON.stringify({ class_size: total, qualifies, avg_pct: avgPct, custom_step: customStep || null, cc_self: ccSelf }),
     }
     try {
       if (draftId) {
@@ -305,7 +307,7 @@ export default function Fundamentals() {
       is_published: !asDraft,
       scores,
       notes: skills,
-      feedback: JSON.stringify({ class_size: total, qualifies, avg_pct: avgPct, custom_step: customStep || null }),
+      feedback: JSON.stringify({ class_size: total, qualifies, avg_pct: avgPct, custom_step: customStep || null, cc_self: ccSelf }),
       action_steps_selected: selectedSteps.map((s) => ({ action: s.action, cat: s.cat })),
     }
 
@@ -578,6 +580,9 @@ export default function Fundamentals() {
             </div>
           </>
         )}
+        <div style={{ marginTop: 12 }}>
+          <SendCopyToggle checked={ccSelf} onChange={setCcSelf} />
+        </div>
       </div>
 
       {/* Sticky submit bar — always rendered; buttons disabled until teacher + scores complete */}

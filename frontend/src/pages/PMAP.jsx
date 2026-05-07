@@ -6,6 +6,7 @@ import FormShell from '../components/FormShell'
 import { api } from '../lib/api'
 import { TEACHER_RUBRIC, LEADER_RUBRIC } from '../lib/rubric-descriptors'
 import RubricCard from '../components/RubricCard'
+import SendCopyToggle from '../components/SendCopyToggle'
 
 /**
  * PMAP — Performance Map. Role-aware: form_type derived from the person's
@@ -415,6 +416,7 @@ export default function PMAP() {
 
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
+  const [ccSelf, setCcSelf] = useState(false)
 
   // Draft paradigm state
   const [draftId, setDraftId] = useState(null)
@@ -584,6 +586,7 @@ export default function PMAP() {
           AG2: loadedGoals.AG2?.id || null,
           AG3: loadedGoals.AG3?.id || null,
         },
+        cc_self: ccSelf,
       }),
     }
   }
@@ -1031,6 +1034,10 @@ export default function PMAP() {
               </div>
             </>
           )}
+
+          <div style={{ marginTop: 16 }}>
+            <SendCopyToggle checked={ccSelf} onChange={setCcSelf} />
+          </div>
         </div>
 
         {/* Sticky 3-button bar — always rendered; buttons disabled until teacher + validation met */}

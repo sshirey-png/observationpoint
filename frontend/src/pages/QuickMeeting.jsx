@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import FormShell from '../components/FormShell'
+import SendCopyToggle from '../components/SendCopyToggle'
 import { api } from '../lib/api'
 
 /**
@@ -99,6 +100,7 @@ export default function QuickMeeting() {
 
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
+  const [ccSelf, setCcSelf] = useState(false)
   const [draftId, setDraftId] = useState(null)
   const [resumedDraft, setResumedDraft] = useState(false)
   const [saveStatus, setSaveStatus] = useState('idle')
@@ -174,6 +176,7 @@ export default function QuickMeeting() {
         absentees,
         discussed,
         next_steps: nextSteps,
+        cc_self: ccSelf,
       }),
     }
   }
@@ -335,6 +338,10 @@ export default function QuickMeeting() {
           <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: '#9ca3af', marginTop: 10, marginBottom: 6 }}>What are the next steps?</div>
           <textarea value={nextSteps} onChange={e => setNextSteps(e.target.value)} placeholder="Action items, owners, deadlines..."
             style={{ width: '100%', minHeight: 90, padding: 12, border: '1.5px solid #e5e7eb', borderRadius: 10, fontSize: 13, fontFamily: 'inherit', color: '#111827', resize: 'vertical', lineHeight: 1.5 }} />
+        </div>
+
+        <div style={{ marginBottom: 12 }}>
+          <SendCopyToggle checked={ccSelf} onChange={setCcSelf} />
         </div>
       </div>
 
