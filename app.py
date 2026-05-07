@@ -2346,45 +2346,40 @@ def api_network_drilldown():
                 })
 
         elif kind == 'action_step':
+            # Per-teacher rollup with state counts. Mirrors the PMAP/SR teacher-list
+            # pattern so leaders see who has open work without scanning step bodies.
+            # Sort: most Not-Mastered first, then most In-Progress — attention rises.
             sql = f"""
-                SELECT a.id, a.body_text, a.progress_pct, a.created_at::date AS created_at,
-                       a.progress_date::date AS progress_date,
-                       a.teacher_email, a.creator_email,
-                       s.first_name, s.last_name, s.school, s.job_title,
-                       cs.first_name AS creator_first_name, cs.last_name AS creator_last_name
-                  FROM action_steps a
-                  JOIN staff s ON LOWER(s.email) = LOWER(a.teacher_email)
-                  LEFT JOIN staff cs ON LOWER(cs.email) = LOWER(a.creator_email)
-                 WHERE a.school_year = %s AND a.type = 'actionStep'
-                   AND COALESCE(a.is_test, false) = false
-                   AND s.is_active
+                SELECT s.email, s.first_name, s.last_name, s.school, s.job_title, s.job_function,
+                       COUNT(a.id) AS total_steps,
+                       COUNT(CASE WHEN a.progress_pct = 100 THEN 1 END) AS mastered,
+                       COUNT(CASE WHEN (a.progress_pct IS NULL OR (a.progress_pct >= 0 AND a.progress_pct < 100)) AND a.id IS NOT NULL THEN 1 END) AS in_progress,
+                       COUNT(CASE WHEN a.progress_pct < 0 THEN 1 END) AS not_mastered
+                  FROM staff s
+                  LEFT JOIN action_steps a ON LOWER(a.teacher_email) = LOWER(s.email)
+                       AND a.school_year = %s AND a.type = 'actionStep'
+                       AND COALESCE(a.is_test, false) = false
+                 WHERE s.is_active
                    AND s.school IS NOT NULL AND s.school <> '' AND s.school <> 'FirstLine Network'
                    AND s.school <> '(unknown)'
                    {school_clause}
-                 ORDER BY (CASE WHEN a.progress_pct = 100 THEN 2
-                                WHEN a.progress_pct < 0 THEN 3
-                                ELSE 1 END),
-                          s.school, s.last_name, a.created_at DESC
+                 GROUP BY s.email, s.first_name, s.last_name, s.school, s.job_title, s.job_function
+                 ORDER BY COUNT(CASE WHEN a.progress_pct < 0 THEN 1 END) DESC,
+                          COUNT(CASE WHEN (a.progress_pct IS NULL OR (a.progress_pct >= 0 AND a.progress_pct < 100)) AND a.id IS NOT NULL THEN 1 END) DESC,
+                          s.school, s.last_name, s.first_name
             """
             cur.execute(sql, (sy,) + school_params)
             for r in cur.fetchall():
-                pct = r['progress_pct']
-                if pct == 100: state = 'Mastered'
-                elif pct is not None and pct < 0: state = 'Not Mastered'
-                else: state = 'In Progress'
                 rows.append({
-                    'id': str(r['id']),
-                    'body_text': r['body_text'] or '',
-                    'state': state,
-                    'progress_pct': pct,
-                    'created_at': r['created_at'].strftime('%Y-%m-%d') if r['created_at'] else None,
-                    'progress_date': r['progress_date'].strftime('%Y-%m-%d') if r['progress_date'] else None,
-                    'teacher_email': r['teacher_email'],
-                    'teacher_name': f"{r['first_name'] or ''} {r['last_name'] or ''}".strip(),
+                    'email': r['email'],
+                    'name': f"{r['first_name'] or ''} {r['last_name'] or ''}".strip(),
                     'school': r['school'] or '',
                     'job_title': r['job_title'] or '',
-                    'creator_email': r['creator_email'] or '',
-                    'creator_name': f"{r['creator_first_name'] or ''} {r['creator_last_name'] or ''}".strip(),
+                    'job_function': r['job_function'] or '',
+                    'total_steps': r['total_steps'] or 0,
+                    'mastered': r['mastered'] or 0,
+                    'in_progress': r['in_progress'] or 0,
+                    'not_mastered': r['not_mastered'] or 0,
                 })
 
         elif kind == 'fundamentals':

@@ -73,6 +73,25 @@ function EvalPill({ label, done, dateStr }) {
   )
 }
 
+// Action-step count pill (M / IP / NM). Zero-count pills mute to gray so the
+// row reads at a glance: which states this teacher actually has work in.
+function StepCountPill({ label, count, variant }) {
+  const PALETTE = {
+    m:  { bg: '#ecfdf5', border: '#bbf7d0', fg: '#15803d' },
+    ip: { bg: '#fff7ed', border: '#fed7aa', fg: '#c2410c' },
+    nm: { bg: '#fee2e2', border: '#fecaca', fg: '#b91c1c' },
+  }
+  const zero = (count || 0) === 0
+  const c = zero ? { bg: '#f9fafb', border: '#e5e7eb', fg: '#9ca3af' } : PALETTE[variant]
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  minWidth: 40, padding: '4px 6px', borderRadius: 6, background: c.bg, border: `1px solid ${c.border}` }}>
+      <div style={{ fontSize: 8, fontWeight: 800, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.05em', lineHeight: 1 }}>{label}</div>
+      <div style={{ fontSize: 13, fontWeight: 800, color: c.fg, marginTop: 2, lineHeight: 1 }}>{count || 0}</div>
+    </div>
+  )
+}
+
 export default function NetworkDrilldown({ kindOverride }) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -126,9 +145,9 @@ export default function NetworkDrilldown({ kindOverride }) {
     if (kind === 'action_step') {
       return [
         { key: 'all', label: 'All' },
+        { key: 'in_progress', label: 'In Progress' },
         { key: 'mastered', label: 'Mastered' },
-        { key: 'in_progress', label: 'Progress' },
-        { key: 'not_mastered', label: 'Not' },
+        { key: 'not_mastered', label: 'Not Mastered' },
       ]
     }
     if (kind === 'fundamentals') {
@@ -164,9 +183,10 @@ export default function NetworkDrilldown({ kindOverride }) {
           if (statusFilter === 'one_open' && done !== 1) return false
           if (statusFilter === 'both_open' && done !== 0) return false
         } else if (kind === 'action_step') {
-          if (statusFilter === 'mastered' && r.state !== 'Mastered') return false
-          if (statusFilter === 'in_progress' && r.state !== 'In Progress') return false
-          if (statusFilter === 'not_mastered' && r.state !== 'Not Mastered') return false
+          // Per-teacher: include teacher if they have ANY step in the selected state.
+          if (statusFilter === 'mastered' && (r.mastered || 0) === 0) return false
+          if (statusFilter === 'in_progress' && (r.in_progress || 0) === 0) return false
+          if (statusFilter === 'not_mastered' && (r.not_mastered || 0) === 0) return false
         } else if (kind === 'fundamentals') {
           if (statusFilter === 'locked' && !r.locked_in) return false
           if (statusFilter === 'not_locked' && r.locked_in) return false
@@ -189,10 +209,11 @@ export default function NetworkDrilldown({ kindOverride }) {
            PMAP <b style={{ color: '#002f60' }}>{pmapPct}%</b> ({pmapDone}/{allRows.length})</>
       )
     } else if (kind === 'action_step') {
-      const m = allRows.filter(r => r.state === 'Mastered').length
-      const p = allRows.filter(r => r.state === 'In Progress').length
-      const n = allRows.filter(r => r.state === 'Not Mastered').length
-      summary = `${allRows.length} total · ${m} Mastered · ${p} In Progress · ${n} Not Mastered`
+      // Sum across teachers to keep the underlying step total visible.
+      const m = allRows.reduce((s, r) => s + (r.mastered || 0), 0)
+      const p = allRows.reduce((s, r) => s + (r.in_progress || 0), 0)
+      const n = allRows.reduce((s, r) => s + (r.not_mastered || 0), 0)
+      summary = `${m + p + n} total steps · ${m} Mastered · ${p} In Progress · ${n} Not Mastered`
     } else if (kind === 'fundamentals') {
       const lockedIn = allRows.filter(r => r.locked_in).length
       const totalVisits = allRows.reduce((sum, r) => sum + (r.visits || 0), 0)
@@ -210,9 +231,10 @@ export default function NetworkDrilldown({ kindOverride }) {
       if (segKey === 'both_open') return allRows.filter(r => !r.pmap_completed && !r.sr_completed).length
     }
     if (kind === 'action_step') {
-      if (segKey === 'mastered') return allRows.filter(r => r.state === 'Mastered').length
-      if (segKey === 'in_progress') return allRows.filter(r => r.state === 'In Progress').length
-      if (segKey === 'not_mastered') return allRows.filter(r => r.state === 'Not Mastered').length
+      // Teacher counts: how many teachers have at least one step in this state.
+      if (segKey === 'mastered') return allRows.filter(r => (r.mastered || 0) > 0).length
+      if (segKey === 'in_progress') return allRows.filter(r => (r.in_progress || 0) > 0).length
+      if (segKey === 'not_mastered') return allRows.filter(r => (r.not_mastered || 0) > 0).length
     }
     if (kind === 'fundamentals') {
       if (segKey === 'locked') return allRows.filter(r => r.locked_in).length
@@ -331,16 +353,21 @@ export default function NetworkDrilldown({ kindOverride }) {
             ))}
 
             {kind === 'action_step' && rows.map(r => (
-              <button key={r.id}
-                onClick={() => navigate(`/app/staff/${encodeURIComponent(r.teacher_email)}`)}
-                style={{ width: '100%', textAlign: 'left', padding: '12px 14px', background: 'transparent', border: 'none', borderBottom: '1px solid #f3f4f6', cursor: 'pointer', fontFamily: 'inherit' }}
+              <button key={r.email}
+                onClick={() => navigate(`/app/staff/${encodeURIComponent(r.email)}`)}
+                style={STYLES.rowItem}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{r.teacher_name || r.teacher_email}</div>
-                  <StateChip state={r.state} />
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>{r.name || r.email}</div>
+                  <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>
+                    {shortSchool(r.school)} · {r.job_title} · {r.total_steps} step{r.total_steps === 1 ? '' : 's'}
+                  </div>
                 </div>
-                <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 4 }}>{shortSchool(r.school)} · created {r.created_at}{r.creator_name ? ` · by ${r.creator_name}` : ''}</div>
-                {r.body_text && <div style={{ fontSize: 12, color: '#374151', lineHeight: 1.4, background: '#f9fafb', padding: '6px 8px', borderRadius: 6 }}>{r.body_text}</div>}
+                <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
+                  <StepCountPill label="M"  count={r.mastered}     variant="m" />
+                  <StepCountPill label="IP" count={r.in_progress}  variant="ip" />
+                  <StepCountPill label="NM" count={r.not_mastered} variant="nm" />
+                </div>
               </button>
             ))}
 
