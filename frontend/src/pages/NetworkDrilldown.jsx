@@ -107,6 +107,13 @@ export default function NetworkDrilldown({ kindOverride }) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const school = searchParams.get('school') || ''
+  // school_year and cycle propagate from Network so back-nav and the
+  // displayed scope match what the user came from. Cycle is not yet
+  // applied as a server-side filter — it's persisted for navigation
+  // continuity (the cycle dropdown on the drill-down stays a placeholder
+  // until backend supports it).
+  const sy = searchParams.get('sy') || ''
+  const cycle = searchParams.get('cycle') || ''
   const kind = kindOverride
 
   const [data, setData] = useState(null)
@@ -123,11 +130,12 @@ export default function NetworkDrilldown({ kindOverride }) {
     setLoading(true); setErr(null)
     const params = new URLSearchParams({ kind })
     if (school) params.set('school', school)
+    if (sy) params.set('school_year', sy)
     api.get(`/api/network/drilldown?${params.toString()}`)
        .then(d => { if (alive) { setData(d); setLoading(false) } })
        .catch(e => { if (alive) { setErr(String(e)); setLoading(false) } })
     return () => { alive = false }
-  }, [kind, school])
+  }, [kind, school, sy])
 
   const title = KIND_TITLES[kind] || kind
   const scopeLabel = school || 'Network'
@@ -312,7 +320,9 @@ export default function NetworkDrilldown({ kindOverride }) {
 
         {/* Scope header */}
         <div style={{ ...STYLES.card, padding: 14, marginBottom: 10 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.05em' }}>{title}</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.05em' }}>
+            {title}{sy ? ` · ${sy}` : ''}{cycle && sy === '2026-2027' ? ` · Cycle ${cycle}` : ''}
+          </div>
           <div style={{ fontSize: 22, fontWeight: 800, color: '#002f60', marginTop: 4 }}>{shortSchool(scopeLabel)}</div>
           {summary && <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>{summary}</div>}
         </div>
