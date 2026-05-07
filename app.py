@@ -5,6 +5,7 @@ import os
 import json
 import logging
 import smtplib
+import yaml
 import psycopg2
 import psycopg2.extras
 from datetime import timedelta
@@ -393,6 +394,30 @@ def auth_status():
             'impersonating': (session.get('impersonating_as') if real and real.get('is_admin') else None),
         })
     return jsonify({'authenticated': False})
+
+
+# ------------------------------------------------------------------
+# API: Permissions matrix (read-only)
+#
+# Single source of truth lives in `permissions.yaml` at the project root.
+# This endpoint exposes the parsed YAML for the /app/admin/permissions
+# viewer page. Admin-only — the matrix itself describes who can access
+# what, including this endpoint.
+# ------------------------------------------------------------------
+
+@app.route('/api/permissions')
+@require_auth
+@require_admin
+def api_permissions():
+    yaml_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'permissions.yaml')
+    try:
+        with open(yaml_path, 'r', encoding='utf-8') as f:
+            data = yaml.safe_load(f)
+        return jsonify(data)
+    except FileNotFoundError:
+        return jsonify({'error': 'permissions.yaml not found'}), 500
+    except yaml.YAMLError as e:
+        return jsonify({'error': f'YAML parse error: {e}'}), 500
 
 
 # ------------------------------------------------------------------

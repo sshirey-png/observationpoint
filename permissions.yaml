@@ -1,0 +1,245 @@
+# ObservationPoint — Permissions Source of Truth
+#
+# Edit this file to change role-based access. The /app/admin/permissions
+# viewer reads from here and PERMISSIONS.md is generated from here, so
+# the doc, the UI, and the runtime all stay in sync.
+#
+# Role title source-of-truth lives in `bigquery-dashboards/config.py`.
+# Mirror those exact strings here. NEVER invent new role categories —
+# if a title isn't here AND isn't already in the dashboards config, ask
+# before adding it.
+#
+# Schema:
+#   tiers:        ordered list of permission buckets, top → bottom = most → least access
+#   capabilities: ordered list of permission grants; each lists which tiers get access
+#                 and (optionally) the scope (all_schools | own_school | own_downline | self)
+# ─────────────────────────────────────────────────────────────────────────────
+
+tiers:
+  - id: admin
+    label: Admin
+    description: Full access to all schools, all data.
+    rule: |
+      job_title matches C_TEAM_KEYWORDS (Chief, ExDir) OR is in HR_TEAM_TITLES
+    titles_keyword: [Chief, ExDir]
+    titles_exact:
+      - Chief Executive Officer
+      - Chief HR Officer
+      - Manager, HR
+      - Manager Payroll
+      - Manager - Benefits
+      - Talent Operations Manager
+      - Recruitment Manager
+
+  - id: content_lead
+    label: Content Lead
+    description: |
+      Formative coaching data across all 4 schools — observations, action steps,
+      fundamentals, goals. Explicitly excluded from personnel-review surfaces
+      (PMAP, SR, PIP, Write-Up).
+    note: |
+      ExDir of Teach and Learn matches C_TEAM_KEYWORDS via "ExDir" and so today
+      lands in `admin` via `is_cteam()`. To honor this scope, OP must check
+      `content_lead` BEFORE `admin` for these specific titles.
+    titles_exact:
+      - ExDir of Teach and Learn
+      - K-8 Content Lead
+
+  - id: school_leader
+    label: School Leader
+    description: |
+      Sees Network-level trends and per-school comparisons. Can only click
+      INTO their own school for drill-downs and the school deep-dive page.
+    titles_keyword:  # case-insensitive substring match
+      - principal
+      - assistant principal
+      - dean
+      - director of culture
+
+  - id: supervisor
+    label: Supervisor
+    description: |
+      Anyone with at least one direct report. Sees their recursive downline.
+      Not school-scoped — a network-team supervisor sees their reports
+      regardless of school.
+    rule: at least one row in staff where supervisor_email = user.email AND is_active
+
+  - id: self_only
+    label: Self-only
+    description: |
+      Active staff with no direct reports and no admin/content-lead/school-leader
+      title. Sees their own profile, action steps, self-reflections, etc.
+    rule: active staff who don't match any tier above
+
+# ─────────────────────────────────────────────────────────────────────────────
+
+capabilities:
+  # ── Network-level views ──
+  - id: view_network
+    label: View Network landing page
+    grants:
+      - { tier: admin,         scope: all_schools }
+      - { tier: content_lead,  scope: all_schools }
+      - { tier: school_leader, scope: all_schools, note: "comparison numbers visible; click-through restricted by other capabilities" }
+
+  - id: view_observations
+    label: Drill-down · Observations
+    grants:
+      - { tier: admin,         scope: all_schools }
+      - { tier: content_lead,  scope: all_schools }
+      - { tier: school_leader, scope: own_school }
+
+  - id: view_evaluations
+    label: Drill-down · Evaluations (PMAP + SR)
+    grants:
+      - { tier: admin,         scope: all_schools }
+      - { tier: school_leader, scope: own_school }
+    excluded_explicitly: [content_lead]
+
+  - id: view_action_steps
+    label: Drill-down · Action Steps
+    grants:
+      - { tier: admin,         scope: all_schools }
+      - { tier: content_lead,  scope: all_schools }
+      - { tier: school_leader, scope: own_school }
+
+  - id: view_fundamentals
+    label: Drill-down · Fundamentals
+    grants:
+      - { tier: admin,         scope: all_schools }
+      - { tier: content_lead,  scope: all_schools }
+      - { tier: school_leader, scope: own_school }
+
+  - id: view_celebration
+    label: Drill-down · Celebration
+    grants:
+      - { tier: admin,         scope: all_schools }
+      - { tier: content_lead,  scope: all_schools }
+      - { tier: school_leader, scope: own_school }
+
+  - id: view_school_page
+    label: School deep-dive page
+    grants:
+      - { tier: admin,         scope: all_schools }
+      - { tier: content_lead,  scope: all_schools }
+      - { tier: school_leader, scope: own_school }
+
+  # ── Team / individual profile ──
+  - id: view_team
+    label: Team page (direct reports)
+    grants:
+      - { tier: admin,         scope: all_schools }
+      - { tier: school_leader, scope: own_downline }
+      - { tier: supervisor,    scope: own_downline }
+
+  - id: view_staff_profile
+    label: Individual staff profile
+    grants:
+      - { tier: admin,         scope: all_schools }
+      - { tier: content_lead,  scope: all_schools, note: "with personnel-review sections hidden" }
+      - { tier: school_leader, scope: own_school }
+      - { tier: supervisor,    scope: own_downline }
+      - { tier: self_only,     scope: self }
+
+  # ── TouchPoint forms (formative) ──
+  - id: form_observe
+    label: Observe form
+    grants:
+      - { tier: admin,         scope: all_schools }
+      - { tier: content_lead,  scope: all_schools }
+      - { tier: school_leader, scope: own_school }
+      - { tier: supervisor,    scope: own_downline }
+
+  - id: form_quick_feedback
+    label: Quick Feedback form
+    grants:
+      - { tier: admin,         scope: all_schools }
+      - { tier: content_lead,  scope: all_schools }
+      - { tier: school_leader, scope: own_school }
+      - { tier: supervisor,    scope: own_downline }
+
+  - id: form_celebrate
+    label: Celebrate form
+    grants:
+      - { tier: admin,         scope: all_schools }
+      - { tier: content_lead,  scope: all_schools }
+      - { tier: school_leader, scope: own_school }
+      - { tier: supervisor,    scope: own_downline }
+
+  - id: form_fundamentals
+    label: Fundamentals timer form
+    grants:
+      - { tier: admin,         scope: all_schools }
+      - { tier: content_lead,  scope: all_schools }
+      - { tier: school_leader, scope: own_school }
+      - { tier: supervisor,    scope: own_downline }
+
+  - id: form_meeting
+    label: Meeting form
+    grants:
+      - { tier: admin,         scope: all_schools }
+      - { tier: content_lead,  scope: all_schools }
+      - { tier: school_leader, scope: own_school }
+      - { tier: supervisor,    scope: own_downline }
+
+  - id: form_goals
+    label: Goals form
+    grants:
+      - { tier: admin,         scope: all_schools }
+      - { tier: content_lead,  scope: all_schools }
+      - { tier: school_leader, scope: own_school }
+      - { tier: supervisor,    scope: own_downline }
+      - { tier: self_only,     scope: self }
+
+  - id: form_solicit_feedback
+    label: Solicit Feedback form
+    grants:
+      - { tier: admin,         scope: all_schools }
+      - { tier: school_leader, scope: own_school }
+      - { tier: supervisor,    scope: own_downline }
+      - { tier: self_only,     scope: self }
+
+  # ── TouchPoint forms (personnel review) ──
+  - id: form_pmap
+    label: PMAP form
+    grants:
+      - { tier: admin,         scope: all_schools }
+      - { tier: school_leader, scope: own_school }
+      - { tier: supervisor,    scope: own_downline }
+    excluded_explicitly: [content_lead]
+
+  - id: form_self_reflection
+    label: Self-Reflection form
+    grants:
+      - { tier: admin,         scope: all_schools }
+      - { tier: school_leader, scope: own_school }
+      - { tier: supervisor,    scope: own_downline }
+      - { tier: self_only,     scope: self }
+    excluded_explicitly: [content_lead]
+
+  - id: form_pip
+    label: PIP (Performance Improvement Plan)
+    grants:
+      - { tier: admin,         scope: all_schools }
+      - { tier: school_leader, scope: own_school }
+      - { tier: supervisor,    scope: own_downline }
+    excluded_explicitly: [content_lead]
+
+  - id: form_writeup
+    label: Write-Up
+    grants:
+      - { tier: admin,         scope: all_schools }
+      - { tier: school_leader, scope: own_school }
+      - { tier: supervisor,    scope: own_downline }
+    excluded_explicitly: [content_lead]
+
+  # ── Admin ──
+  - id: impersonate
+    label: View-as / Impersonation
+    grants:
+      - { tier: admin, scope: all_schools }
+
+  - id: view_permissions_admin
+    label: Admin · Permissions matrix
+    grants:
+      - { tier: admin, scope: all_schools }
