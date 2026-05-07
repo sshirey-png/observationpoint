@@ -210,11 +210,16 @@ capabilities:
 
   - id: form_self_reflection
     label: Self-Reflection form
+    note: |
+      SR is universally self-only — every staff member fills in their own,
+      no one fills SR about another person. The form auto-routes to the
+      correct variant (Teacher / Leader / Network / Support / PreK) based
+      on the user's job_function.
     grants:
-      - { tier: admin,         scope: all_schools }
-      - { tier: content_lead,  scope: self, note: "for their own SR only — not someone else's" }
-      - { tier: school_leader, scope: own_school }
-      - { tier: supervisor,    scope: own_downline }
+      - { tier: admin,         scope: self }
+      - { tier: content_lead,  scope: self }
+      - { tier: school_leader, scope: self }
+      - { tier: supervisor,    scope: self }
       - { tier: self_only,     scope: self }
 
   - id: form_pip

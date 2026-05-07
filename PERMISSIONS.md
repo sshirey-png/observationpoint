@@ -91,7 +91,7 @@ title. Sees their own profile, action steps, self-reflections, etc.
 | **Goals form**<br><small>`form_goals`</small> | ✅ All | ✅ All | 🟡 Own school | 🟡 Own team | 🟡 Self only |
 | **Solicit Feedback form**<br><small>`form_solicit_feedback`</small> | ✅ All | ⛔ | 🟡 Own school | 🟡 Own team | 🟡 Self only |
 | **PMAP form**<br><small>`form_pmap`</small> | ✅ All | ⛔ excluded | 🟡 Own school | 🟡 Own team | ⛔ |
-| **Self-Reflection form**<br><small>`form_self_reflection`</small> | ✅ All | 🟡 Self only<br><small>_for their own SR only — not someone else's_</small> | 🟡 Own school | 🟡 Own team | 🟡 Self only |
+| **Self-Reflection form**<br><small>`form_self_reflection`</small> | 🟡 Self only | 🟡 Self only | 🟡 Self only | 🟡 Self only | 🟡 Self only |
 | **PIP (Performance Improvement Plan)**<br><small>`form_pip`</small> | ✅ All | ⛔ excluded | 🟡 Own school | 🟡 Own team | ⛔ |
 | **Write-Up**<br><small>`form_writeup`</small> | ✅ All | ⛔ excluded | 🟡 Own school | 🟡 Own team | ⛔ |
 | **View-as / Impersonation**<br><small>`impersonate`</small> | ✅ All | ⛔ | ⛔ | ⛔ | ⛔ |
