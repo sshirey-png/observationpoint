@@ -23,6 +23,7 @@ from auth import (
     init_oauth, oauth, get_current_user, get_real_user, is_impersonating,
     require_auth, require_admin, require_no_impersonation,
     get_accessible_emails, is_admin_title, check_access, is_supervisor,
+    get_user_scope,
 )
 import db
 
@@ -365,6 +366,7 @@ def auth_status():
                 'is_admin': True,
                 'can_file_hr_doc': True,
                 'accessible_count': 999,
+                'scope': {'tier': 'admin'},
             }
         })
     user = get_current_user()
@@ -383,6 +385,7 @@ def auth_status():
                 'is_supervisor': is_supervisor(user),
                 'can_file_hr_doc': _can_file_hr_doc(user),
                 'accessible_count': len(user.get('accessible_emails', [])),
+                'scope': get_user_scope(user),
             },
             # Admin-only info: the real signed-in user and whether they're
             # currently impersonating someone.
@@ -2264,13 +2267,50 @@ def api_touchpoint_full_detail(tp_id):
 @require_auth
 def api_network_drilldown():
     user = get_current_user()
-    if not DEV_MODE and not is_supervisor(user):
-        return jsonify({'authorized': False, 'error': 'supervisor access only'}), 200
     kind = (request.args.get('kind') or '').strip().lower()
     school = (request.args.get('school') or '').strip()
     sy = (request.args.get('school_year') or CURRENT_SCHOOL_YEAR).strip()
     if kind not in {'pmap', 'sr', 'evaluations', 'action_step', 'fundamentals', 'observations'}:
         return jsonify({'error': 'invalid kind'}), 400
+
+    # ── Tier-based access (mirrors permissions.yaml) ────────────────────
+    # Returns 200 with authorized:false + reason so the frontend renders a
+    # friendly screen instead of a raw 403 (memory rule).
+    if not DEV_MODE:
+        scope = get_user_scope(user)
+        tier = scope.get('tier')
+
+        # Tier 1: only admin / content_lead / school_leader can hit drill-downs
+        if tier not in {'admin', 'content_lead', 'school_leader'}:
+            return jsonify({
+                'authorized': False,
+                'reason': 'role',
+                'message': 'Network drill-downs are for school leadership.',
+            }), 200
+
+        # Tier 2: content_lead is excluded from personnel-review surfaces
+        if tier == 'content_lead' and kind == 'evaluations':
+            return jsonify({
+                'authorized': False,
+                'reason': 'capability',
+                'message': 'Content Leads do not have access to PMAP / Self-Reflection records.',
+            }), 200
+
+        # Tier 3: school_leader is locked to their own school
+        if tier == 'school_leader':
+            own_school = scope.get('school') or ''
+            if school and own_school and school.lower() != own_school.lower():
+                return jsonify({
+                    'authorized': False,
+                    'reason': 'school',
+                    'message': f"You can only view {own_school} data.",
+                    'own_school': own_school,
+                    'attempted_school': school,
+                }), 200
+            if not school and own_school:
+                # Network-wide drill-down requested → silently scope to own school
+                school = own_school
+    # ────────────────────────────────────────────────────────────────────
 
     school_clause = " AND s.school = %s" if school else ""
     school_params = (school,) if school else ()
@@ -2653,8 +2693,16 @@ def api_staff_touchpoints_export(email):
 @require_auth
 def api_network():
     user = get_current_user()
-    if not DEV_MODE and not is_supervisor(user):
-        return jsonify({'error': 'Access denied'}), 403
+    if not DEV_MODE:
+        scope = get_user_scope(user)
+        # Network landing is for admin / content_lead / school_leader.
+        # Supervisors and self-only roles get a friendly screen.
+        if scope.get('tier') not in {'admin', 'content_lead', 'school_leader'}:
+            return jsonify({
+                'authorized': False,
+                'reason': 'role',
+                'message': 'The Network page is for school leaders, content leads, and HR.',
+            }), 200
     sy = request.args.get('school_year', CURRENT_SCHOOL_YEAR)
     cycle = request.args.get('cycle')
     try:

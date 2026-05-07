@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import BottomNav from '../components/BottomNav'
 import ImpersonationBanner from '../components/ImpersonationBanner'
 import GlobalSearch from '../components/GlobalSearch'
+import Friendly403 from '../components/Friendly403'
 import { api } from '../lib/api'
 
 /**
@@ -33,7 +34,7 @@ function shortSchool(name) {
  * drill-down filtered to that school. When the destination page doesn't
  * exist yet, the cell is non-clickable (no cursor, no tap handler).
  */
-function SchoolCompareStrip({ label, schools, valueOf, hrefOf, mutedWhenZero = false, navigate }) {
+function SchoolCompareStrip({ label, schools, valueOf, hrefOf, mutedWhenZero = false, navigate, ownSchool = null }) {
   if (!schools || schools.length === 0) return null
   return (
     <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #f3f4f6' }}>
@@ -43,24 +44,34 @@ function SchoolCompareStrip({ label, schools, valueOf, hrefOf, mutedWhenZero = f
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${schools.length}, 1fr)`, gap: 6 }}>
         {schools.map(s => {
           const val = valueOf(s)
-          const href = hrefOf ? hrefOf(s) : null
+          const isOwnSchool = ownSchool && s.school === ownSchool
+          // School-leader scope: only own-school cell is clickable
+          const restrictedByScope = ownSchool && !isOwnSchool
+          const href = (hrefOf && !restrictedByScope) ? hrefOf(s) : null
           const isZero = mutedWhenZero && (val === 0 || val === '0' || val === '0%')
+          const baseBg = isOwnSchool ? '#fff7ed' : '#f9fafb'
+          const baseBorder = isOwnSchool ? '#e47727' : '#e5e7eb'
           return (
             <button
               key={s.school}
               onClick={href ? (e) => { e.stopPropagation(); navigate(href) } : undefined}
               disabled={!href}
+              title={restrictedByScope ? 'Other school — view-only' : undefined}
               style={{
-                padding: '8px 4px', borderRadius: 6, background: '#f9fafb',
-                border: '1px solid #e5e7eb', textAlign: 'center',
-                cursor: href ? 'pointer' : 'default', fontFamily: 'inherit',
+                padding: '8px 4px', borderRadius: 6,
+                background: baseBg,
+                border: `${isOwnSchool ? '2px' : '1px'} solid ${baseBorder}`,
+                textAlign: 'center',
+                cursor: href ? 'pointer' : (restrictedByScope ? 'not-allowed' : 'default'),
+                fontFamily: 'inherit',
+                opacity: restrictedByScope ? 0.55 : 1,
                 transition: 'border-color .15s, background .15s',
               }}
               onMouseEnter={href ? (e) => { e.currentTarget.style.borderColor = '#002f60'; e.currentTarget.style.background = '#f0f7ff' } : undefined}
-              onMouseLeave={href ? (e) => { e.currentTarget.style.borderColor = '#e5e7eb'; e.currentTarget.style.background = '#f9fafb' } : undefined}
+              onMouseLeave={href ? (e) => { e.currentTarget.style.borderColor = baseBorder; e.currentTarget.style.background = baseBg } : undefined}
             >
               <div style={{ fontSize: 9, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.04em' }}>
-                {shortSchool(s.school)}
+                {shortSchool(s.school)}{restrictedByScope ? ' 🔒' : ''}
               </div>
               <div style={{ fontSize: 14, fontWeight: 800, color: isZero ? '#9ca3af' : '#002f60', marginTop: 4 }}>
                 {val == null || val === '' ? '—' : val}
@@ -904,6 +915,15 @@ export default function Network() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [scope, setScope] = useState(null)  // {tier, school?}
+  // Pull the user's permission scope once so we know whether to lock
+  // strip cells to own school (school_leader) or hide Evaluations
+  // (content_lead).
+  useEffect(() => {
+    api.get('/api/auth/status').then(r => setScope(r?.user?.scope || null)).catch(() => {})
+  }, [])
+  const ownSchool = scope?.tier === 'school_leader' ? scope.school : null
+  const hideEvaluations = scope?.tier === 'content_lead'
   // School-year and cycle live in the URL so back-navigation from a school
   // or drill-down lands on the same view the user left.
   const initialSY = searchParams.get('sy')
@@ -936,15 +956,21 @@ export default function Network() {
     }
   }, [])
 
+  const [unauth, setUnauth] = useState(null)
   useEffect(() => {
     let cancelled = false
     async function go() {
-      setLoading(true)
+      setLoading(true); setUnauth(null)
       try {
         // Cycle filter only applies to 2026-27 (OP era); Grow data has no cycle
         const cycleParam = schoolYear === '2026-2027' ? `&cycle=${cycle}` : ''
         const d = await api.get(`/api/network?school_year=${encodeURIComponent(schoolYear)}${cycleParam}`)
-        if (!cancelled) setData(d)
+        if (cancelled) return
+        if (d && d.authorized === false) {
+          setUnauth({ reason: d.reason, message: d.message })
+        } else {
+          setData(d)
+        }
       } catch (e) {
         if (!cancelled) setData(null)
       }
@@ -964,6 +990,10 @@ export default function Network() {
   const pmapDim = data?.network_avg || {}
   const pc = data?.pmap_completion || {}
   const sc = data?.sr_completion || {}
+
+  if (unauth) {
+    return <Friendly403 reason={unauth.reason} message={unauth.message} />
+  }
 
   return (
     <div style={{ minHeight: '100svh', background: '#f5f7fa', paddingBottom: 80, fontFamily: 'Inter, sans-serif' }}>
@@ -1076,6 +1106,7 @@ export default function Network() {
                   valueOf={s => s.pmap_avg ?? '—'}
                   hrefOf={s => `/app/network/observations?school=${encodeURIComponent(s.school)}&sy=${encodeURIComponent(schoolYear)}&cycle=${cycle}`}
                   navigate={navigate}
+                  ownSchool={ownSchool}
                 />
               </div>
             )}
@@ -1102,8 +1133,9 @@ export default function Network() {
 
             {/* Per-school comparison: combined Evaluations (PMAP + SR stacked).
                 One strip → one drill-down page so leaders see both statuses
-                in a single teacher list. */}
-            {data.schools_compare?.length > 0 && (
+                in a single teacher list.
+                Hidden for Content Leads — they don't have access to PMAP/SR. */}
+            {!hideEvaluations && data.schools_compare?.length > 0 && (
               <div style={{ background: '#fff', borderRadius: 14, padding: 14, boxShadow: '0 1px 3px rgba(0,0,0,.05)', marginBottom: 14 }}>
                 <SchoolCompareStrip
                   label="Evaluations · by school"
@@ -1122,6 +1154,7 @@ export default function Network() {
                   )}
                   hrefOf={s => `/app/network/evaluations?school=${encodeURIComponent(s.school)}&sy=${encodeURIComponent(schoolYear)}&cycle=${cycle}`}
                   navigate={navigate}
+                  ownSchool={ownSchool}
                 />
               </div>
             )}
@@ -1160,6 +1193,7 @@ export default function Network() {
                   hrefOf={s => `/app/network/action-steps?school=${encodeURIComponent(s.school)}&sy=${encodeURIComponent(schoolYear)}&cycle=${cycle}`}
                   navigate={navigate}
                   mutedWhenZero
+                  ownSchool={ownSchool}
                 />
               )}
             </div>

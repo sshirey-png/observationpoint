@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import ImpersonationBanner from '../components/ImpersonationBanner'
+import Friendly403 from '../components/Friendly403'
 import { api } from '../lib/api'
 
 /**
@@ -119,6 +120,7 @@ export default function NetworkDrilldown({ kindOverride }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [err, setErr] = useState(null)
+  const [unauth, setUnauth] = useState(null)  // { reason, message, own_school?, attempted_school? }
 
   // Filter state
   const [search, setSearch] = useState('')
@@ -127,15 +129,45 @@ export default function NetworkDrilldown({ kindOverride }) {
 
   useEffect(() => {
     let alive = true
-    setLoading(true); setErr(null)
+    setLoading(true); setErr(null); setUnauth(null)
     const params = new URLSearchParams({ kind })
     if (school) params.set('school', school)
     if (sy) params.set('school_year', sy)
     api.get(`/api/network/drilldown?${params.toString()}`)
-       .then(d => { if (alive) { setData(d); setLoading(false) } })
+       .then(d => {
+         if (!alive) return
+         if (d && d.authorized === false) {
+           setUnauth({
+             reason: d.reason,
+             message: d.message,
+             own_school: d.own_school,
+             attempted_school: d.attempted_school,
+           })
+         } else {
+           setData(d)
+         }
+         setLoading(false)
+       })
        .catch(e => { if (alive) { setErr(String(e)); setLoading(false) } })
     return () => { alive = false }
   }, [kind, school, sy])
+
+  if (unauth) {
+    // Build a redirect-to-own-school link for school-mismatch case
+    const ownSchoolLink = unauth.reason === 'school' && unauth.own_school
+      ? `/app/network/${kind === 'action_step' ? 'action-steps' : kind}?school=${encodeURIComponent(unauth.own_school)}${sy ? `&sy=${encodeURIComponent(sy)}` : ''}${cycle ? `&cycle=${cycle}` : ''}`
+      : null
+    return (
+      <Friendly403
+        reason={unauth.reason}
+        message={unauth.message}
+        ownSchool={unauth.own_school}
+        attemptedSchool={unauth.attempted_school}
+        redirectTo={ownSchoolLink}
+        redirectLabel={unauth.own_school ? `View ${unauth.own_school} → ` : null}
+      />
+    )
+  }
 
   const title = KIND_TITLES[kind] || kind
   const scopeLabel = school || 'Network'

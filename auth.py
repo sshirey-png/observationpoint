@@ -130,6 +130,55 @@ def is_admin_user(user):
     return user.get('is_admin', False)
 
 
+# --- Tier-based scope (Network + drill-downs) ---
+# Mirrors permissions.yaml. Order MATTERS: content_lead is checked BEFORE
+# admin so ExDir of Teach and Learn (which matches C_TEAM_KEYWORDS via
+# "ExDir") gets the narrower content-lead scope, not full admin.
+
+CONTENT_LEAD_TITLES_EXACT = ['ExDir of Teach and Learn', 'K-8 Content Lead']
+SCHOOL_LEADER_TITLE_KEYWORDS = ['principal', 'assistant principal', 'dean', 'director of culture']
+
+
+def is_content_lead(job_title):
+    return bool(job_title) and job_title.strip() in CONTENT_LEAD_TITLES_EXACT
+
+
+def is_school_leader(job_title):
+    if not job_title:
+        return False
+    title_lower = job_title.lower()
+    return any(kw in title_lower for kw in SCHOOL_LEADER_TITLE_KEYWORDS)
+
+
+def get_user_scope(user):
+    """Return the user's permission tier + (for school_leader) their school.
+
+    Returns one of:
+      {'tier': 'admin'}
+      {'tier': 'content_lead'}
+      {'tier': 'school_leader', 'school': '<school name>'}
+      {'tier': 'supervisor'}
+      {'tier': 'self_only'}
+      {'tier': None}  # not authenticated
+
+    Tier order matters — see docstring above.
+    """
+    if not user:
+        return {'tier': None}
+    job_title = user.get('job_title') or ''
+    school = user.get('school') or ''
+
+    if is_content_lead(job_title):
+        return {'tier': 'content_lead'}
+    if is_admin_title(job_title):
+        return {'tier': 'admin'}
+    if is_school_leader(job_title) and school:
+        return {'tier': 'school_leader', 'school': school}
+    if is_supervisor(user):
+        return {'tier': 'supervisor'}
+    return {'tier': 'self_only'}
+
+
 # --- Org hierarchy (email-based recursive CTE) ---
 
 def get_accessible_emails(conn, email, job_title):
