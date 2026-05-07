@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>Mock — Friendly 403 screen</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter','Open Sans',Arial,sans-serif;background:#eef1f5;color:#111;-webkit-font-smoothing:antialiased;line-height:1.4;padding:24px 12px 60px}
+h1{font-size:14px;font-weight:800;color:#002f60;text-transform:uppercase;letter-spacing:.06em;text-align:center;margin-bottom:6px}
+.note{font-size:12px;color:#6b7280;text-align:center;max-width:760px;margin:0 auto 24px}
+.note b{color:#111}
+.row{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;max-width:1200px;margin:0 auto}
+@media(max-width:1100px){.row{grid-template-columns:1fr 1fr}}
+@media(max-width:760px){.row{grid-template-columns:1fr}}
+.frame{background:#f5f7fa;border-radius:18px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.08);min-height:680px;display:flex;flex-direction:column}
+
+.frame-label{background:#1e293b;color:#cbd5e1;font-size:10px;font-weight:700;padding:6px 12px;text-align:center;letter-spacing:.05em;text-transform:uppercase}
+
+.nav{background:#002f60;padding:14px 14px;display:flex;align-items:center;gap:10px;color:#fff}
+.nav-back{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:16px}
+.nav-title{flex:1;text-align:center}
+.nav-title .brand{font-size:15px;font-weight:800}
+.nav-title .o{color:#e47727}
+.nav-sub{font-size:11px;color:rgba(255,255,255,.65);margin-top:2px}
+
+.body{padding:30px 22px;flex:1;display:flex;align-items:center;justify-content:center}
+.error-card{background:#fff;border-radius:14px;padding:28px 22px;box-shadow:0 1px 3px rgba(0,0,0,.05);text-align:center;max-width:380px;width:100%}
+.icon{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 14px}
+.icon.lock{background:#fef3c7;color:#a16207}
+.icon.scope{background:#dbeafe;color:#1e40af}
+.icon.lost{background:#fee2e2;color:#b91c1c}
+h2{font-size:18px;font-weight:800;color:#002f60;margin-bottom:8px}
+.body-text{font-size:13px;color:#374151;line-height:1.5;margin-bottom:18px}
+.body-text b{color:#111}
+.btn{display:inline-block;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;background:#002f60;color:#fff;text-decoration:none;cursor:pointer;border:none;font-family:inherit}
+.btn:hover{background:#003a7a}
+.btn-secondary{display:inline-block;padding:10px 16px;border-radius:8px;font-size:12px;font-weight:600;background:transparent;color:#6b7280;text-decoration:none;cursor:pointer;border:1px solid #e5e7eb;margin-left:6px;font-family:inherit}
+.contact{font-size:11px;color:#9ca3af;margin-top:16px}
+.contact a{color:#002f60;text-decoration:none;font-weight:600}
+.path-callout{font-size:10px;color:#6b7280;background:#f3f4f6;padding:6px 8px;border-radius:6px;margin-top:14px;font-family:'SF Mono',Monaco,monospace;word-break:break-all}
+
+.legend{background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:12px 14px;font-size:11px;color:#4338ca;margin:24px auto 0;max-width:1100px;line-height:1.5}
+.legend b{color:#3730a3;display:block;font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.legend ul{margin-left:18px;margin-top:6px}
+</style></head><body>
+
+<h1>Mock — Friendly 403 screens</h1>
+<p class="note">Three flavors depending on context. Goal: never show a raw 403 / "Access denied" / JSON error. Always tell the user <b>what they tried</b>, <b>why it didn't work</b>, and <b>what they can do instead</b>.</p>
+
+<div class="row">
+
+  <!-- ── Variant A: Wrong school ─────────────── -->
+  <div class="frame">
+    <div class="frame-label">A · School leader trying another school</div>
+    <div class="nav">
+      <div class="nav-back">←</div>
+      <div class="nav-title">
+        <div class="brand">Observation<span class="o">Point</span></div>
+        <div class="nav-sub">Network</div>
+      </div>
+      <div style="width:30px"></div>
+    </div>
+    <div class="body">
+      <div class="error-card">
+        <div class="icon scope">🏫</div>
+        <h2>That's not your school</h2>
+        <div class="body-text">
+          You can see <b>network-wide comparison numbers</b> for all schools, but you can only drill into <b>Phillis Wheatley</b> (your school).
+        </div>
+        <a href="#" class="btn">Go to Wheatley's view →</a>
+        <a href="#" class="btn-secondary">Back to Network</a>
+        <div class="path-callout">/app/network/observations?school=Langston%20Hughes</div>
+        <div class="contact">If your assigned school is wrong, email <a href="#">talent@firstlineschools.org</a>.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Variant B: Wrong role bucket (e.g., teacher hits Network) ─────────────── -->
+  <div class="frame">
+    <div class="frame-label">B · Teacher / wrong role bucket</div>
+    <div class="nav">
+      <div class="nav-back">←</div>
+      <div class="nav-title">
+        <div class="brand">Observation<span class="o">Point</span></div>
+        <div class="nav-sub">Network</div>
+      </div>
+      <div style="width:30px"></div>
+    </div>
+    <div class="body">
+      <div class="error-card">
+        <div class="icon lock">🔒</div>
+        <h2>This page isn't for your role</h2>
+        <div class="body-text">
+          The Network page is for <b>school leaders, content leads, and HR</b>. You're signed in as a <b>Teacher</b>, so this section is hidden.
+        </div>
+        <a href="/" class="btn">Go to your home</a>
+        <a href="#" class="btn-secondary">Open my profile</a>
+        <div class="contact">Think this is wrong? Email <a href="#">talent@firstlineschools.org</a> with the page name.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Variant C: Generic / unknown ─────────────── -->
+  <div class="frame">
+    <div class="frame-label">C · Generic 403 (fallback)</div>
+    <div class="nav">
+      <div class="nav-back">←</div>
+      <div class="nav-title">
+        <div class="brand">Observation<span class="o">Point</span></div>
+        <div class="nav-sub">Access</div>
+      </div>
+      <div style="width:30px"></div>
+    </div>
+    <div class="body">
+      <div class="error-card">
+        <div class="icon lost">🤔</div>
+        <h2>You don't have access here</h2>
+        <div class="body-text">
+          We couldn't load this page for you. It might be that <b>you're signed in as the wrong account</b>, or this section <b>isn't part of your role yet</b>.
+        </div>
+        <a href="/" class="btn">Back to home</a>
+        <a href="#" class="btn-secondary">Sign out</a>
+        <div class="contact">Need help? Email <a href="#">talent@firstlineschools.org</a>.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="legend">
+  <b>Design notes</b>
+  <ul>
+    <li><b>Tone:</b> friendly, not punitive. Avoid words like "Forbidden," "Access denied," "401/403."</li>
+    <li><b>Always offer a path forward:</b> primary button takes them somewhere they CAN go (their school, their home, their profile).</li>
+    <li><b>Always offer escape:</b> "email talent@" link for "this is wrong, fix me" cases.</li>
+    <li><b>Variant A vs B is the key distinction</b> — Variant A is "you have access just not THIS school"; Variant B is "you don't have this kind of access at all."</li>
+    <li><b>Pages to wrap:</b> /app/network, /app/network/* (drill-downs), /app/network/school/* (school deep-dive), /app/admin/* (impersonation, permissions matrix).</li>
+    <li><b>API behavior unchanged:</b> backend still returns proper HTTP 403; frontend Router catches the auth response and renders one of these screens. No change to logging or audit.</li>
+  </ul>
+</div>
+
+</body></html>

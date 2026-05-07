@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>Mock — School Leader Network view</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter','Open Sans',Arial,sans-serif;background:#eef1f5;color:#111;-webkit-font-smoothing:antialiased;line-height:1.4;padding:24px 12px 60px}
+h1{font-size:14px;font-weight:800;color:#002f60;text-transform:uppercase;letter-spacing:.06em;text-align:center;margin-bottom:6px}
+.note{font-size:12px;color:#6b7280;text-align:center;max-width:760px;margin:0 auto 24px}
+.note b{color:#111}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:920px;margin:0 auto}
+@media(max-width:760px){.row{grid-template-columns:1fr}}
+.frame{background:#f5f7fa;border-radius:18px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.08);min-height:760px}
+
+.scope-banner{background:#dbeafe;color:#1e40af;font-size:11px;font-weight:700;padding:8px 14px;text-align:center;letter-spacing:.05em;text-transform:uppercase}
+
+.nav{background:#002f60;padding:14px 14px;display:flex;align-items:center;gap:10px;color:#fff}
+.nav-back{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:16px}
+.nav-title{flex:1;text-align:center}
+.nav-title .brand{font-size:15px;font-weight:800}
+.nav-title .o{color:#e47727}
+.nav-sub{font-size:11px;color:rgba(255,255,255,.65);margin-top:2px}
+
+.body{padding:14px}
+.year-pills{background:#fff;padding:8px 14px;display:flex;justify-content:center;gap:4px;border-bottom:1px solid #e5e7eb}
+.year-pills .group{display:inline-flex;background:#f3f4f6;border-radius:18px;padding:3px}
+.year-pills .pill{padding:5px 16px;border-radius:16px;font-size:11px;font-weight:700;border:none;cursor:pointer}
+.year-pills .pill.on{background:#fff;color:#002f60;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.year-pills .pill.off{background:transparent;color:#6b7280}
+
+.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:14px}
+.card-h{font-size:13px;font-weight:800;color:#111;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+
+.statstrip{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.stat{background:#fff;border-radius:14px;padding:12px 8px;box-shadow:0 1px 3px rgba(0,0,0,.05);text-align:center}
+.stat-num{font-size:24px;font-weight:800;color:#002f60;line-height:1}
+.stat-lbl{font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-top:5px}
+
+.cmp-strip{margin-top:10px;padding-top:10px;border-top:1px solid #f3f4f6}
+.cmp-lbl{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.cmp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.cmp-cell{padding:8px 4px;border-radius:6px;background:#f9fafb;text-align:center;border:1px solid #e5e7eb;cursor:pointer;position:relative}
+.cmp-cell:hover{border-color:#002f60;background:#f0f7ff}
+.cmp-cell.disabled{cursor:not-allowed;background:#f9fafb;opacity:.55}
+.cmp-cell.disabled:hover{border-color:#e5e7eb;background:#f9fafb}
+.cmp-cell.own{border-color:#e47727;background:#fff7ed;border-width:2px}
+.cmp-cell.own::after{content:"YOUR SCHOOL";position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:#e47727;color:#fff;font-size:7px;font-weight:800;padding:2px 5px;border-radius:3px;letter-spacing:.05em}
+.cmp-school{font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.04em}
+.cmp-val{font-size:13px;font-weight:800;color:#002f60;margin-top:4px}
+.cmp-val .lbl{font-size:7px;color:#6b7280;font-weight:700;letter-spacing:.04em;margin-right:3px}
+.lock-ico{font-size:9px;color:#9ca3af;margin-top:2px}
+
+.legend{background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:10px 12px;font-size:11px;color:#4338ca;margin-bottom:14px;line-height:1.5}
+.legend b{color:#3730a3;display:block;font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.legend ul{margin-left:16px;margin-top:4px}
+
+.hero{background:linear-gradient(135deg,#002f60 0%,#003c7d 100%);border-radius:14px;padding:18px 16px;margin-bottom:14px;color:#fff}
+.hero-lbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.06em}
+.hero-row{display:flex;align-items:center;gap:18px;margin-top:6px}
+.donut{width:88px;height:88px;border-radius:50%;background:conic-gradient(#10b981 0% 72%, rgba(255,255,255,.15) 72% 100%);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.donut .inner{width:64px;height:64px;border-radius:50%;background:#003a7a;color:#fff;font-size:18px;font-weight:900;display:flex;align-items:center;justify-content:center}
+.hero-text{flex:1;min-width:0}
+.hero-num{font-size:36px;font-weight:900;line-height:1}
+.hero-sub{font-size:11px;color:rgba(255,255,255,.7);margin-top:6px}
+.hero-foot{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.15)}
+.hero-foot .cell{text-align:center;cursor:pointer;border-radius:6px;padding:4px;position:relative}
+.hero-foot .cell.disabled{cursor:not-allowed;opacity:.55}
+.hero-foot .cell.own{background:rgba(228,119,39,.18);border:1.5px solid #e47727}
+.hero-foot .num{font-size:18px;font-weight:800;color:#fff}
+.hero-foot .name{font-size:9px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+</style></head><body>
+
+<h1>Mock — School Leader Network view</h1>
+<p class="note">Logged in as <b>Sabrina Edwards (Asst. Principal · Phillis Wheatley)</b>. She sees all 4 schools' comparison numbers (the value is comparison) but can only click into Wheatley. Other-school cells are visible + dimmed + non-clickable.</p>
+
+<div class="row">
+
+  <!-- ── Network landing — school leader perspective ─────────────── -->
+  <div class="frame">
+    <div class="scope-banner">VIEW SCOPED · Phillis Wheatley · You can compare across schools but only drill into your own.</div>
+    <div class="nav">
+      <div class="nav-back">←</div>
+      <div class="nav-title">
+        <div class="brand">Observation<span class="o">Point</span></div>
+        <div class="nav-sub">Network · 2026-2027 · Cycle 1</div>
+      </div>
+      <div style="width:30px"></div>
+    </div>
+    <div class="year-pills">
+      <div class="group">
+        <button class="pill on">26-27</button>
+        <button class="pill off">25-26</button>
+        <button class="pill off">24-25</button>
+      </div>
+    </div>
+    <div class="body">
+
+      <div class="hero">
+        <div class="hero-lbl">% Mastering Fundamentals · Cycle 1</div>
+        <div class="hero-row">
+          <div class="donut"><div class="inner">72%</div></div>
+          <div class="hero-text">
+            <div class="hero-num">135<span style="font-size:18px;color:#e47727">/187</span></div>
+            <div class="hero-sub">teachers mastering · 779 fundamentals obs captured</div>
+          </div>
+        </div>
+        <div class="hero-foot">
+          <div class="cell disabled" title="Other school — view-only">
+            <div class="num">76%</div><div class="name">Hughes</div><div class="lock-ico" style="color:rgba(255,255,255,.4)">🔒</div>
+          </div>
+          <div class="cell own" title="Your school">
+            <div class="num">76%</div><div class="name">Wheatley</div>
+          </div>
+          <div class="cell disabled" title="Other school — view-only">
+            <div class="num">65%</div><div class="name">Ashe</div><div class="lock-ico" style="color:rgba(255,255,255,.4)">🔒</div>
+          </div>
+          <div class="cell disabled" title="Other school — view-only">
+            <div class="num">70%</div><div class="name">Green</div><div class="lock-ico" style="color:rgba(255,255,255,.4)">🔒</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="statstrip">
+        <div class="stat"><div class="stat-num">3.8</div><div class="stat-lbl">Obs Score Avg</div></div>
+        <div class="stat"><div class="stat-num">142</div><div class="stat-lbl">Observations</div></div>
+        <div class="stat"><div class="stat-num">187</div><div class="stat-lbl">Teachers</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">Observations · By School</div>
+        <div class="cmp-grid">
+          <div class="cmp-cell disabled" title="Other school — view-only">
+            <div class="cmp-school">Hughes 🔒</div>
+            <div class="cmp-val">4.1</div>
+          </div>
+          <div class="cmp-cell own" title="Your school — click to drill in">
+            <div class="cmp-school">Wheatley</div>
+            <div class="cmp-val">3.8</div>
+          </div>
+          <div class="cmp-cell disabled" title="Other school — view-only">
+            <div class="cmp-school">Ashe 🔒</div>
+            <div class="cmp-val">3.6</div>
+          </div>
+          <div class="cmp-cell disabled" title="Other school — view-only">
+            <div class="cmp-school">Green 🔒</div>
+            <div class="cmp-val">3.4</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">Evaluations · By School</div>
+        <div class="cmp-grid">
+          <div class="cmp-cell disabled" title="Other school — view-only">
+            <div class="cmp-school">Hughes 🔒</div>
+            <div class="cmp-val"><span class="lbl">SR</span>71%</div>
+            <div class="cmp-val" style="color:#002f60"><span class="lbl">PMAP</span>82%</div>
+          </div>
+          <div class="cmp-cell own" title="Your school">
+            <div class="cmp-school">Wheatley</div>
+            <div class="cmp-val" style="color:#e47727"><span class="lbl">SR</span>63%</div>
+            <div class="cmp-val"><span class="lbl">PMAP</span>78%</div>
+          </div>
+          <div class="cmp-cell disabled">
+            <div class="cmp-school">Ashe 🔒</div>
+            <div class="cmp-val"><span class="lbl">SR</span>58%</div>
+            <div class="cmp-val"><span class="lbl">PMAP</span>74%</div>
+          </div>
+          <div class="cmp-cell disabled">
+            <div class="cmp-school">Green 🔒</div>
+            <div class="cmp-val"><span class="lbl">SR</span>51%</div>
+            <div class="cmp-val"><span class="lbl">PMAP</span>69%</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">Action Steps · In Progress · By School</div>
+        <div class="cmp-grid">
+          <div class="cmp-cell disabled"><div class="cmp-school">Hughes 🔒</div><div class="cmp-val">42</div></div>
+          <div class="cmp-cell own"><div class="cmp-school">Wheatley</div><div class="cmp-val">51</div></div>
+          <div class="cmp-cell disabled"><div class="cmp-school">Ashe 🔒</div><div class="cmp-val">38</div></div>
+          <div class="cmp-cell disabled"><div class="cmp-school">Green 🔒</div><div class="cmp-val">29</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Notes panel ─────────────── -->
+  <div>
+    <div class="legend">
+      <b>What's different</b>
+      <ul>
+        <li>Blue banner at top makes the scope explicit ("you can compare, but only drill into your own school")</li>
+        <li>Own school cell: orange border + "YOUR SCHOOL" badge + clickable</li>
+        <li>Other-school cells: dimmed (~55% opacity) + lock icon + non-clickable + tooltip on hover</li>
+        <li>Same hero foot treatment</li>
+        <li>All comparison numbers stay visible — that's the value of being on the Network page</li>
+      </ul>
+    </div>
+
+    <div class="legend" style="background:#fff7ed;border-color:#fed7aa;color:#9a3412">
+      <b style="color:#7c2d12">Open questions</b>
+      <ul>
+        <li>Is the orange border + "YOUR SCHOOL" badge enough emphasis, or do we want the own-school cell visually larger?</li>
+        <li>Lock icon (🔒) on disabled cells — keep, drop, or replace with something else?</li>
+        <li>Banner text — does "you can compare across schools but only drill into your own" feel right, or simpler ("Phillis Wheatley · view-only on other schools")?</li>
+        <li>If a school leader pastes another school's drill-down URL directly, should we redirect them to their own school's drill-down, or show a friendly 403?</li>
+      </ul>
+    </div>
+
+    <div class="legend" style="background:#ecfdf5;border-color:#bbf7d0;color:#15803d">
+      <b style="color:#14532d">Backend changes (already specified in PERMISSIONS.md)</b>
+      <ul>
+        <li>New <code>auth.get_user_school_scope(user)</code> helper — returns <code>'admin'</code>, a school name, or <code>None</code></li>
+        <li><code>/api/network/drilldown</code> forces school param to user's school for school-scoped users</li>
+        <li><code>/api/auth/status</code> returns the scope so frontend can render dimmed cells correctly</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+</body></html>

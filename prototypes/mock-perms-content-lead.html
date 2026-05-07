@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>Mock — Content Lead view</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter','Open Sans',Arial,sans-serif;background:#eef1f5;color:#111;-webkit-font-smoothing:antialiased;line-height:1.4;padding:24px 12px 60px}
+h1{font-size:14px;font-weight:800;color:#002f60;text-transform:uppercase;letter-spacing:.06em;text-align:center;margin-bottom:6px}
+.note{font-size:12px;color:#6b7280;text-align:center;max-width:760px;margin:0 auto 24px}
+.note b{color:#111}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:920px;margin:0 auto}
+@media(max-width:760px){.row{grid-template-columns:1fr}}
+.frame{background:#f5f7fa;border-radius:18px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.08);min-height:780px}
+
+.scope-banner{background:#dcfce7;color:#166534;font-size:11px;font-weight:700;padding:8px 14px;text-align:center;letter-spacing:.05em;text-transform:uppercase}
+
+.nav{background:#002f60;padding:14px 14px;display:flex;align-items:center;gap:10px;color:#fff}
+.nav-back{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:16px}
+.nav-title{flex:1;text-align:center}
+.nav-title .brand{font-size:15px;font-weight:800}
+.nav-title .o{color:#e47727}
+.nav-sub{font-size:11px;color:rgba(255,255,255,.65);margin-top:2px}
+
+.body{padding:14px}
+.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:14px}
+.card-h{font-size:13px;font-weight:800;color:#111;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+
+.statstrip{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.stat{background:#fff;border-radius:14px;padding:12px 8px;box-shadow:0 1px 3px rgba(0,0,0,.05);text-align:center}
+.stat-num{font-size:24px;font-weight:800;color:#002f60;line-height:1}
+.stat-lbl{font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-top:5px}
+
+.cmp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.cmp-cell{padding:8px 4px;border-radius:6px;background:#f9fafb;text-align:center;border:1px solid #e5e7eb;cursor:pointer}
+.cmp-cell:hover{border-color:#002f60;background:#f0f7ff}
+.cmp-school{font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.04em}
+.cmp-val{font-size:13px;font-weight:800;color:#002f60;margin-top:4px}
+
+.removed{background:#fee2e2;border:1px dashed #fecaca;border-radius:10px;padding:10px 12px;font-size:11px;color:#991b1b;margin-bottom:14px}
+.removed b{color:#7f1d1d;display:block;font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+
+/* Home page */
+.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:#fff;border-radius:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);text-align:center;border:1px solid #e5e7eb}
+.tile-emoji{font-size:24px;margin-bottom:6px}
+.tile-label{font-size:11px;font-weight:700;color:#002f60;text-transform:uppercase;letter-spacing:.04em}
+.tile.removed-tile{opacity:.35;background:#fef2f2;position:relative}
+.tile.removed-tile::after{content:"HIDDEN";position:absolute;top:6px;right:6px;background:#b91c1c;color:#fff;font-size:8px;font-weight:800;padding:2px 5px;border-radius:3px}
+
+.legend{background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:10px 12px;font-size:11px;color:#4338ca;margin-bottom:14px;line-height:1.5}
+.legend b{color:#3730a3;display:block;font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.legend ul{margin-left:16px;margin-top:4px}
+</style></head><body>
+
+<h1>Mock — Content Lead view</h1>
+<p class="note">Logged in as <b>Sarah K (K-8 Content Lead)</b>. She covers all 4 schools' instructional practice. She sees <b>formative coaching data</b> network-wide (Observations, Action Steps, Fundamentals) but is <b>blocked from personnel review</b> (PMAP, Self-Reflection, PIP, Write-Up).</p>
+
+<div class="row">
+
+  <!-- ── Network landing ─────────────── -->
+  <div class="frame">
+    <div class="scope-banner">CONTENT LEAD VIEW · Coaching data only · Personnel review hidden</div>
+    <div class="nav">
+      <div class="nav-back">←</div>
+      <div class="nav-title">
+        <div class="brand">Observation<span class="o">Point</span></div>
+        <div class="nav-sub">Network · 2026-2027 · Cycle 1</div>
+      </div>
+      <div style="width:30px"></div>
+    </div>
+    <div class="body">
+
+      <div class="statstrip">
+        <div class="stat"><div class="stat-num">3.8</div><div class="stat-lbl">Obs Score Avg</div></div>
+        <div class="stat"><div class="stat-num">142</div><div class="stat-lbl">Observations</div></div>
+        <div class="stat"><div class="stat-num">187</div><div class="stat-lbl">Teachers</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">Observations · By School</div>
+        <div class="cmp-grid">
+          <div class="cmp-cell"><div class="cmp-school">Hughes</div><div class="cmp-val">4.1</div></div>
+          <div class="cmp-cell"><div class="cmp-school">Wheatley</div><div class="cmp-val">3.8</div></div>
+          <div class="cmp-cell"><div class="cmp-school">Ashe</div><div class="cmp-val">3.6</div></div>
+          <div class="cmp-cell"><div class="cmp-school">Green</div><div class="cmp-val">3.4</div></div>
+        </div>
+      </div>
+
+      <!-- EVALUATIONS STRIP HIDDEN -->
+      <div class="removed">
+        <b>⛔ Hidden: Evaluations · By School</b>
+        Content Leads don't see PMAP or Self-Reflection completion. Replaced with…<br>
+        nothing — the strip is just removed from the page (no placeholder needed).
+      </div>
+
+      <div class="card">
+        <div class="card-h">Action Steps · In Progress · By School</div>
+        <div class="cmp-grid">
+          <div class="cmp-cell"><div class="cmp-school">Hughes</div><div class="cmp-val">42</div></div>
+          <div class="cmp-cell"><div class="cmp-school">Wheatley</div><div class="cmp-val">51</div></div>
+          <div class="cmp-cell"><div class="cmp-school">Ashe</div><div class="cmp-val">38</div></div>
+          <div class="cmp-cell"><div class="cmp-school">Green</div><div class="cmp-val">29</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">Fundamentals · By School</div>
+        <div class="cmp-grid">
+          <div class="cmp-cell"><div class="cmp-school">Hughes</div><div class="cmp-val">76%</div></div>
+          <div class="cmp-cell"><div class="cmp-school">Wheatley</div><div class="cmp-val">76%</div></div>
+          <div class="cmp-cell"><div class="cmp-school">Ashe</div><div class="cmp-val">65%</div></div>
+          <div class="cmp-cell"><div class="cmp-school">Green</div><div class="cmp-val">70%</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Home page + notes ─────────────── -->
+  <div class="frame">
+    <div class="scope-banner">HOME · Sarah K (K-8 Content Lead)</div>
+    <div class="nav">
+      <div class="nav-back" style="visibility:hidden"></div>
+      <div class="nav-title">
+        <div class="brand">Observation<span class="o">Point</span></div>
+        <div class="nav-sub">Home</div>
+      </div>
+      <div style="width:30px"></div>
+    </div>
+    <div class="body">
+      <div class="card">
+        <div class="card-h">TouchPoint Forms — visible to Sarah</div>
+        <div class="home-grid">
+          <div class="tile"><div class="tile-emoji">👀</div><div class="tile-label">Observe</div></div>
+          <div class="tile"><div class="tile-emoji">⚡</div><div class="tile-label">Quick Feedback</div></div>
+          <div class="tile"><div class="tile-emoji">🎉</div><div class="tile-label">Celebrate</div></div>
+          <div class="tile"><div class="tile-emoji">⏱️</div><div class="tile-label">Fundamentals</div></div>
+          <div class="tile"><div class="tile-emoji">🎯</div><div class="tile-label">Goals</div></div>
+          <div class="tile"><div class="tile-emoji">📅</div><div class="tile-label">Meeting</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">Personnel Review — hidden from Sarah</div>
+        <div class="home-grid">
+          <div class="tile removed-tile"><div class="tile-emoji">📋</div><div class="tile-label">PMAP</div></div>
+          <div class="tile removed-tile"><div class="tile-emoji">🪞</div><div class="tile-label">Self-Reflection</div></div>
+          <div class="tile removed-tile"><div class="tile-emoji">⚠️</div><div class="tile-label">PIP</div></div>
+          <div class="tile removed-tile"><div class="tile-emoji">📝</div><div class="tile-label">Write-Up</div></div>
+        </div>
+      </div>
+
+      <div class="legend" style="margin-top:14px">
+        <b>Why these are hidden</b>
+        <ul>
+          <li>PMAP &amp; SR — annual evaluation tied to compensation/retention. Belongs to direct supervisor + HR.</li>
+          <li>PIP — formal corrective action. Belongs to direct supervisor + HR.</li>
+          <li>Write-Up — disciplinary record. Same as PIP.</li>
+          <li>Solicit Feedback — left visible (Sarah may want to gather feedback for her own review).</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="max-width:920px;margin:24px auto 0">
+  <div class="legend" style="background:#fff7ed;border-color:#fed7aa;color:#9a3412">
+    <b style="color:#7c2d12">Open questions</b>
+    <ul>
+      <li>Staff profile view — when Sarah taps into a teacher, the profile has many sections. Hide just the PMAP/SR/PIP/Write-Up sections, or hide the whole "Personnel" tab?</li>
+      <li>Sarah currently has admin access via the "ExDir of Teach and Learn" / K-8 Content Lead title not matching ExDir/Chief — actually K-8 Content Lead doesn't match C_TEAM_KEYWORDS so she'd be a regular supervisor today. ExDir of Teach and Learn DOES match ExDir keyword. So the practical scope of this tier today: <b>only ExDir of Teach and Learn needs the override</b>; K-8 Content Lead would already be supervisor-level.</li>
+      <li>Should Content Leads see PIP form on Home for teachers in their content area, even if read-only? (probably no — keep clean separation)</li>
+    </ul>
+  </div>
+
+  <div class="legend" style="background:#ecfdf5;border-color:#bbf7d0;color:#15803d">
+    <b style="color:#14532d">Backend changes</b>
+    <ul>
+      <li>Order of role checks matters — <code>is_content_lead()</code> must run BEFORE <code>is_admin()</code> so ExDir of Teach and Learn gets narrowed scope, not full admin</li>
+      <li><code>/api/auth/status</code> returns a <code>'role_bucket'</code> field so frontend can hide PMAP/PIP tiles + Evaluations strip without the user noticing they're missing</li>
+      <li>Server-side enforcement: <code>/api/network/drilldown?kind=evaluations</code> returns 403 (with friendly screen) for content_lead</li>
+    </ul>
+  </div>
+</div>
+
+</body></html>
