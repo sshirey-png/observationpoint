@@ -266,6 +266,7 @@ except Exception as _e:
 # HR doc gate — only Leadership, Network, or admins may file PIP / Write-Up
 # ------------------------------------------------------------------
 HR_DOC_FORM_TYPES = ('performance_improvement_plan', 'iap', 'write_up')
+PMAP_FORM_TYPE_PREFIX = 'pmap_'
 
 def _can_file_hr_doc(user):
     if not user:
@@ -274,6 +275,18 @@ def _can_file_hr_doc(user):
         return True
     jf = (user.get('job_function') or '').lower()
     return jf in ('leadership', 'network')
+
+
+def _can_file_pmap(user):
+    """PMAP authorship: admins OR anyone with direct reports (supervisors).
+    Mirrors permissions.yaml: form_pmap grants admin / school_leader /
+    supervisor. is_supervisor() returns true for both school leaders and
+    other supervisors with downlines."""
+    if not user:
+        return False
+    if user.get('is_admin'):
+        return True
+    return is_supervisor(user)
 
 
 # ------------------------------------------------------------------
@@ -384,6 +397,7 @@ def auth_status():
                 'is_admin': user.get('is_admin', False),
                 'is_supervisor': is_supervisor(user),
                 'can_file_hr_doc': _can_file_hr_doc(user),
+                'can_file_pmap': _can_file_pmap(user),
                 'accessible_count': len(user.get('accessible_emails', [])),
                 'scope': get_user_scope(user),
             },
@@ -2754,10 +2768,12 @@ def api_update_touchpoint(tp_id):
     user = get_current_user()
     observer = user['email'] if user else DEV_USER_EMAIL
     data = request.get_json() or {}
-    # Role gate on HR doc updates — return 200 with authorized:false so the
-    # frontend can render a friendly screen instead of a raw 403.
+    # Role gate on HR doc + PMAP updates — return 200 with authorized:false
+    # so the frontend can render a friendly screen instead of a raw 403.
     if data.get('form_type') in HR_DOC_FORM_TYPES and not _can_file_hr_doc(user):
-        return jsonify({'authorized': False, 'error': 'not authorized to file HR documents'})
+        return jsonify({'authorized': False, 'reason': 'role', 'message': 'PIPs and Write-Ups can only be filed by school leadership, network staff, or HR.'})
+    if (data.get('form_type') or '').startswith(PMAP_FORM_TYPE_PREFIX) and not _can_file_pmap(user):
+        return jsonify({'authorized': False, 'reason': 'role', 'message': 'PMAPs can only be filed by supervisors and HR.'})
     try:
         db.update_touchpoint(tp_id, observer, data)
         return jsonify({'id': tp_id})
@@ -3067,7 +3083,7 @@ def api_notify_teacher(tp_id):
                 commitments = [fb.get('commitment_theme')]
             html = _celebrate_email_html(teacher, observer, tp_dict, commitments, personal_note)
             subject = f"{type_meta[0]} {type_meta[1]} from {observer_name}"
-        elif form_type in ('performance_improvement_plan', 'iap', 'write_up'):
+        elif form_type in ('performance_improvement_plan', 'iap', 'write_up') or form_type.startswith('pmap_'):
             # Generate an ack token if missing
             ack_token = tp.get('acknowledgment_token')
             if not ack_token:
@@ -3086,6 +3102,15 @@ def api_notify_teacher(tp_id):
                     {'label': 'Category', 'value': ', '.join(fb.get('categories') or [])},
                     {'label': 'Date of Incident', 'value': fb.get('incident_date') or ''},
                 ]
+            elif form_type.startswith('pmap_'):
+                doc_label = FORM_LABELS.get(form_type, 'PMAP')
+                # Concerns is the only narrative bullet meaningful at email-glance.
+                concerns_list = fb.get('concerns') or []
+                summary_bullets = [
+                    {'label': 'Cycle', 'value': str(tp.get('cycle') or '—')},
+                ]
+                if concerns_list:
+                    summary_bullets.append({'label': 'Areas of Concern', 'value': ', '.join(concerns_list)})
             else:
                 doc_label = 'Performance Improvement Plan'
                 summary_bullets = [
@@ -3094,7 +3119,11 @@ def api_notify_teacher(tp_id):
                     {'label': 'Review Date', 'value': fb.get('review_date') or ''},
                 ]
             html = _hr_doc_email_html(doc_label, teacher, observer, tp_dict, ack_url, summary_bullets)
-            subject = f'Action required: {doc_label} from {observer_name}'
+            # PMAP framing is "review your evaluation" not "action required"
+            if form_type.startswith('pmap_'):
+                subject = f'Acknowledge your {doc_label} from {observer_name}'
+            else:
+                subject = f'Action required: {doc_label} from {observer_name}'
         elif form_type == 'observation_fundamentals':
             cur.execute("""SELECT body_text FROM action_steps
                            WHERE observation_grow_id::text = %s AND type = 'actionStep'""", (str(tp_id),))
@@ -4082,11 +4111,12 @@ def api_me_shoutouts():
 def api_save_touchpoint():
     user = get_current_user()
     data = request.get_json()
-    # Role gate: PIP and Write-Up are formal HR documents — restrict to
-    # Leadership, Network, or admins. Return 200 with authorized:false so
-    # the frontend can show a friendly screen (not a raw 403).
+    # Role gates on submission — return 200 with authorized:false + reason
+    # so the frontend can render Friendly403 (no raw 403 errors per memory rule).
     if data.get('form_type') in HR_DOC_FORM_TYPES and not _can_file_hr_doc(user):
-        return jsonify({'authorized': False, 'error': 'not authorized to file HR documents'})
+        return jsonify({'authorized': False, 'reason': 'role', 'message': 'PIPs and Write-Ups can only be filed by school leadership, network staff, or HR.'})
+    if (data.get('form_type') or '').startswith(PMAP_FORM_TYPE_PREFIX) and not _can_file_pmap(user):
+        return jsonify({'authorized': False, 'reason': 'role', 'message': 'PMAPs can only be filed by supervisors and HR.'})
     data['observer_email'] = user['email'] if user else DEV_USER_EMAIL
     # Honor school_year from request body (e.g., test cohort submits with '2026-2027')
     # Fall back to CURRENT_SCHOOL_YEAR if not provided

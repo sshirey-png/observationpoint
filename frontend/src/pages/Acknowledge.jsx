@@ -96,8 +96,18 @@ export default function Acknowledge() {
     )
   }
 
-  const docType = doc?.form_type === 'write_up' ? 'Write-Up' : 'Performance Improvement Plan'
-  const tag = doc?.form_type === 'write_up' ? 'Write-Up' : 'Performance Improvement Plan'
+  const ft = doc?.form_type || ''
+  const PMAP_LABELS = {
+    pmap_teacher: 'PMAP — Teacher',
+    pmap_prek: 'PMAP — PreK',
+    pmap_leader: 'PMAP — Leader',
+    pmap_network: 'PMAP — Network',
+    pmap_support: 'PMAP — Support',
+  }
+  const docType = ft === 'write_up' ? 'Write-Up'
+    : ft.startsWith('pmap_') ? (PMAP_LABELS[ft] || 'PMAP')
+    : 'Performance Improvement Plan'
+  const tag = docType
   const summary = doc?.summary_lines || []
 
   return (

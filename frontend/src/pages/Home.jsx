@@ -136,13 +136,15 @@ export default function Home() {
           />
         </div>
 
-        <div className="text-center text-[11px] mt-5 flex gap-4 justify-center">
+        <div className="text-center text-[11px] mt-5 flex gap-4 justify-center flex-wrap">
           {isAdmin && (
             <>
               <button
                 onClick={() => setAdminOpen(true)}
                 className="text-gray-400 hover:text-fls-orange bg-transparent border-0 cursor-pointer font-[inherit] p-0 text-[11px]"
               >Admin · View as user</button>
+              <span className="text-gray-300">·</span>
+              <a href="/app/admin/permissions" className="text-gray-400 hover:text-fls-orange no-underline">Admin · Permissions</a>
               <span className="text-gray-300">·</span>
             </>
           )}

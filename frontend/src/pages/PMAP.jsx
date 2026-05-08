@@ -7,6 +7,7 @@ import { api } from '../lib/api'
 import { TEACHER_RUBRIC, LEADER_RUBRIC } from '../lib/rubric-descriptors'
 import RubricCard from '../components/RubricCard'
 import SendCopyToggle from '../components/SendCopyToggle'
+import Friendly403 from '../components/Friendly403'
 
 /**
  * PMAP — Performance Map. Role-aware: form_type derived from the person's
@@ -367,6 +368,15 @@ export default function PMAP() {
   const teacherParam = searchParams.get('teacher')
   const [teacher, setTeacher] = useState(null)
 
+  // Role gate — PMAPs can only be filed by supervisors + admins.
+  // Mirrors the backend check at /api/touchpoints POST.
+  const [authStatus, setAuthStatus] = useState({ loading: true, canFile: false })
+  useEffect(() => {
+    api.get('/api/auth/status').then(r => {
+      setAuthStatus({ loading: false, canFile: !!r?.user?.can_file_pmap })
+    }).catch(() => setAuthStatus({ loading: false, canFile: false }))
+  }, [])
+
   // Meeting Checklist
   const [jobDescReviewed, setJobDescReviewed] = useState('')
 
@@ -722,6 +732,13 @@ export default function PMAP() {
     standardRubricFilled && prekRubricFilled && goalsStatusFilled &&
     whirlwindFilled && rubricReviewFilled && personalLeadershipFilled &&
     commonNarrativeFilled && concernsFilled
+
+  if (authStatus.loading) {
+    return <div style={{ minHeight: '100svh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', fontFamily: 'Inter, sans-serif' }}>Loading…</div>
+  }
+  if (!authStatus.canFile) {
+    return <Friendly403 reason="role" message="PMAPs can only be filed by supervisors and HR. Your role doesn't have access to this form." />
+  }
 
   if (done) {
     return (
