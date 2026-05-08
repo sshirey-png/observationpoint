@@ -422,6 +422,28 @@ def auth_status():
 # what, including this endpoint.
 # ------------------------------------------------------------------
 
+@app.route('/api/solicit-questions')
+@require_auth
+def api_solicit_questions():
+    """Returns the parsed solicit_questions.yaml — question bank, custom-allow
+    flag, max-questions cap, and standardized Likert scale config. Loaded by
+    the SolicitFeedback form on mount. Auth-gated (any signed-in user)."""
+    yaml_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'solicit_questions.yaml')
+    try:
+        with open(yaml_path, 'r', encoding='utf-8') as f:
+            data = yaml.safe_load(f) or {}
+        # Defaults if YAML is partial
+        data.setdefault('questions', [])
+        data.setdefault('allow_custom', True)
+        data.setdefault('max_questions', 3)
+        data.setdefault('likert_scales', [])
+        return jsonify(data)
+    except FileNotFoundError:
+        return jsonify({'error': 'solicit_questions.yaml not found', 'questions': [], 'allow_custom': True, 'max_questions': 3, 'likert_scales': []}), 200
+    except yaml.YAMLError as e:
+        return jsonify({'error': f'YAML parse error: {e}'}), 500
+
+
 @app.route('/api/permissions')
 @require_auth
 @require_admin
@@ -3003,6 +3025,43 @@ def _hr_doc_email_html(doc_label, teacher, observer, tp_row, ack_url, summary_bu
 </body></html>'''
 
 
+def _solicit_request_email_html(subject_email, subject_first, requestor_name, questions, context, response_url=None, mode='email'):
+    """Email subject receives when someone requests their feedback.
+    mode='email' → CTA button to response page.
+    mode='in_person' → no CTA; pure thank-you note since responses already captured."""
+    name = (subject_first or subject_email.split('@')[0]).strip()
+    q_html = ''.join(f'<li style="margin-bottom:6px;color:#374151">{q}</li>' for q in (questions or []))
+    if mode == 'in_person':
+        body = f'''<p style="margin:0 0 14px;font-size:14px;color:#374151">Hi {name},</p>
+<p style="margin:0 0 14px;font-size:14px;color:#374151;line-height:1.55">Thank you for taking the time to share honest feedback with {requestor_name} today. Your perspective is what makes our coaching better — we appreciate it.</p>'''
+        cta = ''
+    else:
+        body = f'''<p style="margin:0 0 14px;font-size:14px;color:#374151">Hi {name},</p>
+<p style="margin:0 0 12px;font-size:14px;color:#374151;line-height:1.55">{requestor_name} would like your honest feedback. They've asked you to share your thoughts on:</p>
+<ul style="margin:0 0 14px 20px;font-size:13px;line-height:1.6">{q_html}</ul>
+{f'<div style="background:#f9fafb;border-left:3px solid #002f60;padding:10px 12px;margin-bottom:18px;font-size:13px;color:#374151;font-style:italic;line-height:1.5">{context}</div>' if context else ''}
+<p style="margin:0 0 14px;font-size:13px;color:#6b7280;line-height:1.5">Take a few minutes when you can. Your responses are shared only with {requestor_name} and admins.</p>'''
+        cta = f'''<div style="text-align:center;margin:24px 0">
+  <a href="{response_url}" style="display:inline-block;background:#002f60;color:#fff;padding:14px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px">Share your feedback →</a>
+</div>'''
+    return f'''<!DOCTYPE html>
+<html><body style="margin:0;padding:0;background:#f8f9fa;font-family:'Open Sans',Arial,sans-serif">
+  <div style="max-width:600px;margin:0 auto;background:#fff">
+    <div style="background:#002f60;padding:20px;text-align:center">
+      <h1 style="color:#fff;margin:0;font-size:18px;font-weight:800">{'Thank you' if mode == 'in_person' else 'Feedback request'}</h1>
+    </div>
+    <div style="padding:24px">
+      {body}
+      {cta}
+    </div>
+    <div style="background:#f8f9fa;padding:14px 24px;font-size:11px;color:#6b7280">
+      Questions? Contact <a href="mailto:talent@firstlineschools.org" style="color:#002f60">talent@firstlineschools.org</a>
+    </div>
+    <div style="background:#002f60;color:rgba(255,255,255,.7);padding:10px;text-align:center;font-size:10px">FirstLine Schools — Education For Life</div>
+  </div>
+</body></html>'''
+
+
 @app.route('/api/touchpoints/<tp_id>/notify', methods=['POST'])
 @require_auth
 @require_no_impersonation
@@ -3130,8 +3189,26 @@ def api_notify_teacher(tp_id):
             action_steps = [{'cat': '', 'action': r['body_text']} for r in cur.fetchall()]
             html = _fundamentals_email_html(teacher, observer, tp_dict, action_steps, tp.get('notes', '') or '')
             subject = f'New Fundamentals observation from {observer_name}'
+        elif form_type == 'solicited_feedback':
+            # Email mode: subject gets a secure response link.
+            # In-person mode: subject just gets a thank-you (responses already captured).
+            mode = (fb.get('mode') or 'email').lower()
+            ack_token = tp.get('acknowledgment_token')
+            if mode == 'email' and not ack_token:
+                import secrets as _sec
+                ack_token = _sec.token_urlsafe(24)
+                cur.execute("UPDATE touchpoints SET acknowledgment_token = %s WHERE id = %s", (ack_token, tp_id))
+                conn.commit()
+            app_url = 'https://observationpoint-965913991496.us-central1.run.app'
+            response_url = f'{app_url}/respond/{ack_token}' if ack_token else None
+            html = _solicit_request_email_html(
+                tp['teacher_email'], tp.get('teacher_first') or '', observer_name,
+                fb.get('questions') or [], fb.get('context') or '',
+                response_url=response_url, mode=mode,
+            )
+            subject = f'Feedback request from {observer_name}' if mode == 'email' else 'Thanks for your feedback today'
         else:
-            # Generic touchpoint email — observation, PMAP, meeting, SR, QF, SF
+            # Generic touchpoint email — observation, PMAP, meeting, SR, QF
             html = _generic_touchpoint_email_html(form_label, teacher, observer, tp_dict)
             subject = f'New {form_label} from {observer_name}'
 
@@ -3147,18 +3224,11 @@ def api_notify_teacher(tp_id):
             ok = _send_email(recipient, subject, html, cc_emails=cc)
 
         elif form_type == 'solicited_feedback':
-            # Dual email by design:
-            #   - thank-you to the responder (observer_email)
-            #   - summary to the requestor (teacher_email)
-            # No cc_self option (two emails by design covers both parties).
-            requestor_first = (tp.get('teacher_first') or '').strip() or tp['teacher_email']
-            thx_subject = f"Thanks for sharing feedback for {requestor_first}"
-            sum_subject = f"Feedback received from {observer_name}"
-            ok1 = _send_email(observer_email, thx_subject, html)
-            ok2 = _send_email(tp['teacher_email'], sum_subject, html)
-            ok = ok1 and ok2
-            recipient = tp['teacher_email']  # for the response payload below
-            cc = [observer_email]            # for the response payload below
+            # Single email to subject. Response capture (gratitude + summary)
+            # fires from /api/feedback-respond/<token> when subject submits.
+            recipient = tp['teacher_email']
+            cc = []
+            ok = _send_email(recipient, subject, html, cc_emails=cc)
 
         elif form_type.startswith('self_reflection'):
             # SR: recipient = SUBMITTER's supervisor (not the submitter themselves).
@@ -3374,6 +3444,164 @@ def api_ack_submit(token):
         return jsonify({'acknowledged': True, 'at': _dt.now().isoformat()})
     except Exception as e:
         log.error(f"ack submit failed: {e}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Public Solicit Feedback response flow (no login — token-gated, like /acknowledge)
+# ──────────────────────────────────────────────────────────────────────
+
+@app.route('/respond/<path:path>')
+@app.route('/respond')
+def serve_respond(path=None):
+    """Public route — staff clicking the email link from a feedback request
+    land here. Serves the React SPA which renders FeedbackResponse.jsx."""
+    react_index = os.path.join(REACT_DIR, 'index.html')
+    if os.path.exists(react_index):
+        return _nocache_html(send_from_directory(REACT_DIR, 'index.html'))
+    return 'React app not built', 404
+
+
+@app.route('/api/feedback-respond/<token>', methods=['GET'])
+def api_feedback_respond_load(token):
+    """Load the feedback request: questions, context, requestor name. Public."""
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            SELECT t.*,
+                   s.first_name AS subject_first, s.last_name AS subject_last,
+                   o.first_name AS requestor_first, o.last_name AS requestor_last
+              FROM touchpoints t
+              LEFT JOIN staff s ON LOWER(s.email) = LOWER(t.teacher_email)
+              LEFT JOIN staff o ON LOWER(o.email) = LOWER(t.observer_email)
+             WHERE t.acknowledgment_token = %s AND t.form_type = 'solicited_feedback'
+        """, (token,))
+        tp = cur.fetchone()
+        if not tp:
+            return jsonify({'error': 'not found'}), 404
+        fb = {}
+        try:
+            fb = json.loads(tp['feedback']) if isinstance(tp['feedback'], str) else (tp['feedback'] or {})
+        except (ValueError, TypeError):
+            fb = {}
+        return jsonify({
+            'subject_first': tp.get('subject_first', ''),
+            'subject_last': tp.get('subject_last', ''),
+            'subject_email': tp.get('teacher_email', ''),
+            'requestor_first': tp.get('requestor_first', ''),
+            'requestor_last': tp.get('requestor_last', ''),
+            'requestor_email': tp.get('observer_email', ''),
+            'questions': fb.get('questions') or [],
+            'context': fb.get('context') or '',
+            'likert_scales': fb.get('likert_scales') or [],
+            'already_responded': bool(fb.get('responded_at')),
+            'responded_at': fb.get('responded_at'),
+        })
+    finally:
+        conn.close()
+
+
+@app.route('/api/feedback-respond/<token>', methods=['POST'])
+def api_feedback_respond_submit(token):
+    """Subject submits their responses. Updates the touchpoint's feedback
+    JSON, fires gratitude email to subject + summary email to requestor."""
+    body = request.get_json() or {}
+    responses = body.get('responses') or []
+    likert_answers = body.get('likert_answers') or {}
+    from datetime import datetime as _dt
+
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            SELECT t.*,
+                   s.first_name AS subject_first, s.last_name AS subject_last,
+                   o.first_name AS requestor_first, o.last_name AS requestor_last
+              FROM touchpoints t
+              LEFT JOIN staff s ON LOWER(s.email) = LOWER(t.teacher_email)
+              LEFT JOIN staff o ON LOWER(o.email) = LOWER(t.observer_email)
+             WHERE t.acknowledgment_token = %s AND t.form_type = 'solicited_feedback'
+        """, (token,))
+        tp = cur.fetchone()
+        if not tp:
+            return jsonify({'error': 'not found'}), 404
+        fb = {}
+        try:
+            fb = json.loads(tp['feedback']) if isinstance(tp['feedback'], str) else (tp['feedback'] or {})
+        except (ValueError, TypeError):
+            fb = {}
+        if fb.get('responded_at'):
+            return jsonify({'already_responded': True}), 200
+
+        now_iso = _dt.now().isoformat()
+        fb['responses'] = responses
+        fb['likert_answers'] = likert_answers
+        fb['responded_at'] = now_iso
+        cur.execute("UPDATE touchpoints SET feedback = %s WHERE id = %s",
+                    (json.dumps(fb), tp['id']))
+        conn.commit()
+
+        subject_first = (tp.get('subject_first') or '').strip()
+        subject_email = tp.get('teacher_email', '')
+        requestor_name = f"{(tp.get('requestor_first') or '').strip()} {(tp.get('requestor_last') or '').strip()}".strip() or tp.get('observer_email', '')
+        questions = fb.get('questions') or []
+
+        # Build summary email (HTML) for the requestor
+        no_resp = '<em style="color:#9ca3af">(no response)</em>'
+        summary_blocks = []
+        for q, r in zip(questions, responses):
+            answer = r if r else no_resp
+            summary_blocks.append(f'<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:4px">{q}</div><div style="font-size:13px;color:#111;line-height:1.55;background:#f9fafb;padding:10px 12px;border-radius:6px">{answer}</div></div>')
+        likert_blocks = []
+        for scale in (fb.get('likert_scales') or []):
+            sid = scale.get('id')
+            val = likert_answers.get(sid)
+            if val is not None:
+                likert_blocks.append(f'<div style="display:inline-block;margin-right:14px;font-size:12px;color:#374151"><b>{scale.get("label","")}</b>: {val}/5</div>')
+
+        summary_html = f'''<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f8f9fa;font-family:'Open Sans',Arial,sans-serif">
+  <div style="max-width:600px;margin:0 auto;background:#fff">
+    <div style="background:#002f60;padding:20px;text-align:center">
+      <h1 style="color:#fff;margin:0;font-size:18px">Feedback received from {subject_first}</h1>
+    </div>
+    <div style="padding:24px">
+      <p style="margin:0 0 16px;font-size:14px;color:#374151">Hi,</p>
+      <p style="margin:0 0 18px;font-size:14px;color:#374151">{subject_first} responded to your feedback request. Here's what they shared:</p>
+      {''.join(summary_blocks)}
+      {('<div style="margin-top:6px;padding-top:14px;border-top:1px solid #e5e7eb">' + ''.join(likert_blocks) + '</div>') if likert_blocks else ''}
+    </div>
+    <div style="background:#f8f9fa;padding:14px 24px;font-size:11px;color:#6b7280">
+      Questions? Contact <a href="mailto:talent@firstlineschools.org" style="color:#002f60">talent@firstlineschools.org</a>
+    </div>
+    <div style="background:#002f60;color:rgba(255,255,255,.7);padding:10px;text-align:center;font-size:10px">FirstLine Schools — Education For Life</div>
+  </div></body></html>'''
+
+        gratitude_html = f'''<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f8f9fa;font-family:'Open Sans',Arial,sans-serif">
+  <div style="max-width:600px;margin:0 auto;background:#fff">
+    <div style="background:#002f60;padding:20px;text-align:center">
+      <h1 style="color:#fff;margin:0;font-size:18px">Thank you, {subject_first}</h1>
+    </div>
+    <div style="padding:24px">
+      <p style="margin:0 0 14px;font-size:14px;color:#374151">Hi {subject_first},</p>
+      <p style="margin:0 0 14px;font-size:14px;color:#374151;line-height:1.55">Thank you for taking the time to share honest feedback with {requestor_name}. Your perspective is what makes our coaching better — we appreciate it.</p>
+    </div>
+    <div style="background:#002f60;color:rgba(255,255,255,.7);padding:10px;text-align:center;font-size:10px">FirstLine Schools — Education For Life</div>
+  </div></body></html>'''
+
+        # Test-mode: both emails go to the requestor (originator) for safety.
+        if tp.get('is_test'):
+            _send_email(tp['observer_email'], '[TEST · gratitude → subject] Thanks for your feedback', gratitude_html)
+            _send_email(tp['observer_email'], f'[TEST · summary] Feedback received from {subject_first}', summary_html)
+        else:
+            _send_email(subject_email, 'Thanks for sharing your feedback', gratitude_html)
+            _send_email(tp['observer_email'], f'Feedback received from {subject_first}', summary_html)
+
+        return jsonify({'ok': True, 'responded_at': now_iso})
+    except Exception as e:
+        log.error(f"feedback-respond submit failed: {e}")
         return jsonify({'error': str(e)}), 500
     finally:
         conn.close()

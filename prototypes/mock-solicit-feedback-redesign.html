@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>Mock — Solicit Feedback redesign</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter','Open Sans',Arial,sans-serif;background:#eef1f5;color:#111;-webkit-font-smoothing:antialiased;line-height:1.4;padding:24px 12px 60px}
+h1{font-size:14px;font-weight:800;color:#002f60;text-transform:uppercase;letter-spacing:.06em;text-align:center;margin-bottom:6px}
+.note{font-size:12px;color:#6b7280;text-align:center;max-width:760px;margin:0 auto 20px;line-height:1.5}
+.note b{color:#111}
+.row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;max-width:1280px;margin:0 auto}
+@media(max-width:1100px){.row{grid-template-columns:1fr 1fr;max-width:840px}}
+@media(max-width:780px){.row{grid-template-columns:1fr}}
+.frame{background:#f5f7fa;border-radius:18px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.08);min-height:780px}
+.frame-label{background:#1e293b;color:#cbd5e1;font-size:10px;font-weight:700;padding:6px 12px;text-align:center;letter-spacing:.05em;text-transform:uppercase}
+
+.nav{background:#002f60;padding:14px 14px;display:flex;align-items:center;gap:10px;color:#fff}
+.nav-back{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:16px}
+.nav-title{flex:1;text-align:center}
+.nav-title .brand{font-size:15px;font-weight:800}
+.nav-title .o{color:#e47727}
+.nav-sub{font-size:11px;color:rgba(255,255,255,.65);margin-top:2px}
+
+.body{padding:14px}
+
+.subject-card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:12px;display:flex;gap:12px;align-items:center}
+.avatar{width:40px;height:40px;border-radius:50%;background:#002f60;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0}
+.subject-name{font-size:15px;font-weight:800;color:#111}
+.subject-meta{font-size:11px;color:#6b7280;margin-top:2px}
+
+.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:12px}
+.card-h{font-size:12px;font-weight:800;color:#111;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.card-sub{font-size:11px;color:#6b7280;margin-top:-4px;margin-bottom:10px}
+
+/* Mode toggle */
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.mode{padding:14px 12px;border:2px solid #e5e7eb;border-radius:10px;cursor:pointer;text-align:center;background:#fff}
+.mode.on{border-color:#002f60;background:#eef4ff}
+.mode-label{font-size:13px;font-weight:800;color:#374151}
+.mode.on .mode-label{color:#002f60}
+.mode-sub{font-size:10px;color:#6b7280;margin-top:4px;line-height:1.3}
+
+/* Questions multi-select */
+.q-row{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:13px;color:#374151}
+.q-row.on{background:#fff7ed;color:#e47727;font-weight:700}
+.q-row.disabled{opacity:.45;cursor:not-allowed}
+.q-check{width:18px;height:18px;border-radius:5px;border:2px solid #d1d5db;background:transparent;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center}
+.q-row.on .q-check{border-color:#e47727;background:#e47727;color:#fff;font-size:10px;font-weight:800}
+.cap-hint{font-size:10px;color:#9ca3af;margin-top:8px;text-align:right}
+.cap-hint b{color:#e47727}
+
+/* In-person responses */
+.response-block{background:#f9fafb;border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.response-q{font-size:11px;font-weight:700;color:#374151;margin-bottom:6px}
+.response-block textarea{width:100%;min-height:50px;padding:8px;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;font-family:inherit;resize:vertical;background:#fff}
+
+.submit-bar{position:absolute;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;padding:10px 14px}
+.submit-btn{width:100%;padding:13px;border:none;border-radius:10px;font-size:14px;font-weight:800;background:#002f60;color:#fff;cursor:pointer;font-family:inherit}
+
+/* Done state */
+.done{background:#fff;border-radius:14px;padding:20px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05);max-width:340px;margin:30px auto}
+.done .ico{width:48px;height:48px;border-radius:50%;background:#dbeafe;color:#1e40af;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 10px}
+.done h2{font-size:16px;font-weight:800;color:#002f60;margin-bottom:6px}
+.done p{font-size:12px;color:#6b7280;line-height:1.5}
+
+/* Response page (what teacher sees) */
+.tp-banner{background:#eef4ff;color:#1e40af;padding:14px;border-radius:10px;font-size:12px;margin-bottom:14px;line-height:1.5}
+.tp-banner b{color:#002f60}
+
+.legend{background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:12px 14px;font-size:11px;color:#4338ca;margin:24px auto 0;max-width:1280px;line-height:1.5}
+.legend b{color:#3730a3;display:block;font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.legend ul{margin-left:18px;margin-top:6px}
+</style></head><body>
+
+<h1>Solicit Feedback · redesign</h1>
+<p class="note">Three frames: <b>(1)</b> form filled out, <b>(2)</b> response page the teacher lands on (email mode), <b>(3)</b> in-person path with inline response capture.<br>Pulse section dropped. Multi-select questions capped at 3. Mode toggle: Email | In Person.</p>
+
+<div class="row">
+
+  <!-- ── Frame 1: Form (email mode) ─────────────── -->
+  <div class="frame" style="position:relative;padding-bottom:80px">
+    <div class="frame-label">1 · Form · Email mode selected</div>
+    <div class="nav">
+      <div class="nav-back">←</div>
+      <div class="nav-title">
+        <div class="brand">Observation<span class="o">Point</span></div>
+        <div class="nav-sub">Solicit Feedback</div>
+      </div>
+      <div style="width:30px"></div>
+    </div>
+    <div class="body">
+
+      <div class="subject-card">
+        <div class="avatar">DJ</div>
+        <div>
+          <div class="subject-name">Drew Johnson</div>
+          <div class="subject-meta">3rd Grade Teacher · Phillis Wheatley</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">Delivery</div>
+        <div class="card-sub">How will you collect Drew's feedback?</div>
+        <div class="modes">
+          <div class="mode on">
+            <div class="mode-label">📧 Email</div>
+            <div class="mode-sub">Send Drew the questions to answer at their pace</div>
+          </div>
+          <div class="mode">
+            <div class="mode-label">🤝 In Person</div>
+            <div class="mode-sub">Record their responses live during a conversation</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">Questions</div>
+        <div class="card-sub">Pick up to 3.</div>
+        <div class="q-row on">
+          <div class="q-check">✓</div>
+          How is your workload right now?
+        </div>
+        <div class="q-row on">
+          <div class="q-check">✓</div>
+          What support do you need from me?
+        </div>
+        <div class="q-row">
+          <div class="q-check"></div>
+          How are you feeling about your goals?
+        </div>
+        <div class="q-row disabled">
+          <div class="q-check"></div>
+          How is the team culture feeling?
+        </div>
+        <div class="q-row disabled">
+          <div class="q-check"></div>
+          Custom question…
+        </div>
+        <div class="cap-hint"><b>2</b> of 3 selected</div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">Additional Context (optional)</div>
+        <textarea style="width:100%;min-height:60px;padding:10px;border:1px solid #e5e7eb;border-radius:8px;font-size:12px;font-family:inherit;resize:vertical">We're heading into the last cycle and I want to make sure I'm supporting where it matters most.</textarea>
+      </div>
+
+      <div class="card">
+        <div class="card-h">Likert scales <span style="font-weight:500;text-transform:none;letter-spacing:0;color:#9ca3af;font-size:10px">· always asked · Drew rates these</span></div>
+        <div style="font-size:11px;color:#6b7280;margin-bottom:10px">Two standardized 1–5 scales Drew will fill in alongside the open-ended questions.</div>
+        <div style="display:flex;gap:8px;font-size:11px;font-weight:700;color:#374151;background:#f9fafb;padding:9px 12px;border-radius:8px;margin-bottom:6px;align-items:center">
+          <span style="flex:1">Sustainability — "Is your workload sustainable?"</span>
+          <span style="font-size:9px;color:#9ca3af">1–5</span>
+        </div>
+        <div style="display:flex;gap:8px;font-size:11px;font-weight:700;color:#374151;background:#f9fafb;padding:9px 12px;border-radius:8px;align-items:center">
+          <span style="flex:1">Flight risk — "How likely are you to stay next year?"</span>
+          <span style="font-size:9px;color:#9ca3af">1–5</span>
+        </div>
+      </div>
+
+    </div>
+    <div class="submit-bar">
+      <button class="submit-btn">Send to Drew</button>
+    </div>
+  </div>
+
+  <!-- ── Frame 2: Response page (what Drew sees from email) ─────────────── -->
+  <div class="frame" style="position:relative;padding-bottom:80px">
+    <div class="frame-label">2 · Response page · Drew's view</div>
+    <div class="nav">
+      <div class="nav-back" style="visibility:hidden"></div>
+      <div class="nav-title">
+        <div class="brand">Observation<span class="o">Point</span></div>
+        <div class="nav-sub">Feedback request</div>
+      </div>
+      <div style="width:30px"></div>
+    </div>
+    <div class="body">
+
+      <div class="tp-banner">
+        <b>Hi Drew —</b><br>
+        Scott Shirey is asking for your feedback. Take a few minutes to share your honest answers below.
+        <div style="font-size:10px;color:#6b7280;margin-top:6px;font-style:italic">"We're heading into the last cycle and I want to make sure I'm supporting where it matters most."</div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">1. How is your workload right now?</div>
+        <textarea style="width:100%;min-height:80px;padding:10px;border:1px solid #e5e7eb;border-radius:8px;font-size:12px;font-family:inherit;resize:vertical" placeholder="Be honest. Your answer is shared only with Scott."></textarea>
+      </div>
+
+      <div class="card">
+        <div class="card-h">2. What support do you need from me?</div>
+        <textarea style="width:100%;min-height:80px;padding:10px;border:1px solid #e5e7eb;border-radius:8px;font-size:12px;font-family:inherit;resize:vertical" placeholder="Be honest. Your answer is shared only with Scott."></textarea>
+      </div>
+
+      <div class="card">
+        <div class="card-h">3. Is your workload sustainable?</div>
+        <div style="display:flex;gap:4px">
+          <div style="flex:1;padding:8px 0;border:2px solid #e5e7eb;border-radius:6px;text-align:center;font-size:11px;font-weight:700;background:#fff">1<div style="font-size:8px;color:#9ca3af">Not at all</div></div>
+          <div style="flex:1;padding:8px 0;border:2px solid #e5e7eb;border-radius:6px;text-align:center;font-size:11px;font-weight:700;background:#fff">2</div>
+          <div style="flex:1;padding:8px 0;border:2px solid #e5e7eb;border-radius:6px;text-align:center;font-size:11px;font-weight:700;background:#fff">3<div style="font-size:8px;color:#9ca3af">Neutral</div></div>
+          <div style="flex:1;padding:8px 0;border:2px solid #e5e7eb;border-radius:6px;text-align:center;font-size:11px;font-weight:700;background:#fff">4</div>
+          <div style="flex:1;padding:8px 0;border:2px solid #e5e7eb;border-radius:6px;text-align:center;font-size:11px;font-weight:700;background:#fff">5<div style="font-size:8px;color:#9ca3af">Very</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">4. How likely are you to stay at FLS next year?</div>
+        <div style="display:flex;gap:4px">
+          <div style="flex:1;padding:8px 0;border:2px solid #e5e7eb;border-radius:6px;text-align:center;font-size:11px;font-weight:700;background:#fff">1<div style="font-size:8px;color:#9ca3af">Leaving</div></div>
+          <div style="flex:1;padding:8px 0;border:2px solid #e5e7eb;border-radius:6px;text-align:center;font-size:11px;font-weight:700;background:#fff">2</div>
+          <div style="flex:1;padding:8px 0;border:2px solid #e5e7eb;border-radius:6px;text-align:center;font-size:11px;font-weight:700;background:#fff">3<div style="font-size:8px;color:#9ca3af">50/50</div></div>
+          <div style="flex:1;padding:8px 0;border:2px solid #e5e7eb;border-radius:6px;text-align:center;font-size:11px;font-weight:700;background:#fff">4</div>
+          <div style="flex:1;padding:8px 0;border:2px solid #e5e7eb;border-radius:6px;text-align:center;font-size:11px;font-weight:700;background:#fff">5<div style="font-size:8px;color:#9ca3af">Locked in</div></div>
+        </div>
+      </div>
+
+      <div style="font-size:10px;color:#9ca3af;text-align:center;margin-top:14px;line-height:1.5">
+        Your responses are saved as a touchpoint on your record. Only Scott and admins can see what you wrote.
+      </div>
+
+    </div>
+    <div class="submit-bar">
+      <button class="submit-btn">Share my feedback</button>
+    </div>
+  </div>
+
+  <!-- ── Frame 3: In-person mode form ─────────────── -->
+  <div class="frame" style="position:relative;padding-bottom:80px">
+    <div class="frame-label">3 · Form · In-person mode</div>
+    <div class="nav">
+      <div class="nav-back">←</div>
+      <div class="nav-title">
+        <div class="brand">Observation<span class="o">Point</span></div>
+        <div class="nav-sub">Solicit Feedback</div>
+      </div>
+      <div style="width:30px"></div>
+    </div>
+    <div class="body">
+
+      <div class="subject-card">
+        <div class="avatar">DJ</div>
+        <div>
+          <div class="subject-name">Drew Johnson</div>
+          <div class="subject-meta">3rd Grade Teacher · Phillis Wheatley</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">Delivery</div>
+        <div class="modes">
+          <div class="mode">
+            <div class="mode-label">📧 Email</div>
+            <div class="mode-sub">Send Drew the questions to answer at their pace</div>
+          </div>
+          <div class="mode on">
+            <div class="mode-label">🤝 In Person</div>
+            <div class="mode-sub">Record their responses live during a conversation</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">Questions &amp; Drew's responses</div>
+        <div class="card-sub">Pick up to 3, then capture what they said.</div>
+
+        <div class="q-row on">
+          <div class="q-check">✓</div>
+          How is your workload right now?
+        </div>
+        <div class="response-block">
+          <div class="response-q">Drew's response</div>
+          <textarea placeholder="Capture the key points of what Drew shared…">Feeling stretched on data tracking. PD time is helpful but I need more bench planning time.</textarea>
+        </div>
+
+        <div class="q-row on">
+          <div class="q-check">✓</div>
+          What support do you need from me?
+        </div>
+        <div class="response-block">
+          <div class="response-q">Drew's response</div>
+          <textarea placeholder="Capture the key points of what Drew shared…">Co-plan with me once a week for the next four weeks during cycle 4.</textarea>
+        </div>
+
+        <div class="cap-hint">2 of 3 questions answered</div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">Drew's Likert ratings</div>
+        <div class="card-sub">Capture what Drew said when you asked.</div>
+
+        <div style="margin-bottom:12px">
+          <div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:6px">Sustainability — "Is your workload sustainable?"</div>
+          <div style="display:flex;gap:4px">
+            <div style="flex:1;padding:8px 0;border:2px solid #e5e7eb;border-radius:6px;text-align:center;font-size:11px;font-weight:700;background:#fff">1<div style="font-size:8px;color:#9ca3af">Not at all</div></div>
+            <div style="flex:1;padding:8px 0;border:2px solid #e47727;border-radius:6px;text-align:center;font-size:11px;font-weight:800;background:#e47727;color:#fff">2</div>
+            <div style="flex:1;padding:8px 0;border:2px solid #e5e7eb;border-radius:6px;text-align:center;font-size:11px;font-weight:700;background:#fff">3<div style="font-size:8px;color:#9ca3af">Neutral</div></div>
+            <div style="flex:1;padding:8px 0;border:2px solid #e5e7eb;border-radius:6px;text-align:center;font-size:11px;font-weight:700;background:#fff">4</div>
+            <div style="flex:1;padding:8px 0;border:2px solid #e5e7eb;border-radius:6px;text-align:center;font-size:11px;font-weight:700;background:#fff">5<div style="font-size:8px;color:#9ca3af">Very</div></div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:6px">Flight risk — "How likely are you to stay next year?"</div>
+          <div style="display:flex;gap:4px">
+            <div style="flex:1;padding:8px 0;border:2px solid #e5e7eb;border-radius:6px;text-align:center;font-size:11px;font-weight:700;background:#fff">1<div style="font-size:8px;color:#9ca3af">Leaving</div></div>
+            <div style="flex:1;padding:8px 0;border:2px solid #e5e7eb;border-radius:6px;text-align:center;font-size:11px;font-weight:700;background:#fff">2</div>
+            <div style="flex:1;padding:8px 0;border:2px solid #e5e7eb;border-radius:6px;text-align:center;font-size:11px;font-weight:700;background:#fff">3<div style="font-size:8px;color:#9ca3af">50/50</div></div>
+            <div style="flex:1;padding:8px 0;border:2px solid #e47727;border-radius:6px;text-align:center;font-size:11px;font-weight:800;background:#e47727;color:#fff">4</div>
+            <div style="flex:1;padding:8px 0;border:2px solid #e5e7eb;border-radius:6px;text-align:center;font-size:11px;font-weight:700;background:#fff">5<div style="font-size:8px;color:#9ca3af">Locked in</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="submit-bar">
+      <button class="submit-btn">Save &amp; send Drew a thank-you</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Done states + emails ─────────────── -->
+
+<div class="row" style="margin-top:24px">
+
+  <div class="frame" style="min-height:auto;padding:20px">
+    <div class="frame-label" style="margin:-20px -20px 16px;border-radius:18px 18px 0 0">📧 Email Drew receives</div>
+    <div style="font-size:11px;color:#9ca3af;margin-bottom:6px">Subject:</div>
+    <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:14px">Feedback request from Scott Shirey</div>
+    <div style="background:#eef4ff;border-radius:10px;padding:14px;font-size:12px;color:#374151;line-height:1.5">
+      Hi Drew,<br><br>
+      Scott Shirey would like your feedback. They've asked you to share thoughts on:
+      <ul style="margin:8px 0 8px 22px"><li>How is your workload right now?</li><li>What support do you need from me?</li></ul>
+      <i>"We're heading into the last cycle and I want to make sure I'm supporting where it matters most."</i><br><br>
+      <a href="#" style="display:inline-block;background:#002f60;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:700;font-size:12px">Share your feedback →</a><br><br>
+      <span style="font-size:10px;color:#9ca3af">Only Scott and admins will see your answers.</span>
+    </div>
+  </div>
+
+  <div class="frame" style="min-height:auto;padding:20px">
+    <div class="frame-label" style="margin:-20px -20px 16px;border-radius:18px 18px 0 0;background:#14532d;color:#bbf7d0">🙏 Drew gets after submitting (email mode) OR after in-person save</div>
+    <div style="font-size:11px;color:#9ca3af;margin-bottom:6px">Subject:</div>
+    <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:14px">Thanks for sharing your feedback, Drew</div>
+    <div style="background:#ecfdf5;border-radius:10px;padding:14px;font-size:12px;color:#374151;line-height:1.5">
+      Hi Drew,<br><br>
+      Thank you for taking the time to share honest feedback with Scott. Your perspective is what makes our coaching better — we appreciate it.<br><br>
+      <span style="font-size:10px;color:#9ca3af">— FirstLine Schools</span>
+    </div>
+  </div>
+
+  <div class="frame" style="min-height:auto;padding:20px">
+    <div class="frame-label" style="margin:-20px -20px 16px;border-radius:18px 18px 0 0;background:#7c2d12;color:#fed7aa">📨 Scott gets when Drew responds (email mode only)</div>
+    <div style="font-size:11px;color:#9ca3af;margin-bottom:6px">Subject:</div>
+    <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:14px">Drew Johnson shared feedback with you</div>
+    <div style="background:#fff7ed;border-radius:10px;padding:14px;font-size:12px;color:#374151;line-height:1.5">
+      Hi Scott,<br><br>
+      Drew Johnson responded to your feedback request:<br><br>
+      <b>How is your workload right now?</b><br>
+      Feeling stretched on data tracking. PD time is helpful but I need more bench planning time.<br><br>
+      <b>What support do you need from me?</b><br>
+      Co-plan with me once a week for the next four weeks during cycle 4.<br><br>
+      <a href="#" style="font-size:11px;color:#002f60;font-weight:700">View on Drew's profile →</a>
+    </div>
+  </div>
+
+</div>
+
+<div class="legend">
+  <b>Flow summary</b>
+  <ul>
+    <li><b>Email mode:</b> requestor submits → 1 email to teacher with question(s) + secure link → teacher answers on response page → submits → (a) gratitude email to teacher, (b) summary email to requestor with their responses, (c) record stored on teacher's profile.</li>
+    <li><b>In-person mode:</b> requestor types responses inline as the conversation happens → submits → 1 gratitude email to teacher → record stored on teacher's profile (no email back to requestor; they have it on screen).</li>
+    <li><b>Multi-select cap:</b> 3 questions max. Once 3 are picked, remaining options grey out.</li>
+    <li><b>Likert scales (sustainability + flight risk)</b> are part of the request itself, not a private read. In email mode, Drew rates them on the response page. In in-person mode, the requestor records what Drew said. Always asked — they're standardized pulse items.</li>
+    <li><b>Public response link:</b> uses a token like the PIP/Write-Up acknowledgment URL. No login needed for Drew. Only the link-holder can post the response.</li>
+    <li><b>Privacy line on response page:</b> "Only Scott and admins can see what you wrote." — manages expectations.</li>
+  </ul>
+</div>
+
+<div class="legend" style="background:#ecfdf5;border-color:#bbf7d0;color:#15803d">
+  <b style="color:#14532d">Question management — easy editing</b>
+  <ul>
+    <li><b>Source of truth:</b> new <code>solicit_questions.yaml</code> at project root, same pattern as <code>permissions.yaml</code>.</li>
+    <li>Structure:
+      <pre style="background:#fff;padding:8px;border-radius:6px;font-size:10px;margin:4px 0">questions:
+  - "How is your workload right now?"
+  - "How are you feeling about your goals?"
+  - "What support do you need from me?"
+  - "How is the team culture feeling?"
+  - "What's one thing I can do better?"
+allow_custom: true   # show "Custom question…" option</pre>
+    </li>
+    <li><b>Day-1:</b> Scott edits the YAML and redeploys. 5 minutes per change. (Same way <code>permissions.yaml</code> works.)</li>
+    <li><b>Later (post-launch):</b> add an admin page at <code>/app/admin/questions</code> that reads/writes the same YAML. Add/edit/remove/reorder via UI. ~45 min when needed.</li>
+    <li><b>Form loads questions from <code>/api/solicit-questions</code></b> on mount — admins always see latest list without rebuilding the frontend bundle.</li>
+  </ul>
+</div>
+
+</body></html>

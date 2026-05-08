@@ -15,6 +15,7 @@ import Network from './pages/Network'
 import School from './pages/School'
 import NetworkDrilldown from './pages/NetworkDrilldown'
 import PermissionsAdmin from './pages/PermissionsAdmin'
+import FeedbackResponse from './pages/FeedbackResponse'
 import CelebrationDrilldown from './pages/CelebrationDrilldown'
 import TouchpointHub from './pages/TouchpointHub'
 import PIP from './pages/PIP'
@@ -56,6 +57,8 @@ export default function App() {
         {/* Public acknowledgment page — no auth */}
         <Route path="/acknowledge/:token" element={<Acknowledge />} />
         <Route path="/acknowledge" element={<Acknowledge />} />
+        <Route path="/respond/:token" element={<FeedbackResponse />} />
+        <Route path="/respond" element={<FeedbackResponse />} />
         <Route path="/app/team" element={<Team />} />
         <Route path="/app/me" element={<MeRedirect />} />
         <Route path="/app/me/action-steps" element={<ActionStepsPage />} />

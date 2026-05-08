@@ -1,0 +1,42 @@
+# ObservationPoint — Solicit Feedback Questions
+#
+# The bank of questions a leader can pick from when soliciting feedback
+# from a staff member. Loaded by /api/solicit-questions and rendered as
+# a multi-select on the form (cap 3).
+#
+# Edit this file to add / remove / reorder questions. Redeploy applies.
+# Same pattern as permissions.yaml — single source of truth, frontend
+# pulls live, no JS bundle changes needed for question edits.
+# ─────────────────────────────────────────────────────────────────────
+
+questions:
+  - "How is your workload right now?"
+  - "How are you feeling about your goals?"
+  - "What support do you need from me?"
+  - "How is the team culture feeling?"
+  - "What's one thing I can do better as your supervisor?"
+  - "Where do you feel most successful right now?"
+  - "What's getting in the way of your best work?"
+
+# Allow user to write a custom question on top of (or instead of) the bank
+allow_custom: true
+
+# Cap on number of questions selectable per request
+max_questions: 3
+
+# Standardized Likert scales — always asked alongside the open-ended questions.
+# Drew rates these in email mode; the requestor records what Drew said in
+# in-person mode.
+likert_scales:
+  - id: sustainability
+    label: Sustainability
+    prompt: "Is your workload sustainable?"
+    low_label: "Not at all"
+    mid_label: "Neutral"
+    high_label: "Very"
+  - id: flight_risk
+    label: Flight risk
+    prompt: "How likely are you to stay at FirstLine next year?"
+    low_label: "Leaving"
+    mid_label: "50/50"
+    high_label: "Locked in"
