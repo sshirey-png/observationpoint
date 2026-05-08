@@ -896,15 +896,27 @@ function ActionStepsSection({ email, isSelf, navigate }) {
   const reload = () => {
     api.get(`/api/staff/${encodeURIComponent(email)}/assignments`)
       .then(rows => setItems(Array.isArray(rows)
-        ? rows.filter(r => r.type === 'actionStep' && r.school_year === '2025-2026')
+        ? rows.filter(r => r.type === 'actionStep')
         : []))
       .catch(() => setItems([]))
   }
   useEffect(() => { reload() }, [email])
 
   if (items == null) return <div className="text-center text-gray-400 text-sm py-6">Loading action steps…</div>
-  const active = items.filter(x => (x.progress_pct || 0) < 100)
-  const mastered = items.filter(x => x.progress_pct === 100)
+
+  // Group by school_year. Newest year first, expanded; older years collapsed.
+  const byYear = {}
+  items.forEach(a => {
+    const y = a.school_year || 'Unknown'
+    if (!byYear[y]) byYear[y] = []
+    byYear[y].push(a)
+  })
+  const years = Object.keys(byYear).sort().reverse()
+  const currentYear = years[0] || null
+  const currentItems = currentYear ? byYear[currentYear] : []
+  const active = currentItems.filter(x => (x.progress_pct || 0) < 100 && (x.progress_pct == null || x.progress_pct >= 0))
+  const mastered = currentItems.filter(x => x.progress_pct === 100)
+  const notMastered = currentItems.filter(x => x.progress_pct != null && x.progress_pct < 0)
 
   async function markMastered(id) {
     setBusy(id)
@@ -965,6 +977,7 @@ function ActionStepsSection({ email, isSelf, navigate }) {
             <div className="text-[13px] font-semibold text-gray-900 leading-snug">{a.body}</div>
             <div className="flex items-center gap-2 mt-2 flex-wrap">
               {stateChip}
+              {a.school_year && <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">{a.school_year}</span>}
               {dt && <span className="text-[10px] text-gray-500">· assigned {dt}</span>}
               {a.creator_email && <span className="text-[10px] text-gray-500">· by {a.creator_email.split('@')[0]}</span>}
             </div>
@@ -987,14 +1000,21 @@ function ActionStepsSection({ email, isSelf, navigate }) {
     )
   }
 
+  const priorYears = years.slice(1)
+
   return (
     <div className="mt-2 mb-4">
       <div className="text-[11px] font-bold uppercase tracking-[.06em] text-gray-400 mb-2 flex items-center justify-between">
-        <span>{isSelf ? 'Your Action Steps' : 'Active Action Steps'}</span>
-        <span className="text-[10px] font-normal text-gray-400 normal-case tracking-normal">{active.length} active · {mastered.length} mastered</span>
+        <span>{isSelf ? 'Your Action Steps' : 'Action Steps'}{currentYear ? ` · ${currentYear}` : ''}</span>
+        <span className="text-[10px] font-normal text-gray-400 normal-case tracking-normal">
+          {active.length} active · {mastered.length} mastered{notMastered.length > 0 ? ` · ${notMastered.length} not mastered` : ''}
+        </span>
       </div>
-      {active.length === 0 && mastered.length === 0 && (
+      {currentItems.length === 0 && priorYears.length === 0 && (
         <div className="bg-gray-50 rounded-xl p-3.5 text-center text-[12px] text-gray-500">No action steps yet.</div>
+      )}
+      {currentItems.length === 0 && priorYears.length > 0 && (
+        <div className="bg-gray-50 rounded-xl p-3.5 text-center text-[12px] text-gray-500">No action steps for {currentYear}.</div>
       )}
       {active.map(a => <StepCard key={a.id} a={a} archived={false} />)}
       {mastered.length > 0 && (
@@ -1005,6 +1025,31 @@ function ActionStepsSection({ email, isSelf, navigate }) {
           </div>
         </details>
       )}
+      {notMastered.length > 0 && (
+        <details className="bg-white rounded-xl shadow-sm mb-2 overflow-hidden">
+          <summary className="cursor-pointer p-3 text-[11px] font-bold text-gray-600 select-none">Not Mastered ({notMastered.length}) ›</summary>
+          <div className="px-3 pb-3">
+            {notMastered.map(a => <StepCard key={a.id} a={a} archived={false} />)}
+          </div>
+        </details>
+      )}
+
+      {/* Prior school years — collapsed. Each year shows active+mastered together. */}
+      {priorYears.map(y => {
+        const yearItems = byYear[y]
+        return (
+          <details key={y} className="bg-gray-50 rounded-xl shadow-sm mb-2 overflow-hidden">
+            <summary className="cursor-pointer p-3 text-[11px] font-bold text-gray-600 select-none flex items-center justify-between">
+              <span>{y} ({yearItems.length})</span>
+              <span className="text-[10px] text-gray-400">›</span>
+            </summary>
+            <div className="px-3 pb-3">
+              {yearItems.map(a => <StepCard key={a.id} a={a} archived={a.progress_pct === 100} />)}
+            </div>
+          </details>
+        )
+      })}
+
       {!isSelf && (
         <button
           onClick={() => navigate(`/app/observe?teacher=${encodeURIComponent(email)}`)}
