@@ -243,6 +243,12 @@ export default function PIP() {
             onClick={() => navigate(teacher ? `/app/staff/${teacher.email}` : '/')}
             style={{ marginTop: 18, background: '#002f60', color: '#fff', border: 'none', borderRadius: 12, padding: '12px 24px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
           >View Profile</button>
+          <div style={{ marginTop: 14 }}>
+            <button
+              onClick={() => navigate('/')}
+              style={{ background: 'transparent', border: 'none', color: '#6b7280', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: '6px 10px' }}
+            >Back to home →</button>
+          </div>
         </div>
       </div>
     )
