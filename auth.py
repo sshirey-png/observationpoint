@@ -135,7 +135,7 @@ def is_admin_user(user):
 # admin so ExDir of Teach and Learn (which matches C_TEAM_KEYWORDS via
 # "ExDir") gets the narrower content-lead scope, not full admin.
 
-CONTENT_LEAD_TITLES_EXACT = ['ExDir of Teach and Learn', 'K-8 Content Lead']
+CONTENT_LEAD_TITLES_EXACT = ['K-8 Content Lead']
 SCHOOL_LEADER_TITLE_KEYWORDS = ['principal', 'assistant principal', 'dean', 'director of culture']
 
 

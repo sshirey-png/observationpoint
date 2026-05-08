@@ -35,10 +35,9 @@ Formative coaching data across all 4 schools — observations, action steps,
 fundamentals, goals. Explicitly excluded from personnel-review surfaces
 (PMAP, SR, PIP, Write-Up).
 
-- ExDir of Teach and Learn
 - K-8 Content Lead
 
-> ⚠️ **Note:** ExDir of Teach and Learn matches C_TEAM_KEYWORDS via "ExDir" and so today lands in `admin` via `is_cteam()`. To honor this scope, OP must check `content_lead` BEFORE `admin` for these specific titles.
+> ⚠️ **Note:** Only K-8 Content Lead lives here. ExDir of Teach and Learn matches C_TEAM_KEYWORDS via "ExDir" and is full admin (same as CPO/CHRO) — not a content lead. The `teachers_only` scope they get on the Schools dashboard is a dashboard-specific filter, not a tier downgrade.
 
 ### School Leader
 
