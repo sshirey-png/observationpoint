@@ -417,7 +417,7 @@ export default function NetworkDrilldown({ kindOverride }) {
           <div style={{ ...STYLES.card, overflow: 'hidden' }}>
             {kind === 'evaluations' && rows.map(r => (
               <button key={r.email}
-                onClick={() => navigate(`/app/staff/${encodeURIComponent(r.email)}`)}
+                onClick={() => navigate(`/app/staff/${encodeURIComponent(r.email)}${sy ? `?sy=${encodeURIComponent(sy)}` : ''}`)}
                 style={STYLES.rowItem}
               >
                 <div style={{ minWidth: 0, flex: 1 }}>
@@ -433,7 +433,7 @@ export default function NetworkDrilldown({ kindOverride }) {
 
             {kind === 'action_step' && rows.map(r => (
               <button key={r.email}
-                onClick={() => navigate(`/app/staff/${encodeURIComponent(r.email)}`)}
+                onClick={() => navigate(`/app/staff/${encodeURIComponent(r.email)}${sy ? `?sy=${encodeURIComponent(sy)}` : ''}`)}
                 style={STYLES.rowItem}
               >
                 <div style={{ minWidth: 0, flex: 1 }}>
@@ -452,7 +452,7 @@ export default function NetworkDrilldown({ kindOverride }) {
 
             {kind === 'fundamentals' && rows.map(r => (
               <button key={r.email}
-                onClick={() => navigate(`/app/staff/${encodeURIComponent(r.email)}`)}
+                onClick={() => navigate(`/app/staff/${encodeURIComponent(r.email)}${sy ? `?sy=${encodeURIComponent(sy)}` : ''}`)}
                 style={STYLES.rowItem}
               >
                 <div style={{ minWidth: 0, flex: 1 }}>
@@ -471,7 +471,7 @@ export default function NetworkDrilldown({ kindOverride }) {
 
             {kind === 'observations' && rows.map(r => (
               <button key={r.email}
-                onClick={() => navigate(`/app/staff/${encodeURIComponent(r.email)}`)}
+                onClick={() => navigate(`/app/staff/${encodeURIComponent(r.email)}${sy ? `?sy=${encodeURIComponent(sy)}` : ''}`)}
                 style={STYLES.rowItem}
               >
                 <div style={{ minWidth: 0, flex: 1 }}>

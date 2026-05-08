@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useParams, useNavigate } from 'react-router-dom'
+import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import BottomNav from '../components/BottomNav'
 import LogTouchpointModal from '../components/LogTouchpointModal'
 import TouchpointDetail from '../components/TouchpointDetail'
@@ -888,6 +888,8 @@ function YourTodos({ todos }) {
  * Supervisor/admin: "Mark Mastered" / "Edit" / "Delete" + "Assign new" CTA.
  */
 function ActionStepsSection({ email, isSelf, navigate }) {
+  const [searchParams] = useSearchParams()
+  const urlSy = searchParams.get('sy')
   const [items, setItems] = useState(null)
   const [busy, setBusy] = useState(null)
   const [editingId, setEditingId] = useState(null)
@@ -904,7 +906,10 @@ function ActionStepsSection({ email, isSelf, navigate }) {
 
   if (items == null) return <div className="text-center text-gray-400 text-sm py-6">Loading action steps…</div>
 
-  // Group by school_year. Newest year first, expanded; older years collapsed.
+  // Group by school_year. Focused year follows URL ?sy= so the page
+  // inherits whatever year the user was viewing on Network. Falls back
+  // to newest year that has data if URL has no sy or specifies a year
+  // with no records for this teacher.
   const byYear = {}
   items.forEach(a => {
     const y = a.school_year || 'Unknown'
@@ -912,8 +917,8 @@ function ActionStepsSection({ email, isSelf, navigate }) {
     byYear[y].push(a)
   })
   const years = Object.keys(byYear).sort().reverse()
-  const currentYear = years[0] || null
-  const currentItems = currentYear ? byYear[currentYear] : []
+  const focusedYear = (urlSy && byYear[urlSy]) ? urlSy : (years[0] || null)
+  const currentItems = focusedYear ? byYear[focusedYear] : []
   const active = currentItems.filter(x => (x.progress_pct || 0) < 100 && (x.progress_pct == null || x.progress_pct >= 0))
   const mastered = currentItems.filter(x => x.progress_pct === 100)
   const notMastered = currentItems.filter(x => x.progress_pct != null && x.progress_pct < 0)
@@ -1000,21 +1005,22 @@ function ActionStepsSection({ email, isSelf, navigate }) {
     )
   }
 
-  const priorYears = years.slice(1)
+  // Other years = everything except focusedYear, descending.
+  const otherYears = years.filter(y => y !== focusedYear)
 
   return (
     <div className="mt-2 mb-4">
       <div className="text-[11px] font-bold uppercase tracking-[.06em] text-gray-400 mb-2 flex items-center justify-between">
-        <span>{isSelf ? 'Your Action Steps' : 'Action Steps'}{currentYear ? ` · ${currentYear}` : ''}</span>
+        <span>{isSelf ? 'Your Action Steps' : 'Action Steps'}{focusedYear ? ` · ${focusedYear}` : ''}</span>
         <span className="text-[10px] font-normal text-gray-400 normal-case tracking-normal">
           {active.length} active · {mastered.length} mastered{notMastered.length > 0 ? ` · ${notMastered.length} not mastered` : ''}
         </span>
       </div>
-      {currentItems.length === 0 && priorYears.length === 0 && (
+      {currentItems.length === 0 && otherYears.length === 0 && (
         <div className="bg-gray-50 rounded-xl p-3.5 text-center text-[12px] text-gray-500">No action steps yet.</div>
       )}
-      {currentItems.length === 0 && priorYears.length > 0 && (
-        <div className="bg-gray-50 rounded-xl p-3.5 text-center text-[12px] text-gray-500">No action steps for {currentYear}.</div>
+      {currentItems.length === 0 && otherYears.length > 0 && (
+        <div className="bg-gray-50 rounded-xl p-3.5 text-center text-[12px] text-gray-500">No action steps for {focusedYear}.</div>
       )}
       {active.map(a => <StepCard key={a.id} a={a} archived={false} />)}
       {mastered.length > 0 && (
@@ -1034,8 +1040,8 @@ function ActionStepsSection({ email, isSelf, navigate }) {
         </details>
       )}
 
-      {/* Prior school years — collapsed. Each year shows active+mastered together. */}
-      {priorYears.map(y => {
+      {/* Other school years — collapsed. Each year shows active+mastered together. */}
+      {otherYears.map(y => {
         const yearItems = byYear[y]
         return (
           <details key={y} className="bg-gray-50 rounded-xl shadow-sm mb-2 overflow-hidden">

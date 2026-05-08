@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>Mock — Staff profile: action steps grouped by year</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter','Open Sans',Arial,sans-serif;background:#eef1f5;color:#111;-webkit-font-smoothing:antialiased;line-height:1.4;padding:24px 12px 60px}
+h1{font-size:14px;font-weight:800;color:#002f60;text-transform:uppercase;letter-spacing:.06em;text-align:center;margin-bottom:6px}
+.note{font-size:12px;color:#6b7280;text-align:center;max-width:760px;margin:0 auto 20px;line-height:1.5}
+.note b{color:#111}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:920px;margin:0 auto}
+@media(max-width:760px){.row{grid-template-columns:1fr}}
+.frame{background:#f5f7fa;border-radius:18px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.08);min-height:760px}
+.frame-label{background:#1e293b;color:#cbd5e1;font-size:10px;font-weight:700;padding:6px 12px;text-align:center;letter-spacing:.05em;text-transform:uppercase}
+.frame-label.bad{background:#7f1d1d;color:#fecaca}
+.frame-label.good{background:#14532d;color:#bbf7d0}
+
+.nav{background:#002f60;padding:14px 14px;display:flex;align-items:center;gap:10px;color:#fff}
+.nav-back{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:16px}
+.nav-title{flex:1;text-align:center}
+.nav-title .brand{font-size:15px;font-weight:800}
+.nav-title .o{color:#e47727}
+.nav-sub{font-size:11px;color:rgba(255,255,255,.65);margin-top:2px}
+
+.body{padding:14px}
+
+.profile-head{background:#fff;border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:12px;display:flex;gap:12px;align-items:center}
+.avatar{width:48px;height:48px;border-radius:50%;background:#002f60;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;flex-shrink:0}
+.profile-name{font-size:18px;font-weight:800;color:#002f60}
+.profile-meta{font-size:11px;color:#6b7280;margin-top:2px}
+
+.section-head{font-size:11px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;display:flex;justify-content:space-between;align-items:center;margin:14px 4px 8px}
+.section-meta{font-size:10px;color:#9ca3af;font-weight:500;text-transform:none;letter-spacing:0}
+
+.empty{background:#f9fafb;border-radius:12px;padding:18px;text-align:center;font-size:12px;color:#6b7280}
+
+.step{background:#fff;border-radius:12px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:8px;border-left:3px solid #e47727}
+.step.archived{border-left-color:#10b981;opacity:.85}
+.step-body{font-size:13px;font-weight:600;color:#111;line-height:1.45}
+.step-meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.chip{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding:2px 6px;border-radius:4px}
+.chip.prog{background:#fff7ed;color:#c2410c}
+.chip.mast{background:#ecfdf5;color:#15803d}
+.chip.notmast{background:#fef9c3;color:#854d0e}
+.chip.year{background:#f3f4f6;color:#4b5563}
+.step-sub{font-size:10px;color:#6b7280}
+.step-actions{display:flex;gap:6px;margin-top:10px}
+.step-actions button{font-size:10px;font-weight:800;padding:5px 10px;border-radius:6px;border:1px solid #e5e7eb;background:#fff;color:#4b5563;cursor:pointer;font-family:inherit}
+.step-actions button.primary{background:#10b981;color:#fff;border:none}
+
+.disclosure{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:8px;overflow:hidden}
+.disclosure-head{padding:12px 14px;font-size:11px;font-weight:700;color:#4b5563;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.disclosure-head .arrow{color:#9ca3af}
+.disclosure-body{padding:0 14px 12px}
+
+.disclosure.year{background:#f9fafb}
+.disclosure.year .disclosure-head{font-size:11px;font-weight:800;color:#374151}
+
+.assign-btn{width:100%;padding:11px;background:#002f60;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:6px}
+
+.callout{background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:10px 12px;font-size:11px;color:#78350f;line-height:1.5;margin:14px 4px}
+.callout b{color:#7c2d12}
+
+.legend{background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:12px 14px;font-size:11px;color:#4338ca;margin:24px auto 0;max-width:920px;line-height:1.5}
+.legend b{color:#3730a3;display:block;font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.legend ul{margin-left:18px;margin-top:6px}
+</style></head><body>
+
+<h1>StaffProfile · Action Steps · Before vs After</h1>
+<p class="note"><b>What we're solving:</b> Today, the Action Steps section on a staff profile is hardcoded to <code>school_year === '2025-2026'</code>. If a viewer comes from a Network drill-down set to a different year, the drill-down counts steps but the profile filters them all out → "No action steps."<br><br><b>Goal:</b> The profile follows the year the user was viewing on Network. Click into Jeffrey from a 25-26 drill-down → his 25-26 work is focused. Click in from 26-27 → 26-27 is focused. Other years still accessible (collapsed) so historical context isn't lost. Each step card carries a year badge.</p>
+
+<div class="row">
+
+  <!-- ── BEFORE (current bug) ─────────────── -->
+  <div class="frame">
+    <div class="frame-label bad">BEFORE · Hardcoded to 25-26 only</div>
+    <div class="nav">
+      <div class="nav-back">←</div>
+      <div class="nav-title">
+        <div class="brand">Observation<span class="o">Point</span></div>
+        <div class="nav-sub">Staff Profile</div>
+      </div>
+      <div style="width:30px"></div>
+    </div>
+    <div class="body">
+
+      <div class="profile-head">
+        <div class="avatar">JC</div>
+        <div>
+          <div class="profile-name">Jeffrey Cappell</div>
+          <div class="profile-meta">3rd Grade Teacher · Phillis Wheatley</div>
+        </div>
+      </div>
+
+      <div class="section-head">
+        <span>Action Steps</span>
+        <span class="section-meta">0 active · 0 mastered</span>
+      </div>
+
+      <div class="empty">No action steps yet.</div>
+
+      <div class="callout">
+        <b>The bug:</b> Drill-down said Jeffrey has 2 In Progress + 1 Mastered.<br>
+        Profile says he has none. Reason: profile filter hardcoded to 25-26.<br>
+        Jeffrey's records are all 26-27 (test data) and 24-25 (historical).
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── AFTER (proposed): viewer arrived from Network 25-26 ─────────────── -->
+  <div class="frame">
+    <div class="frame-label good">AFTER · Came from Network @ 2025-2026</div>
+    <div class="nav">
+      <div class="nav-back">←</div>
+      <div class="nav-title">
+        <div class="brand">Observation<span class="o">Point</span></div>
+        <div class="nav-sub">Staff Profile · 2025-2026</div>
+      </div>
+      <div style="width:30px"></div>
+    </div>
+    <div class="body">
+
+      <div class="profile-head">
+        <div class="avatar">JC</div>
+        <div>
+          <div class="profile-name">Jeffrey Cappell</div>
+          <div class="profile-meta">3rd Grade Teacher · Phillis Wheatley</div>
+        </div>
+      </div>
+
+      <div class="section-head">
+        <span>Action Steps · 2025-2026</span>
+        <span class="section-meta">3 active · 2 mastered</span>
+      </div>
+
+      <!-- Active for the focused year (25-26) -->
+      <div class="step">
+        <div class="step-body">Tighten transitions between math stations to under 90 seconds; use a visual timer.</div>
+        <div class="step-meta">
+          <span class="chip prog">In Progress</span>
+          <span class="chip year">2025-2026</span>
+          <span class="step-sub">· assigned Mar 18 · by Sabrina Edwards</span>
+        </div>
+        <div class="step-actions">
+          <button class="primary">Mark Mastered</button>
+          <button>Edit</button>
+          <button>Delete</button>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-body">Increase ratio of Cog Eng questions: 2 "what" questions for every 1 "why/how" question.</div>
+        <div class="step-meta">
+          <span class="chip prog">In Progress</span>
+          <span class="chip year">2025-2026</span>
+          <span class="step-sub">· assigned Feb 4 · by Sabrina Edwards</span>
+        </div>
+        <div class="step-actions">
+          <button class="primary">Mark Mastered</button>
+          <button>Edit</button>
+          <button>Delete</button>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-body">Use cold-call after every 3rd CFU to keep all 23 students accountable.</div>
+        <div class="step-meta">
+          <span class="chip prog">In Progress</span>
+          <span class="chip year">2025-2026</span>
+          <span class="step-sub">· assigned Jan 22 · by Sabrina Edwards</span>
+        </div>
+        <div class="step-actions">
+          <button class="primary">Mark Mastered</button>
+          <button>Edit</button>
+          <button>Delete</button>
+        </div>
+      </div>
+
+      <!-- Mastered, focused year — collapsed -->
+      <div class="disclosure">
+        <div class="disclosure-head">
+          <span>Mastered (2)</span>
+          <span class="arrow">›</span>
+        </div>
+      </div>
+
+      <!-- Other years — collapsed -->
+      <div class="disclosure year">
+        <div class="disclosure-head">
+          <span>2026-2027 (3)</span>
+          <span class="arrow">›</span>
+        </div>
+      </div>
+      <div class="disclosure year">
+        <div class="disclosure-head">
+          <span>2024-2025 (4)</span>
+          <span class="arrow">›</span>
+        </div>
+      </div>
+
+      <button class="assign-btn">+ Assign new action step</button>
+
+    </div>
+  </div>
+
+</div>
+
+<div class="legend">
+  <b>What changes</b>
+  <ul>
+    <li><b>Focused year follows the URL.</b> Click into Jeffrey from a 25-26 drill-down → 25-26 is focused. Click in from 26-27 → 26-27 is focused. Drill-down nav now appends <code>?sy=25-26</code> to the staff URL.</li>
+    <li><b>Focused year shows expanded</b> with active step cards. Mastered + Not Mastered collapse into disclosure rows so the page isn't noisy with completed work.</li>
+    <li><b>Other years</b> collapse to single rows with the count (e.g. <code>2026-2027 (3) ›</code>). Expand to see those steps with their original state badges.</li>
+    <li><b>Year badge on every step</b> so when you do expand another year, each step reads contextually — you don't mistake a 2-year-old "In Progress" for current work.</li>
+    <li><b>Nav subtitle reads</b> "Staff Profile · 2025-2026" so it's obvious which year the page is anchored to.</li>
+    <li><b>Fallback:</b> if the URL has no <code>sy</code>, default to the newest year that has any data for this teacher.</li>
+    <li><b>Empty states:</b> "No action steps yet" only if zero across all years. If there's history but nothing in the focused year, message reads "No action steps for 2025-2026."</li>
+  </ul>
+</div>
+
+</body></html>
