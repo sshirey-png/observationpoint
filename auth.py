@@ -183,11 +183,23 @@ def get_user_scope(user):
 
 def get_accessible_emails(conn, email, job_title):
     """
-    Get all staff emails the user can access.
-    Admins see everyone. Others see their recursive downline + self
-    (so self-actions like viewing their own goals/profile work).
+    Get all staff emails the user can access. Used by check_access() for
+    per-record authorization on staff profiles, action steps, touchpoints.
+
+    Tier behavior (mirrors permissions.yaml):
+      - admin / content_lead: all active staff (Content Leads coach across
+        all schools; their PMAP exclusion is enforced at the capability
+        layer, not by trimming this list)
+      - school_leader: own downline + ALL active staff at their school
+        (so when they click into any teacher at their school the profile
+        loads, not just their direct reports)
+      - other supervisors: own + recursive downline
+      - everyone else: self only
     """
-    if is_admin_title(job_title):
+    # All-staff tiers: admin and content_lead.
+    # Order matters — is_content_lead BEFORE is_admin_title so ExDir of
+    # Teach and Learn (which would also match is_cteam) gets here too.
+    if is_content_lead(job_title) or is_admin_title(job_title):
         cur = conn.cursor()
         cur.execute("SELECT email FROM staff WHERE is_active")
         return [r[0] for r in cur.fetchall()]
@@ -215,6 +227,22 @@ def get_accessible_emails(conn, email, job_title):
         """, (email,))
         for r in cur.fetchall():
             accessible.add(r[0])
+
+    # School leaders: also include all active staff at their school. This
+    # is what makes click-through-from-drill-down to a teacher's profile
+    # actually load data instead of returning 403.
+    if is_school_leader(job_title):
+        cur.execute("SELECT school FROM staff WHERE LOWER(email) = LOWER(%s)", (email,))
+        row = cur.fetchone()
+        leader_school = row[0] if row else None
+        if leader_school:
+            cur.execute(
+                "SELECT email FROM staff WHERE is_active AND school = %s",
+                (leader_school,),
+            )
+            for r in cur.fetchall():
+                if r[0]:
+                    accessible.add(r[0])
 
     return list(accessible)
 
