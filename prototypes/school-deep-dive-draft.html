@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>School Deep Dive — Phillis Wheatley</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f7fa;-webkit-font-smoothing:antialiased;color:#111827;line-height:1.4}
+.frame{max-width:760px;margin:0 auto;padding:14px}
+.banner{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:10px 14px;font-size:11px;color:#9a3412;margin-bottom:14px;text-align:center}
+.banner b{color:#7c2d12}
+
+/* Hero — school */
+.hero{background:linear-gradient(135deg,#002f60,#003b7a);color:#fff;border-radius:14px;padding:20px;margin-bottom:14px}
+.hero-back{font-size:11px;color:rgba(255,255,255,.6);margin-bottom:6px}
+.hero-name{font-size:24px;font-weight:900;letter-spacing:-.02em}
+.hero-sub{font-size:12px;color:rgba(255,255,255,.7);margin-top:4px}
+.hero-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:18px}
+.hero-stat{background:rgba(255,255,255,.1);border-radius:10px;padding:12px;text-align:center}
+.hero-stat-num{font-size:22px;font-weight:800;color:#fff}
+.hero-stat-lbl{font-size:9px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.05em;margin-top:4px;font-weight:700}
+
+.section{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:14px}
+.h{font-size:13px;font-weight:800;color:#111827;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;display:flex;justify-content:space-between;align-items:baseline}
+.sub{font-size:11px;color:#6b7280;font-weight:500;text-transform:none;letter-spacing:0}
+
+.split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.metric-card{padding:18px;background:#fff;border-radius:14px}
+.metric-card.warn{background:linear-gradient(135deg,#fff7ed,#fff);border-left:4px solid #e47727}
+.metric-card.green{background:linear-gradient(135deg,#ecfdf5,#fff);border-left:4px solid #16a34a}
+.metric-num{font-size:38px;font-weight:900;line-height:1;letter-spacing:-.02em}
+.metric-num.warn{color:#c2410c}
+.metric-num.green{color:#15803d}
+.metric-lbl{font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-top:6px}
+.metric-sub{font-size:10px;color:#9ca3af;margin-top:3px}
+.bar{height:6px;background:#f3f4f6;border-radius:3px;overflow:hidden;margin-top:10px}
+.bar-fill{height:100%;border-radius:3px}
+.target-line{position:relative;font-size:9px;color:#9ca3af;margin-top:4px;font-weight:600}
+.target-tick{position:absolute;left:80%;top:-12px;width:1px;height:8px;background:#ef4444}
+.target-label{position:absolute;left:80%;top:-12px;transform:translateX(-50%);font-size:9px;color:#ef4444;font-weight:700;white-space:nowrap}
+
+.action-state-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.state{padding:14px 10px;border-radius:10px;text-align:center}
+.state.mastered{background:#ecfdf5;border:1px solid #a7f3d0}
+.state.progress{background:#fff7ed;border:1px solid #fed7aa}
+.state.notyet{background:#f9fafb;border:1px solid #e5e7eb}
+.state-num{font-size:24px;font-weight:800;line-height:1}
+.state-num.mastered{color:#15803d}
+.state-num.progress{color:#c2410c}
+.state-num.notyet{color:#6b7280}
+.state-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:5px;color:#6b7280}
+
+/* Staff list */
+.staff-search{background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:#9ca3af;display:flex;align-items:center;gap:8px}
+.staff-row{display:grid;grid-template-columns:32px 1fr auto auto auto;gap:10px;padding:10px 0;border-bottom:1px solid #f3f4f6;align-items:center;cursor:pointer}
+.staff-row:hover{background:#f9fafb}
+.staff-row:last-child{border-bottom:none}
+.avatar{width:32px;height:32px;border-radius:8px;background:#002f60;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}
+.staff-name{font-size:13px;font-weight:700;color:#111827}
+.staff-role{font-size:10px;color:#9ca3af;margin-top:1px}
+.chip{font-size:10px;font-weight:700;padding:3px 7px;border-radius:8px;text-align:center;min-width:42px}
+.chip.mastered{background:#ecfdf5;color:#15803d}
+.chip.notyet{background:#fef3c7;color:#92400e}
+.chip.total{background:#dbeafe;color:#1e40af}
+.staff-row .arrow{font-size:14px;color:#9ca3af}
+
+.tab-bar{display:flex;background:#f3f4f6;border-radius:18px;padding:3px;margin-bottom:14px}
+.tab{flex:1;padding:8px;text-align:center;font-size:11px;font-weight:700;color:#6b7280;border-radius:14px;cursor:pointer}
+.tab.on{background:#fff;color:#002f60;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+</style>
+</head><body>
+<div class="frame">
+
+<div class="banner">
+  <b>DRAFT</b> — School deep dive · Phillis Wheatley · real 25-26 data
+</div>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-back">← Network</div>
+  <div class="hero-name">Phillis Wheatley Community School</div>
+  <div class="hero-sub">2025-2026 · K-8 Charter</div>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-num">60</div>
+      <div class="hero-stat-lbl">Teachers w/ steps</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">258</div>
+      <div class="hero-stat-lbl">Action steps</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">625</div>
+      <div class="hero-stat-lbl">Observations</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">51%</div>
+      <div class="hero-stat-lbl">Mastered</div>
+    </div>
+  </div>
+</div>
+
+<!-- Coaching Follow-Through (school-scoped) -->
+<div class="section">
+  <div class="h">Coaching Follow-Through<span class="sub">vs. 80% target</span></div>
+  <div class="split">
+    <div class="metric-card warn">
+      <div class="metric-num warn">17%</div>
+      <div class="metric-lbl">48h Action Step</div>
+      <div class="metric-sub">106 of 625 obs</div>
+      <div class="bar"><div class="bar-fill" style="width:17%;background:#e47727"></div></div>
+      <div class="target-line"><span class="target-tick"></span><span class="target-label">80%</span></div>
+    </div>
+    <div class="metric-card green">
+      <div class="metric-num green">78%</div>
+      <div class="metric-lbl">Re-Observation</div>
+      <div class="metric-sub">200 of 258 steps</div>
+      <div class="bar"><div class="bar-fill" style="width:78%;background:#16a34a"></div></div>
+      <div class="target-line"><span class="target-tick"></span><span class="target-label">80%</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Action Step state -->
+<div class="section">
+  <div class="h">Action Steps · State<span class="sub">258 total · 60 teachers</span></div>
+  <div class="action-state-grid">
+    <div class="state mastered">
+      <div class="state-num mastered">132</div>
+      <div class="state-lbl">Mastered</div>
+      <div style="font-size:10px;color:#16a34a;font-weight:700;margin-top:2px">51%</div>
+    </div>
+    <div class="state progress">
+      <div class="state-num progress">0</div>
+      <div class="state-lbl">In Progress</div>
+      <div style="font-size:10px;color:#9ca3af;margin-top:2px">—</div>
+    </div>
+    <div class="state notyet">
+      <div class="state-num notyet">95</div>
+      <div class="state-lbl">Not Yet</div>
+      <div style="font-size:10px;color:#9ca3af;margin-top:2px">37%</div>
+    </div>
+  </div>
+</div>
+
+<!-- Staff list with action step status -->
+<div class="section">
+  <div class="h">Staff · Action Step Activity<span class="sub">Click row → StaffProfile</span></div>
+
+  <div class="tab-bar">
+    <div class="tab on">Most active</div>
+    <div class="tab">Highest mastery</div>
+    <div class="tab">Stalled (no recent)</div>
+  </div>
+
+  <div class="staff-search">🔍 Search staff at Wheatley...</div>
+
+  <div class="staff-row">
+    <div class="avatar">JC</div>
+    <div><div class="staff-name">Jeffrey Cappell</div><div class="staff-role">K-8 ELL Teacher</div></div>
+    <div class="chip total">12</div>
+    <div class="chip mastered">2 ✓</div>
+    <div class="arrow">→</div>
+  </div>
+  <div class="staff-row">
+    <div class="avatar">MM</div>
+    <div><div class="staff-name">Michael Milburn</div><div class="staff-role">Asst Principal</div></div>
+    <div class="chip total">12</div>
+    <div class="chip mastered">10 ✓</div>
+    <div class="arrow">→</div>
+  </div>
+  <div class="staff-row">
+    <div class="avatar">BB</div>
+    <div><div class="staff-name">Brittnee Barnes</div><div class="staff-role">K-8 Asst Teacher</div></div>
+    <div class="chip total">11</div>
+    <div class="chip mastered">9 ✓</div>
+    <div class="arrow">→</div>
+  </div>
+  <div class="staff-row">
+    <div class="avatar">JC</div>
+    <div><div class="staff-name">Jessica Carpenter</div><div class="staff-role">K-8 Lead Teacher</div></div>
+    <div class="chip total">11</div>
+    <div class="chip mastered">9 ✓</div>
+    <div class="arrow">→</div>
+  </div>
+  <div class="staff-row">
+    <div class="avatar">SC</div>
+    <div><div class="staff-name">Simone Clair</div><div class="staff-role">K-8 Lead Teacher</div></div>
+    <div class="chip total">10</div>
+    <div class="chip mastered">5 ✓</div>
+    <div class="arrow">→</div>
+  </div>
+  <div class="staff-row">
+    <div class="avatar">SP</div>
+    <div><div class="staff-name">Sekoya Price</div><div class="staff-role">K-8 Lead Teacher</div></div>
+    <div class="chip total">10</div>
+    <div class="chip mastered">7 ✓</div>
+    <div class="arrow">→</div>
+  </div>
+  <div class="staff-row">
+    <div class="avatar">AR</div>
+    <div><div class="staff-name">Angelica Robinson</div><div class="staff-role">K-8 Lead Teacher</div></div>
+    <div class="chip total">10</div>
+    <div class="chip mastered">6 ✓</div>
+    <div class="arrow">→</div>
+  </div>
+  <div class="staff-row">
+    <div class="avatar">LH</div>
+    <div><div class="staff-name">Laval Hughes</div><div class="staff-role">K-8 ELL Teacher</div></div>
+    <div class="chip total">9</div>
+    <div class="chip mastered">1 ✓</div>
+    <div class="arrow">→</div>
+  </div>
+  <div class="staff-row">
+    <div class="avatar">QM</div>
+    <div><div class="staff-name">Quanesha McGriff</div><div class="staff-role">K-8 ELL Teacher</div></div>
+    <div class="chip total">8</div>
+    <div class="chip mastered">4 ✓</div>
+    <div class="arrow">→</div>
+  </div>
+  <div class="staff-row">
+    <div class="avatar">LB</div>
+    <div><div class="staff-name">Lauren Briggs</div><div class="staff-role">K-8 Lead Teacher</div></div>
+    <div class="chip total">8</div>
+    <div class="chip mastered">7 ✓</div>
+    <div class="arrow">→</div>
+  </div>
+
+  <div style="text-align:center;font-size:11px;color:#e47727;font-weight:700;padding:12px;cursor:pointer;margin-top:6px;border-top:1px solid #f3f4f6">
+    View all 60 teachers with action steps →
+  </div>
+</div>
+
+<div style="text-align:center;font-size:11px;color:#9ca3af;padding:24px;font-style:italic">
+  Existing School page sections (band grid, dim card, comp pair) stay above this and unchanged.
+</div>
+
+</div>
+</body></html>
