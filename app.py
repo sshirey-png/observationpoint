@@ -289,6 +289,28 @@ def _can_file_pmap(user):
     return is_supervisor(user)
 
 
+# Personnel-review forms — PMAP variants + PIP / Write-Up / IAP. Content Leads
+# can see formative data on any staff profile but NOT these records (only their own).
+_PERSONNEL_REVIEW_FORM_TYPES = {'performance_improvement_plan', 'iap', 'write_up'}
+
+def _is_personnel_review_form(form_type):
+    ft = form_type or ''
+    return ft in _PERSONNEL_REVIEW_FORM_TYPES or ft.startswith('pmap_')
+
+
+def _viewer_can_see_personnel(user, target_email):
+    """True unless the viewer is a Content Lead looking at someone else's
+    profile. Content Leads see observation/coaching data network-wide but
+    personnel-review records (PMAP / PIP / Write-Up) are scoped to the
+    supervisor + HR — Content Leads only see their own."""
+    if not user:
+        return False
+    scope = get_user_scope(user)
+    if scope.get('tier') != 'content_lead':
+        return True  # access already governed by check_access for other tiers
+    return (user.get('email') or '').lower() == (target_email or '').lower()
+
+
 # ------------------------------------------------------------------
 # Auth
 # ------------------------------------------------------------------
@@ -1968,6 +1990,16 @@ def api_staff_profile(email):
     data = db.get_staff_profile(email)
     if not data:
         return jsonify({'error': 'Not found'}), 404
+
+    # Content Lead gate: strip personnel-review records (PMAP / PIP / Write-Up)
+    # unless they're looking at their own profile. They keep all formative data.
+    can_see_personnel = DEV_MODE or _viewer_can_see_personnel(user, email)
+    if not can_see_personnel:
+        if isinstance(data.get('touchpoints'), list):
+            data['touchpoints'] = [t for t in data['touchpoints'] if not _is_personnel_review_form(t.get('form_type'))]
+        data['pmap_by_year'] = {}
+    data['viewer_can_see_personnel'] = can_see_personnel
+
     return jsonify(data)
 
 
@@ -2004,6 +2036,10 @@ def api_touchpoint_full_detail(tp_id):
         # Auth gate — same rule as staff profile (admin / supervisor chain / self)
         if not DEV_MODE and not check_access(user, tp['teacher_email']):
             return jsonify({'authorized': False, 'error': 'Access denied'}), 200
+        # Content Lead gate on personnel-review records (PMAP / PIP / Write-Up)
+        if not DEV_MODE and _is_personnel_review_form(tp['form_type']) and not _viewer_can_see_personnel(user, tp['teacher_email']):
+            return jsonify({'authorized': False, 'reason': 'capability',
+                            'message': 'This is a personnel-review record, restricted to the supervisor and HR.'}), 200
 
         # 1. Scores from scores_v2, grouped by (measurement_group, dim_code, mid, cycle).
         # The cycle column is critical for PreK records where each PK1-PK10 dim

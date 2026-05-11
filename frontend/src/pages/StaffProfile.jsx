@@ -650,9 +650,11 @@ function SnapshotView({ touchpoints, onOpenDetail, staffEmail, currentSY, onShow
           </div>
         )}
       </details>
-      <button onClick={onShowPast} className="w-full mt-2 px-3 py-2.5 rounded-[10px] bg-white border border-gray-200 text-fls-navy text-[12px] font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1">
-        📈 View last 3 PMAPs →
-      </button>
+      {onShowPast && (
+        <button onClick={onShowPast} className="w-full mt-2 px-3 py-2.5 rounded-[10px] bg-white border border-gray-200 text-fls-navy text-[12px] font-bold cursor-pointer font-[inherit] flex items-center justify-center gap-1">
+          📈 View last 3 PMAPs →
+        </button>
+      )}
     </div>
   )
 }
@@ -1171,6 +1173,10 @@ export default function StaffProfile() {
   }, [email])
 
   const staff = data?.staff || {}
+  // Content Lead viewers don't see personnel-review records (PMAP / PIP /
+  // Write-Up) on someone else's profile. Backend already strips them from
+  // `data.touchpoints` + sets viewer_can_see_personnel; we hide the UI too.
+  const canSeePersonnel = data?.viewer_can_see_personnel !== false
   // Filter out drafts + dedup effectively-identical records (a pattern we see
   // with reimported Grow data — same date, same observer, same scores, new ID).
   const touchpoints = dedupTouchpoints(
@@ -1260,7 +1266,7 @@ export default function StaffProfile() {
         </div>
       )}
 
-      {viewMode === 'past' && (
+      {viewMode === 'past' && canSeePersonnel && (
         <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 flex items-center justify-between">
           <div className="text-[11px] font-bold uppercase tracking-wider text-yellow-800">Last 3 PMAPs · trend</div>
           <button
@@ -1287,10 +1293,10 @@ export default function StaffProfile() {
             staffEmail={email}
             currentSY={data.current_school_year || '2025-2026'}
             assignmentsSummary={assignSummary}
-            onShowPast={() => setViewMode('past')}
+            onShowPast={canSeePersonnel ? () => setViewMode('past') : null}
           />
         )}
-        {!loading && data && viewMode === 'snapshot' && (
+        {!loading && data && viewMode === 'snapshot' && canSeePersonnel && (
           <DisciplineSection touchpoints={touchpoints} onOpenDetail={setDetail} />
         )}
         {!loading && data && viewMode === 'snapshot' && isSelf && (
@@ -1302,8 +1308,11 @@ export default function StaffProfile() {
             🎉 Recognize a colleague
           </Link>
         )}
-        {!loading && data && viewMode === 'past' && (
+        {!loading && data && viewMode === 'past' && canSeePersonnel && (
           <PMAPView touchpoints={touchpoints} pmap_by_year={data.pmap_by_year} school_years={data.school_years} onOpenDetail={setDetail} staffEmail={email} />
+        )}
+        {!loading && data && viewMode === 'past' && !canSeePersonnel && (
+          <Empty msg="PMAP records are restricted to the supervisor and HR." />
         )}
       </div>
 

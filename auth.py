@@ -228,16 +228,18 @@ def get_accessible_emails(conn, email, job_title):
         for r in cur.fetchall():
             accessible.add(r[0])
 
-    # School leaders: also include all active staff at their school. This
-    # is what makes click-through-from-drill-down to a teacher's profile
-    # actually load data instead of returning 403.
+    # School leaders: also include all active TEACHERS at their school —
+    # NOT all staff. This makes click-through-from-drill-down to a teacher's
+    # profile load data instead of 403'ing, without exposing peer/senior
+    # leaders, directors, or support staff who don't report to them. Those
+    # are reachable only via the supervisor downline above.
     if is_school_leader(job_title):
         cur.execute("SELECT school FROM staff WHERE LOWER(email) = LOWER(%s)", (email,))
         row = cur.fetchone()
         leader_school = row[0] if row else None
         if leader_school:
             cur.execute(
-                "SELECT email FROM staff WHERE is_active AND school = %s",
+                "SELECT email FROM staff WHERE is_active AND school = %s AND job_function = 'Teacher'",
                 (leader_school,),
             )
             for r in cur.fetchall():
