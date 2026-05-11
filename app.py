@@ -1985,7 +1985,14 @@ def api_network_assignments_summary():
 def api_staff_profile(email):
     user = get_current_user()
     if not DEV_MODE and not check_access(user, email):
-        return jsonify({'error': 'Access denied'}), 403
+        # 200 + authorized:false so the frontend renders a friendly screen
+        # instead of a dead "couldn't load this profile" message.
+        scope = get_user_scope(user)
+        if scope.get('tier') in ('admin', 'content_lead', 'school_leader', 'supervisor'):
+            msg = "This person isn't in your team. You can only open profiles for people in your reporting chain."
+        else:
+            msg = "You can only view your own profile."
+        return jsonify({'authorized': False, 'reason': 'role', 'message': msg}), 200
 
     data = db.get_staff_profile(email)
     if not data:

@@ -5,6 +5,7 @@ import LogTouchpointModal from '../components/LogTouchpointModal'
 import TouchpointDetail from '../components/TouchpointDetail'
 import ImpersonationBanner from '../components/ImpersonationBanner'
 import GlobalSearch from '../components/GlobalSearch'
+import Friendly403 from '../components/Friendly403'
 import { api } from '../lib/api'
 
 // Short, human-readable form_type labels for chips on record cards
@@ -1155,13 +1156,16 @@ export default function StaffProfile() {
   const [exportOpen, setExportOpen] = useState(false)
   const [detail, setDetail] = useState(null)
 
+  const [unauth, setUnauth] = useState(null)  // { reason, message }
   useEffect(() => {
     let cancelled = false
     async function go() {
-      setLoading(true)
+      setLoading(true); setUnauth(null)
       try {
         const d = await api.get(`/api/staff/${encodeURIComponent(email)}`)
-        if (!cancelled) setData(d)
+        if (cancelled) return
+        if (d && d.authorized === false) setUnauth({ reason: d.reason, message: d.message })
+        else setData(d)
       } catch (e) {
         console.error('staff profile load failed', e)
         if (!cancelled) setData(null)
@@ -1183,6 +1187,10 @@ export default function StaffProfile() {
     (data?.touchpoints || []).filter(t => t.status !== 'draft' && !t.is_test)
   )
   const currentSY = data?.current_school_year || '2025-2026'
+
+  if (unauth) {
+    return <Friendly403 reason={unauth.reason} message={unauth.message} />
+  }
 
   return (
     <div className="min-h-[100svh] bg-[#f5f7fa] pb-20">

@@ -48,8 +48,12 @@ tiers:
   - id: school_leader
     label: School Leader
     description: |
-      Sees Network-level trends and per-school comparisons. Can only click
-      INTO their own school for drill-downs and the school deep-dive page.
+      Sees Network-level trends and per-school comparisons. Can only drill
+      INTO their own school's aggregate data (and the school deep-dive page).
+      Individual staff profiles follow the recursive supervisor chain — same
+      as the Supervisor Dashboard — NOT blanket "everyone at my building."
+      If a teacher isn't reachable through the chain, the fix is the data
+      (set supervisor_email), not a broader rule.
     titles_keyword:  # case-insensitive substring match
       - principal
       - assistant principal
@@ -136,8 +140,8 @@ capabilities:
     label: Individual staff profile
     grants:
       - { tier: admin,         scope: all_schools }
-      - { tier: content_lead,  scope: all_schools, note: "with personnel-review sections hidden" }
-      - { tier: school_leader, scope: own_school }
+      - { tier: content_lead,  scope: all_schools, note: "personnel-review sections (PMAP / PIP / Write-Up) hidden" }
+      - { tier: school_leader, scope: own_downline, note: "recursive supervisor chain only — same as Supervisor Dashboard; not blanket 'everyone at my school'" }
       - { tier: supervisor,    scope: own_downline }
       - { tier: self_only,     scope: self }
 

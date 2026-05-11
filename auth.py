@@ -186,15 +186,18 @@ def get_accessible_emails(conn, email, job_title):
     Get all staff emails the user can access. Used by check_access() for
     per-record authorization on staff profiles, action steps, touchpoints.
 
-    Tier behavior (mirrors permissions.yaml):
+    Mirrors the Supervisor Dashboard model exactly — pure recursive
+    supervisor chain:
       - admin / content_lead: all active staff (Content Leads coach across
         all schools; their PMAP exclusion is enforced at the capability
-        layer, not by trimming this list)
-      - school_leader: own downline + ALL active staff at their school
-        (so when they click into any teacher at their school the profile
-        loads, not just their direct reports)
-      - other supervisors: own + recursive downline
-      - everyone else: self only
+        layer in app.py, not by trimming this list)
+      - everyone else (incl. school leaders): self + recursive downline
+
+    School leaders are NOT given blanket "everyone at my school" access —
+    that exposed peer/senior leaders and support staff who don't report
+    to them. If a teacher isn't reachable through a leader's chain, the
+    fix is the data (set the teacher's supervisor_email), not a broader
+    rule. See tools/audit_supervisor_gaps.py.
     """
     # All-staff tiers: admin and content_lead.
     # Order matters — is_content_lead BEFORE is_admin_title so ExDir of
@@ -208,7 +211,8 @@ def get_accessible_emails(conn, email, job_title):
     own = (email or '').lower()
     accessible = {own} if own else set()
 
-    # Add recursive downline for supervisors
+    # Add recursive downline for supervisors (this is the whole rule for
+    # non-admin tiers, school leaders included)
     cur = conn.cursor()
     cur.execute("SELECT COUNT(*) FROM staff WHERE supervisor_email = %s AND is_active", (email,))
     if cur.fetchone()[0] > 0:
@@ -227,24 +231,6 @@ def get_accessible_emails(conn, email, job_title):
         """, (email,))
         for r in cur.fetchall():
             accessible.add(r[0])
-
-    # School leaders: also include all active TEACHERS at their school —
-    # NOT all staff. This makes click-through-from-drill-down to a teacher's
-    # profile load data instead of 403'ing, without exposing peer/senior
-    # leaders, directors, or support staff who don't report to them. Those
-    # are reachable only via the supervisor downline above.
-    if is_school_leader(job_title):
-        cur.execute("SELECT school FROM staff WHERE LOWER(email) = LOWER(%s)", (email,))
-        row = cur.fetchone()
-        leader_school = row[0] if row else None
-        if leader_school:
-            cur.execute(
-                "SELECT email FROM staff WHERE is_active AND school = %s AND job_function = 'Teacher'",
-                (leader_school,),
-            )
-            for r in cur.fetchall():
-                if r[0]:
-                    accessible.add(r[0])
 
     return list(accessible)
 

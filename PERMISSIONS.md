@@ -43,8 +43,12 @@ fundamentals, goals. Explicitly excluded from personnel-review surfaces
 
 `school_leader`
 
-Sees Network-level trends and per-school comparisons. Can only click
-INTO their own school for drill-downs and the school deep-dive page.
+Sees Network-level trends and per-school comparisons. Can only drill
+INTO their own school's aggregate data (and the school deep-dive page).
+Individual staff profiles follow the recursive supervisor chain — same
+as the Supervisor Dashboard — NOT blanket "everyone at my building."
+If a teacher isn't reachable through the chain, the fix is the data
+(set supervisor_email), not a broader rule.
 
 **Titles (keyword match):** `principal`, `assistant principal`, `dean`, `director of culture`
 
@@ -81,7 +85,7 @@ title. Sees their own profile, action steps, self-reflections, etc.
 | **Drill-down · Celebration**<br><small>`view_celebration`</small> | ✅ All | ✅ All | 🟡 Own school | ⛔ | ⛔ |
 | **School deep-dive page**<br><small>`view_school_page`</small> | ✅ All | ✅ All | 🟡 Own school | ⛔ | ⛔ |
 | **Team page (direct reports)**<br><small>`view_team`</small> | ✅ All | ⛔ | 🟡 Own team | 🟡 Own team | ⛔ |
-| **Individual staff profile**<br><small>`view_staff_profile`</small> | ✅ All | ✅ All<br><small>_with personnel-review sections hidden_</small> | 🟡 Own school | 🟡 Own team | 🟡 Self only |
+| **Individual staff profile**<br><small>`view_staff_profile`</small> | ✅ All | ✅ All<br><small>_personnel-review sections (PMAP / PIP / Write-Up) hidden_</small> | 🟡 Own team<br><small>_recursive supervisor chain only — same as Supervisor Dashboard; not blanket 'everyone at my school'_</small> | 🟡 Own team | 🟡 Self only |
 | **Observe form**<br><small>`form_observe`</small> | ✅ All | ✅ All | 🟡 Own school | 🟡 Own team | ⛔ |
 | **Quick Feedback form**<br><small>`form_quick_feedback`</small> | ✅ All | ✅ All | 🟡 Own school | 🟡 Own team | ⛔ |
 | **Celebrate form**<br><small>`form_celebrate`</small> | ✅ All | ✅ All | 🟡 Own school | 🟡 Own team | ⛔ |
