@@ -512,16 +512,17 @@ def api_impersonate():
         if not target:
             return jsonify({'error': 'Staff member not found or inactive'}), 404
 
-        # Compute accessible_emails for the impersonated user (may differ from admin's view)
-        accessible = get_accessible_emails(conn, email, target.get('job_title', ''))
-
+        # Store ONLY a slim identity in the session cookie. accessible_emails
+        # (which can be hundreds of entries for a content-lead / HR scope) is
+        # recomputed per-request in auth.get_current_user — stuffing it into
+        # the cookie blew past the ~4KB limit and silently dropped the whole
+        # session, so view-as appeared to "not take".
         imp = {
             'email': email,
             'name': f"{target.get('first_name') or ''} {target.get('last_name') or ''}".strip() or email,
             'job_title': target.get('job_title') or '',
             'school': target.get('school') or '',
             'job_function': target.get('job_function') or '',
-            'accessible_emails': accessible,
         }
         session['impersonating_as'] = imp
         db.log_impersonation(

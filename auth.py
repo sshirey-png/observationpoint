@@ -7,8 +7,9 @@ import os
 import logging
 import functools
 import psycopg2
-from flask import session, redirect, request, jsonify
+from flask import session, redirect, request, jsonify, g
 
+import db
 from config import (
     DEV_MODE, CPO_TITLE, C_TEAM_KEYWORDS, HR_TEAM_TITLES,
     GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
@@ -32,30 +33,59 @@ def init_oauth(app):
     )
 
 
+_NO_CACHE = object()
+
+
 def get_current_user():
     """
     The EFFECTIVE current user. If an admin is impersonating another staff
     member, this returns that impersonated user (with is_admin forced False
     so they don't accidentally wield admin powers). Otherwise returns the
     real signed-in user.
+
+    For the impersonated user, accessible_emails is recomputed fresh on each
+    request (cached on flask.g) — it is NEVER stored in the session cookie.
+    A content-lead / HR scope is hundreds of emails, which would push the
+    serialized session past the ~4KB cookie limit and cause the browser to
+    silently drop the whole cookie — symptom: "view-as didn't take, stayed
+    in my own view".
     """
+    try:
+        cached = getattr(g, '_op_current_user', _NO_CACHE)
+        have_g = True
+    except RuntimeError:           # called outside an app context
+        cached, have_g = _NO_CACHE, False
+    if cached is not _NO_CACHE:
+        return cached
+
     real_user = session.get('user')
     if not real_user:
-        return None
-    imp = session.get('impersonating_as')
-    if imp and real_user.get('is_admin'):
-        return {
-            'email': imp['email'],
-            'name': imp.get('name', ''),
-            'job_title': imp.get('job_title', ''),
-            'school': imp.get('school', ''),
-            'job_function': imp.get('job_function', ''),
-            'is_admin': False,           # impersonated users never have admin powers
-            'accessible_emails': imp.get('accessible_emails', []),
-            '_impersonating': True,
-            '_real_user_email': real_user.get('email'),
-        }
-    return real_user
+        result = None
+    else:
+        imp = session.get('impersonating_as')
+        if imp and real_user.get('is_admin'):
+            conn = db.get_conn()
+            try:
+                accessible = get_accessible_emails(conn, imp['email'], imp.get('job_title', ''))
+            finally:
+                conn.close()
+            result = {
+                'email': imp['email'],
+                'name': imp.get('name', ''),
+                'job_title': imp.get('job_title', ''),
+                'school': imp.get('school', ''),
+                'job_function': imp.get('job_function', ''),
+                'is_admin': False,           # impersonated users never have admin powers
+                'accessible_emails': accessible,
+                '_impersonating': True,
+                '_real_user_email': real_user.get('email'),
+            }
+        else:
+            result = real_user
+
+    if have_g:
+        g._op_current_user = result
+    return result
 
 
 def get_real_user():
