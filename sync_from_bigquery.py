@@ -40,12 +40,17 @@ def get_conn():
 def sync_staff(bq, conn):
     """Sync staff from staff_master_list_with_function."""
     log.info("Syncing staff...")
+    # As of the May 2026 BI-report change, staff_master_list_with_function carries
+    # Supervisor_Email directly (it replaced the old Job_Alike_Desc column). We
+    # prefer that; the name-resolution path below is the fallback for blank cells
+    # or in case the column hasn't propagated yet (older snapshots).
     rows = list(bq.query(f"""
         SELECT
             LOWER(TRIM(Email_Address)) as email,
             First_Name, Last_Name, Employee_Number,
             Job_Title, Job_Function, Location_Name, Dept,
             Supervisor_Name__Unsecured_ as supervisor_name,
+            LOWER(TRIM(Supervisor_Email)) as supervisor_email_direct,
             Subject_Desc, Grade_Level_Desc,
             Last_Hire_Date, Salary_or_Hourly, Employment_Status
         FROM `{PROJECT_ID}.talent_grow_observations.staff_master_list_with_function`
@@ -109,9 +114,10 @@ def sync_staff(bq, conn):
         if not r.email:
             continue
 
-        # Resolve supervisor name to email — try raw, then normalized
-        sup_email = None
-        if r.supervisor_name:
+        # Supervisor email: prefer the direct Supervisor_Email column from the
+        # BI report; fall back to resolving Supervisor_Name__Unsecured_ by name.
+        sup_email = (r.supervisor_email_direct or '').strip().lower() or None
+        if not sup_email and r.supervisor_name:
             raw = r.supervisor_name.lower().strip()
             sup_email = name_to_email.get(raw) or name_to_email.get(_norm_key_from_display(r.supervisor_name))
             if not sup_email:
