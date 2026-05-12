@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MOCK · Network drill-down + Supervisor filter — ObservationPoint</title>
+<style>
+  :root { --navy:#002f60; --orange:#e47727; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:#f5f7fa; color:#111827; padding-bottom:90px; }
+  .banner { background:#fef3c7; color:#92400e; text-align:center; font-size:12px; font-weight:700; padding:7px 12px; border-bottom:1px solid #fde68a; }
+  nav.top { position:sticky; top:0; z-index:50; background:var(--navy); padding:14px 16px; display:flex; align-items:center; gap:12px; }
+  nav.top .back { width:32px; height:32px; border-radius:9px; background:rgba(255,255,255,.1); display:flex; align-items:center; justify-content:center; color:#fff; }
+  nav.top .title { flex:1; text-align:center; }
+  nav.top .title .t { font-size:17px; font-weight:800; color:#fff; }
+  nav.top .title .t span { color:var(--orange); }
+  nav.top .title .s { font-size:12px; color:rgba(255,255,255,.6); margin-top:2px; }
+  .wrap { padding:16px; max-width:760px; margin:0 auto; }
+  .card { background:#fff; border-radius:14px; box-shadow:0 1px 3px rgba(0,0,0,.05); }
+  .scope { padding:14px; margin-bottom:10px; }
+  .scope .k { font-size:11px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.05em; }
+  .scope .v { font-size:22px; font-weight:800; color:var(--navy); margin-top:4px; }
+  .scope .sum { font-size:12px; color:#6b7280; margin-top:4px; }
+  .filter { padding:10px; margin-bottom:10px; }
+  .srch { position:relative; margin-bottom:8px; }
+  .srch span { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#9ca3af; font-size:12px; }
+  .srch input { width:100%; padding:8px 10px 8px 30px; border:1px solid #e5e7eb; border-radius:9px; font-size:12px; background:#f9fafb; font-family:inherit; outline:none; }
+  .segs { display:flex; background:#f3f4f6; border-radius:8px; padding:3px; gap:2px; margin-bottom:8px; }
+  .segs button { flex:1; padding:6px 4px; border-radius:6px; font-size:10px; font-weight:700; background:transparent; color:#6b7280; border:none; cursor:pointer; text-transform:uppercase; letter-spacing:.04em; font-family:inherit; }
+  .segs button.on { background:#fff; color:var(--navy); box-shadow:0 1px 2px rgba(0,0,0,.08); }
+  .dd { width:100%; padding:7px 9px; border:1px solid #e5e7eb; border-radius:8px; font-size:11px; font-weight:600; background:#f9fafb; color:#374151; font-family:inherit; cursor:pointer; margin-bottom:8px; }
+  .dd.new { border-color:var(--orange); box-shadow:0 0 0 2px rgba(228,119,39,.12); }
+  .ddrow { display:flex; gap:8px; }
+  .ddrow .dd { margin-bottom:8px; }
+  .showing { font-size:10px; color:#9ca3af; margin-top:2px; text-align:right; }
+  .showing b { color:var(--navy); }
+  .scoped-tag { display:inline-flex; align-items:center; gap:5px; background:#fff7ed; border:1px solid #fed7aa; color:#9a3412; font-size:11px; font-weight:700; border-radius:14px; padding:3px 9px; margin-bottom:8px; }
+  .scoped-tag .x { cursor:pointer; font-weight:800; }
+  .rows { overflow:hidden; }
+  .rrow { padding:12px 14px; border-bottom:1px solid #f3f4f6; display:flex; justify-content:space-between; align-items:center; gap:10px; cursor:pointer; }
+  .rrow:last-child { border-bottom:none; }
+  .rl { min-width:0; }
+  .rn { font-size:14px; font-weight:700; color:#111827; }
+  .rr { font-size:11px; color:#9ca3af; margin-top:1px; }
+  .rsup { font-size:10px; color:#c4965a; font-weight:600; margin-top:1px; }
+  .rp { display:flex; gap:5px; flex-shrink:0; }
+  .pill { font-size:10px; font-weight:700; padding:3px 7px; border-radius:11px; white-space:nowrap; }
+  .pill.green { background:#dcfce7; color:#166534; }
+  .pill.yellow { background:#fef9c3; color:#854d0e; }
+  .pill.red { background:#fee2e2; color:#991b1b; }
+  .pill.gray { background:#f3f4f6; color:#9ca3af; }
+  .empty { background:#fff; border-radius:12px; padding:24px; text-align:center; color:#9ca3af; font-size:13px; margin-top:0; }
+  .annot { background:#eef6ff; border:1px solid #bfdbfe; border-radius:12px; padding:12px 14px; font-size:12px; color:#1e40af; line-height:1.5; margin-bottom:12px; }
+  .annot b { color:#1e3a8a; }
+  .switcher { position:fixed; bottom:14px; left:50%; transform:translateX(-50%); background:var(--navy); color:#fff; border-radius:22px; padding:7px 8px; display:flex; gap:5px; z-index:99; box-shadow:0 6px 20px rgba(0,0,0,.25); }
+  .switcher button { border:none; background:transparent; color:rgba(255,255,255,.6); font-size:12px; font-weight:700; padding:6px 13px; border-radius:16px; cursor:pointer; font-family:inherit; }
+  .switcher button.on { background:var(--orange); color:#fff; }
+</style>
+</head>
+<body>
+<div class="banner">DESIGN MOCK · ObservationPoint — drill-down "filter by supervisor" · not live · this is the real drill-down page you land on after tapping a school</div>
+
+<nav class="top">
+  <div class="back">←</div>
+  <div class="title"><div class="t">Observation<span>Point</span></div><div class="s" id="navsub">Action Steps · Arthur Ashe</div></div>
+  <div style="width:32px"></div>
+</nav>
+
+<div class="wrap">
+
+  <div class="annot" id="annot"></div>
+
+  <!-- scope header (unchanged) -->
+  <div class="card scope">
+    <div class="k">Action Steps · 2026-2027 · Cycle 2</div>
+    <div class="v">Arthur Ashe</div>
+    <div class="sum" id="scopesum">258 total steps · 96 Mastered · 121 In Progress · 41 Not Mastered</div>
+  </div>
+
+  <!-- filter bar -->
+  <div class="card filter">
+    <div class="srch"><span>🔍</span><input placeholder="Search teacher, step text…"></div>
+    <div class="segs">
+      <button class="on">All · 54</button><button>Mastered · 38</button><button>In Progress · 47</button><button>Not Mastered · 19</button>
+    </div>
+    <div class="ddrow">
+      <select class="dd"><option>All Roles</option><option>Teacher</option><option>Support</option><option>Leadership</option></select>
+      <!-- NEW control -->
+      <select class="dd new" id="supsel" onchange="pick(this.value)">
+        <option value="">All supervisors</option>
+        <option value="cowilliams">▸ Corey Williams · Asst Principal (14)</option>
+        <option value="jaroussell">▸ Jasmine Roussell · Asst Principal (12)</option>
+        <option value="bfletcher">▸ Barbara Fletcher · Asst Principal (13)</option>
+        <option value="ejupiter">▸ Danielle Jupiter · Asst Principal (9)</option>
+        <option value="kware">▸ Kemisha Ware · SPED Coordinator (6)</option>
+      </select>
+    </div>
+    <div id="scopedtag"></div>
+    <div class="showing">Showing <b id="showing">54 of 54</b></div>
+  </div>
+
+  <!-- rows -->
+  <div class="card rows" id="rows"></div>
+  <div class="empty" id="empty" style="display:none">No matches for the current filters.</div>
+</div>
+
+<div class="switcher">
+  <button class="on" onclick="setState('all')">All · whole school</button>
+  <button onclick="setState('one')">Supervisor: Corey Williams</button>
+</div>
+
+<script>
+// sample data (mock) — real Ashe supervisors + lead teachers
+const ROWS = [
+  {n:'Semaj Brown', r:'K-8 Lead Teacher · Math 7', sup:'cowilliams', m:2,p:1,x:0},
+  {n:'Julian Terry', r:'K-8 Lead Teacher · Math 8', sup:'cowilliams', m:3,p:0,x:0},
+  {n:'Brendan Keller', r:'K-8 Lead Teacher · Science 5&7', sup:'cowilliams', m:1,p:2,x:1},
+  {n:'Jared Dorsey', r:'K-8 Lead Teacher · Science 6&7', sup:'cowilliams', m:0,p:1,x:3},
+  {n:'Brianna Thompson', r:'K-8 Lead Teacher · Science 7&8', sup:'cowilliams', m:1,p:2,x:0},
+  {n:'Teri’ane Martin', r:'K-8 Lead Teacher · Math 5', sup:'cowilliams', m:2,p:0,x:1},
+  {n:'Darren Goudeau', r:'K-8 Lead Teacher · Math 6', sup:'cowilliams', m:3,p:1,x:0},
+  {n:'Audrey Dennis', r:'K-8 SPED Lead Teacher · Math 5&6', sup:'cowilliams', m:1,p:2,x:1},
+  {n:'Almeta Brisbon', r:'K-8 Lead Teacher · Grade 1', sup:'jaroussell', m:3,p:0,x:0},
+  {n:'Jessica Meyer', r:'K-8 Lead Teacher · Kinder', sup:'jaroussell', m:1,p:1,x:1},
+  {n:'Jaunte’ August', r:'K-8 Lead Teacher · Kinder', sup:'jaroussell', m:2,p:1,x:0},
+  {n:'Stacy Cave', r:'K-8 Lead Teacher · ELA 3', sup:'bfletcher', m:2,p:1,x:1},
+  {n:'Megan Matthews', r:'K-8 Lead Teacher · ELA 4', sup:'bfletcher', m:0,p:2,x:2},
+  {n:'Malcolm Jackson', r:'K-8 Lead Teacher · Math 3', sup:'bfletcher', m:1,p:1,x:0},
+  {n:'Kaloni James', r:'K-8 Lead Teacher · ELA 5', sup:'ejupiter', m:2,p:0,x:0},
+  {n:'Shawnte Bell', r:'K-8 Lead Teacher · ELA 7', sup:'ejupiter', m:1,p:1,x:1},
+  {n:'Jamitha Carey', r:'K-8 Lead Teacher · Social Studies 5&7', sup:'ejupiter', m:0,p:2,x:1},
+  {n:'Katie Carroll', r:'K-8 SPED Lead Teacher · Discovery 6-8', sup:'kware', m:2,p:0,x:1},
+  {n:'Deanna Smithson', r:'K-8 SPED Lead Teacher · Discovery K-2', sup:'kware', m:1,p:1,x:0},
+];
+const SUP = { cowilliams:{name:'Corey Williams',count:14}, jaroussell:{name:'Jasmine Roussell',count:12}, bfletcher:{name:'Barbara Fletcher',count:13}, ejupiter:{name:'Danielle Jupiter',count:9}, kware:{name:'Kemisha Ware',count:6} };
+
+function pill(label, n, cls){ return n>0 ? `<span class="pill ${cls}">${n} ${label}</span>` : `<span class="pill gray">0 ${label}</span>`; }
+function render(list, showSup){
+  document.getElementById('rows').innerHTML = list.map(t=>`
+    <div class="rrow">
+      <div class="rl">
+        <div class="rn">${t.n}</div>
+        <div class="rr">${t.r}</div>
+        ${showSup?`<div class="rsup">↳ ${SUP[t.sup].name}</div>`:''}
+      </div>
+      <div class="rp">${pill('M',t.m,'green')}${pill('IP',t.p,'yellow')}${pill('NM',t.x,'red')}</div>
+    </div>`).join('') || '';
+  document.getElementById('rows').style.display = list.length?'block':'none';
+  document.getElementById('empty').style.display = list.length?'none':'block';
+}
+
+function setState(s){
+  document.querySelectorAll('.switcher button').forEach((b,i)=>b.classList.toggle('on',(s==='all'&&i===0)||(s==='one'&&i===1)));
+  document.getElementById('supsel').value = s==='one'?'cowilliams':'';
+  pick(s==='one'?'cowilliams':'');
+}
+
+function pick(sup){
+  const annot=document.getElementById('annot'), tag=document.getElementById('scopedtag');
+  if(!sup){
+    render(ROWS, false);
+    document.getElementById('showing').textContent='54 of 54';
+    document.getElementById('navsub').textContent='Action Steps · Arthur Ashe';
+    document.getElementById('scopesum').textContent='258 total steps · 96 Mastered · 121 In Progress · 41 Not Mastered';
+    tag.innerHTML='';
+    annot.innerHTML='<b>State A — whole school.</b> This is the page you land on today after tapping a school on Network: scope header, the existing filter bar (search · status segments · Role dropdown), then the per-teacher list. The <b>"Supervisor" dropdown</b> (highlighted) is the new piece — it lists every leader who has reports at this school, with their team size. Pick one → State B.';
+    return;
+  }
+  const list = ROWS.filter(t=>t.sup===sup);
+  const teamN = SUP[sup].count;
+  const m=list.reduce((a,t)=>a+t.m,0), p=list.reduce((a,t)=>a+t.p,0), x=list.reduce((a,t)=>a+t.x,0);
+  render(list, true);
+  document.getElementById('showing').textContent = list.length+' of 54';
+  document.getElementById('navsub').textContent = 'Action Steps · Arthur Ashe › '+SUP[sup].name;
+  document.getElementById('scopesum').textContent = `${SUP[sup].name}’s team — ${m+p+x} steps · ${m} Mastered · ${p} In Progress · ${x} Not Mastered`;
+  tag.innerHTML = `<span class="scoped-tag">▸ ${SUP[sup].name}’s team (${teamN}) · ${list.length} shown in mock <span class="x" onclick="document.getElementById('supsel').value='';pick('');document.querySelectorAll('.switcher button')[0].classList.add('on');document.querySelectorAll('.switcher button')[1].classList.remove('on')">✕</span></span>`;
+  annot.innerHTML = '<b>State B — scoped to one supervisor.</b> A Director / CAO drilled into Arthur Ashe’s action steps, then picked <b>'+SUP[sup].name+'</b> from the Supervisor dropdown. The list, the "Showing" count, and the scope summary all narrow to that leader’s teachers. Each row shows a <span style="color:#c4965a">↳ supervisor</span> tag while scoped, and the ✕ chip clears it. (Default = direct reports; an option could make it recursive downline — pick the Principal, get everyone.)';
+}
+pick('');
+</script>
+</body>
+</html>

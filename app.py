@@ -2621,12 +2621,53 @@ def api_network_drilldown():
                     'locked_in': bool(r['locked_in']),
                 })
 
+        # ── "Filter by supervisor" support ─────────────────────────────────
+        # Attach each row's direct supervisor (email + display name) and build
+        # the dropdown options (one per supervisor who has >=1 listed person
+        # reporting to them, with a head-count). Two cheap lookups against the
+        # staff table; the per-kind queries above are left untouched.
+        row_emails = sorted({(r.get('email') or '').lower() for r in rows if r.get('email')})
+        sup_of = {}
+        if row_emails:
+            cur.execute(
+                "SELECT LOWER(email) AS email, LOWER(supervisor_email) AS supervisor_email "
+                "FROM staff WHERE LOWER(email) = ANY(%s)", (row_emails,))
+            for sr in cur.fetchall():
+                sup_of[sr['email']] = sr['supervisor_email'] or ''
+        sup_emails = sorted({se for se in sup_of.values() if se})
+        sup_meta = {}
+        if sup_emails:
+            cur.execute(
+                "SELECT LOWER(email) AS email, first_name, last_name, job_title "
+                "FROM staff WHERE LOWER(email) = ANY(%s)", (sup_emails,))
+            for sr in cur.fetchall():
+                sup_meta[sr['email']] = {
+                    'name': f"{sr['first_name'] or ''} {sr['last_name'] or ''}".strip() or sr['email'],
+                    'job_title': sr['job_title'] or '',
+                }
+        sup_count = {}
+        for r in rows:
+            se = sup_of.get((r.get('email') or '').lower(), '')
+            r['supervisor_email'] = se
+            r['supervisor_name'] = (sup_meta.get(se) or {}).get('name', '') if se else ''
+            if se:
+                sup_count[se] = sup_count.get(se, 0) + 1
+        supervisor_options = sorted(
+            [{'email': se,
+              'name': (sup_meta.get(se) or {}).get('name') or se,
+              'job_title': (sup_meta.get(se) or {}).get('job_title') or '',
+              'count': c}
+             for se, c in sup_count.items()],
+            key=lambda o: (o['name'] or '').lower(),
+        )
+
         return jsonify({
             'kind': kind,
             'school': school or None,
             'school_year': sy,
             'rows': rows,
             'total': len(rows),
+            'supervisor_options': supervisor_options,
         })
     finally:
         conn.close()

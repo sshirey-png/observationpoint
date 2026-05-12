@@ -126,6 +126,7 @@ export default function NetworkDrilldown({ kindOverride }) {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')   // kind-specific
   const [roleFilter, setRoleFilter] = useState('all')
+  const [supervisorFilter, setSupervisorFilter] = useState('all')   // 'all' or a supervisor email
 
   useEffect(() => {
     let alive = true
@@ -172,6 +173,7 @@ export default function NetworkDrilldown({ kindOverride }) {
   const title = KIND_TITLES[kind] || kind
   const scopeLabel = school || 'Network'
   const allRows = data?.rows || []
+  const supervisorOptions = data?.supervisor_options || []
 
   // Build role dropdown options from data (job_function values present in rows).
   const roleOptions = useMemo(() => {
@@ -234,6 +236,10 @@ export default function NetworkDrilldown({ kindOverride }) {
         const jf = r.job_function || ''
         if (jf !== roleFilter) return false
       }
+      // Supervisor filter — narrows to one leader's direct reports at this school
+      if (supervisorFilter !== 'all') {
+        if ((r.supervisor_email || '').toLowerCase() !== supervisorFilter) return false
+      }
       // Status filter
       if (statusFilter !== 'all') {
         if (kind === 'evaluations') {
@@ -258,7 +264,7 @@ export default function NetworkDrilldown({ kindOverride }) {
       }
       return true
     })
-  }, [allRows, search, statusFilter, roleFilter, kind])
+  }, [allRows, search, statusFilter, roleFilter, supervisorFilter, kind])
 
   // Per-kind summary based on the FULL set, not filtered.
   let summary = null
@@ -395,6 +401,23 @@ export default function NetworkDrilldown({ kindOverride }) {
                          fontFamily: 'inherit', cursor: 'pointer' }}
               >
                 {roleOptions.map(r => <option key={r} value={r}>{r === 'all' ? 'All Roles' : r}</option>)}
+              </select>
+            )}
+            {supervisorOptions.length > 0 && (
+              <select
+                value={supervisorFilter}
+                onChange={e => setSupervisorFilter(e.target.value)}
+                style={{ width: '100%', padding: '7px 9px', border: '1px solid #e5e7eb', borderRadius: 8,
+                         fontSize: 11, fontWeight: 600, background: '#f9fafb', color: '#374151',
+                         fontFamily: 'inherit', cursor: 'pointer',
+                         marginTop: roleOptions.length > 1 ? 8 : 0 }}
+              >
+                <option value="all">All Supervisors</option>
+                {supervisorOptions.map(o => (
+                  <option key={o.email} value={o.email}>
+                    {o.name}{o.job_title ? ` · ${o.job_title}` : ''} ({o.count})
+                  </option>
+                ))}
               </select>
             )}
             <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 6, textAlign: 'right' }}>
