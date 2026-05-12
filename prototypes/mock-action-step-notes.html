@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>Mock — Action Step Notes</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter','Open Sans',Arial,sans-serif;background:#eef1f5;color:#111827;-webkit-font-smoothing:antialiased;line-height:1.45;padding:24px 12px 60px}
+h1{font-size:14px;font-weight:800;color:#002f60;text-transform:uppercase;letter-spacing:.06em;text-align:center;margin-bottom:6px}
+.note{font-size:12px;color:#6b7280;text-align:center;max-width:760px;margin:0 auto 22px;line-height:1.5}
+.note b{color:#111}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:880px;margin:0 auto}
+@media(max-width:760px){.row{grid-template-columns:1fr}}
+.frame{background:#f5f7fa;border-radius:18px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.08);min-height:560px}
+.frame-label{background:#1e293b;color:#cbd5e1;font-size:10px;font-weight:700;padding:6px 12px;text-align:center;letter-spacing:.05em;text-transform:uppercase}
+.body{padding:14px}
+
+.section-head{font-size:11px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;display:flex;justify-content:space-between;align-items:center;margin:6px 4px 8px}
+.section-head .meta{font-size:10px;font-weight:500;text-transform:none;letter-spacing:0;color:#9ca3af}
+
+.step{background:#fff;border-radius:12px;padding:13px 14px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:10px;border-left:3px solid #e47727}
+.step-body{font-size:13px;font-weight:600;color:#111;line-height:1.45}
+.step-meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.chip{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding:2px 6px;border-radius:4px}
+.chip.prog{background:#fff7ed;color:#c2410c}
+.chip.year{background:#f3f4f6;color:#4b5563}
+.step-sub{font-size:10px;color:#6b7280}
+.step-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.step-actions button{font-size:10px;font-weight:800;padding:5px 10px;border-radius:6px;border:1px solid #e5e7eb;background:#fff;color:#4b5563;cursor:pointer;font-family:inherit}
+.step-actions button.primary{background:#10b981;color:#fff;border:none}
+.step-actions button.notes{background:#eef4ff;border-color:#c7d2fe;color:#1e40af}
+.step-actions button.notes.on{background:#1e40af;color:#fff;border-color:#1e40af}
+
+/* Notes panel — expands under the step when the Notes button is toggled */
+.notes-panel{margin-top:10px;border-top:1px solid #f3f4f6;padding-top:10px}
+.note-item{background:#f9fafb;border-radius:8px;padding:8px 10px;margin-bottom:6px}
+.note-item.priv{background:#fef9f3;border:1px dashed #fde68a}
+.note-head{display:flex;align-items:center;gap:6px;font-size:10px;color:#6b7280;margin-bottom:3px}
+.note-author{font-weight:700;color:#374151}
+.note-priv-badge{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;background:#fde68a;color:#92400e;padding:1px 5px;border-radius:3px;margin-left:auto}
+.note-text{font-size:12px;color:#374151;line-height:1.45}
+.note-empty{font-size:11px;color:#9ca3af;text-align:center;padding:8px}
+
+.composer{margin-top:8px}
+.composer textarea{width:100%;min-height:54px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:12px;font-family:inherit;resize:vertical;background:#fff}
+.composer-row{display:flex;align-items:center;gap:8px;margin-top:6px}
+.composer-row label{display:flex;align-items:center;gap:5px;font-size:10px;color:#6b7280;cursor:pointer}
+.composer-row label input{accent-color:#002f60;width:13px;height:13px}
+.composer-row .spacer{flex:1}
+.composer-row button{font-size:11px;font-weight:800;padding:6px 14px;border-radius:7px;border:none;background:#002f60;color:#fff;cursor:pointer;font-family:inherit}
+.priv-hint{font-size:9px;color:#9ca3af;margin-top:4px}
+
+.legend{background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:12px 14px;font-size:11px;color:#4338ca;margin:24px auto 0;max-width:880px;line-height:1.55}
+.legend b{color:#3730a3;display:block;font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.legend ul{margin-left:18px;margin-top:6px}
+</style></head><body>
+
+<h1>Action Step · Notes (proposed)</h1>
+<p class="note">Today a step card has <b>Mark Mastered · Edit · Delete</b>. Adding a <b>💬 Notes</b> button that expands an inline thread + composer — same idea as Grow's "View Comments" panel, in OP's style. Left = supervisor view (can post + see private). Right = teacher viewing their own profile (shared notes only; no private toggle).</p>
+
+<div class="row">
+
+  <!-- ── Supervisor / coach view ─────────────── -->
+  <div class="frame">
+    <div class="frame-label">Supervisor / coach view — Sabrina viewing Triana's action step</div>
+    <div class="body">
+      <div class="section-head"><span>Action Steps · 2025-2026</span><span class="meta">3 active · 1 mastered</span></div>
+
+      <div class="step">
+        <div class="step-body">When teaching CoL, narrate the WHY behind each procedure for the first 30 seconds before moving into practice.</div>
+        <div class="step-meta">
+          <span class="chip prog">In Progress</span>
+          <span class="chip year">2025-2026</span>
+          <span class="step-sub">· assigned Mar 27 · by Sabrina Edwards</span>
+        </div>
+        <div class="step-actions">
+          <button class="primary">Mark Mastered</button>
+          <button>Edit</button>
+          <button>Delete</button>
+          <button class="notes on">💬 Notes · 2</button>
+        </div>
+
+        <div class="notes-panel">
+          <div class="note-item">
+            <div class="note-head">
+              <span class="note-author">Sabrina Edwards</span>
+              <span>· Apr 2</span>
+            </div>
+            <div class="note-text">Saw this in your 4th period today — the WHY before procedures was crisp. Keep going. Let's look at how it lands in a longer block next visit.</div>
+          </div>
+          <div class="note-item priv">
+            <div class="note-head">
+              <span class="note-author">Sabrina Edwards</span>
+              <span>· Mar 30</span>
+              <span class="note-priv-badge">Private</span>
+            </div>
+            <div class="note-text">Note to self: check whether the procedure list is too long — might be why the first 30s feels rushed. Bring this up at our next 1:1, not in writing.</div>
+          </div>
+
+          <div class="composer">
+            <textarea placeholder="Add a note on this action step…"></textarea>
+            <div class="composer-row">
+              <label><input type="checkbox"> Private (only you see this)</label>
+              <span class="spacer"></span>
+              <button>Add note</button>
+            </div>
+            <div class="priv-hint">Shared notes are visible to Triana and anyone who can see her profile. Private notes are visible only to you.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step" style="opacity:.6">
+        <div class="step-body">Use cold-call after every 3rd CFU to keep all 23 students accountable.</div>
+        <div class="step-meta">
+          <span class="chip prog">In Progress</span>
+          <span class="chip year">2025-2026</span>
+          <span class="step-sub">· assigned Feb 4 · by Sabrina Edwards</span>
+        </div>
+        <div class="step-actions">
+          <button class="primary">Mark Mastered</button>
+          <button>Edit</button>
+          <button>Delete</button>
+          <button class="notes">💬 Notes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Teacher viewing own profile ─────────────── -->
+  <div class="frame">
+    <div class="frame-label">Teacher viewing own profile — Triana sees her own action step</div>
+    <div class="body">
+      <div class="section-head"><span>Your Action Steps · 2025-2026</span><span class="meta">3 active · 1 mastered</span></div>
+
+      <div class="step">
+        <div class="step-body">When teaching CoL, narrate the WHY behind each procedure for the first 30 seconds before moving into practice.</div>
+        <div class="step-meta">
+          <span class="chip prog">In Progress</span>
+          <span class="chip year">2025-2026</span>
+          <span class="step-sub">· assigned Mar 27 · by Sabrina Edwards</span>
+        </div>
+        <div class="step-actions">
+          <button>Request Review</button>
+          <button class="notes on">💬 Notes · 1</button>
+        </div>
+
+        <div class="notes-panel">
+          <div class="note-item">
+            <div class="note-head">
+              <span class="note-author">Sabrina Edwards</span>
+              <span>· Apr 2</span>
+            </div>
+            <div class="note-text">Saw this in your 4th period today — the WHY before procedures was crisp. Keep going. Let's look at how it lands in a longer block next visit.</div>
+          </div>
+
+          <div class="composer">
+            <textarea placeholder="Reply or add a note…"></textarea>
+            <div class="composer-row">
+              <span class="spacer"></span>
+              <button>Add note</button>
+            </div>
+            <div class="priv-hint">Your notes are visible to Sabrina and anyone who can see your profile.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="legend">
+  <b>Design notes — confirm or change</b>
+  <ul>
+    <li><b>Inline expand, not a modal.</b> The 💬 Notes button toggles a panel under the step. Count badge shows how many notes the viewer can see.</li>
+    <li><b>Private toggle</b> (coach/supervisor only) — a private note is visible only to its author. Teachers viewing their own profile never see private notes and don't get the toggle. Mirrors Grow's "Make Private."</li>
+    <li><b>Who can post:</b> the teacher (on their own profile), their supervisor chain, admins, content leads. Same as who can see the profile.</li>
+    <li><b>No file attachments in v1.</b> Grow has "Attach File" — we can add it later via the existing FileDrop component if you want, but v1 is text only.</li>
+    <li><b>No "Show Shared / Show Private" filter</b> (Grow has it). With private-to-author-only, there's nothing to filter — you only ever see shared notes + your own private ones. Keeps it simpler.</li>
+    <li><b>Storage:</b> new <code>action_step_notes</code> table (id, action_step_id, author_email, body, is_private, created_at). New endpoints: GET notes for a step, POST a note.</li>
+    <li><b>Mastered steps:</b> notes stay readable on mastered/archived steps (the thread is the coaching record), but the composer is hidden once a step is mastered. Confirm?</li>
+  </ul>
+</div>
+
+</body></html>

@@ -934,6 +934,123 @@ def init_impersonation_table():
         conn.close()
 
 
+# --- Action step notes (coaching thread on an action step) ---
+
+def init_action_step_notes_table():
+    """Create the action_step_notes table if it doesn't exist.
+    action_step_id stays loose-typed (no FK) — action_steps.id is a UUID
+    but some imported rows have quirky values; we just store the text."""
+    conn = get_conn()
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS action_step_notes (
+                id SERIAL PRIMARY KEY,
+                action_step_id TEXT NOT NULL,
+                author_email TEXT NOT NULL,
+                body TEXT NOT NULL,
+                is_private BOOLEAN NOT NULL DEFAULT FALSE,
+                created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+            )
+        """)
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_asn_step ON action_step_notes(action_step_id, created_at)")
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_action_step_notes(action_step_id, viewer_email):
+    """Notes on a step the viewer may see: all shared notes + the viewer's
+    own private notes. Oldest first (thread order)."""
+    conn = get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            SELECT n.id, n.action_step_id, n.author_email, n.body, n.is_private, n.created_at,
+                   TRIM(CONCAT(s.first_name, ' ', s.last_name)) AS author_name
+              FROM action_step_notes n
+              LEFT JOIN staff s ON LOWER(s.email) = LOWER(n.author_email)
+             WHERE n.action_step_id = %s
+               AND (n.is_private = FALSE OR LOWER(n.author_email) = LOWER(%s))
+             ORDER BY n.created_at ASC, n.id ASC
+        """, (str(action_step_id), viewer_email or ''))
+        out = []
+        for r in cur.fetchall():
+            out.append({
+                'id': r['id'],
+                'action_step_id': r['action_step_id'],
+                'author_email': r['author_email'],
+                'author_name': (r['author_name'] or '').strip() or r['author_email'],
+                'body': r['body'],
+                'is_private': bool(r['is_private']),
+                'created_at': r['created_at'].isoformat() if r['created_at'] else None,
+            })
+        return out
+    finally:
+        conn.close()
+
+
+def add_action_step_note(action_step_id, author_email, body, is_private=False):
+    """Insert a note and return its row (with author_name)."""
+    conn = get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            INSERT INTO action_step_notes (action_step_id, author_email, body, is_private)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id, action_step_id, author_email, body, is_private, created_at
+        """, (str(action_step_id), author_email, body, bool(is_private)))
+        r = cur.fetchone()
+        conn.commit()
+        cur.execute("SELECT TRIM(CONCAT(first_name,' ',last_name)) AS n FROM staff WHERE LOWER(email)=LOWER(%s)", (author_email,))
+        nm = cur.fetchone()
+        return {
+            'id': r['id'],
+            'action_step_id': r['action_step_id'],
+            'author_email': r['author_email'],
+            'author_name': ((nm['n'] if nm else '') or '').strip() or author_email,
+            'body': r['body'],
+            'is_private': bool(r['is_private']),
+            'created_at': r['created_at'].isoformat() if r['created_at'] else None,
+        }
+    finally:
+        conn.close()
+
+
+def get_action_step_for_note(action_step_id):
+    """Fetch the action step + the teacher/creator emails + names + is_test,
+    so the notes endpoint can authorize + route notifications. None if missing."""
+    conn = get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            SELECT a.id, a.teacher_email, a.creator_email, a.body_text, a.progress_pct,
+                   COALESCE(a.is_test, FALSE) AS is_test,
+                   TRIM(CONCAT(t.first_name,' ',t.last_name)) AS teacher_name,
+                   TRIM(CONCAT(c.first_name,' ',c.last_name)) AS creator_name
+              FROM action_steps a
+              LEFT JOIN staff t ON LOWER(t.email) = LOWER(a.teacher_email)
+              LEFT JOIN staff c ON LOWER(c.email) = LOWER(a.creator_email)
+             WHERE a.id::text = %s
+        """, (str(action_step_id),))
+        r = cur.fetchone()
+        if not r:
+            return None
+        return {
+            'id': str(r['id']),
+            'teacher_email': r['teacher_email'],
+            'teacher_name': (r['teacher_name'] or '').strip() or r['teacher_email'],
+            'creator_email': r['creator_email'],
+            'creator_name': (r['creator_name'] or '').strip() or (r['creator_email'] or ''),
+            'body_text': r['body_text'] or '',
+            'progress_pct': r['progress_pct'],
+            'is_test': bool(r['is_test']),
+            'is_mastered': r['progress_pct'] == 100,
+        }
+    finally:
+        conn.close()
+
+
 def log_impersonation(admin_email, impersonated_email, action, user_agent=None, ip=None):
     """Append an impersonation event to the audit log."""
     conn = get_conn()

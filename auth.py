@@ -161,10 +161,14 @@ def is_hr_admin_user(user):
 CONTENT_LEAD_TITLES_EXACT = [
     'K-8 Content Lead',
     'Dir of Teach Development',   # coaches instruction across schools
-    'Dir of ESYNOLA',            # ESY program leadership (see ESY-scope note in permissions.yaml)
+    'Dir of ESYNOLA',            # ESY program leadership — scoped, see ESY_SCOPED_CONTENT_LEAD_TITLES
     'Dir of SPED',
     'Dir of Stud Supp Serv',
 ]
+# Content leads whose all-staff scope is narrowed to a slice. Dir of ESYNOLA
+# sees only ESY-program staff (job_title contains "ESY") plus their own
+# recursive downline + self — not the whole org.
+ESY_SCOPED_CONTENT_LEAD_TITLES = {'Dir of ESYNOLA'}
 SCHOOL_LEADER_TITLE_KEYWORDS = ['principal', 'assistant principal', 'dean', 'director of culture']
 
 
@@ -232,10 +236,12 @@ def get_accessible_emails(conn, email, job_title):
     fix is the data (set the teacher's supervisor_email), not a broader
     rule. See tools/audit_supervisor_gaps.py.
     """
-    # All-staff tiers: the HR function + content leads.
+    jt = (job_title or '').strip()
+
+    # Full all-staff tiers: the HR function + (most) content leads.
     # Order matters — is_content_lead BEFORE is_hr_admin so the content-lead
     # director titles aren't accidentally absorbed by a broader check.
-    if is_content_lead(job_title) or is_hr_admin(job_title):
+    if jt not in ESY_SCOPED_CONTENT_LEAD_TITLES and (is_content_lead(job_title) or is_hr_admin(job_title)):
         cur = conn.cursor()
         cur.execute("SELECT email FROM staff WHERE is_active")
         return [r[0] for r in cur.fetchall()]
@@ -244,9 +250,18 @@ def get_accessible_emails(conn, email, job_title):
     own = (email or '').lower()
     accessible = {own} if own else set()
 
+    cur = conn.cursor()
+
+    # ESY-scoped content lead (Dir of ESYNOLA): all active ESY-program staff
+    # (job_title contains "ESY") in addition to their downline + self.
+    if jt in ESY_SCOPED_CONTENT_LEAD_TITLES:
+        cur.execute("SELECT email FROM staff WHERE is_active AND job_title ILIKE '%%ESY%%'")
+        for r in cur.fetchall():
+            if r[0]:
+                accessible.add(r[0].lower())
+
     # Add recursive downline for supervisors (this is the whole rule for
     # non-admin tiers, school leaders included)
-    cur = conn.cursor()
     cur.execute("SELECT COUNT(*) FROM staff WHERE supervisor_email = %s AND is_active", (email,))
     if cur.fetchone()[0] > 0:
         cur.execute("""

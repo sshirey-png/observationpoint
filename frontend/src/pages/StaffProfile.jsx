@@ -886,9 +886,98 @@ function YourTodos({ todos }) {
 }
 
 /**
+ * StepNotes — inline coaching thread under an action step.
+ * Loads /api/action-steps/<id>/notes on mount; shared notes + the viewer's
+ * own private notes. Composer hidden once the step is mastered. Private
+ * checkbox only shown when the viewer can mark notes private (coach/admin).
+ */
+function StepNotes({ stepId }) {
+  const [data, setData] = useState(null)   // {notes, can_post, can_mark_private, ...}
+  const [text, setText] = useState('')
+  const [priv, setPriv] = useState(false)
+  const [posting, setPosting] = useState(false)
+  const [err, setErr] = useState(null)
+
+  useEffect(() => {
+    let alive = true
+    api.get(`/api/action-steps/${encodeURIComponent(stepId)}/notes`)
+      .then(d => { if (alive) setData(d && d.authorized === false ? { notes: [], can_post: false, blocked: d.message } : d) })
+      .catch(e => { if (alive) setErr(String(e)) })
+    return () => { alive = false }
+  }, [stepId])
+
+  async function submit() {
+    if (!text.trim() || posting) return
+    setPosting(true); setErr(null)
+    try {
+      const r = await api.post(`/api/action-steps/${encodeURIComponent(stepId)}/notes`, { body: text.trim(), is_private: priv })
+      if (r?.note) {
+        setData(d => ({ ...d, notes: [...(d?.notes || []), r.note] }))
+        setText(''); setPriv(false)
+      } else {
+        setErr(r?.error || r?.message || 'Could not add note')
+      }
+    } catch (e) { setErr(String(e)) }
+    setPosting(false)
+  }
+
+  if (err && !data) return <div className="mt-2.5 pt-2.5 border-t border-gray-100 text-[11px] text-red-600">Could not load notes: {err}</div>
+  if (!data) return <div className="mt-2.5 pt-2.5 border-t border-gray-100 text-[11px] text-gray-400 text-center py-1.5">Loading notes…</div>
+
+  const fmt = (iso) => iso ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''
+  return (
+    <div className="mt-2.5 pt-2.5 border-t border-gray-100">
+      {(data.notes || []).length === 0 && <div className="text-[11px] text-gray-400 text-center py-1.5">No notes yet.</div>}
+      {(data.notes || []).map(n => (
+        <div key={n.id} className={`rounded-lg px-2.5 py-2 mb-1.5 ${n.is_private ? 'bg-amber-50 border border-dashed border-amber-300' : 'bg-gray-50'}`}>
+          <div className="flex items-center gap-1.5 text-[10px] text-gray-500 mb-0.5">
+            <span className="font-bold text-gray-700">{n.author_name}</span>
+            <span>· {fmt(n.created_at)}</span>
+            {n.is_private && <span className="ml-auto text-[8px] font-extrabold uppercase tracking-wide bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded">Private</span>}
+          </div>
+          <div className="text-[12px] text-gray-700 leading-snug whitespace-pre-wrap">{n.body}</div>
+        </div>
+      ))}
+      {data.blocked && <div className="text-[11px] text-amber-700 py-1.5">{data.blocked}</div>}
+      {data.can_post && (
+        <div className="mt-2">
+          <textarea
+            value={text}
+            onChange={e => setText(e.target.value)}
+            placeholder="Add a note on this action step…"
+            className="w-full text-[12px] p-2 border border-gray-200 rounded-lg resize-y"
+            rows={2}
+          />
+          <div className="flex items-center gap-2 mt-1.5">
+            {data.can_mark_private && (
+              <label className="flex items-center gap-1 text-[10px] text-gray-500 cursor-pointer">
+                <input type="checkbox" checked={priv} onChange={e => setPriv(e.target.checked)} className="w-3 h-3" />
+                Private (only you see this)
+              </label>
+            )}
+            <div className="flex-1" />
+            <button disabled={posting || !text.trim()} onClick={submit}
+              className="px-3.5 py-1.5 rounded-md bg-fls-navy text-white text-[11px] font-extrabold border-0 cursor-pointer disabled:opacity-50">
+              {posting ? '…' : 'Add note'}
+            </button>
+          </div>
+          {err && <div className="text-[10px] text-red-600 mt-1">{err}</div>}
+          <div className="text-[9px] text-gray-400 mt-1">
+            {data.can_mark_private
+              ? 'Shared notes are visible to this person and anyone who can see their profile. Private notes are visible only to you.'
+              : 'Your notes are visible to anyone who can see this profile.'}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
  * ActionStepsSection — always visible on StaffProfile.
  * Self viewer: "Request Review" button per active step.
  * Supervisor/admin: "Mark Mastered" / "Edit" / "Delete" + "Assign new" CTA.
+ * All viewers: "💬 Notes" toggle (inline coaching thread).
  */
 function ActionStepsSection({ email, isSelf, navigate }) {
   const [searchParams] = useSearchParams()
@@ -964,6 +1053,7 @@ function ActionStepsSection({ email, isSelf, navigate }) {
 
   function StepCard({ a, archived }) {
     const isEditing = editingId === a.id
+    const [notesOpen, setNotesOpen] = useState(false)
     const stateChip = archived
       ? <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">Mastered ✓</span>
       : (a.progress_pct > 0
@@ -989,19 +1079,22 @@ function ActionStepsSection({ email, isSelf, navigate }) {
               {dt && <span className="text-[10px] text-gray-500">· assigned {dt}</span>}
               {a.creator_email && <span className="text-[10px] text-gray-500">· by {a.creator_email.split('@')[0]}</span>}
             </div>
-            {!archived && (
-              <div className="flex gap-1.5 mt-2.5">
-                {isSelf ? (
-                  <button disabled={busy === a.id} onClick={() => requestReview(a.id)} className="px-2.5 py-1 rounded bg-fls-navy text-white text-[10px] font-bold border-0 cursor-pointer">Request Review</button>
-                ) : (
-                  <>
-                    <button disabled={busy === a.id} onClick={() => markMastered(a.id)} className="px-2.5 py-1 rounded bg-green-600 text-white text-[10px] font-bold border-0 cursor-pointer">Mark Mastered</button>
-                    <button onClick={() => { setEditingId(a.id); setEditText(a.body || '') }} className="px-2.5 py-1 rounded bg-white border border-gray-300 text-[10px] font-bold cursor-pointer">Edit</button>
-                    <button disabled={busy === a.id} onClick={() => deleteStep(a.id)} className="px-2.5 py-1 rounded bg-white border border-gray-300 text-red-600 text-[10px] font-bold cursor-pointer">Delete</button>
-                  </>
-                )}
-              </div>
-            )}
+            <div className="flex gap-1.5 mt-2.5 flex-wrap">
+              {!archived && (isSelf ? (
+                <button disabled={busy === a.id} onClick={() => requestReview(a.id)} className="px-2.5 py-1 rounded bg-fls-navy text-white text-[10px] font-bold border-0 cursor-pointer">Request Review</button>
+              ) : (
+                <>
+                  <button disabled={busy === a.id} onClick={() => markMastered(a.id)} className="px-2.5 py-1 rounded bg-green-600 text-white text-[10px] font-bold border-0 cursor-pointer">Mark Mastered</button>
+                  <button onClick={() => { setEditingId(a.id); setEditText(a.body || '') }} className="px-2.5 py-1 rounded bg-white border border-gray-300 text-[10px] font-bold cursor-pointer">Edit</button>
+                  <button disabled={busy === a.id} onClick={() => deleteStep(a.id)} className="px-2.5 py-1 rounded bg-white border border-gray-300 text-red-600 text-[10px] font-bold cursor-pointer">Delete</button>
+                </>
+              ))}
+              <button onClick={() => setNotesOpen(o => !o)}
+                className={`px-2.5 py-1 rounded text-[10px] font-bold cursor-pointer border ${notesOpen ? 'bg-fls-navy text-white border-fls-navy' : 'bg-blue-50 text-blue-800 border-blue-200'}`}>
+                💬 Notes
+              </button>
+            </div>
+            {notesOpen && <StepNotes stepId={a.id} />}
           </>
         )}
       </div>

@@ -61,7 +61,7 @@ their own profile. Cannot file PMAP/PIP/Write-Up.
 - Dir of SPED
 - Dir of Stud Supp Serv
 
-> ⚠️ **Note:** ExDir of Teach and Learn is NOT here — it matches C_TEAM_KEYWORDS via "ExDir" and gets the admin (feature) tier. The FLS-Schools directors below were added per Scott (May 2026) because they coach instruction / programs across schools, same shape as a content lead:   - Dir of Teach Development  (Erica Winston)   - Dir of ESYNOLA            (Charlotte Steele) — TODO: narrow her     all-staff view to ESY-role staff only (job_title contains "ESY" /     dept = "FLS ESY"); currently she has the full content-lead scope.   - Dir of SPED               (Tiffany Willis)   - Dir of Stud Supp Serv     (Melissa Labarrere) Order matters: is_content_lead is checked BEFORE is_hr_admin / is_admin_title so these titles land here, not in a broader bucket.
+> ⚠️ **Note:** ExDir of Teach and Learn is NOT here — it matches C_TEAM_KEYWORDS via "ExDir" and gets the admin (feature) tier. The FLS-Schools directors below were added per Scott (May 2026) because they coach instruction / programs across schools, same shape as a content lead:   - Dir of Teach Development  (Erica Winston)   — full content-lead scope   - Dir of ESYNOLA            (Charlotte Steele) — SCOPED: sees only ESY-     program staff (job_title contains "ESY") + her own recursive downline     + self. See auth.ESY_SCOPED_CONTENT_LEAD_TITLES.   - Dir of SPED               (Tiffany Willis)  — full content-lead scope   - Dir of Stud Supp Serv     (Melissa Labarrere) — full content-lead scope Order matters: is_content_lead is checked BEFORE is_hr_admin / is_admin_title so these titles land here, not in a broader bucket.
 
 ### School Leader
 

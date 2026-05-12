@@ -33,6 +33,12 @@ try:
 except Exception as _e:
     logging.warning(f"Could not init impersonation_log table: {_e}")
 
+# Ensure the action-step notes table exists on startup
+try:
+    db.init_action_step_notes_table()
+except Exception as _e:
+    logging.warning(f"Could not init action_step_notes table: {_e}")
+
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
@@ -4229,6 +4235,134 @@ def api_me_action_step_request_review(step_id):
         return jsonify({'sent': bool(ok)})
     finally:
         conn.close()
+
+
+# ------------------------------------------------------------------
+# Action step notes — a coaching thread on an individual action step.
+# Shared notes are visible to anyone who can see the teacher's profile;
+# private notes are visible only to their author. Teachers can post but
+# cannot mark a note private. A shared note notifies the "other party"
+# (coach→teacher / teacher→step-creator) — routed to the author during
+# the pre-launch test period (same pattern as the request-review email).
+# ------------------------------------------------------------------
+
+@app.route('/api/action-steps/<step_id>/notes', methods=['GET'])
+@require_auth
+def api_action_step_notes_list(step_id):
+    user = get_current_user()
+    me_email = (user['email'] if user else DEV_USER_EMAIL).lower()
+    step = db.get_action_step_for_note(step_id)
+    if not step:
+        return jsonify({'error': 'not found'}), 404
+    if not DEV_MODE and not check_access(user, step['teacher_email']):
+        return jsonify({'authorized': False, 'reason': 'role',
+                        'message': "You don't have access to this person's records."}), 200
+    notes = db.get_action_step_notes(step_id, me_email)
+    is_teacher = me_email == (step['teacher_email'] or '').lower()
+    return jsonify({
+        'notes': notes,
+        'viewer_email': me_email,
+        'can_post': not step['is_mastered'],   # no new notes on mastered steps
+        'can_mark_private': not is_teacher,      # only coaches/admins post private notes
+        'is_mastered': step['is_mastered'],
+    })
+
+
+@app.route('/api/action-steps/<step_id>/notes', methods=['POST'])
+@require_auth
+@require_no_impersonation
+def api_action_step_notes_add(step_id):
+    user = get_current_user()
+    me_email = (user['email'] if user else DEV_USER_EMAIL).lower()
+    data = request.get_json() or {}
+    body_text = (data.get('body') or '').strip()
+    want_private = bool(data.get('is_private'))
+    if not body_text:
+        return jsonify({'error': 'note body required'}), 400
+
+    step = db.get_action_step_for_note(step_id)
+    if not step:
+        return jsonify({'error': 'not found'}), 404
+    if not DEV_MODE and not check_access(user, step['teacher_email']):
+        return jsonify({'authorized': False, 'reason': 'role',
+                        'message': "You don't have access to this person's records."}), 200
+    if step['is_mastered']:
+        return jsonify({'error': 'this action step is mastered — notes are read-only'}), 400
+
+    is_teacher = me_email == (step['teacher_email'] or '').lower()
+    # Teachers can't post private notes; force shared.
+    is_private = want_private and not is_teacher
+
+    note = db.add_action_step_note(step_id, me_email, body_text, is_private=is_private)
+
+    # Notification — shared notes only.
+    if not is_private:
+        try:
+            _notify_action_step_note(step, author_email=me_email,
+                                     author_name=(user.get('name') if user else None),
+                                     note_body=body_text, author_is_teacher=is_teacher)
+        except Exception as e:
+            log.error(f"action step note notify failed: {e}")
+
+    return jsonify({'note': note})
+
+
+def _notify_action_step_note(step, author_email, author_name, note_body, author_is_teacher):
+    """Email the other party when a shared note is added to an action step.
+    coach→teacher : teacher gets it.  teacher→creator : the assigning coach gets it.
+    Pre-launch: route to the author with a [TEST] subject so no real teacher is pinged."""
+    author_first = (author_name or author_email.split('@')[0]).split(' ')[0]
+    step_text = (step.get('body_text') or '').strip()
+    app_url = 'https://observationpoint-965913991496.us-central1.run.app'
+
+    if author_is_teacher:
+        # Teacher posted → notify the creator (the coach who assigned the step)
+        to_email = (step.get('creator_email') or '').strip()
+        to_name = step.get('creator_name') or to_email
+        deep_link = f"{app_url}/app/staff/{step['teacher_email']}"
+        headline = f"{step.get('teacher_name') or 'A teacher'} added a note on an action step"
+        intro = f"{step.get('teacher_name') or author_first} responded on the action step you assigned:"
+    else:
+        # Coach/admin posted → notify the teacher
+        to_email = (step.get('teacher_email') or '').strip()
+        to_name = step.get('teacher_name') or to_email
+        deep_link = f"{app_url}/app/staff/{step['teacher_email']}"
+        headline = f"{author_first} added a note on your action step"
+        intro = f"{author_name or author_first} left you a note on your action step:"
+
+    if not to_email:
+        return  # nobody to notify (e.g. no creator on file)
+
+    to_first = (to_name or to_email).split(' ')[0]
+    html = f"""
+    <html><body style="margin:0;padding:0;font-family:'Open Sans',Arial,sans-serif;background:#f8f9fa">
+      <div style="max-width:560px;margin:0 auto;background:#fff">
+        <div style="background:#002f60;color:#fff;padding:18px 20px">
+          <h1 style="margin:0;font-size:20px">{headline}</h1>
+          <div style="font-size:12px;opacity:.8;margin-top:4px">Action step note</div>
+        </div>
+        <div style="padding:20px">
+          <p style="margin:0 0 12px;font-size:14px;color:#374151">Hi {to_first},</p>
+          <p style="margin:0 0 8px;font-size:14px;color:#374151">{intro}</p>
+          <div style="background:#f9fafb;border-left:3px solid #e47727;padding:10px 14px;margin:10px 0;border-radius:6px;font-size:13px;color:#111827;white-space:pre-wrap">{step_text}</div>
+          <p style="margin:14px 0 0;font-size:13px;color:#374151"><b>The note:</b></p>
+          <div style="background:#eef4ff;border:1px solid #c7d2fe;padding:10px 14px;border-radius:6px;font-size:13px;color:#1e3a8a;margin-top:6px;white-space:pre-wrap">{note_body}</div>
+          <a href="{deep_link}" style="display:inline-block;background:#e47727;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700;font-size:14px;margin-top:18px">Open the profile →</a>
+        </div>
+        <div style="background:#f8f9fa;padding:14px 20px;font-size:11px;color:#6b7280">Questions? <a href="mailto:talent@firstlineschools.org" style="color:#002f60">talent@firstlineschools.org</a></div>
+        <div style="background:#002f60;color:rgba(255,255,255,.7);padding:10px;text-align:center;font-size:10px">FirstLine Schools — Education For Life</div>
+      </div>
+    </body></html>
+    """
+    # Pre-launch: route to the author. Flip to `to_email` at launch.
+    test_mode = True
+    if test_mode or step.get('is_test'):
+        recipient = author_email
+        subject = f"[TEST · would go to {to_email}] {headline}"
+    else:
+        recipient = to_email
+        subject = headline
+    _send_email(recipient, subject, html)
 
 
 @app.route('/api/me/activity')
