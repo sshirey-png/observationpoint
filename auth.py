@@ -118,10 +118,27 @@ def is_cteam(job_title):
 
 
 def is_admin_title(job_title):
-    """CPO, C-Team, or HR Team title."""
+    """C-Team (Chief*/ExDir*) or HR Team title. Grants broad FEATURE access
+    (Network page, drill-downs, impersonation, etc.) — NOT blanket per-person
+    data access. Whose individual records you can see is governed separately
+    by check_access / get_accessible_emails (see is_hr_admin)."""
     if not job_title:
         return False
     return is_cteam(job_title) or job_title in HR_TEAM_TITLES
+
+
+def is_hr_admin(job_title):
+    """The HR function: CPO + Chief HR Officer + HR managers (everything in
+    HR_TEAM_TITLES, which also includes the CEO). These — and ONLY these —
+    can see every staff member's individual records, PMAPs included.
+
+    This mirrors the Supervisor Dashboard model: "CPO + HR Team see all
+    teams; everyone else (incl. other Chiefs) sees their recursive downline."
+    A C-Team Chief who isn't in this set sees their org branch only — not a
+    peer Chief's evaluation."""
+    if not job_title:
+        return False
+    return job_title == CPO_TITLE or job_title in HR_TEAM_TITLES
 
 
 def is_admin_user(user):
@@ -130,12 +147,24 @@ def is_admin_user(user):
     return user.get('is_admin', False)
 
 
+def is_hr_admin_user(user):
+    if not user:
+        return False
+    return is_hr_admin((user.get('job_title') or '').strip())
+
+
 # --- Tier-based scope (Network + drill-downs) ---
 # Mirrors permissions.yaml. Order MATTERS: content_lead is checked BEFORE
 # admin so ExDir of Teach and Learn (which matches C_TEAM_KEYWORDS via
 # "ExDir") gets the narrower content-lead scope, not full admin.
 
-CONTENT_LEAD_TITLES_EXACT = ['K-8 Content Lead']
+CONTENT_LEAD_TITLES_EXACT = [
+    'K-8 Content Lead',
+    'Dir of Teach Development',   # coaches instruction across schools
+    'Dir of ESYNOLA',            # ESY program leadership (see ESY-scope note in permissions.yaml)
+    'Dir of SPED',
+    'Dir of Stud Supp Serv',
+]
 SCHOOL_LEADER_TITLE_KEYWORDS = ['principal', 'assistant principal', 'dean', 'director of culture']
 
 
@@ -188,10 +217,14 @@ def get_accessible_emails(conn, email, job_title):
 
     Mirrors the Supervisor Dashboard model exactly — pure recursive
     supervisor chain:
-      - admin / content_lead: all active staff (Content Leads coach across
-        all schools; their PMAP exclusion is enforced at the capability
-        layer in app.py, not by trimming this list)
-      - everyone else (incl. school leaders): self + recursive downline
+      - HR function (CPO + HR Team, incl. CEO) → all active staff
+      - content_lead → all active staff too (they coach across all schools;
+        their PMAP/PIP exclusion is enforced at the capability layer in
+        app.py, not by trimming this list)
+      - everyone else, INCLUDING C-Team Chiefs / ExDirs / school leaders
+        → self + recursive downline. A Chief sees their org branch only,
+        not a peer Chief's records. (The CEO's downline is everyone, so
+        she sees everything either way.)
 
     School leaders are NOT given blanket "everyone at my school" access —
     that exposed peer/senior leaders and support staff who don't report
@@ -199,10 +232,10 @@ def get_accessible_emails(conn, email, job_title):
     fix is the data (set the teacher's supervisor_email), not a broader
     rule. See tools/audit_supervisor_gaps.py.
     """
-    # All-staff tiers: admin and content_lead.
-    # Order matters — is_content_lead BEFORE is_admin_title so ExDir of
-    # Teach and Learn (which would also match is_cteam) gets here too.
-    if is_content_lead(job_title) or is_admin_title(job_title):
+    # All-staff tiers: the HR function + content leads.
+    # Order matters — is_content_lead BEFORE is_hr_admin so the content-lead
+    # director titles aren't accidentally absorbed by a broader check.
+    if is_content_lead(job_title) or is_hr_admin(job_title):
         cur = conn.cursor()
         cur.execute("SELECT email FROM staff WHERE is_active")
         return [r[0] for r in cur.fetchall()]
@@ -236,16 +269,23 @@ def get_accessible_emails(conn, email, job_title):
 
 
 def check_access(user, target_email):
-    """Check if user can view a specific staff member.
-    Self is always allowed — every staff member can view their own profile."""
+    """Check if user can view a specific staff member's record.
+
+    - HR function (CPO + HR Team, incl. CEO) → anyone
+    - everyone else → self, or someone in their recursive downline
+      (content leads get all active staff in accessible_emails, so this
+       also lets them open any profile — PMAP/PIP sections are stripped
+       for them at the API layer)
+    Note: a C-Team Chief who isn't HR sees only their org branch. That's
+    deliberate — peer Chiefs don't manage each other."""
     if not user:
         return False
-    if user.get('is_admin'):
+    if is_hr_admin_user(user):
         return True
-    if user.get('email', '').lower() == (target_email or '').lower():
+    if (user.get('email') or '').lower() == (target_email or '').lower():
         return True
     accessible = user.get('accessible_emails', [])
-    return target_email.lower() in accessible
+    return (target_email or '').lower() in accessible
 
 
 def is_supervisor(user):

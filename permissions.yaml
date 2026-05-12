@@ -18,9 +18,29 @@
 tiers:
   - id: admin
     label: Admin
-    description: Full access to all schools, all data.
+    description: |
+      Broad FEATURE access (Network page, drill-downs, impersonation, the
+      permissions matrix). But per-person DATA scope splits in two — this
+      mirrors the Supervisor Dashboard model so the structure is repeatable:
+
+        • HR function (CPO + everything in HR_TEAM_TITLES, which includes the
+          CEO) → can open ANY staff member's record, PMAPs included. These
+          are the only "see everyone" accounts. Helper: auth.is_hr_admin().
+
+        • Other C-Team / ExDirs (CXO, CAO, COO, CSAO, ExDir of Teach and
+          Learn, etc.) → see their recursive supervisor downline only, same
+          as any supervisor. A Chief sees their own org branch — NOT a peer
+          Chief's evaluation. (The CEO's downline is everyone, so she sees
+          everything either way.)
+
+      "Whose record can I open" = check_access(); "all-staff list" =
+      get_accessible_emails(). Both key off is_hr_admin, not is_admin.
     rule: |
-      job_title matches C_TEAM_KEYWORDS (Chief, ExDir) OR is in HR_TEAM_TITLES
+      FEATURE access: job_title matches C_TEAM_KEYWORDS (Chief, ExDir) OR
+      is in HR_TEAM_TITLES.
+      ALL-STAFF data access: job_title == 'Chief People Officer' OR in
+      HR_TEAM_TITLES (is_hr_admin). Everyone else with this tier sees only
+      their recursive downline.
     titles_keyword: [Chief, ExDir]
     titles_exact:
       - Chief Executive Officer
@@ -35,15 +55,28 @@ tiers:
     label: Content Lead
     description: |
       Formative coaching data across all 4 schools — observations, action steps,
-      fundamentals, goals. Explicitly excluded from personnel-review surfaces
-      (PMAP, SR, PIP, Write-Up).
+      fundamentals, goals. Sees every staff profile, but personnel-review
+      sections (PMAP, SR, PIP, Write-Up) are stripped for everyone except
+      their own profile. Cannot file PMAP/PIP/Write-Up.
     note: |
-      Only K-8 Content Lead lives here. ExDir of Teach and Learn matches
-      C_TEAM_KEYWORDS via "ExDir" and is full admin (same as CPO/CHRO) —
-      not a content lead. The `teachers_only` scope they get on the Schools
-      dashboard is a dashboard-specific filter, not a tier downgrade.
+      ExDir of Teach and Learn is NOT here — it matches C_TEAM_KEYWORDS via
+      "ExDir" and gets the admin (feature) tier. The FLS-Schools directors
+      below were added per Scott (May 2026) because they coach instruction /
+      programs across schools, same shape as a content lead:
+        - Dir of Teach Development  (Erica Winston)
+        - Dir of ESYNOLA            (Charlotte Steele) — TODO: narrow her
+          all-staff view to ESY-role staff only (job_title contains "ESY" /
+          dept = "FLS ESY"); currently she has the full content-lead scope.
+        - Dir of SPED               (Tiffany Willis)
+        - Dir of Stud Supp Serv     (Melissa Labarrere)
+      Order matters: is_content_lead is checked BEFORE is_hr_admin /
+      is_admin_title so these titles land here, not in a broader bucket.
     titles_exact:
       - K-8 Content Lead
+      - Dir of Teach Development
+      - Dir of ESYNOLA
+      - Dir of SPED
+      - Dir of Stud Supp Serv
 
   - id: school_leader
     label: School Leader
