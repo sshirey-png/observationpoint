@@ -53,16 +53,50 @@ def sync_staff(bq, conn):
     """).result())
     log.info(f"  {len(rows)} staff from BigQuery")
 
+    # --- Robust name normalization for supervisor-hierarchy resolution ---
+    # The staff source carries supervisor as a display name ("Milburn II,
+    # Michael E.") but each person's own First/Last fields are plain
+    # ("Michael" / "Milburn"). Without normalization the lookup misses on
+    # generational suffixes and middle initials. We reduce both sides to
+    # "lastname, firstname" with suffixes + middle parts stripped.
+    _SUFFIXES = {'jr', 'jr.', 'sr', 'sr.', 'ii', 'iii', 'iv', 'v'}
+
+    def _strip_suffix_tokens(tokens):
+        return [t for t in tokens if t.strip('.').lower() not in _SUFFIXES]
+
+    def _norm_first(first):
+        toks = _strip_suffix_tokens((first or '').split())
+        return toks[0].strip('.').lower() if toks else ''
+
+    def _norm_last(last):
+        toks = _strip_suffix_tokens((last or '').split())
+        return toks[0].strip('.').lower() if toks else ''
+
+    def _norm_key_from_parts(last, first):
+        nl, nf = _norm_last(last), _norm_first(first)
+        return f'{nl}, {nf}' if nl and nf else ''
+
+    def _norm_key_from_display(display):
+        # "Milburn II, Michael E." -> "milburn, michael"
+        if not display:
+            return ''
+        parts = display.split(',', 1)
+        if len(parts) == 2:
+            return _norm_key_from_parts(parts[0], parts[1])
+        toks = _strip_suffix_tokens(display.split())
+        if len(toks) >= 2:
+            return _norm_key_from_parts(toks[-1], toks[0])
+        return ''
+
     # Build supervisor name→email map for resolving hierarchy
     name_to_email = {}
     for r in rows:
         if r.email and r.Last_Name and r.First_Name:
-            key = f'{r.Last_Name}, {r.First_Name}'.lower().strip()
-            name_to_email[key] = r.email
-            short_first = r.First_Name.split()[0] if r.First_Name else ''
-            short_key = f'{r.Last_Name}, {short_first}'.lower().strip()
-            if short_key not in name_to_email:
-                name_to_email[short_key] = r.email
+            exact = f'{r.Last_Name}, {r.First_Name}'.lower().strip()
+            name_to_email.setdefault(exact, r.email)
+            norm = _norm_key_from_parts(r.Last_Name, r.First_Name)
+            if norm:
+                name_to_email.setdefault(norm, r.email)
 
     cur = conn.cursor()
 
@@ -70,21 +104,18 @@ def sync_staff(bq, conn):
     cur.execute("UPDATE staff SET is_active = FALSE, updated_at = NOW()")
 
     upserted = 0
+    unresolved_sups = []
     for r in rows:
         if not r.email:
             continue
 
-        # Resolve supervisor name to email
+        # Resolve supervisor name to email — try raw, then normalized
         sup_email = None
         if r.supervisor_name:
-            key = r.supervisor_name.lower().strip()
-            sup_email = name_to_email.get(key)
+            raw = r.supervisor_name.lower().strip()
+            sup_email = name_to_email.get(raw) or name_to_email.get(_norm_key_from_display(r.supervisor_name))
             if not sup_email:
-                parts = key.split(',')
-                if len(parts) == 2:
-                    last = parts[0].strip()
-                    first = parts[1].strip().split()[0] if parts[1].strip() else ''
-                    sup_email = name_to_email.get(f'{last}, {first}')
+                unresolved_sups.append((r.email, r.supervisor_name))
 
         is_active = (r.Employment_Status or '').strip() in ('Active', 'Leave of absence', '')
         hire_date = r.Last_Hire_Date.date() if hasattr(r.Last_Hire_Date, 'date') and r.Last_Hire_Date else None
@@ -116,6 +147,10 @@ def sync_staff(bq, conn):
     cur.execute("SELECT COUNT(*) FROM staff WHERE supervisor_email IS NOT NULL AND supervisor_email != '' AND is_active")
     with_sup = cur.fetchone()[0]
     log.info(f"  Upserted {upserted}, active: {active}, with supervisor_email: {with_sup}")
+    if unresolved_sups:
+        log.warning(f"  {len(unresolved_sups)} staff have a supervisor_name that didn't resolve to an email:")
+        for em, sn in unresolved_sups[:25]:
+            log.warning(f"    {em} -> supervisor_name=[{sn}]")
 
 
 def sync_touchpoints(bq, conn):
