@@ -199,18 +199,24 @@ CONTENT_LEAD_TITLES_EXACT = [
 # sees only ESY-program staff (job_title contains "ESY") plus their own
 # recursive downline + self — not the whole org.
 ESY_SCOPED_CONTENT_LEAD_TITLES = {'Dir of ESYNOLA'}
-SCHOOL_LEADER_TITLE_KEYWORDS = ['principal', 'assistant principal', 'dean', 'director of culture']
+
+# A "school leader" is anyone the warehouse classifies as Leadership in
+# staff_master_list_with_function's Job_Function CASE (the canonical title→role
+# map — grow-observations/staff_master_list_with_function.sql). That's
+# Principal / Asst Principal / Dean of Students / School Director / Manager
+# School Ops / SPED Coordinator / RTI Coordinator (and anyone whose Function is
+# 'Emp School Leaders' / 'Emp AP - Deans'). No keyword list to keep in sync —
+# whatever the warehouse calls Leadership *is* a school leader. Asst Dean →
+# Support (not leadership); Dir of Culture → Network (it's a network role).
+SCHOOL_LEADER_JOB_FUNCTION = 'Leadership'
 
 
 def is_content_lead(job_title):
     return bool(job_title) and job_title.strip() in CONTENT_LEAD_TITLES_EXACT
 
 
-def is_school_leader(job_title):
-    if not job_title:
-        return False
-    title_lower = job_title.lower()
-    return any(kw in title_lower for kw in SCHOOL_LEADER_TITLE_KEYWORDS)
+def is_school_leader(job_function):
+    return (job_function or '').strip() == SCHOOL_LEADER_JOB_FUNCTION
 
 
 def get_user_scope(user):
@@ -229,13 +235,14 @@ def get_user_scope(user):
     if not user:
         return {'tier': None}
     job_title = user.get('job_title') or ''
+    job_function = user.get('job_function') or ''
     school = user.get('school') or ''
 
     if is_content_lead(job_title):
         return {'tier': 'content_lead'}
     if is_admin_title(job_title):
         return {'tier': 'admin'}
-    if is_school_leader(job_title) and school:
+    if is_school_leader(job_function) and school:
         return {'tier': 'school_leader', 'school': school}
     if is_supervisor(user):
         return {'tier': 'supervisor'}

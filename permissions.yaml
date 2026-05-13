@@ -81,17 +81,21 @@ tiers:
   - id: school_leader
     label: School Leader
     description: |
-      Sees Network-level trends and per-school comparisons. Can only drill
-      INTO their own school's aggregate data (and the school deep-dive page).
-      Individual staff profiles follow the recursive supervisor chain — same
-      as the Supervisor Dashboard — NOT blanket "everyone at my building."
-      If a teacher isn't reachable through the chain, the fix is the data
-      (set supervisor_email), not a broader rule.
-    titles_keyword:  # case-insensitive substring match
-      - principal
-      - assistant principal
-      - dean
-      - director of culture
+      Building leadership. Sees Network-level trends and per-school comparisons,
+      but can only drill INTO their own school's aggregate data (and the school
+      deep-dive page). Individual staff profiles follow the recursive supervisor
+      chain — same as the Supervisor Dashboard — NOT blanket "everyone at my
+      building." If a teacher isn't reachable through the chain, the fix is the
+      data (set supervisor_email), not a broader rule.
+
+      Membership is NOT a hand-maintained title list — it's whatever the warehouse
+      classifies as Leadership in staff_master_list_with_function's Job_Function
+      CASE (grow-observations/staff_master_list_with_function.sql). Today that's
+      Principal / Asst Principal / Dean of Students / School Director / Manager
+      School Ops / SPED Coordinator / RTI Coordinator (plus anyone whose Function
+      is 'Emp School Leaders' or 'Emp AP - Deans'). NOT Asst Dean (→ Support),
+      NOT Dir of Culture (→ Network — it's a network Schools-Team role).
+    rule: job_function == 'Leadership' (from staff_master_list_with_function) AND school is a real school
 
   - id: supervisor
     label: Supervisor
