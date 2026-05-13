@@ -2622,43 +2622,58 @@ def api_network_drilldown():
                 })
 
         # ── "Filter by supervisor" support ─────────────────────────────────
-        # Attach each row's direct supervisor (email + display name) and build
-        # the dropdown options (one per supervisor who has >=1 listed person
-        # reporting to them, with a head-count). Two cheap lookups against the
-        # staff table; the per-kind queries above are left untouched.
-        row_emails = sorted({(r.get('email') or '').lower() for r in rows if r.get('email')})
-        sup_of = {}
-        if row_emails:
-            cur.execute(
-                "SELECT LOWER(email) AS email, LOWER(supervisor_email) AS supervisor_email "
-                "FROM staff WHERE LOWER(email) = ANY(%s)", (row_emails,))
-            for sr in cur.fetchall():
-                sup_of[sr['email']] = sr['supervisor_email'] or ''
-        sup_emails = sorted({se for se in sup_of.values() if se})
-        sup_meta = {}
-        if sup_emails:
-            cur.execute(
-                "SELECT LOWER(email) AS email, first_name, last_name, job_title "
-                "FROM staff WHERE LOWER(email) = ANY(%s)", (sup_emails,))
-            for sr in cur.fetchall():
-                sup_meta[sr['email']] = {
-                    'name': f"{sr['first_name'] or ''} {sr['last_name'] or ''}".strip() or sr['email'],
-                    'job_title': sr['job_title'] or '',
-                }
+        # For each listed person, walk the supervisor chain UP through their
+        # own building (stop when we leave the school — a network supervisor)
+        # and attach it as supervisor_chain. The dropdown then offers every
+        # leader who appears in any chain (Principal → Deans/APs), with a
+        # head-count; the frontend filters to rows whose chain contains the
+        # chosen leader, i.e. that leader's recursive downline at the school.
+        # One cheap load of the active-staff hierarchy; the per-kind queries
+        # above are untouched.
+        cur.execute(
+            "SELECT LOWER(email) AS email, LOWER(supervisor_email) AS supervisor_email, "
+            "first_name, last_name, job_title, school FROM staff WHERE is_active")
+        _parent, _meta, _school_of = {}, {}, {}
+        for sr in cur.fetchall():
+            em = sr['email']
+            _parent[em] = sr['supervisor_email'] or ''
+            _meta[em] = {
+                'name': f"{sr['first_name'] or ''} {sr['last_name'] or ''}".strip() or em,
+                'job_title': sr['job_title'] or '',
+            }
+            _school_of[em] = (sr['school'] or '')
+
+        def _chain_within_building(person_email, person_school):
+            """Ancestors of person_email, direct→up, kept only while the
+            ancestor is at the same building (school). Cycle-guarded."""
+            out, seen = [], {person_email}
+            ps = (person_school or '').strip().lower()
+            cur_e = _parent.get(person_email, '')
+            while cur_e and cur_e not in seen:
+                seen.add(cur_e)
+                if (_school_of.get(cur_e, '') or '').strip().lower() != ps:
+                    break
+                out.append(cur_e)
+                cur_e = _parent.get(cur_e, '')
+            return out
+
         sup_count = {}
         for r in rows:
-            se = sup_of.get((r.get('email') or '').lower(), '')
-            r['supervisor_email'] = se
-            r['supervisor_name'] = (sup_meta.get(se) or {}).get('name', '') if se else ''
-            if se:
-                sup_count[se] = sup_count.get(se, 0) + 1
+            em = (r.get('email') or '').lower()
+            chain = _chain_within_building(em, r.get('school'))
+            direct = _parent.get(em, '')
+            r['supervisor_email'] = direct
+            r['supervisor_name'] = (_meta.get(direct) or {}).get('name', '') if direct else ''
+            r['supervisor_chain'] = chain
+            for a in chain:
+                sup_count[a] = sup_count.get(a, 0) + 1
         supervisor_options = sorted(
-            [{'email': se,
-              'name': (sup_meta.get(se) or {}).get('name') or se,
-              'job_title': (sup_meta.get(se) or {}).get('job_title') or '',
+            [{'email': a,
+              'name': (_meta.get(a) or {}).get('name') or a,
+              'job_title': (_meta.get(a) or {}).get('job_title') or '',
               'count': c}
-             for se, c in sup_count.items()],
-            key=lambda o: (o['name'] or '').lower(),
+             for a, c in sup_count.items()],
+            key=lambda o: (-o['count'], (o['name'] or '').lower()),  # broadest team first, then name
         )
 
         return jsonify({

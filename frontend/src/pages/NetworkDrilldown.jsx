@@ -236,9 +236,12 @@ export default function NetworkDrilldown({ kindOverride }) {
         const jf = r.job_function || ''
         if (jf !== roleFilter) return false
       }
-      // Supervisor filter — narrows to one leader's direct reports at this school
+      // Supervisor filter — narrows to one leader's recursive downline at this
+      // school (their chain includes the picked leader: Principal → everyone,
+      // a Dean → just that Dean's teachers).
       if (supervisorFilter !== 'all') {
-        if ((r.supervisor_email || '').toLowerCase() !== supervisorFilter) return false
+        const chain = r.supervisor_chain || []
+        if (!chain.map(e => (e || '').toLowerCase()).includes(supervisorFilter)) return false
       }
       // Status filter
       if (statusFilter !== 'all') {
