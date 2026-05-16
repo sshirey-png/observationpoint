@@ -822,7 +822,7 @@ function V3DimBar({ name, avg }) {
   )
 }
 
-function V3FundamentalsHero({ data, onSchool, useMock, cycle = 1 }) {
+function V3FundamentalsHero({ data, onSchool, useMock, cycle = 1, ownSchool = null }) {
   const fm = data?.fundamentals_mastery || {}
   // For 2025-26 view, fall back to realistic mock numbers so testers can envision
   const mastered = useMock ? Math.round((fm.total_teachers || 187) * 0.72) : (fm.mastered ?? 0)
@@ -860,14 +860,18 @@ function V3FundamentalsHero({ data, onSchool, useMock, cycle = 1 }) {
       <div style={V3_FOOT}>
         {SCHOOLS.map((s) => {
           const row = byIS[s] || { mastered: 0, observed: 0 }
+          // School-leader scope: only own-school cell drills in (matches the compare strips below)
+          const restricted = ownSchool && s !== ownSchool
+          const val = row.observed > 0 ? `${Math.round(100 * row.mastered / row.observed)}%` : '—'
           return (
-            <a key={s} onClick={(e) => { e.preventDefault(); onSchool(s) }}
-              style={{ cursor: 'pointer', textDecoration: 'none', color: 'inherit', minWidth: 0, textAlign: 'center' }}>
-              <div style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>
-                {row.observed > 0 ? `${Math.round(100 * row.mastered / row.observed)}%` : '—'}
-              </div>
+            <a key={s}
+              onClick={restricted ? undefined : (e) => { e.preventDefault(); onSchool(s) }}
+              title={restricted ? 'Other school — view-only' : undefined}
+              style={{ cursor: restricted ? 'not-allowed' : 'pointer', textDecoration: 'none', color: 'inherit',
+                       minWidth: 0, textAlign: 'center', opacity: restricted ? 0.5 : 1 }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{val}</div>
               <div style={{ fontSize: 10, color: 'rgba(255,255,255,.65)', textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 2, lineHeight: 1.25, wordBreak: 'break-word' }}>
-                {shortSchool(s)}
+                {shortSchool(s)}{restricted ? ' 🔒' : ''}
               </div>
             </a>
           )
@@ -877,7 +881,7 @@ function V3FundamentalsHero({ data, onSchool, useMock, cycle = 1 }) {
   )
 }
 
-function V3ObsScoreHero({ data, onSchool }) {
+function V3ObsScoreHero({ data, onSchool, ownSchool = null }) {
   const avg = data?.obs_score?.network_avg
   const totalObs = data?.kpis?.observations_total || 0
   const teachers = data?.teachers_total || 0
@@ -896,15 +900,22 @@ function V3ObsScoreHero({ data, onSchool }) {
         </div>
       </div>
       <div style={V3_FOOT}>
-        {schools.slice(0, 4).map((s) => (
-          <a key={s.school} onClick={(e) => { e.preventDefault(); onSchool(s.school) }}
-            style={{ cursor: 'pointer', textDecoration: 'none', color: 'inherit', minWidth: 0, textAlign: 'center' }}>
-            <div style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{s.on_task_pct != null ? s.on_task_pct.toFixed(2) : '—'}</div>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,.65)', textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 2, lineHeight: 1.25, wordBreak: 'break-word' }}>
-              {shortSchool(s.school)}
-            </div>
-          </a>
-        ))}
+        {schools.slice(0, 4).map((s) => {
+          // School-leader scope: only own-school cell drills in (matches the compare strips below)
+          const restricted = ownSchool && s.school !== ownSchool
+          return (
+            <a key={s.school}
+              onClick={restricted ? undefined : (e) => { e.preventDefault(); onSchool(s.school) }}
+              title={restricted ? 'Other school — view-only' : undefined}
+              style={{ cursor: restricted ? 'not-allowed' : 'pointer', textDecoration: 'none', color: 'inherit',
+                       minWidth: 0, textAlign: 'center', opacity: restricted ? 0.5 : 1 }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>{s.on_task_pct != null ? s.on_task_pct.toFixed(2) : '—'}</div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,.65)', textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 2, lineHeight: 1.25, wordBreak: 'break-word' }}>
+                {shortSchool(s.school)}{restricted ? ' 🔒' : ''}
+              </div>
+            </a>
+          )
+        })}
       </div>
     </div>
   )
@@ -1075,8 +1086,8 @@ export default function Network() {
                 into the section-specific drill-down so the hero comparison flows
                 straight into the per-teacher list for that school. */}
             {showFundamentals
-              ? <V3FundamentalsHero data={data} onSchool={(s) => navigate(`/app/network/fundamentals?school=${encodeURIComponent(s)}&sy=${encodeURIComponent(schoolYear)}&cycle=${cycle}`)} useMock={schoolYear === '2025-2026'} cycle={cycle} />
-              : <V3ObsScoreHero data={data} onSchool={(s) => navigate(`/app/network/observations?school=${encodeURIComponent(s)}&sy=${encodeURIComponent(schoolYear)}&cycle=${cycle}`)} />}
+              ? <V3FundamentalsHero data={data} onSchool={(s) => navigate(`/app/network/fundamentals?school=${encodeURIComponent(s)}&sy=${encodeURIComponent(schoolYear)}&cycle=${cycle}`)} useMock={schoolYear === '2025-2026'} cycle={cycle} ownSchool={ownSchool} />
+              : <V3ObsScoreHero data={data} onSchool={(s) => navigate(`/app/network/observations?school=${encodeURIComponent(s)}&sy=${encodeURIComponent(schoolYear)}&cycle=${cycle}`)} ownSchool={ownSchool} />}
 
             {/* Stat strip */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 14 }}>
