@@ -484,6 +484,93 @@ const TYPE_BADGE = {
   'meeting_data_meeting_(relay)': { label: 'Data Mtg', bg: '#f0fdf4', color: '#16a34a' },
 }
 
+/**
+ * MeetingSeriesSection — recurring meeting-notes touchpoints grouped into
+ * collapsible series (matches the approved mock State 4 — instead of N
+ * separate weekly-meeting rows in the recent feed, one expandable row per
+ * series). Series detection: form_type='meeting_notes' AND feedback.is_recurring
+ * AND grouping key = (series_name, sorted-participant-emails). One-off
+ * meetings (no is_recurring) are left to the regular recent-touchpoints list.
+ */
+function _parseFeedback(t) {
+  if (!t.feedback) return null
+  if (typeof t.feedback === 'object') return t.feedback
+  try { return JSON.parse(t.feedback) } catch { return null }
+}
+
+function MeetingSeriesSection({ touchpoints, onOpenDetail }) {
+  const groups = (() => {
+    const byKey = new Map()
+    for (const t of touchpoints) {
+      if (t.form_type !== 'meeting_notes') continue
+      const fb = _parseFeedback(t)
+      if (!fb || !fb.is_recurring) continue
+      const sname = ((fb.series_name || fb.name || '') + '').trim()
+      if (!sname) continue
+      const parts = Array.isArray(fb.participants) ? fb.participants : []
+      const partEmails = parts.map(p => ((p && p.email) || '').toLowerCase()).filter(Boolean).sort()
+      const key = sname.toLowerCase() + '' + partEmails.join(',')
+      if (!byKey.has(key)) {
+        byKey.set(key, {
+          series_name: sname,
+          participants: parts,
+          instances: [],
+        })
+      }
+      byKey.get(key).instances.push({ tp: t, fb })
+    }
+    const arr = Array.from(byKey.values())
+    arr.forEach(g => g.instances.sort((a, b) => new Date(b.tp.date || 0) - new Date(a.tp.date || 0)))
+    arr.sort((a, b) => new Date(b.instances[0]?.tp.date || 0) - new Date(a.instances[0]?.tp.date || 0))
+    return arr
+  })()
+  if (groups.length === 0) return null
+  return (
+    <div className="bg-white rounded-xl shadow-sm mt-3 mb-2 p-3">
+      <div className="text-[11px] font-bold uppercase tracking-wider text-gray-700 mb-2">
+        Recurring meeting series <span className="text-gray-400 font-semibold normal-case">· {groups.length}</span>
+      </div>
+      {groups.map((g, gi) => {
+        const last = g.instances[0]
+        const partLabel = (g.participants || []).slice(0, 3).map(p => p.name || (p.email || '').split('@')[0]).join(' · ')
+        const more = (g.participants || []).length > 3 ? ` · +${g.participants.length - 3}` : ''
+        return (
+          <details key={gi} className="border border-blue-100 rounded-lg p-2.5 mb-1.5"
+                   style={{ background: 'linear-gradient(135deg,#eef4ff,#ffffff)' }}>
+            <summary className="cursor-pointer list-none flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-md bg-blue-100 text-fls-navy flex items-center justify-center text-[15px] shrink-0">🗓</div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[13px] font-bold text-fls-navy truncate">{g.series_name}</div>
+                <div className="text-[11px] text-gray-500 truncate">
+                  {partLabel}{more} · {g.instances.length} meeting{g.instances.length === 1 ? '' : 's'} · last {formatDate(last.tp.date)}
+                </div>
+              </div>
+              <div className="text-[9px] font-extrabold text-fls-navy bg-white border border-blue-200 rounded-full px-2 py-0.5 shrink-0">SERIES</div>
+              <div className="text-fls-navy text-[12px] font-bold shrink-0">›</div>
+            </summary>
+            <div className="mt-2.5 pt-2.5 border-t border-blue-100">
+              {g.instances.map((ix, ii) => {
+                const linkCount = Array.isArray(ix.fb.links) ? ix.fb.links.length : 0
+                const preview = (ix.fb.discussed || '').replace(/\s+/g, ' ').trim().slice(0, 120)
+                return (
+                  <button key={ii} onClick={() => onOpenDetail(ix.tp)}
+                          className="w-full text-left flex items-start gap-2.5 py-2 px-1.5 border-b border-gray-50 last:border-b-0 cursor-pointer border-l-0 border-r-0 border-t-0 bg-transparent font-[inherit]">
+                    <div className="text-[11px] font-bold text-fls-navy w-12 shrink-0">{formatDate(ix.tp.date).slice(0, 6)}</div>
+                    <div className="text-[12px] text-gray-600 leading-snug">
+                      {preview || <span className="text-gray-400 italic">no notes</span>}
+                      {linkCount > 0 && <span className="text-fls-orange text-[10px] ml-1.5">🔗 {linkCount}</span>}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </details>
+        )
+      })}
+    </div>
+  )
+}
+
 /** Latest PMAP card: dimension chips + strength/growth snippet if present. */
 function LatestPMAPCard({ touchpoints, onOpenDetail }) {
   // Exclude test records and any post-current-year drafts so a test PMAP doesn't
@@ -588,6 +675,10 @@ function SnapshotView({ touchpoints, onOpenDetail, staffEmail, currentSY, onShow
 
       {/* Latest PMAP (any year — always useful context) */}
       <LatestPMAPCard touchpoints={touchpoints} onOpenDetail={onOpenDetail} />
+
+      {/* Recurring meeting series — meeting_notes touchpoints flagged is_recurring,
+          grouped by series_name + participants. One-offs stay in the recent feed below. */}
+      <MeetingSeriesSection touchpoints={touchpoints} onOpenDetail={onOpenDetail} />
 
       {/* Recent Touchpoints — expand once for top 3, expand again for all current year inline */}
       <details className="bg-white rounded-xl shadow-sm mt-3 mb-2 overflow-hidden">

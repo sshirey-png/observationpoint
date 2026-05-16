@@ -643,6 +643,57 @@ function SectionGroup({ title, children }) {
   )
 }
 
+/**
+ * AttachmentsSection — universal read-only attachment chips for any
+ * touchpoint. Pulls file uploads from /api/uploads (parent_type='touchpoint')
+ * and link chips from feedback.links[]. Tap a file → opens a short-lived
+ * signed download URL. Hidden if nothing to show.
+ */
+function AttachmentsSection({ touchpointId, feedback }) {
+  const [files, setFiles] = useState([])
+  const links = Array.isArray(feedback?.links) ? feedback.links : []
+  useEffect(() => {
+    if (!touchpointId) return
+    let alive = true
+    api.get(`/api/uploads?parent_type=touchpoint&parent_id=${encodeURIComponent(touchpointId)}`)
+       .then(r => { if (alive && Array.isArray(r)) setFiles(r) })
+       .catch(() => {})
+    return () => { alive = false }
+  }, [touchpointId])
+
+  if (files.length === 0 && links.length === 0) return null
+
+  async function openFile(uid) {
+    try {
+      const dl = await api.get(`/api/uploads/${uid}/download`)
+      if (dl?.url) window.open(dl.url, '_blank')
+    } catch {}
+  }
+
+  return (
+    <Section label="Attachments & Links">
+      <div className="flex flex-wrap gap-1.5">
+        {links.map((l, i) => (
+          <a key={`l${i}`} href={l.url} target="_blank" rel="noopener noreferrer"
+             className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 no-underline max-w-full"
+             title={l.url}>
+            <span>🔗</span>
+            <span className="truncate" style={{ maxWidth: 240 }}>{l.label || l.url}</span>
+          </a>
+        ))}
+        {files.map(f => (
+          <button key={f.id} onClick={() => openFile(f.id)}
+             className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 border-0 cursor-pointer font-[inherit] max-w-full"
+             title={f.filename}>
+            <span>📄</span>
+            <span className="truncate" style={{ maxWidth: 240 }}>{f.filename}</span>
+          </button>
+        ))}
+      </div>
+    </Section>
+  )
+}
+
 // ---------------------------------------------------------------
 // 25-26 archive PMAP layout — mirrors `PMAP Teacher.pdf` form structure:
 //   1. Meeting Checklist
@@ -1041,6 +1092,9 @@ export default function TouchpointDetail({ touchpoint, onClose }) {
               ))}
             </Section>
           )}
+
+          {/* Attachments & links — universal, hidden if empty */}
+          <AttachmentsSection touchpointId={tp.id} feedback={formFeedback} />
 
           {/* Observer + provenance */}
           <div className="text-xs text-gray-400 mt-4 pt-3 border-t border-gray-100 space-y-0.5">
