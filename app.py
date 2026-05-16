@@ -3227,7 +3227,7 @@ def api_notify_teacher(tp_id):
             'self_reflection_network': 'Self-Reflection (Network)',
             'self_reflection_support': 'Self-Reflection (Support)',
             'meeting_data_meeting_(relay)': 'Data Meeting',
-            'meeting_quick_meeting': 'Quick Meeting',
+            'meeting_notes': 'Meeting Notes',
             'quick_feedback': 'Quick Feedback',
             'solicited_feedback': 'Feedback Request',
         }
@@ -4422,6 +4422,75 @@ def _notify_action_step_note(step, author_email, author_name, note_body, author_
     _send_email(recipient, subject, html)
 
 
+@app.route('/api/me/recurring-series')
+@require_auth
+def api_me_recurring_series():
+    """List the current user's recurring meeting series — recent published
+    meeting_notes touchpoints flagged is_recurring, grouped by series_name +
+    participant set. Powers the "Continue a series" picker on the Meeting Notes
+    form. Returns up to 10 series, most-recent first."""
+    user = get_current_user()
+    me = ((user or {}).get('email') or '').strip().lower()
+    if not me:
+        return jsonify([])
+    conn = db.get_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        # Pull the user's recent meeting_notes touchpoints (as observer/creator).
+        # No is_test filter — during pre-launch testers' meetings are is_test=True,
+        # and we want those to show up in the picker too.
+        cur.execute("""
+            SELECT id, observed_at, feedback, teacher_email, school
+              FROM touchpoints
+             WHERE LOWER(observer_email) = %s
+               AND form_type = 'meeting_notes'
+               AND status = 'published'
+               AND observed_at >= NOW() - INTERVAL '180 days'
+             ORDER BY observed_at DESC
+             LIMIT 200
+        """, (me,))
+        rows = cur.fetchall()
+
+        groups = {}
+        for r in rows:
+            try:
+                fb = json.loads(r['feedback']) if r['feedback'] else {}
+            except Exception:
+                fb = {}
+            if not fb.get('is_recurring'):
+                continue
+            sname = (fb.get('series_name') or fb.get('name') or '').strip()
+            if not sname:
+                continue
+            parts = fb.get('participants') or []
+            part_emails = tuple(sorted(
+                (p.get('email') or '').lower() for p in parts if isinstance(p, dict) and p.get('email')
+            ))
+            key = (sname.lower(), part_emails)
+            g = groups.get(key)
+            if g is None:
+                g = {
+                    'series_name': sname,
+                    'participants': [
+                        {
+                            'email': p.get('email'),
+                            'name': (f"{p.get('first_name') or ''} {p.get('last_name') or ''}".strip()
+                                     or p.get('email') or ''),
+                        }
+                        for p in parts if isinstance(p, dict) and p.get('email')
+                    ],
+                    'last_date': r['observed_at'].strftime('%Y-%m-%d') if r['observed_at'] else None,
+                    'last_touchpoint_id': str(r['id']),
+                    'count': 0,
+                }
+                groups[key] = g
+            g['count'] += 1
+        out = sorted(groups.values(), key=lambda g: g.get('last_date') or '', reverse=True)[:10]
+        return jsonify(out)
+    finally:
+        conn.close()
+
+
 @app.route('/api/me/activity')
 @require_auth
 def api_me_activity():
@@ -4705,7 +4774,7 @@ TABLE touchpoints (aliased as t):
     self_reflection_teacher, self_reflection_leader, self_reflection_prek,
     self_reflection_support, self_reflection_network,
     quick_feedback, celebrate, write_up, iap, solicited_feedback,
-    meeting_quick_meeting, "meeting_data_meeting_(relay)"
+    meeting_notes, "meeting_data_meeting_(relay)"
   HINT: "meetings" → form_type LIKE 'meeting_%'
   HINT: "observations" → form_type LIKE 'observation_%'
   HINT: "pmaps" → form_type LIKE 'pmap_%'

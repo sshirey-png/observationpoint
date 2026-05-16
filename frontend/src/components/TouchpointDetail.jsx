@@ -27,7 +27,7 @@ const FORM_LABELS = {
   self_reflection_support: 'Self-Reflection — Support',
   self_reflection_network: 'Self-Reflection — Network',
   quick_feedback: 'Quick Feedback',
-  meeting_quick_meeting: 'Coaching Meeting',
+  meeting_notes: 'Meeting Notes',
   'meeting_data_meeting_(relay)': 'Data Meeting (Relay)',
   write_up: 'Employee Write-Up',
   iap: 'Performance Improvement Plan',

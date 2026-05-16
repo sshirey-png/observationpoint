@@ -28,7 +28,7 @@ const FORM_LABEL = {
   celebration: 'Celebrate',
   meeting: 'Meeting',
   meeting_data: 'Data Meeting',
-  meeting_quick_meeting: 'Meeting',
+  meeting_notes: 'Meeting Notes',
   'meeting_data_meeting_(relay)': 'Data Meeting',
   solicited_feedback: 'Solicit Feedback',
   write_up: 'Write-Up',
@@ -480,7 +480,7 @@ const TYPE_BADGE = {
   quick_feedback:         { label: 'Quick FB',    bg: '#fef3c7', color: '#b45309' },
   celebrate:              { label: 'Celebrate',   bg: '#d1fae5', color: '#059669' },
   solicited_feedback:     { label: 'Solicit',     bg: '#dbeafe', color: '#2563eb' },
-  meeting_quick_meeting:  { label: 'Meeting',     bg: '#f0fdf4', color: '#16a34a' },
+  meeting_notes:          { label: 'Meeting Notes', bg: '#f0fdf4', color: '#16a34a' },
   'meeting_data_meeting_(relay)': { label: 'Data Mtg', bg: '#f0fdf4', color: '#16a34a' },
 }
 

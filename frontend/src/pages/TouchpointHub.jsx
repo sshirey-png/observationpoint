@@ -12,7 +12,7 @@ const FORM_LABELS = {
   quick_feedback: { label: 'Quick FB', color: '#b45309', bg: '#fef3c7', route: '/app/feedback' },
   celebrate: { label: 'Celebrate', color: '#059669', bg: '#dcfce7', route: '/app/celebrate' },
   'meeting_data_meeting_(relay)': { label: 'Data Mtg', color: '#16a34a', bg: '#f0fdf4', route: '/app/meeting' },
-  meeting_quick_meeting: { label: 'Meeting', color: '#16a34a', bg: '#f0fdf4', route: '/app/meeting' },
+  meeting_notes: { label: 'Meeting Notes', color: '#16a34a', bg: '#f0fdf4', route: '/app/quick-meeting' },
   pmap_teacher: { label: 'PMAP', color: '#059669', bg: '#dcfce7', route: '/app/pmap' },
   pmap_leader: { label: 'PMAP', color: '#059669', bg: '#dcfce7', route: '/app/pmap' },
   pmap_prek: { label: 'PMAP', color: '#059669', bg: '#dcfce7', route: '/app/pmap' },
@@ -141,7 +141,7 @@ export default function TouchpointHub() {
           <Card to="/app/observe" icon="👁" iconBg="#dbeafe" title="Observation" sub="Classroom visit · auto PreK" />
           <Card to="/app/fundamentals" icon="⏱" iconBg="#fef3c7" title="Fundamentals" sub="5-min On Task %" />
           <Card to="/app/meeting" icon="💬" iconBg="#f0fdf4" title="Data Meeting" sub="Relay DDI" />
-          <Card to="/app/quick-meeting" icon="🗓" iconBg="#e0e7ff" title="Quick Meeting" sub="Multi-participant · notes" />
+          <Card to="/app/quick-meeting" icon="🗓" iconBg="#e0e7ff" title="Meeting Notes" sub="Multi-participant · recurring · attachments" />
           <Card to="/app/feedback" icon="⚡" iconBg="#fef3c7" title="Quick Feedback" sub="Informal note" />
           <Card to="/app/celebrate" icon="🎉" iconBg="#dcfce7" title="Recognize" sub="Celebrate · Shoutout · Gratitude" />
           <Card to="/app/solicit" icon="🙌" iconBg="#dbeafe" title="Solicit Feedback" sub="Ask for input" />
